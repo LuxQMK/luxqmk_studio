@@ -114,6 +114,17 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 0 15px var(--primary-glow);
+  padding: 3px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebar-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: calc(var(--radius-md) - 3px);
+  display: block;
 }
 
 .sidebar-brand-text h2 {
@@ -1781,7 +1792,9 @@ input:checked + .switch-slider:before {
     <!-- LEFT SIDEBAR NAVIGATION -->
     <aside class="sidebar">
       <div class="sidebar-brand">
-        <div class="sidebar-logo-badge">G3</div>
+        <div class="sidebar-logo-badge">
+          <img src="data:image/png;base64,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" alt="LuxQMK" class="sidebar-logo-img">
+        </div>
         <div class="sidebar-brand-text">
           <h2 data-i18n="appName">LuxQMK Studio</h2>
           <span data-i18n="appSubtitle">QMK / VIA Hub</span>
@@ -2292,7 +2305,7 @@ input:checked + .switch-slider:before {
             <div class="color-item-card">
               <div class="color-item-info">
                 <strong>Caps Lock</strong>
-                <span data-i18n="logoCapsDesc">Caps Lock indicator (Default: Red)</span>
+                <span data-i18n="logoCapsDesc">Caps Lock indicator (#FF0000)</span>
               </div>
               <input type="color" id="colorCaps" class="color-picker-input" value="#ff0000">
             </div>
@@ -2300,47 +2313,47 @@ input:checked + .switch-slider:before {
             <div class="color-item-card">
               <div class="color-item-info">
                 <strong>Num Lock</strong>
-                <span data-i18n="logoNumDesc">Num Lock indicator (Default: Blue)</span>
+                <span data-i18n="logoNumDesc">Num Lock indicator (#001EFF)</span>
               </div>
-              <input type="color" id="colorNum" class="color-picker-input" value="#0099ff">
+              <input type="color" id="colorNum" class="color-picker-input" value="#001eff">
             </div>
 
             <div class="color-item-card">
               <div class="color-item-info">
                 <strong>Scroll Lock</strong>
-                <span data-i18n="logoScrollDesc">Scroll Lock indicator (Default: Green)</span>
+                <span data-i18n="logoScrollDesc">Scroll Lock indicator (#32FF00)</span>
               </div>
-              <input type="color" id="colorScroll" class="color-picker-input" value="#00ff00">
+              <input type="color" id="colorScroll" class="color-picker-input" value="#32ff00">
             </div>
 
             <div class="color-item-card">
               <div class="color-item-info">
                 <strong>Caps + Num Lock</strong>
-                <span data-i18n="logoCapsNumDesc">Caps + Num Lock active (Default: Magenta)</span>
+                <span data-i18n="logoCapsNumDesc">Caps + Num Lock active (#FF3200)</span>
               </div>
-              <input type="color" id="colorCapsNum" class="color-picker-input" value="#ff00aa">
+              <input type="color" id="colorCapsNum" class="color-picker-input" value="#ff3200">
             </div>
 
             <div class="color-item-card">
               <div class="color-item-info">
                 <strong>Caps + Scroll Lock</strong>
-                <span data-i18n="logoCapsScrollDesc">Caps + Scroll Lock active (Default: Yellow)</span>
+                <span data-i18n="logoCapsScrollDesc">Caps + Scroll Lock active (#FFFF00)</span>
               </div>
-              <input type="color" id="colorCapsScroll" class="color-picker-input" value="#ffcc00">
+              <input type="color" id="colorCapsScroll" class="color-picker-input" value="#ffff00">
             </div>
 
             <div class="color-item-card">
               <div class="color-item-info">
                 <strong>Num + Scroll Lock</strong>
-                <span data-i18n="logoNumScrollDesc">Num + Scroll Lock active (Default: Cyan)</span>
+                <span data-i18n="logoNumScrollDesc">Num + Scroll Lock active (#00C8FF)</span>
               </div>
-              <input type="color" id="colorNumScroll" class="color-picker-input" value="#00ffee">
+              <input type="color" id="colorNumScroll" class="color-picker-input" value="#00c8ff">
             </div>
 
             <div class="color-item-card">
               <div class="color-item-info">
                 <strong>Caps + Num + Scroll Lock</strong>
-                <span data-i18n="logoAllDesc">All 3 locks active (Default: White)</span>
+                <span data-i18n="logoAllDesc">All 3 locks active (#FFFFFF)</span>
               </div>
               <input type="color" id="colorAll" class="color-picker-input" value="#ffffff">
             </div>
@@ -5698,13 +5711,13 @@ input:checked + .switch-slider:before {
       optLogoRgb: "RGB Matrix Effect (Default)",
       optLogoLockRgb: "Lock Indicator (RGB when inactive)",
       optLogoLockOff: "Lock Indicator (Off when inactive)",
-      logoCapsDesc: "Caps Lock indicator (Default: Red)",
-      logoNumDesc: "Num Lock indicator (Default: Blue)",
-      logoScrollDesc: "Scroll Lock indicator (Default: Green)",
-      logoCapsNumDesc: "Caps + Num Lock active (Default: Magenta)",
-      logoCapsScrollDesc: "Caps + Scroll Lock active (Default: Yellow)",
-      logoNumScrollDesc: "Num + Scroll Lock active (Default: Cyan)",
-      logoAllDesc: "All 3 locks active (Default: White)",
+      logoCapsDesc: "Caps Lock indicator (#FF0000)",
+      logoNumDesc: "Num Lock indicator (#001EFF)",
+      logoScrollDesc: "Scroll Lock indicator (#32FF00)",
+      logoCapsNumDesc: "Caps + Num Lock active (#FF3200)",
+      logoCapsScrollDesc: "Caps + Scroll Lock active (#FFFF00)",
+      logoNumScrollDesc: "Num + Scroll Lock active (#00C8FF)",
+      logoAllDesc: "All 3 locks active (#FFFFFF)",
 
       // Audio Visualizer
       audioCardTitle: "🎵 Real-Time Audio Visualizer & Spectrum",
@@ -6007,13 +6020,13 @@ input:checked + .switch-slider:before {
       optLogoRgb: "Efekt RGB Matrix (Domyślny)",
       optLogoLockRgb: "Wskaźnik Blokad (RGB gdy nieaktywne)",
       optLogoLockOff: "Wskaźnik Blokad (Wyłączona gdy nieaktywne)",
-      logoCapsDesc: "Wskaźnik wielkich liter (Domyślnie: Czerwony)",
-      logoNumDesc: "Wskaźnik klawiatury numerycznej (Domyślnie: Niebieski)",
-      logoScrollDesc: "Wskaźnik blokady przewijania (Domyślnie: Zielony)",
-      logoCapsNumDesc: "Równoczesna blokada Caps i Num (Domyślnie: Magenta)",
-      logoCapsScrollDesc: "Równoczesna blokada Caps i Scroll (Domyślnie: Żółty)",
-      logoNumScrollDesc: "Równoczesna blokada Num i Scroll (Domyślnie: Cyjan)",
-      logoAllDesc: "Wszystkie 3 blokady aktywne (Domyślnie: Biały)",
+      logoCapsDesc: "Wskaźnik wielkich liter (#FF0000)",
+      logoNumDesc: "Wskaźnik klawiatury numerycznej (#001EFF)",
+      logoScrollDesc: "Wskaźnik blokady przewijania (#32FF00)",
+      logoCapsNumDesc: "Równoczesna blokada Caps i Num (#FF3200)",
+      logoCapsScrollDesc: "Równoczesna blokada Caps i Scroll (#FFFF00)",
+      logoNumScrollDesc: "Równoczesna blokada Num i Scroll (#00C8FF)",
+      logoAllDesc: "Wszystkie 3 blokady aktywne (#FFFFFF)",
 
       // Audio Visualizer
       audioCardTitle: "🎵 Wizualizer Audio i Muzyki w Czasie Rzeczywistym",
@@ -6979,10 +6992,7 @@ input:checked + .switch-slider:before {
           keyEl.style.cursor = "default";
         } else if (key.isKnob) {
           keyEl.classList.add("keycap-knob");
-          keyEl.innerHTML = `
-            <div class="knob-icon">🎛️</div>
-            <div class="key-primary">${primaryLabel}</div>
-          `;
+          keyEl.innerHTML = `<div class="knob-icon">🎛️</div>`;
         } else {
           keyEl.innerHTML = `
             <div class="key-secondary">${key.label}</div>
@@ -7283,13 +7293,13 @@ input:checked + .switch-slider:before {
           layer3Color: [200, 255],  // Magenta
           logoMode: 1,              // Lock indicator mode
           lockColors: {
-            caps: [0, 255],         // Red
-            num: [145, 255],        // Blue
-            scroll: [85, 255],      // Green
-            capsNum: [213, 255],    // Magenta
-            capsScroll: [43, 255],  // Yellow
-            numScroll: [106, 255],  // Cyan
-            all: [0, 0]             // White
+            caps: [0, 255],         // #FF0000 (Red)
+            num: [165, 255],        // #001EFF (Blue)
+            scroll: [77, 255],      // #32FF00 (Lime Green)
+            capsNum: [8, 255],      // #FF3200 (Orange)
+            capsScroll: [43, 255],  // #FFFF00 (Yellow)
+            numScroll: [137, 255],  // #00C8FF (Cyan)
+            all: [0, 0]             // #FFFFFF (White)
           },
           winLockMode: 0,           // 0: Animation, 1: Off, 2: Custom Color
           winLockColor: [0, 255],   // Default Red

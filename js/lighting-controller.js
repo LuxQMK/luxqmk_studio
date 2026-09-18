@@ -124,13 +124,13 @@
           layer3Color: [200, 255],  // Magenta
           logoMode: 1,              // Lock indicator mode
           lockColors: {
-            caps: [0, 255],         // Red
-            num: [145, 255],        // Blue
-            scroll: [85, 255],      // Green
-            capsNum: [213, 255],    // Magenta
-            capsScroll: [43, 255],  // Yellow
-            numScroll: [106, 255],  // Cyan
-            all: [0, 0]             // White
+            caps: [0, 255],         // #FF0000 (Red)
+            num: [165, 255],        // #001EFF (Blue)
+            scroll: [77, 255],      // #32FF00 (Lime Green)
+            capsNum: [8, 255],      // #FF3200 (Orange)
+            capsScroll: [43, 255],  // #FFFF00 (Yellow)
+            numScroll: [137, 255],  // #00C8FF (Cyan)
+            all: [0, 0]             // #FFFFFF (White)
           },
           winLockMode: 0,           // 0: Animation, 1: Off, 2: Custom Color
           winLockColor: [0, 255],   // Default Red

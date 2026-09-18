@@ -61,9 +61,16 @@ def bundle():
             with open(abs_path, "r", encoding="utf-8") as f:
                 all_js.append(f"/* === {rel_path} === */\n" + f.read())
             html = re.sub(rf'<script\s+src="{re.escape(rel_path)}"></script>', '', html)
-
     js_tag = f"<script>\n{chr(10).join(all_js)}\n</script>"
     html = html.replace("</body>", f"  {js_tag}\n</body>")
+
+    # Inlining images (icon.png -> Base64 data URI)
+    import base64
+    icon_path = os.path.join(SRC_DIR, "assets", "icon.png")
+    if os.path.exists(icon_path):
+        with open(icon_path, "rb") as img_f:
+            b64_img = base64.b64encode(img_f.read()).decode("utf-8")
+        html = html.replace('src="assets/icon.png"', f'src="data:image/png;base64,{b64_img}"')
 
     # Write primary bundle
     with open(OUTPUT_FILE_PRIMARY, "w", encoding="utf-8") as f:

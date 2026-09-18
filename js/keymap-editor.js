@@ -215,10 +215,7 @@
           keyEl.style.cursor = "default";
         } else if (key.isKnob) {
           keyEl.classList.add("keycap-knob");
-          keyEl.innerHTML = `
-            <div class="knob-icon">🎛️</div>
-            <div class="key-primary">${primaryLabel}</div>
-          `;
+          keyEl.innerHTML = `<div class="knob-icon">🎛️</div>`;
         } else {
           keyEl.innerHTML = `
             <div class="key-secondary">${key.label}</div>
