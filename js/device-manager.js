@@ -102,7 +102,7 @@
         } else if (this.firmwareInfo) {
           hwProto.textContent = `Legacy VIA / QMK (Unknown LuxQMK version)`;
         } else {
-          hwProto.textContent = `LuxQMK v${STUDIO_VERSION} (QMK v0.22.14 / VIA v12)`;
+          hwProto.textContent = `LuxQMK v${STUDIO_VERSION} (QMK v0.34.4 / VIA v12)`;
         }
       }
 
