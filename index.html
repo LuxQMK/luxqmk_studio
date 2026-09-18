@@ -64,11 +64,14 @@
       </nav>
 
       <div class="sidebar-footer">
-        <div data-i18n="lblDeviceStatus">Device Status:</div>
-        <div class="device-chip" id="deviceChip">
-          <div class="chip-dot"></div>
-          <span id="deviceChipName">Disconnected</span>
-        </div>
+        <button class="sidebar-footer-btn" id="btnCheckUpdates">
+          <span class="footer-btn-icon">🔄</span>
+          <span data-i18n="btnCheckUpdates">Check for Updates</span>
+        </button>
+        <button class="sidebar-footer-btn" id="btnAboutApp">
+          <span class="footer-btn-icon">ℹ️</span>
+          <span data-i18n="btnAboutApp">About & Author</span>
+        </button>
       </div>
     </aside>
 
@@ -933,6 +936,77 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- About & Legal Modal -->
+  <div class="modal-overlay" id="aboutModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="sidebar-logo-badge" style="width: 32px; height: 32px;">
+            <img src="assets/icon.png" alt="LuxQMK" class="sidebar-logo-img">
+          </div>
+          <div>
+            <h3 class="modal-title" data-i18n="modalAboutTitle">About LuxQMK Studio</h3>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">Version 1.0.0 (Build 2026.09)</span>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btnCloseAboutModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>👤</span> <span data-i18n="lblAuthorTitle">Project Author</span>
+          </div>
+          <div class="modal-section-content">
+            <strong style="font-size: 1.05rem; color: #ffffff;" data-i18n="lblAuthorName">Dorian Piwnik</strong>
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.2rem;" data-i18n="lblAuthorRole">Creator & Lead Developer of the LuxQMK Project</p>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>📜</span> <span data-i18n="lblLicenseTitle">License</span>
+          </div>
+          <div class="modal-section-content" style="font-size: 0.85rem;" data-i18n="lblLicenseDesc">
+            • <strong>LuxQMK Studio Application</strong>: Open Source MIT License<br>
+            • <strong>LuxQMK Firmware</strong>: GNU General Public License v2 / v3 (GPL)
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>🌐</span> <span data-i18n="lblWebsiteTitle">Project Website</span>
+          </div>
+          <div class="modal-section-content">
+            <a href="https://luxqmk.click" target="_blank" style="color: var(--secondary); text-decoration: underline; font-weight: 600;">luxqmk.click</a>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>🐙</span> <span data-i18n="lblGithubTitle">GitHub</span>
+          </div>
+          <div class="modal-section-content">
+            <a href="https://github.com/LuxQMK" target="_blank" style="color: var(--secondary); text-decoration: underline; font-weight: 600;">github.com/LuxQMK</a>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>⚖️</span> <span data-i18n="lblLegalTitle">Legal Notices & Disclaimer</span>
+          </div>
+          <div class="modal-section-content" style="font-size: 0.78rem; color: var(--text-dim); line-height: 1.55;" data-i18n="lblLegalDesc">
+            LuxQMK Studio is an independent companion configuration suite developed for keyboards running LuxQMK custom firmware (fork of QMK Firmware) communicating via standard WebHID / VIA protocol channels.<br><br>
+            QMK Firmware is open-source software licensed under GPLv2+. VIA is an open configuration protocol standard.<br><br>
+            All product names, logos, trademarks, and registered trademarks (including Glorious, GMMK 3, GMMK 2, WB32) are property of their respective owners and are used solely for identification and compatibility purposes.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnOkAboutModal" style="min-width: 90px;" data-i18n="btnOk">OK</button>
+      </div>
+    </div>
   </div>
 
   <!-- Toast Notification Container -->

@@ -113,31 +113,47 @@
 }
 
 .sidebar-footer {
-  padding: 1.25rem;
+  padding: 0.85rem 1rem 1rem 1rem;
   border-top: 1px solid var(--border-color);
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.sidebar-footer-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: var(--transition-normal);
+  width: 100%;
+  text-align: left;
+}
+
+.sidebar-footer-btn:hover {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-1px);
+}
+
+.sidebar-footer-btn .footer-btn-icon {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  flex-shrink: 0;
 }
 
 .device-chip {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  margin-top: 0.5rem;
-}
-
-.device-chip .chip-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent-amber);
-}
-
-.device-chip.connected .chip-dot {
-  background: var(--accent-green);
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  display: none;
 }

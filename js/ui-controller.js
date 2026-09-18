@@ -16,7 +16,37 @@
       this._bindLangSelect();
       this._initDesktopFeatures();
       this._initSettingsControls();
+      this._initFooterAndModals();
       this._initResponsiveKeyboardFit();
+    }
+
+    _initFooterAndModals() {
+      // 1. About & Legal Modal
+      const btnAbout = document.getElementById("btnAboutApp");
+      const aboutModal = document.getElementById("aboutModal");
+      const btnCloseAbout = document.getElementById("btnCloseAboutModal");
+      const btnOkAbout = document.getElementById("btnOkAboutModal");
+
+      if (btnAbout && aboutModal) {
+        btnAbout.addEventListener("click", () => {
+          aboutModal.classList.add("active");
+        });
+
+        const closeAbout = () => aboutModal.classList.remove("active");
+        btnCloseAbout?.addEventListener("click", closeAbout);
+        btnOkAbout?.addEventListener("click", closeAbout);
+        aboutModal.addEventListener("click", (e) => {
+          if (e.target === aboutModal) closeAbout();
+        });
+      }
+
+      // 2. Check for Updates
+      const btnCheckUpdates = document.getElementById("btnCheckUpdates");
+      if (btnCheckUpdates) {
+        btnCheckUpdates.addEventListener("click", () => {
+          this.showToast(window.i18n.t("msgUpdateCheckLatest"), "info");
+        });
+      }
     }
 
     async _initDesktopFeatures() {

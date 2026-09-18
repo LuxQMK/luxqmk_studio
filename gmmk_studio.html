@@ -190,33 +190,49 @@
 }
 
 .sidebar-footer {
-  padding: 1.25rem;
+  padding: 0.85rem 1rem 1rem 1rem;
   border-top: 1px solid var(--border-color);
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.sidebar-footer-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: var(--transition-normal);
+  width: 100%;
+  text-align: left;
+}
+
+.sidebar-footer-btn:hover {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-1px);
+}
+
+.sidebar-footer-btn .footer-btn-icon {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  flex-shrink: 0;
 }
 
 .device-chip {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  margin-top: 0.5rem;
-}
-
-.device-chip .chip-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent-amber);
-}
-
-.device-chip.connected .chip-dot {
-  background: var(--accent-green);
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  display: none;
 }
 
 /* === css/layout.css === */
@@ -1784,6 +1800,135 @@ input:checked + .switch-slider:before {
   flex-shrink: 0;
 }
 
+/* ==========================================================================
+   Modal Dialog Component
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(8, 12, 22, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px var(--primary-glow);
+  width: 92%;
+  max-width: 580px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.95) translateY(10px);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-overlay.active .modal-card {
+  transform: scale(1) translateY(0);
+}
+
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.modal-section {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+}
+
+.modal-section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary);
+  margin-bottom: 0.45rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.modal-section-content {
+  color: var(--text-main);
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(255, 255, 255, 0.02);
+}
+
 </style>
 </head>
 <body>
@@ -1839,11 +1984,14 @@ input:checked + .switch-slider:before {
       </nav>
 
       <div class="sidebar-footer">
-        <div data-i18n="lblDeviceStatus">Device Status:</div>
-        <div class="device-chip" id="deviceChip">
-          <div class="chip-dot"></div>
-          <span id="deviceChipName">Disconnected</span>
-        </div>
+        <button class="sidebar-footer-btn" id="btnCheckUpdates">
+          <span class="footer-btn-icon">🔄</span>
+          <span data-i18n="btnCheckUpdates">Check for Updates</span>
+        </button>
+        <button class="sidebar-footer-btn" id="btnAboutApp">
+          <span class="footer-btn-icon">ℹ️</span>
+          <span data-i18n="btnAboutApp">About & Author</span>
+        </button>
       </div>
     </aside>
 
@@ -2708,6 +2856,77 @@ input:checked + .switch-slider:before {
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- About & Legal Modal -->
+  <div class="modal-overlay" id="aboutModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="sidebar-logo-badge" style="width: 32px; height: 32px;">
+            <img src="data:image/png;base64,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" alt="LuxQMK" class="sidebar-logo-img">
+          </div>
+          <div>
+            <h3 class="modal-title" data-i18n="modalAboutTitle">About LuxQMK Studio</h3>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">Version 1.0.0 (Build 2026.09)</span>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btnCloseAboutModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>👤</span> <span data-i18n="lblAuthorTitle">Project Author</span>
+          </div>
+          <div class="modal-section-content">
+            <strong style="font-size: 1.05rem; color: #ffffff;" data-i18n="lblAuthorName">Dorian Piwnik</strong>
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.2rem;" data-i18n="lblAuthorRole">Creator & Lead Developer of the LuxQMK Project</p>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>📜</span> <span data-i18n="lblLicenseTitle">License</span>
+          </div>
+          <div class="modal-section-content" style="font-size: 0.85rem;" data-i18n="lblLicenseDesc">
+            • <strong>LuxQMK Studio Application</strong>: Open Source MIT License<br>
+            • <strong>LuxQMK Firmware</strong>: GNU General Public License v2 / v3 (GPL)
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>🌐</span> <span data-i18n="lblWebsiteTitle">Project Website</span>
+          </div>
+          <div class="modal-section-content">
+            <a href="https://luxqmk.click" target="_blank" style="color: var(--secondary); text-decoration: underline; font-weight: 600;">luxqmk.click</a>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>🐙</span> <span data-i18n="lblGithubTitle">GitHub</span>
+          </div>
+          <div class="modal-section-content">
+            <a href="https://github.com/LuxQMK" target="_blank" style="color: var(--secondary); text-decoration: underline; font-weight: 600;">github.com/LuxQMK</a>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>⚖️</span> <span data-i18n="lblLegalTitle">Legal Notices & Disclaimer</span>
+          </div>
+          <div class="modal-section-content" style="font-size: 0.78rem; color: var(--text-dim); line-height: 1.55;" data-i18n="lblLegalDesc">
+            LuxQMK Studio is an independent companion configuration suite developed for keyboards running LuxQMK custom firmware (fork of QMK Firmware) communicating via standard WebHID / VIA protocol channels.<br><br>
+            QMK Firmware is open-source software licensed under GPLv2+. VIA is an open configuration protocol standard.<br><br>
+            All product names, logos, trademarks, and registered trademarks (including Glorious, GMMK 3, GMMK 2, WB32) are property of their respective owners and are used solely for identification and compatibility purposes.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnOkAboutModal" style="min-width: 90px;" data-i18n="btnOk">OK</button>
+      </div>
+    </div>
   </div>
 
   <!-- Toast Notification Container -->
@@ -5592,6 +5811,22 @@ input:checked + .switch-slider:before {
       btnConnect: "Connect Keyboard",
       btnDisconnect: "Disconnect",
       btnRefresh: "Refresh",
+      btnCheckUpdates: "Check for Updates",
+      btnAboutApp: "About & Author",
+      btnOk: "OK",
+      modalAboutTitle: "About LuxQMK Studio",
+      lblAuthorTitle: "Project Author",
+      lblAuthorName: "Dorian Piwnik",
+      lblAuthorRole: "Creator & Lead Developer of the LuxQMK Project",
+      lblLicenseTitle: "License",
+      lblLicenseDesc: "• <strong>LuxQMK Studio Application</strong>: Open Source MIT License<br>• <strong>LuxQMK Firmware</strong>: GNU General Public License v2 / v3 (GPL)",
+      lblWebsiteTitle: "Project Website",
+      lblGithubTitle: "GitHub",
+      lblWebsiteStatus: "(Official documentation and website coming soon)",
+      lblLegalTitle: "Legal Notices & Disclaimer",
+      lblLegalDesc: "LuxQMK Studio is an independent companion configuration suite developed for keyboards running LuxQMK custom firmware (fork of QMK Firmware) communicating via standard WebHID / VIA protocol channels.<br><br>QMK Firmware is open-source software licensed under GPLv2+. VIA is an open configuration protocol standard.<br><br>All product names, logos, trademarks, and registered trademarks (including Glorious, GMMK 3, GMMK 2, WB32) are property of their respective owners and are used solely for identification and compatibility purposes.",
+      msgUpdateCheckTitle: "LuxQMK Studio Updates",
+      msgUpdateCheckLatest: "You are running the latest version of LuxQMK Studio (v1.0.0). Automatic update downloads will be available soon!",
       tooltipAddDevice: "Add / Pair New Device (+)",
       optSearchingDevices: "Searching for devices...",
       optNoDevices: "No devices found (Click + to connect)",
@@ -5901,6 +6136,22 @@ input:checked + .switch-slider:before {
       btnConnect: "Połącz Klawiaturę",
       btnDisconnect: "Rozłącz",
       btnRefresh: "Odśwież",
+      btnCheckUpdates: "Sprawdź aktualizacje",
+      btnAboutApp: "O programie i Autor",
+      btnOk: "OK",
+      modalAboutTitle: "O programie LuxQMK Studio",
+      lblAuthorTitle: "Autor projektu",
+      lblAuthorName: "Dorian Piwnik",
+      lblAuthorRole: "Główny twórca i programista projektu LuxQMK",
+      lblLicenseTitle: "Licencja",
+      lblLicenseDesc: "• <strong>Aplikacja LuxQMK Studio</strong>: Open Source MIT License<br>• <strong>Firmware LuxQMK</strong>: GNU General Public License v2 / v3 (GPL)",
+      lblWebsiteTitle: "Strona projektu",
+      lblGithubTitle: "GitHub",
+      lblWebsiteStatus: "(Oficjalna strona i repozytorium w przygotowaniu — wkrótce)",
+      lblLegalTitle: "Informacje prawne i nota licencyjna",
+      lblLegalDesc: "LuxQMK Studio jest niezależnym oprogramowaniem towarzyszącym do konfiguracji klawiatur bazującym na protokole WebHID oraz VIA. Komponenty firmware stanowią zmodyfikowany fork QMK Firmware na licencji GNU GPL v2/v3.<br><br>QMK Firmware jest oprogramowaniem open-source na licencji GPLv2+. VIA jest otwartym standardem protokołu konfiguracji.<br><br>Wszelkie nazwy produktów, logotypy, znaki towarowe i zarejestrowane znaki handlowe (w tym Glorious, GMMK 3, GMMK 2, WB32) należą do ich prawnych właścicieli i zostały użyte wyłącznie w celach informacyjnych oraz identyfikacji kompatybilności sprzętowej.",
+      msgUpdateCheckTitle: "Aktualizacje LuxQMK Studio",
+      msgUpdateCheckLatest: "Posiadasz najnowszą wersję LuxQMK Studio (v1.0.0). Automatyczne pobieranie aktualizacji z poziomu programu będzie dostępne wkrótce!",
       tooltipAddDevice: "Dodaj / Połącz nowe urządzenie (+)",
       optSearchingDevices: "Wyszukiwanie urządzeń...",
       optNoDevices: "Brak urządzeń (Kliknij + aby połączyć)",
@@ -10169,7 +10420,37 @@ input:checked + .switch-slider:before {
       this._bindLangSelect();
       this._initDesktopFeatures();
       this._initSettingsControls();
+      this._initFooterAndModals();
       this._initResponsiveKeyboardFit();
+    }
+
+    _initFooterAndModals() {
+      // 1. About & Legal Modal
+      const btnAbout = document.getElementById("btnAboutApp");
+      const aboutModal = document.getElementById("aboutModal");
+      const btnCloseAbout = document.getElementById("btnCloseAboutModal");
+      const btnOkAbout = document.getElementById("btnOkAboutModal");
+
+      if (btnAbout && aboutModal) {
+        btnAbout.addEventListener("click", () => {
+          aboutModal.classList.add("active");
+        });
+
+        const closeAbout = () => aboutModal.classList.remove("active");
+        btnCloseAbout?.addEventListener("click", closeAbout);
+        btnOkAbout?.addEventListener("click", closeAbout);
+        aboutModal.addEventListener("click", (e) => {
+          if (e.target === aboutModal) closeAbout();
+        });
+      }
+
+      // 2. Check for Updates
+      const btnCheckUpdates = document.getElementById("btnCheckUpdates");
+      if (btnCheckUpdates) {
+        btnCheckUpdates.addEventListener("click", () => {
+          this.showToast(window.i18n.t("msgUpdateCheckLatest"), "info");
+        });
+      }
     }
 
     async _initDesktopFeatures() {
