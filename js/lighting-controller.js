@@ -975,7 +975,26 @@
                 break;
               }
 
-              case 6: { // REACTIVE_MODE_HEATMAP
+              case 6: { // REACTIVE_MODE_WIDE (Wide solid expanding wave)
+                let sumInt = 0;
+                for (let j = 0; j < this.hits.length; j++) {
+                  const hit = this.hits[j];
+                  if (!hit || !Number.isFinite(hit.time)) continue;
+                  const dx = k.qmkX - hit.x;
+                  const dy = k.qmkY - hit.y;
+                  const dist = Math.sqrt(dx * dx + dy * dy);
+                  const elapsedSec = (now - hit.time) / 1000;
+                  const tick = Math.min(255, Math.floor(elapsedSec * 60 * rSpdScale * 2.5));
+                  const eff = tick - dist;
+                  if (eff >= 0 && eff < 48 && tick < 255) {
+                    sumInt = Math.min(255, sumInt + Math.floor((48 - eff) * (255 - tick) / 48));
+                  }
+                }
+                reactiveIntensity = sumInt;
+                break;
+              }
+
+              case 7: { // REACTIVE_MODE_HEATMAP
                 const curHeat = this.keyHeat.get(k.id) || 0;
                 if (curHeat > 0) {
                   reactiveIntensity = Math.round(curHeat);
@@ -1076,7 +1095,7 @@
         const dimVal = Math.round((this.state.custom.layerDimLevel / 255) * 100);
         badge.innerHTML = window.i18n ? window.i18n.t("badgeLayerActive", { layer: activeLyr, dim: dimVal }) : `🎨 Layer ${activeLyr} Active • Dimming: ${dimVal}%`;
       } else if (this.activeTab === "reactive") {
-        const rEffNames = ["Disabled", "Fade", "Splash Ripple", "Rainbow Splash", "Cross +", "Nexus X", "Typing Heatmap"];
+        const rEffNames = ["Disabled", "Fade", "Splash Ripple", "Rainbow Splash", "Cross +", "Nexus X", "Wide Wave", "Typing Heatmap"];
         const curRMode = this.state.custom.reactiveMode || 0;
         const modeLabel = rEffNames[curRMode] || 'Active';
         badge.innerHTML = this.state.custom.reactiveEnable
@@ -1346,7 +1365,7 @@
 
       const reactiveColorGrp = document.getElementById("reactiveColorGroup");
       if (reactiveColorGrp) {
-        reactiveColorGrp.style.display = (this.state.custom.reactiveMode === 3 || this.state.custom.reactiveMode === 6) ? "none" : "block";
+        reactiveColorGrp.style.display = (this.state.custom.reactiveMode === 3 || this.state.custom.reactiveMode === 7) ? "none" : "block";
       }
 
       const sliderReactiveSpd = document.getElementById("reactiveSpeedSlider");
@@ -1553,7 +1572,7 @@
         this.state.custom.reactiveMode = val;
         const colorGrp = document.getElementById("reactiveColorGroup");
         if (colorGrp) {
-          colorGrp.style.display = (val === 3 || val === 6) ? "none" : "block";
+          colorGrp.style.display = (val === 3 || val === 7) ? "none" : "block";
         }
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.REACTIVE_MODE, val);

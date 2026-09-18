@@ -2292,12 +2292,13 @@ input:checked + .switch-slider:before {
               <label data-i18n="lblReactiveEffect">Reactive Effect</label>
               <select id="reactiveModeSelect" class="form-control">
                 <option value="0" data-i18n="optReactiveOff">Disabled</option>
-                <option value="1" data-i18n="optReactiveFade">Reactive Fade</option>
-                <option value="2" data-i18n="optReactiveSplash">Splash Ripple (Single Color)</option>
+                <option value="1" data-i18n="optReactiveFade">Reactive Fade (Simple)</option>
+                <option value="2" data-i18n="optReactiveSplash">Splash Ripple (Solid Color)</option>
                 <option value="3" data-i18n="optReactiveSplashRainbow">Splash Ripple (Rainbow)</option>
                 <option value="4" data-i18n="optReactiveCross">Reactive Cross (+)</option>
                 <option value="5" data-i18n="optReactiveNexus">Reactive Nexus (X)</option>
-                <option value="6" data-i18n="optReactiveHeatmap">Typing Heatmap</option>
+                <option value="6" data-i18n="optReactiveWide">Reactive Wide Wave</option>
+                <option value="7" data-i18n="optReactiveHeatmap">Typing Heatmap</option>
               </select>
             </div>
 
@@ -5921,6 +5922,7 @@ input:checked + .switch-slider:before {
       optReactiveSplashRainbow: "Splash Ripple (Rainbow)",
       optReactiveCross: "Reactive Cross (+)",
       optReactiveNexus: "Reactive Nexus (X)",
+      optReactiveWide: "Reactive Wide Wave",
       optReactiveHeatmap: "Typing Heatmap",
       lblReactiveColor: "Reactive Effect Color",
       lblReactiveColorHint: "Color of ripples and reactive flashes",
@@ -6246,6 +6248,7 @@ input:checked + .switch-slider:before {
       optReactiveSplashRainbow: "Fala Tęczowa (Rainbow Splash)",
       optReactiveCross: "Krzyż (Reactive Cross +)",
       optReactiveNexus: "Gwiazda (Reactive Nexus X)",
+      optReactiveWide: "Szeroka Fala (Wide Wave)",
       optReactiveHeatmap: "Heatmapa Pisania (Typing Heatmap)",
       lblReactiveColor: "Kolor Błysku Reaktywnego",
       lblReactiveColorHint: "Barwa fali i rozbłysków dla efektów jednokolorowych",
@@ -8397,7 +8400,26 @@ input:checked + .switch-slider:before {
                 break;
               }
 
-              case 6: { // REACTIVE_MODE_HEATMAP
+              case 6: { // REACTIVE_MODE_WIDE (Wide solid expanding wave)
+                let sumInt = 0;
+                for (let j = 0; j < this.hits.length; j++) {
+                  const hit = this.hits[j];
+                  if (!hit || !Number.isFinite(hit.time)) continue;
+                  const dx = k.qmkX - hit.x;
+                  const dy = k.qmkY - hit.y;
+                  const dist = Math.sqrt(dx * dx + dy * dy);
+                  const elapsedSec = (now - hit.time) / 1000;
+                  const tick = Math.min(255, Math.floor(elapsedSec * 60 * rSpdScale * 2.5));
+                  const eff = tick - dist;
+                  if (eff >= 0 && eff < 48 && tick < 255) {
+                    sumInt = Math.min(255, sumInt + Math.floor((48 - eff) * (255 - tick) / 48));
+                  }
+                }
+                reactiveIntensity = sumInt;
+                break;
+              }
+
+              case 7: { // REACTIVE_MODE_HEATMAP
                 const curHeat = this.keyHeat.get(k.id) || 0;
                 if (curHeat > 0) {
                   reactiveIntensity = Math.round(curHeat);
@@ -8498,7 +8520,7 @@ input:checked + .switch-slider:before {
         const dimVal = Math.round((this.state.custom.layerDimLevel / 255) * 100);
         badge.innerHTML = window.i18n ? window.i18n.t("badgeLayerActive", { layer: activeLyr, dim: dimVal }) : `🎨 Layer ${activeLyr} Active • Dimming: ${dimVal}%`;
       } else if (this.activeTab === "reactive") {
-        const rEffNames = ["Disabled", "Fade", "Splash Ripple", "Rainbow Splash", "Cross +", "Nexus X", "Typing Heatmap"];
+        const rEffNames = ["Disabled", "Fade", "Splash Ripple", "Rainbow Splash", "Cross +", "Nexus X", "Wide Wave", "Typing Heatmap"];
         const curRMode = this.state.custom.reactiveMode || 0;
         const modeLabel = rEffNames[curRMode] || 'Active';
         badge.innerHTML = this.state.custom.reactiveEnable
@@ -8768,7 +8790,7 @@ input:checked + .switch-slider:before {
 
       const reactiveColorGrp = document.getElementById("reactiveColorGroup");
       if (reactiveColorGrp) {
-        reactiveColorGrp.style.display = (this.state.custom.reactiveMode === 3 || this.state.custom.reactiveMode === 6) ? "none" : "block";
+        reactiveColorGrp.style.display = (this.state.custom.reactiveMode === 3 || this.state.custom.reactiveMode === 7) ? "none" : "block";
       }
 
       const sliderReactiveSpd = document.getElementById("reactiveSpeedSlider");
@@ -8975,7 +8997,7 @@ input:checked + .switch-slider:before {
         this.state.custom.reactiveMode = val;
         const colorGrp = document.getElementById("reactiveColorGroup");
         if (colorGrp) {
-          colorGrp.style.display = (val === 3 || val === 6) ? "none" : "block";
+          colorGrp.style.display = (val === 3 || val === 7) ? "none" : "block";
         }
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.REACTIVE_MODE, val);
