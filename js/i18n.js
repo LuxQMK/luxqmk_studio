@@ -694,13 +694,15 @@
     }
 
     translatePage() {
-      // 1. Standard text content
+      // 1. Standard text content & HTML formatting
       document.querySelectorAll("[data-i18n]").forEach((el) => {
         const key = el.dataset.i18n;
         const translation = this.t(key);
         if (translation) {
           if (el.tagName === "INPUT" && el.type === "placeholder") {
             el.placeholder = translation;
+          } else if (/<[a-z][\s\S]*>/i.test(translation)) {
+            el.innerHTML = translation;
           } else {
             el.textContent = translation;
           }
