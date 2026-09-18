@@ -1,7 +1,7 @@
 {
   "name": "luxqmk-studio",
   "productName": "LuxQMK Studio",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "LuxQMK Studio - Professional Keyboard Configuration, Audio Visualizer & RGB Suite",
   "main": "main.js",
   "scripts": {
