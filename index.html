@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LuxQMK Studio - QMK / VIA Configuration Hub</title>
+  
+  <!-- Modular Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+<div class="app-wrapper">
+    <!-- LEFT SIDEBAR NAVIGATION -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-logo-badge">G3</div>
+        <div class="sidebar-brand-text">
+          <h2 data-i18n="appName">LuxQMK Studio</h2>
+          <span data-i18n="appSubtitle">QMK / VIA Hub</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item-btn active" data-view="keymap">
+          <span class="nav-icon">🎮</span>
+          <span data-i18n="navKeymap">Keymap Editor</span>
+        </button>
+
+        <button class="nav-item-btn" data-view="encoder">
+          <span class="nav-icon">🎛️</span>
+          <span data-i18n="navEncoder">Rotary Knob</span>
+        </button>
+
+        <button class="nav-item-btn" data-view="tester">
+          <span class="nav-icon">⌨️</span>
+          <span data-i18n="navTester">Key Tester</span>
+        </button>
+
+        <button class="nav-item-btn" data-view="lighting">
+          <span class="nav-icon">💡</span>
+          <span data-i18n="navLighting">Lighting Studio</span>
+        </button>
+
+        <button class="nav-item-btn" data-view="audio">
+          <span class="nav-icon">🎵</span>
+          <span data-i18n="navAudio">Audio Visualizer</span>
+        </button>
+
+        <button class="nav-item-btn" data-view="backup">
+          <span class="nav-icon">💾</span>
+          <span data-i18n="navBackup">Profiles & Backup</span>
+        </button>
+
+        <button class="nav-item-btn" data-view="settings">
+          <span class="nav-icon">⚙️</span>
+          <span data-i18n="navSettings">Device Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div data-i18n="lblDeviceStatus">Device Status:</div>
+        <div class="device-chip" id="deviceChip">
+          <div class="chip-dot"></div>
+          <span id="deviceChipName">Disconnected</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN APP CONTENT -->
+    <main class="main-content">
+      <!-- Top Action Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <div class="view-title-wrap">
+            <h1 id="topBarViewTitle" data-i18n="viewKeymapTitle">Visual Keymap Editor</h1>
+            <p id="topBarViewSubtitle" data-i18n="viewKeymapSubtitle">Real-time key assignment for hardware layers 0 to 2</p>
+          </div>
+        </div>
+
+        <!-- Center Device Selector (Top Bar) -->
+        <div class="top-bar-center">
+          <div class="custom-device-selector" id="customDeviceSelector">
+            <button class="device-selector-btn" id="deviceSelectorBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="device-status-dot" id="deviceSelectorDot"></span>
+              <span class="device-icon">⌨️</span>
+              <span class="device-name-display" id="deviceNameDisplay">Searching for devices...</span>
+              <span class="device-badge" id="deviceStatusBadge">Disconnected</span>
+              <span class="device-chevron">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </button>
+            <button id="btnAddDevice" class="btn-pair-device" title="Add / Pair New Device (+)" data-i18n-title="tooltipAddDevice" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+
+            <!-- Custom Dropdown Menu -->
+            <div class="device-dropdown-menu" id="deviceDropdownMenu" role="listbox">
+              <div class="device-dropdown-header" data-i18n="lblConnectedDevices">Authorized Devices</div>
+              <div class="device-dropdown-list" id="deviceDropdownList"></div>
+              <div class="device-dropdown-divider"></div>
+              <button class="device-dropdown-item add-device-item" id="deviceDropdownAddBtn" type="button">
+                <span class="item-icon-svg">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </span>
+                <span class="item-text" data-i18n="optAddNewDevice">Add / Pair new device...</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="top-bar-actions">
+          <button class="btn btn-secondary" id="btnRefreshDevice" disabled>
+            <span>🔄 <span data-i18n="btnRefresh">Refresh</span></span>
+          </button>
+
+          <!-- Language Selector -->
+          <select id="langSelect" class="form-control" style="width: auto; padding: 0.5rem 0.75rem;">
+            <option value="en">🇺🇸 English</option>
+            <option value="pl">🇵🇱 Polski</option>
+          </select>
+
+          <!-- Connect Button -->
+          <button class="btn btn-primary" id="btnConnect">
+            <span id="btnConnectLabel" data-i18n="btnConnect">Connect Keyboard</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- 1. VIEW: KEYMAP EDITOR -->
+      <section class="view-container active" id="view-keymap">
+        <div class="keyboard-canvas-card">
+          <div class="keyboard-canvas-header">
+            <div class="layer-selector">
+              <button class="layer-btn active" data-layer="0" data-i18n="layer0">Layer 0 (Base)</button>
+              <button class="layer-btn" data-layer="1" data-i18n="layer1">Layer 1 (Fn)</button>
+              <button class="layer-btn" data-layer="2" data-i18n="layer2">Layer 2 (Custom)</button>
+            </div>
+            <div id="selectedKeyBanner">
+              <span class="muted-text" data-i18n="selectedKeyDefault">Click any keycap on the keyboard to remap it</span>
+            </div>
+          </div>
+
+          <div class="keyboard-scroll-wrapper">
+            <div class="keyboard-canvas" id="keyboardCanvas">
+              <!-- Dynamically rendered 105 keycaps -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Keycode Palette (1:1 VIA Categories) -->
+        <div class="palette-card">
+          <div class="palette-header">
+            <div class="palette-category-tabs">
+              <button class="cat-tab-btn active" data-category="basic" data-i18n="catBasic">Basic</button>
+              <button class="cat-tab-btn" data-category="media" data-i18n="catMedia">Media</button>
+              <button class="cat-tab-btn" data-category="macro" data-i18n="catMacro">Macro</button>
+              <button class="cat-tab-btn" data-category="layers" data-i18n="catLayers">Layers</button>
+              <button class="cat-tab-btn" data-category="special" data-i18n="catSpecial">Special</button>
+              <button class="cat-tab-btn" data-category="lighting" data-i18n="catLighting">Lighting</button>
+              <button class="cat-tab-btn" data-category="custom" data-i18n="catCustom">Custom (LuxQMK)</button>
+            </div>
+          </div>
+          <div class="palette-grid" id="keycodePickerPalette">
+            <!-- Dynamically populated keycode buttons -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. VIEW: ROTARY KNOB CONFIGURATION -->
+      <section class="view-container" id="view-encoder">
+        <div class="keyboard-canvas-card" style="margin-bottom: 1.5rem;">
+          <h3 style="margin-bottom: 0.5rem;" data-i18n="viewEncoderTitle">Rotary Knob Configuration</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;" data-i18n="viewEncoderSubtitle">
+            Assign Clockwise, Counter-Clockwise, and Press actions for active layer.
+          </p>
+
+          <div class="layer-selector" style="margin-bottom: 1.5rem;">
+            <button class="layer-btn active" data-layer="0" data-i18n="layer0">Layer 0 (Base)</button>
+            <button class="layer-btn" data-layer="1" data-i18n="layer1">Layer 1 (Fn)</button>
+            <button class="layer-btn" data-layer="2" data-i18n="layer2">Layer 2 (Custom)</button>
+          </div>
+
+          <div id="encoderConfigWidget">
+            <!-- Dynamically populated 3 slots -->
+          </div>
+        </div>
+
+        <!-- Keycode Palette for Encoder -->
+        <div class="palette-card">
+          <div class="palette-header">
+            <div class="palette-category-tabs">
+              <button class="cat-tab-btn" data-category="media" data-i18n="catMedia">Media</button>
+              <button class="cat-tab-btn active" data-category="basic" data-i18n="catBasic">Basic</button>
+              <button class="cat-tab-btn" data-category="macro" data-i18n="catMacro">Macro</button>
+              <button class="cat-tab-btn" data-category="layers" data-i18n="catLayers">Layers</button>
+              <button class="cat-tab-btn" data-category="special" data-i18n="catSpecial">Special</button>
+              <button class="cat-tab-btn" data-category="lighting" data-i18n="catLighting">Lighting</button>
+              <button class="cat-tab-btn" data-category="custom" data-i18n="catCustom">Custom (LuxQMK)</button>
+            </div>
+          </div>
+          <div class="palette-grid keycodePickerPaletteContainer" id="encoderKeycodePickerPalette">
+            <!-- Dynamically populated keycode buttons -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. VIEW: KEY TESTER -->
+      <section class="view-container" id="view-tester">
+        <div class="keyboard-canvas-card">
+          <div class="keyboard-canvas-header">
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+              <h3 data-i18n="viewTesterTitle">Interactive Key Tester</h3>
+              <div class="badge-target"><span data-i18n="testedKeys">Tested Keys:</span> <strong id="testedKeysCount">0 / 105</strong></div>
+            </div>
+            <button class="btn btn-secondary" id="btnResetKeyTest" data-i18n="btnResetTest">🔄 Reset Test</button>
+          </div>
+
+          <div class="keyboard-scroll-wrapper">
+            <div class="keyboard-canvas" id="testerCanvas">
+              <!-- Interactive test keycaps -->
+            </div>
+          </div>
+
+          <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;" data-i18n="testerRecentKeys">Recently pressed keys:</label>
+            <div id="testerHistoryList" style="display: flex; flex-wrap: wrap; gap: 0.35rem; min-height: 38px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. VIEW: LIGHTING STUDIO (1:1 VIA SUB-MENUS: Backlight, Layers, Logo LED) -->
+      <section class="view-container" id="view-lighting">
+        <!-- Live RGB Visualizer Virtual Keyboard -->
+        <div class="keyboard-canvas-card" style="margin-bottom: 1.5rem;">
+          <div class="keyboard-canvas-header">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span class="live-dot-pulse"></span>
+              <h3 style="font-size: 1.05rem; font-weight: 600;" data-i18n="lightingLivePreviewTitle">Live Lighting Preview & RGB Visualizer (1:1 QMK)</h3>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+              <div class="layer-selector" id="visLayerSelector" style="padding: 0.15rem;">
+                <button class="layer-btn active" id="btnVisLayer0" data-vlayer="0" data-i18n="layer0">Layer 0 (Base)</button>
+                <button class="layer-btn" id="btnVisLayer1" data-vlayer="1" data-i18n="layer1">Layer 1 (Fn)</button>
+                <button class="layer-btn" id="btnVisLayer2" data-vlayer="2" data-i18n="layer2">Layer 2 (Custom)</button>
+              </div>
+              <button class="btn btn-secondary" id="btnHoldFnSim" data-i18n="btnHoldFn" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-color: rgba(99, 102, 241, 0.4);">
+                🔘 Hold Fn
+              </button>
+              <div class="lighting-preview-status">
+                <span class="badge-pill" id="lightingStatusBadge">🌈 Rainbow Wave • 100% Brightness</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="keyboard-scroll-wrapper">
+            <div class="keyboard-canvas" id="lightingKeyboardCanvas">
+              <!-- Dynamically populated 105 animated RGB keycaps -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Tabs Navigation -->
+        <div class="lighting-tabs-header">
+          <button class="lighting-tab-btn active" data-tab="backlight">
+            <span>💡</span> <span data-i18n="tabBacklight">Main Backlight</span>
+          </button>
+          <button class="lighting-tab-btn" data-tab="reactive">
+            <span>⚡</span> <span data-i18n="tabReactive">Reactive Layer</span>
+          </button>
+          <button class="lighting-tab-btn" data-tab="winlock">
+            <span>🔒</span> <span data-i18n="tabWinLock">Win Lock</span>
+          </button>
+          <button class="lighting-tab-btn" data-tab="layers">
+            <span>🎨</span> <span data-i18n="tabLayers">Layer Lighting</span>
+          </button>
+          <button class="lighting-tab-btn" data-tab="logo">
+            <span>💎</span> <span data-i18n="tabLogo">Logo & Locks</span>
+          </button>
+        </div>
+
+        <!-- Sub-Tab 1: Backlight (RGB Matrix Main) -->
+        <div class="lighting-subview active" id="lighting-tab-backlight">
+          <div class="palette-card" style="max-width: 680px; margin: 0 auto;">
+            <h3 style="margin-bottom: 1.25rem; font-size: 1.05rem;" data-i18n="tabBacklight">Main Backlight</h3>
+
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between;">
+                <label data-i18n="lblBrightness">Master Brightness</label>
+                <span id="rgbBriVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">255</span>
+              </div>
+              <div class="range-slider-wrap">
+                <input type="range" id="rgbBrightnessSlider" class="range-slider" min="0" max="255" value="255">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label data-i18n="lblEffect">Lighting Effect</label>
+              <select id="rgbEffectSelect" class="form-control">
+                <!-- All effects populated dynamically -->
+              </select>
+            </div>
+
+            <div class="form-group" id="rgbSpeedGroup">
+              <div style="display: flex; justify-content: space-between;">
+                <label data-i18n="lblSpeed">Animation Speed</label>
+                <span id="rgbSpdVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">128</span>
+              </div>
+              <div class="range-slider-wrap">
+                <input type="range" id="rgbSpeedSlider" class="range-slider" min="0" max="255" value="128">
+              </div>
+            </div>
+
+            <div class="form-group" id="rgbColorGroup">
+              <label data-i18n="lblRgbColor">Effect Color</label>
+              <div class="color-input-wrap">
+                <input type="color" id="rgbColorPicker" class="color-picker-input" value="#00ffff">
+                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="hintSingleColor">Set color for single-color effects</span>
+              </div>
+            </div>
+
+            <div class="switch-wrap" style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
+              <div>
+                <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblReverse">Reverse Animation Direction</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="chkRgbReverse">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Tab 2: Reactive Layer Overlay (Dual-Layer Parity) -->
+        <div class="lighting-subview" id="lighting-tab-reactive">
+          <div class="palette-card" style="max-width: 680px; margin: 0 auto;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+              <h3 style="font-size: 1.05rem;" data-i18n="reactiveSectionTitle">⚡ Reactive Layer (Dual-Layer Overlay)</h3>
+              <span class="badge-pill" id="reactiveStatusBadge" style="font-size: 0.75rem;" data-i18n="badgeDisabled">Disabled</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 1.25rem;" data-i18n="reactiveDesc">
+              Layer a reactive keystroke effect directly on top of your background animation.
+            </p>
+
+            <div class="switch-wrap" style="margin-bottom: 1.25rem;">
+              <div>
+                <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblReactiveEnable">Enable Reactive Overlay on Background</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="chkReactiveEnable">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label data-i18n="lblReactiveEffect">Reactive Effect</label>
+              <select id="reactiveModeSelect" class="form-control">
+                <option value="0" data-i18n="optReactiveOff">Disabled</option>
+                <option value="1" data-i18n="optReactiveFade">Reactive Fade</option>
+                <option value="2" data-i18n="optReactiveSplash">Splash Ripple (Single Color)</option>
+                <option value="3" data-i18n="optReactiveSplashRainbow">Splash Ripple (Rainbow)</option>
+                <option value="4" data-i18n="optReactiveCross">Reactive Cross (+)</option>
+                <option value="5" data-i18n="optReactiveNexus">Reactive Nexus (X)</option>
+                <option value="6" data-i18n="optReactiveHeatmap">Typing Heatmap</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="reactiveColorGroup">
+              <label data-i18n="lblReactiveColor">Reactive Effect Color</label>
+              <div class="color-input-wrap">
+                <input type="color" id="reactiveColorPicker" class="color-picker-input" value="#ffffff">
+                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblReactiveColorHint">Color of ripples and reactive flashes</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between;">
+                <label data-i18n="lblReactiveSpeed">Reaction Duration / Speed</label>
+                <span id="reactiveSpdVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">128</span>
+              </div>
+              <div class="range-slider-wrap">
+                <input type="range" id="reactiveSpeedSlider" class="range-slider" min="10" max="255" value="128">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label data-i18n="lblReactiveBlend">Blend Mode</label>
+              <select id="reactiveBlendSelect" class="form-control">
+                <option value="0" data-i18n="optBlendAdditive">Additive Glow (Additive)</option>
+                <option value="1" data-i18n="optBlendOverride">Solid Override</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Tab 3: Win Lock Indicator -->
+        <div class="lighting-subview" id="lighting-tab-winlock">
+          <div class="palette-card" style="max-width: 680px; margin: 0 auto;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+              <h3 style="font-size: 1.05rem;" data-i18n="winLockSectionTitle">🔒 Windows Key Lock (Win Lock)</h3>
+              <span class="badge-pill" id="winLockStatusBadge" style="font-size: 0.75rem;" data-i18n="badgeUnlocked">Unlocked</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 1.25rem;" data-i18n="winLockDesc">
+              Configure the Windows key LED behavior when Win Lock is toggled (default Fn + Win).
+            </p>
+
+            <div class="form-group">
+              <label data-i18n="lblWinLockMode">Win Lock LED Behavior</label>
+              <select id="winLockModeSelect" class="form-control">
+                <option value="0" data-i18n="optWinLockAnim">Default: Do nothing (continue animation)</option>
+                <option value="1" data-i18n="optWinLockOff">Turn off LED (LED Off)</option>
+                <option value="2" data-i18n="optWinLockColor">Set custom color (Custom Color)</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="winLockColorGroup" style="display: none;">
+              <label data-i18n="lblWinLockColor">Win Lock Indicator Color</label>
+              <div class="color-input-wrap">
+                <input type="color" id="winLockColorPicker" class="color-picker-input" value="#ff0000">
+                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblWinLockColorHint">Color of the Win key LED when locked</span>
+              </div>
+            </div>
+
+            <div class="switch-wrap" style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
+              <div>
+                <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblWinLockToggle">Toggle Win Lock (Fn + Win)</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="lblWinLockToggleHint">Test Windows key GUI lock state</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="chkWinLockToggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Tab 4: Layer Lighting -->
+        <div class="lighting-subview" id="lighting-tab-layers">
+          <div class="grid-2">
+            <div class="palette-card">
+              <h3 style="margin-bottom: 1.25rem; font-size: 1.05rem;" data-i18n="tabLayers">Layer Lighting</h3>
+
+              <div class="switch-wrap" style="margin-bottom: 1.25rem;">
+                <div>
+                  <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblLayerLightingEnable">Dim Inactive & Highlight Active Keys</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="chkLayerLighting" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between;">
+                  <label data-i18n="lblLayerDimLevel">Inactive Keys Brightness</label>
+                  <span id="layerDimVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">128</span>
+                </div>
+                <div class="range-slider-wrap">
+                  <input type="range" id="layerDimSlider" class="range-slider" min="0" max="255" value="128">
+                </div>
+              </div>
+            </div>
+
+            <div class="palette-card" style="display: flex; flex-direction: column; gap: 0.85rem;">
+              <h3 style="margin-bottom: 0.5rem; font-size: 1.05rem;" data-i18n="layerColorsTitle">Active Layer Colors</h3>
+
+              <div class="color-item-card">
+                <div class="color-item-info">
+                  <strong data-i18n="lblLayer1Color">Layer 1 Color (Fn)</strong>
+                  <span data-i18n="layer1ColorDesc">Active function keys, media controls</span>
+                </div>
+                <input type="color" id="layer1ColorPicker" class="color-picker-input" value="#ffa800">
+              </div>
+
+              <div class="color-item-card">
+                <div class="color-item-info">
+                  <strong data-i18n="lblLayer2Color">Layer 2 Color (Custom)</strong>
+                  <span data-i18n="layer2ColorDesc">Custom key mappings and macros</span>
+                </div>
+                <input type="color" id="layer2ColorPicker" class="color-picker-input" value="#00ffff">
+              </div>
+
+              <div class="color-item-card">
+                <div class="color-item-info">
+                  <strong data-i18n="lblLayer3Color">Layer 3 Color (Custom)</strong>
+                  <span data-i18n="layer3ColorDesc">Additional layer 3 assignments</span>
+                </div>
+                <input type="color" id="layer3ColorPicker" class="color-picker-input" value="#b400ff">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Tab 5: Logo & Locks -->
+        <div class="lighting-subview" id="lighting-tab-logo">
+          <div class="palette-card" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h3 style="font-size: 1.05rem; margin-bottom: 0.25rem;" data-i18n="tabLogo">Logo & Locks</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="logoSubtitle">
+                  Configure Glorious badge LED behavior and lock indicator colors next to the knob.
+                </p>
+              </div>
+              <div style="min-width: 280px;">
+                <label style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.35rem; display: block;" data-i18n="lblLogoMode">Logo Mode</label>
+                <select id="logoModeSelect" class="form-control">
+                  <option value="0" data-i18n="optLogoRgb">RGB Matrix Effect (Default)</option>
+                  <option value="1" data-i18n="optLogoLockRgb">Lock Indicator (RGB when inactive)</option>
+                  <option value="2" data-i18n="optLogoLockOff">Lock Indicator (Off when inactive)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7 Lock Indicator Color Pickers (1:1 VIA Definition) -->
+          <div class="grid-2" id="logoColorsContainer">
+            <div class="color-item-card">
+              <div class="color-item-info">
+                <strong>Caps Lock</strong>
+                <span data-i18n="logoCapsDesc">Caps Lock indicator (Default: Red)</span>
+              </div>
+              <input type="color" id="colorCaps" class="color-picker-input" value="#ff0000">
+            </div>
+
+            <div class="color-item-card">
+              <div class="color-item-info">
+                <strong>Num Lock</strong>
+                <span data-i18n="logoNumDesc">Num Lock indicator (Default: Blue)</span>
+              </div>
+              <input type="color" id="colorNum" class="color-picker-input" value="#0099ff">
+            </div>
+
+            <div class="color-item-card">
+              <div class="color-item-info">
+                <strong>Scroll Lock</strong>
+                <span data-i18n="logoScrollDesc">Scroll Lock indicator (Default: Green)</span>
+              </div>
+              <input type="color" id="colorScroll" class="color-picker-input" value="#00ff00">
+            </div>
+
+            <div class="color-item-card">
+              <div class="color-item-info">
+                <strong>Caps + Num Lock</strong>
+                <span data-i18n="logoCapsNumDesc">Caps + Num Lock active (Default: Magenta)</span>
+              </div>
+              <input type="color" id="colorCapsNum" class="color-picker-input" value="#ff00aa">
+            </div>
+
+            <div class="color-item-card">
+              <div class="color-item-info">
+                <strong>Caps + Scroll Lock</strong>
+                <span data-i18n="logoCapsScrollDesc">Caps + Scroll Lock active (Default: Yellow)</span>
+              </div>
+              <input type="color" id="colorCapsScroll" class="color-picker-input" value="#ffcc00">
+            </div>
+
+            <div class="color-item-card">
+              <div class="color-item-info">
+                <strong>Num + Scroll Lock</strong>
+                <span data-i18n="logoNumScrollDesc">Num + Scroll Lock active (Default: Cyan)</span>
+              </div>
+              <input type="color" id="colorNumScroll" class="color-picker-input" value="#00ffee">
+            </div>
+
+            <div class="color-item-card">
+              <div class="color-item-info">
+                <strong>Caps + Num + Scroll Lock</strong>
+                <span data-i18n="logoAllDesc">All 3 locks active (Default: White)</span>
+              </div>
+              <input type="color" id="colorAll" class="color-picker-input" value="#ffffff">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. VIEW: AUDIO VISUALIZER (Real-time Spectrum & Beat Reactions) -->
+      <section class="view-container" id="view-audio">
+        <div class="palette-card" style="max-width: 820px; margin: 0 auto 1.5rem auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <div>
+              <h3 style="font-size: 1.15rem; margin-bottom: 0.25rem;" data-i18n="audioCardTitle">🎵 Real-Time Audio Visualizer & Spectrum</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem;" data-i18n="audioDesc">
+                Synchronize your keyboard LEDs to music, YouTube, Spotify, and gaming sounds in real time.
+              </p>
+            </div>
+            <span class="badge-pill" id="audioStatusBadge" data-i18n="audioStatusStopped">Stopped</span>
+          </div>
+
+          <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
+            <button class="btn btn-primary" id="btnAudioToggle" style="padding: 0.75rem 1.5rem; font-weight: 600;" data-i18n="btnAudioStart">
+              ▶️ Start Audio Visualizer
+            </button>
+          </div>
+
+          <div class="grid-2" style="gap: 1.25rem;">
+            <div class="form-group">
+              <label data-i18n="audioMode">Visualization Mode</label>
+              <select id="audioModeSelect" class="form-control">
+                <option value="equalizer" data-i18n="optEqualizer">Graphic Equalizer (Spectrum Column Bars)</option>
+                <option value="bassPulse" data-i18n="optBassPulse">Bass Pulse (Beat Drop Reaction)</option>
+                <option value="audioWave" data-i18n="optAudioWave">Audio Wave (Energy Ripples)</option>
+                <option value="vuMeter" data-i18n="optVuMeter">Stereo VU Meter (Left/Right Channel Level)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label data-i18n="audioColorMode">Color Palette</label>
+              <select id="audioColorModeSelect" class="form-control">
+                <option value="rainbow" data-i18n="optColorRainbow">Dynamic Rainbow Spectrum</option>
+                <option value="singleColor" data-i18n="optColorSingle">Custom Accent Color</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" id="audioSingleColorGroup" style="display: none; margin-top: 1rem;">
+            <label data-i18n="lblAudioSingleColor">Audio Accent Color</label>
+            <div class="color-input-wrap">
+              <input type="color" id="audioColorPicker" class="color-picker-input" value="#00ffff">
+              <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblAudioSingleColorHint">Color of frequency bars and pulses</span>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 1.25rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <label data-i18n="audioSensitivity">Audio Sensitivity Multiplier</label>
+              <span id="audioSensVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">1.2x</span>
+            </div>
+            <div class="range-slider-wrap">
+              <input type="range" id="audioSensitivitySlider" class="range-slider" min="0.5" max="3.0" step="0.1" value="1.2">
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop Native Background Card (Hidden in Browser, Visible in Electron) -->
+        <div class="palette-card" id="desktopAutostartCard" style="display: none; max-width: 820px; margin: 0 auto;">
+          <div class="switch-wrap">
+            <div>
+              <span style="display: block; font-weight: 600; font-size: 0.95rem;" data-i18n="lblAutostart">Launch LuxQMK Studio on Windows Startup</span>
+              <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblAutostartHint">
+                Runs quietly in the System Tray and operates audio visualizers in the background.
+              </span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="chkDesktopAutostart">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. VIEW: PROFILES & BACKUP -->
+      <section class="view-container" id="view-backup">
+        <div class="grid-2">
+          <!-- Backup Card -->
+          <div class="palette-card" style="display: flex; flex-direction: column;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <span style="font-size: 1.5rem; background: rgba(0, 240, 255, 0.1); padding: 0.5rem; border-radius: var(--radius-md); color: var(--accent-cyan);">💾</span>
+              <div>
+                <h3 data-i18n="backupTitle">Create Complete Backup</h3>
+                <p style="color: var(--text-muted); font-size: 0.8rem;" data-i18n="backupDesc">
+                  Download a full snapshot of keymaps, layers, encoder, RGB, and custom settings.
+                </p>
+              </div>
+            </div>
+
+            <ul class="feature-checklist" style="margin: 0.75rem 0 1.25rem 0; font-size: 0.82rem; color: var(--text-muted); list-style: none; display: flex; flex-direction: column; gap: 0.4rem;">
+              <li data-i18n="backupFeatureLayers">✓ 3 Hardware Keymap Layers (Base, Fn, Custom)</li>
+              <li data-i18n="backupFeatureEncoder">✓ Rotary Knob Configuration (CCW, CW, Press)</li>
+              <li data-i18n="backupFeatureMacros">✓ Macro Memory & Dynamic Keycodes</li>
+              <li data-i18n="backupFeatureRgb">✓ RGB Matrix Lighting Mode, Speed & Brightness</li>
+              <li data-i18n="backupFeatureCustom">✓ Custom Layer Colors, Dim Level & 7 Logo Lock Indicators</li>
+            </ul>
+
+            <div class="progress-container" id="backupProgress" style="display: none; margin-bottom: 1rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 0.35rem; color: var(--text-muted);">
+                <span id="backupProgressText" data-i18n="backupProgressReading">Reading data from keyboard...</span>
+                <span id="backupProgressPercent">0%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" id="backupProgressBar" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div style="margin-top: auto; padding-top: 1rem;">
+              <button class="btn btn-primary" id="btnCreateBackup" style="width: 100%;" disabled data-i18n="btnDownloadBackup">
+                💾 Download JSON Backup File
+              </button>
+            </div>
+          </div>
+
+          <!-- Restore Card -->
+          <div class="palette-card" style="display: flex; flex-direction: column;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <span style="font-size: 1.5rem; background: rgba(139, 92, 246, 0.1); padding: 0.5rem; border-radius: var(--radius-md); color: var(--secondary);">⚡</span>
+              <div>
+                <h3 data-i18n="restoreTitle">Restore from Backup</h3>
+                <p style="color: var(--text-muted); font-size: 0.8rem;" data-i18n="restoreDesc">
+                  Upload a previously exported JSON backup file to flash it back to keyboard memory.
+                </p>
+              </div>
+            </div>
+
+            <div class="dropzone" id="dropzone" style="margin-bottom: 1rem;">
+              <input type="file" id="fileInput" accept=".json" style="display: none;">
+              <div style="font-size: 1.8rem; margin-bottom: 0.35rem;">📂</div>
+              <strong data-i18n="dropzoneTextTitle">Click or drag & drop backup file here</strong>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;" data-i18n="dropzoneText">Accepts JSON configuration snapshots exported from LuxQMK Studio</p>
+            </div>
+
+            <div class="file-preview-card" id="filePreview" style="display: none; margin-bottom: 1rem;">
+              <div class="preview-header">
+                <strong id="prevFileName" style="color: var(--accent-cyan); font-size: 0.85rem;">-</strong>
+                <span id="prevDate" style="font-size: 0.75rem; color: var(--text-dim);">-</span>
+              </div>
+              <div class="preview-stats-grid">
+                <div class="stat-pill"><span class="stat-lbl" data-i18n="lblStatLayers">Layers:</span> <strong id="prevLayers">-</strong></div>
+                <div class="stat-pill"><span class="stat-lbl" data-i18n="lblStatEncoder">Encoder:</span> <strong id="prevEncoder">-</strong></div>
+                <div class="stat-lbl-box"><span class="stat-lbl" data-i18n="lblStatRgb">RGB:</span> <strong id="prevRgb">-</strong></div>
+                <div class="stat-lbl-box"><span class="stat-lbl" data-i18n="lblStatCustom">GMMK 3:</span> <strong id="prevCustom">-</strong></div>
+              </div>
+            </div>
+
+            <div class="progress-container" id="restoreProgress" style="display: none; margin-bottom: 1rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 0.35rem; color: var(--text-muted);">
+                <span id="restoreProgressText" data-i18n="restoreProgressWriting">Writing settings to EEPROM memory...</span>
+                <span id="restoreProgressPercent">0%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" id="restoreProgressBar" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div style="margin-top: auto; padding-top: 1rem;">
+              <button class="btn btn-primary" id="btnRestoreBackup" style="width: 100%;" disabled data-i18n="btnFlashBackup">
+                ⚡ Restore & Flash to Keyboard Memory
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- USB HID Protocol Event Console Card -->
+        <div class="palette-card console-card" style="margin-top: 1.5rem;">
+          <div class="console-header">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <span style="font-size: 1.1rem;">📟</span>
+              <h4 style="font-size: 0.92rem; font-weight: 600;" data-i18n="consoleTitle">Hardware HID Communication Console</h4>
+            </div>
+            <button class="btn btn-secondary" id="btnClearLog" style="padding: 0.3rem 0.75rem; font-size: 0.75rem;">
+              🗑️ <span data-i18n="btnClearLog">Clear Console</span>
+            </button>
+          </div>
+          <div class="console-log" id="consoleLog">
+            <div class="log-line">
+              <span class="log-time">[00:00:00]</span>
+              <span class="log-info" id="consoleInitialMsg" data-i18n="consoleInitialLog">Ready. Connect keyboard via WebHID to start transmission.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. VIEW: SETTINGS -->
+      <!-- SETTINGS VIEW -->
+      <section class="view-container" id="view-settings">
+        <div class="settings-grid">
+          <!-- CARD 1: PERFORMANCE & LATENCY -->
+          <div class="palette-card settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-icon" style="background: rgba(0, 240, 255, 0.1); color: var(--accent-cyan);">⚡</span>
+              <div>
+                <h3 data-i18n="cardPerformanceTitle">Performance & Input Latency</h3>
+                <p class="settings-card-subtitle" data-i18n="cardPerformanceSubtitle">Configure switch debounce filtering, NKRO rollover mode, and USB polling rate</p>
+              </div>
+            </div>
+
+            <!-- Debounce Time Selector -->
+            <div class="settings-group">
+              <div class="settings-label-row">
+                <span class="settings-item-title" data-i18n="lblDebounceTime">Debounce Time / Input Latency</span>
+                <span class="settings-badge" id="currentDebounceBadge">5 ms</span>
+              </div>
+              <p class="settings-item-desc" data-i18n="descDebounce">
+                Filters mechanical contact vibrations (switch chatter). 0–2 ms offers ultra-fast esports response; 16 ms provides safe operation preventing accidental double clicks on older switches.
+              </p>
+              <div class="debounce-pills" id="debouncePillsContainer">
+                <button type="button" class="debounce-pill" data-val="0" data-i18n="debounce0">0 ms (Esports / Eager)</button>
+                <button type="button" class="debounce-pill" data-val="2" data-i18n="debounce2">2 ms (Ultra Fast)</button>
+                <button type="button" class="debounce-pill active" data-val="5" data-i18n="debounce5">5 ms (Balanced QMK)</button>
+                <button type="button" class="debounce-pill" data-val="8" data-i18n="debounce8">8 ms (Standard)</button>
+                <button type="button" class="debounce-pill" data-val="16" data-i18n="debounce16">16 ms (Safe / Glorious Core)</button>
+              </div>
+            </div>
+
+            <!-- NKRO Toggle -->
+            <div class="settings-group">
+              <div class="settings-label-row">
+                <span class="settings-item-title" data-i18n="lblNkroMode">N-Key Rollover (NKRO) Mode</span>
+                <label class="switch-control">
+                  <input type="checkbox" id="chkNkroToggle" checked>
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+              <p class="settings-item-desc" data-i18n="descNkro">
+                Enables registration of unlimited simultaneous key presses without the 6-key USB limitation.
+              </p>
+              <div class="nkro-status-badge active" id="nkroStatusBadge" data-i18n="nkroActiveBadge">
+                Active: Full NKRO Mode (Unlimited Keys)
+              </div>
+            </div>
+
+            <!-- USB Polling Rate -->
+            <div class="settings-group">
+              <div class="settings-label-row">
+                <span class="settings-item-title" data-i18n="lblPollingRate">USB Polling Rate (Frequency)</span>
+              </div>
+              <p class="settings-item-desc" data-i18n="descPollingRate">
+                How often the USB controller reports keyboard state to the computer.
+              </p>
+              <select class="form-control" id="selectPollingRate" style="max-width: 320px; margin-top: 0.5rem;">
+                <option value="1000" selected data-i18n="polling1000">1000 Hz (1.0 ms) - Default</option>
+                <option value="2000" data-i18n="polling2000">2000 Hz (0.5 ms)</option>
+                <option value="4000" data-i18n="polling4000">4000 Hz (0.25 ms)</option>
+                <option value="8000" data-i18n="polling8000">8000 Hz (0.125 ms)</option>
+                <option value="5000" data-i18n="polling500">500 Hz (2.0 ms)</option>
+                <option value="125" data-i18n="polling125">125 Hz (8.0 ms)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- CARD 2: HARDWARE INFO -->
+          <div class="palette-card settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-icon" style="background: rgba(189, 0, 255, 0.1); color: var(--accent-magenta);">ℹ️</span>
+              <div>
+                <h3 data-i18n="cardHardwareTitle">Hardware Information & Diagnostics</h3>
+                <p class="settings-card-subtitle" data-i18n="cardHardwareSubtitle">Controller specifications, memory status, and communication protocols</p>
+              </div>
+            </div>
+
+            <div class="hardware-info-grid">
+              <div class="hardware-info-item">
+                <span class="hardware-info-label" data-i18n="lblKeyboardModel">Keyboard Model:</span>
+                <span class="hardware-info-value highlight" data-i18n="valKeyboardModel">Glorious GMMK 3 100% ANSI</span>
+              </div>
+              <div class="hardware-info-item">
+                <span class="hardware-info-label" data-i18n="lblMcuChip">MCU Microcontroller:</span>
+                <span class="hardware-info-value" data-i18n="valMcuChip">WB32FQ95 (ARM Cortex-M4)</span>
+              </div>
+              <div class="hardware-info-item">
+                <span class="hardware-info-label" data-i18n="lblUsbVidPid">USB VID / PID:</span>
+                <span class="hardware-info-value" data-i18n="valUsbVidPid">VID: 0x504B | PID: 0x320F</span>
+              </div>
+              <div class="hardware-info-item">
+                <span class="hardware-info-label" data-i18n="lblProtocolVersion">Firmware / Protocol:</span>
+                <span class="hardware-info-value" data-i18n="valProtocolVersion">QMK v0.22+ / VIA Protocol v12</span>
+              </div>
+              <div class="hardware-info-item">
+                <span class="hardware-info-label" data-i18n="lblMatrixLayout">Physical Matrix:</span>
+                <span class="hardware-info-value" data-i18n="valMatrixLayout">14 Rows × 8 Cols (112 Key Positions)</span>
+              </div>
+              <div class="hardware-info-item">
+                <span class="hardware-info-label" data-i18n="lblEepromSize">Custom EEPROM Buffer:</span>
+                <span class="hardware-info-value" data-i18n="valEepromSize">32 Bytes Dedicated Storage</span>
+              </div>
+            </div>
+
+            <!-- Autostart card if desktop Electron -->
+            <div id="desktopAutostartCard" style="display: none; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color);">
+              <div class="settings-label-row">
+                <span class="settings-item-title" data-i18n="lblDesktopAutostart">Start LuxQMK Studio on System Boot</span>
+                <label class="switch-control">
+                  <input type="checkbox" id="chkDesktopAutostart">
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 3: MAINTENANCE & EEPROM TOOLS -->
+          <div class="palette-card settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-icon" style="background: rgba(255, 170, 0, 0.1); color: var(--accent-amber);">🛠️</span>
+              <div>
+                <h3 data-i18n="cardMaintenanceTitle">Maintenance & EEPROM Tools</h3>
+                <p class="settings-card-subtitle" data-i18n="cardMaintenanceSubtitle">Advanced operations on controller memory and flashing mode</p>
+              </div>
+            </div>
+
+            <div class="maintenance-action-list">
+              <div class="maintenance-action-item">
+                <div class="maintenance-action-text">
+                  <strong data-i18n="lblBootloaderTitle">Reboot to Bootloader (DFU Mode)</strong>
+                  <p data-i18n="btnBootloaderDesc">Puts the keyboard into DFU Bootloader mode for flashing new firmware (.bin/.hex).</p>
+                </div>
+                <button class="btn btn-secondary" id="btnJumpBootloader" disabled data-i18n="btnBootloader">
+                  🚀 Reboot to Bootloader (DFU Mode)
+                </button>
+              </div>
+
+              <div class="maintenance-action-item">
+                <div class="maintenance-action-text">
+                  <strong data-i18n="lblResetEepromTitle">Factory Reset EEPROM</strong>
+                  <p data-i18n="btnResetEepromDesc">Clears keyboard EEPROM memory and restores factory default keymaps, lighting, and macros.</p>
+                </div>
+                <button class="btn btn-danger" id="btnResetEEPROM" disabled data-i18n="btnResetEeprom">
+                  ⚠️ Factory Reset EEPROM
+                </button>
+              </div>
+
+              <div class="maintenance-action-item">
+                <div class="maintenance-action-text">
+                  <strong data-i18n="lblQuickBackupTitle">Quick Profile Backup</strong>
+                  <p data-i18n="btnQuickBackupDesc">Quickly export a full snapshot of your current layers and lighting configuration.</p>
+                </div>
+                <button class="btn btn-secondary" id="btnQuickBackup" disabled data-i18n="btnQuickBackup">
+                  💾 Export Profile Backup
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="appToast" class="app-toast"></div>
+
+  <!-- Scripts -->
+
+  <!-- Modular Scripts -->
+  <script src="js/layout-data.js"></script>
+  <script src="js/devices/gmmk3.js"></script>
+  <script src="js/devices/gmmk2.js"></script>
+  <script src="js/devices/generic-via.js"></script>
+  <script src="js/device-manager.js"></script>
+  <script src="js/keycodes-db.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/hid-protocol.js"></script>
+  <script src="js/keymap-editor.js"></script>
+  <script src="js/lighting-controller.js"></script>
+  <script src="js/audio-visualizer.js"></script>
+  <script src="js/key-tester.js"></script>
+  <script src="js/backup-manager.js"></script>
+  <script src="js/ui-controller.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

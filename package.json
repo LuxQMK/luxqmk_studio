@@ -1,0 +1,63 @@
+{
+  "name": "luxqmk-studio",
+  "productName": "LuxQMK Studio",
+  "version": "1.0.0",
+  "description": "LuxQMK Studio - Professional Keyboard Configuration, Audio Visualizer & RGB Suite",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "bundle": "python util/bundle_studio.py",
+    "test": "node test_suite.js",
+    "dist": "electron-builder --win",
+    "dist:portable": "electron-builder --win portable",
+    "dist:installer": "electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "com.luxqmk.studio",
+    "productName": "LuxQMK Studio",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "LuxQMK Studio"
+    }
+  },
+  "keywords": [
+    "luxqmk",
+    "gmmk3",
+    "qmk",
+    "via",
+    "keyboard",
+    "rgb",
+    "audio-visualizer",
+    "webhid"
+  ],
+  "author": "DoreK",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  }
+}
+
