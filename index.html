@@ -856,27 +856,31 @@
             <div class="hardware-info-grid">
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblKeyboardModel">Keyboard Model:</span>
-                <span class="hardware-info-value highlight" data-i18n="valKeyboardModel">Glorious GMMK 3 100% ANSI</span>
+                <span id="hw-keyboard-model" class="hardware-info-value highlight" data-i18n="valKeyboardModel">Glorious GMMK 3 100% ANSI</span>
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblMcuChip">MCU Microcontroller:</span>
-                <span class="hardware-info-value" data-i18n="valMcuChip">WB32FQ95 (ARM Cortex-M4)</span>
+                <span id="hw-mcu-chip" class="hardware-info-value" data-i18n="valMcuChip">WB32FQ95 (ARM Cortex-M4)</span>
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblUsbVidPid">USB VID / PID:</span>
-                <span class="hardware-info-value" data-i18n="valUsbVidPid">VID: 0x504B | PID: 0x320F</span>
+                <span id="hw-usb-vidpid" class="hardware-info-value" data-i18n="valUsbVidPid">VID: 0x504B | PID: 0x320F</span>
               </div>
               <div class="hardware-info-item">
-                <span class="hardware-info-label" data-i18n="lblProtocolVersion">Firmware / Protocol:</span>
-                <span class="hardware-info-value" data-i18n="valProtocolVersion">QMK v0.22+ / VIA Protocol v12</span>
+                <span class="hardware-info-label" data-i18n="lblProtocolVersion">Firmware & Engine:</span>
+                <span id="hw-protocol-version" class="hardware-info-value" data-i18n="valProtocolVersion">LuxQMK v0.1.0 (QMK v0.22.14 / VIA v12)</span>
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblMatrixLayout">Physical Matrix:</span>
-                <span class="hardware-info-value" data-i18n="valMatrixLayout">14 Rows × 8 Cols (112 Key Positions)</span>
+                <span id="hw-matrix-layout" class="hardware-info-value" data-i18n="valMatrixLayout">14 Rows × 8 Cols (112 Key Positions)</span>
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblEepromSize">Custom EEPROM Buffer:</span>
-                <span class="hardware-info-value" data-i18n="valEepromSize">32 Bytes Dedicated Storage</span>
+                <span id="hw-eeprom-size" class="hardware-info-value" data-i18n="valEepromSize">32 Bytes Dedicated Storage</span>
+              </div>
+              <div class="hardware-info-item">
+                <span class="hardware-info-label" data-i18n="lblCompatibilityStatus">Compatibility Status:</span>
+                <span id="hw-compat-status" class="hardware-info-value" style="color: var(--accent-green, #00ff88);" data-i18n="valCompatibilityStatus">✓ Fully Compatible (LuxQMK Studio v0.1.0)</span>
               </div>
             </div>
 

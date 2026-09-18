@@ -53,7 +53,9 @@
     REACTIVE_MODE: 21,
     REACTIVE_COLOR: 22,
     REACTIVE_SPEED: 23,
-    REACTIVE_BLEND: 24
+    REACTIVE_BLEND: 24,
+    LUXQMK_VERSION: 25,
+    QMK_VERSION: 26
   };
 
   const RGB_MATRIX_VAL = {
@@ -468,6 +470,52 @@
         num: res[4] === 1,
         scroll: res[5] === 1
       };
+    }
+
+    async getFirmwareVersion() {
+      try {
+        const res = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LUXQMK_VERSION);
+        if (!res || res[0] === 0xFF || res[1] !== CHANNELS.CUSTOM || res[2] !== CUSTOM_VAL.LUXQMK_VERSION) {
+          return { major: 0, minor: 0, patch: 0, versionString: "Legacy / Generic VIA", capabilities: {} };
+        }
+        const major = res[3];
+        const minor = res[4];
+        const patch = res[5];
+        const capFlags = res[6] || 0;
+        return {
+          major,
+          minor,
+          patch,
+          versionString: `v${major}.${minor}.${patch}`,
+          capabilities: {
+            reactiveOverlay: (capFlags & 0x01) !== 0,
+            directionReverse: (capFlags & 0x02) !== 0,
+            logoBadgeLed: (capFlags & 0x04) !== 0,
+            winLock: (capFlags & 0x08) !== 0,
+            layerLighting: (capFlags & 0x10) !== 0,
+            heatmap: (capFlags & 0x20) !== 0
+          }
+        };
+      } catch (e) {
+        return { major: 0, minor: 0, patch: 0, versionString: "Legacy / Generic VIA", capabilities: {} };
+      }
+    }
+
+    async getQMKVersion() {
+      try {
+        const res = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.QMK_VERSION);
+        if (!res || res[0] === 0xFF || res[1] !== CHANNELS.CUSTOM || res[2] !== CUSTOM_VAL.QMK_VERSION) {
+          return "QMK";
+        }
+        let str = "";
+        for (let i = 3; i < res.length; i++) {
+          if (res[i] === 0) break;
+          str += String.fromCharCode(res[i]);
+        }
+        return str.trim() || "QMK";
+      } catch (e) {
+        return "QMK";
+      }
     }
 
     async resetEEPROM() {

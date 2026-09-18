@@ -181,6 +181,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     await refreshDeviceList();
 
     try {
+      // Query LuxQMK & QMK firmware version for smart capability handshake
+      const fwInfo = await protocol.getFirmwareVersion();
+      const qmkVer = await protocol.getQMKVersion();
+      fwInfo.qmkVersion = qmkVer;
+      if (window.deviceManager) {
+        window.deviceManager.setFirmwareInfo(fwInfo);
+      }
+
       if (window.gLightingController) {
         window.gLightingController.clearStaleHits();
         window.gLightingController.startVisualizer();
