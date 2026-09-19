@@ -14,10 +14,62 @@
     init() {
       this._bindSidebarNav();
       this._bindLangSelect();
+      this._initLayoutControls();
       this._initDesktopFeatures();
       this._initSettingsControls();
       this._initFooterAndModals();
       this._initResponsiveKeyboardFit();
+    }
+
+    _initLayoutControls() {
+      const select = document.getElementById("layoutPresetSelect");
+      const btnLoad = document.getElementById("btnLoadViaJson");
+      const fileInput = document.getElementById("viaJsonFileInput");
+
+      if (select) {
+        select.addEventListener("change", (e) => {
+          const profileId = e.target.value;
+          if (window.deviceManager) {
+            window.deviceManager.setProfile(profileId);
+            this.showToast(
+              window.i18n ? (window.i18n.t("toastSwitchingDevice") || "Layout switched") : "Layout switched",
+              "info"
+            );
+          }
+        });
+      }
+
+      if (btnLoad && fileInput) {
+        btnLoad.addEventListener("click", () => {
+          fileInput.click();
+        });
+
+        fileInput.addEventListener("change", (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            try {
+              const parsed = JSON.parse(evt.target.result);
+              if (window.deviceManager && window.deviceManager.loadCustomVIALayout(parsed)) {
+                const count = window.deviceManager.getActiveProfile().customLayout.length;
+                const msg = window.i18n ? window.i18n.t("toastLayoutLoaded", { count: count }) : `VIA Layout (${count} keys) loaded successfully!`;
+                this.showToast(msg, "success");
+              } else {
+                const errMsg = window.i18n ? window.i18n.t("toastLayoutError") : "Invalid VIA JSON layout file format.";
+                this.showToast(errMsg, "error");
+              }
+            } catch (err) {
+              console.error("Error parsing VIA JSON layout:", err);
+              const errMsg = window.i18n ? window.i18n.t("toastLayoutError") : "Failed to parse JSON file.";
+              this.showToast(errMsg, "error");
+            }
+            fileInput.value = "";
+          };
+          reader.readAsText(file);
+        });
+      }
     }
 
     _initFooterAndModals() {
@@ -83,12 +135,19 @@
           pill.classList.remove("active");
         }
 
-        pill.addEventListener("click", () => {
+        pill.addEventListener("click", async () => {
           document.querySelectorAll(".debounce-pill").forEach((p) => p.classList.remove("active"));
           pill.classList.add("active");
           const val = pill.dataset.val;
           localStorage.setItem("gmmk_debounce_ms", val);
           if (debounceBadge) debounceBadge.textContent = val + " ms";
+          if (window.gmmkProtocol && window.gmmkProtocol.isConnected) {
+            try {
+              await window.gmmkProtocol.setDebounceTime(parseInt(val, 10));
+            } catch (e) {
+              console.warn("Failed to set debounce on device:", e);
+            }
+          }
           this.showToast(window.i18n.t("toastDebounceSet", { val: val + " ms" }), "success");
         });
       });
@@ -267,6 +326,10 @@
       const deviceStatusBadge = document.getElementById("deviceStatusBadge");
       const deviceSelectorDot = document.getElementById("deviceSelectorDot");
 
+      const layoutPresetWrap = document.getElementById("layoutPresetWrap");
+      const connectedDeviceBadgeWrap = document.getElementById("connectedDeviceBadgeWrap");
+      const connectedDeviceBadgeName = document.getElementById("connectedDeviceBadgeName");
+
       if (this.isConnected) {
         chip?.classList.add("connected");
         if (chipName) chipName.textContent = this.deviceName;
@@ -279,6 +342,11 @@
 
         if (btnConnectLabel) btnConnectLabel.textContent = window.i18n.t("btnDisconnect");
         btnConnect?.classList.replace("btn-primary", "btn-secondary");
+
+        // Hide offline demo dropdown and show active hardware status badge
+        if (layoutPresetWrap) layoutPresetWrap.style.display = "none";
+        if (connectedDeviceBadgeWrap) connectedDeviceBadgeWrap.style.display = "inline-flex";
+        if (connectedDeviceBadgeName) connectedDeviceBadgeName.textContent = this.deviceName;
       } else {
         chip?.classList.remove("connected");
         if (chipName) chipName.textContent = window.i18n.t("statusDisconnected");
@@ -291,6 +359,10 @@
 
         if (btnConnectLabel) btnConnectLabel.textContent = window.i18n.t("btnConnect");
         btnConnect?.classList.replace("btn-secondary", "btn-primary");
+
+        // Show offline demo dropdown and hide hardware status badge
+        if (layoutPresetWrap) layoutPresetWrap.style.display = "flex";
+        if (connectedDeviceBadgeWrap) connectedDeviceBadgeWrap.style.display = "none";
       }
 
       // Re-sync NKRO badge text with current language
@@ -382,13 +454,13 @@
         const baseHeight = canvas.offsetHeight || 349;
 
         if (containerWidth < baseWidth) {
-          const scale = containerWidth / baseWidth;
+          const scale = Math.min(1, containerWidth / baseWidth);
           canvas.style.transform = `scale(${scale})`;
           canvas.style.transformOrigin = "top center";
-          wrapper.style.height = `${Math.ceil(baseHeight * scale)}px`;
+          wrapper.style.height = `${Math.ceil(baseHeight * scale) + 24}px`;
         } else {
           canvas.style.transform = "none";
-          wrapper.style.height = `${baseHeight}px`;
+          wrapper.style.height = `${baseHeight + 16}px`;
         }
       });
     }

@@ -64,13 +64,21 @@ def bundle():
     js_tag = f"<script>\n{chr(10).join(all_js)}\n</script>"
     html = html.replace("</body>", f"  {js_tag}\n</body>")
 
-    # Inlining images (icon.png -> Base64 data URI)
+    # Inlining images and icons (icon.png / logo.svg -> Base64 data URI)
     import base64
     icon_path = os.path.join(SRC_DIR, "assets", "icon.png")
     if os.path.exists(icon_path):
         with open(icon_path, "rb") as img_f:
             b64_img = base64.b64encode(img_f.read()).decode("utf-8")
         html = html.replace('src="assets/icon.png"', f'src="data:image/png;base64,{b64_img}"')
+        html = html.replace('href="assets/icon.png"', f'href="data:image/png;base64,{b64_img}"')
+
+    logo_path = os.path.join(SRC_DIR, "assets", "logo.svg")
+    if os.path.exists(logo_path):
+        with open(logo_path, "rb") as logo_f:
+            b64_svg = base64.b64encode(logo_f.read()).decode("utf-8")
+        html = html.replace('src="assets/logo.svg"', f'src="data:image/svg+xml;base64,{b64_svg}"')
+        html = html.replace('href="assets/logo.svg"', f'href="data:image/svg+xml;base64,{b64_svg}"')
 
     # Write primary bundle
     with open(OUTPUT_FILE_PRIMARY, "w", encoding="utf-8") as f:
@@ -82,13 +90,14 @@ def bundle():
         f.write(html)
     print(f"[OK] Alias Bundle   -> {OUTPUT_FILE_ALIAS} ({os.path.getsize(OUTPUT_FILE_ALIAS):,} bytes)")
 
-    # Mirror to qmk_firmware root if directory exists
+    # Mirror to qmk_firmware
     if os.path.exists(FIRMWARE_DIR):
-        fw_primary = os.path.join(FIRMWARE_DIR, "luxqmk_studio.html")
-        fw_alias = os.path.join(FIRMWARE_DIR, "gmmk_studio.html")
-        shutil.copy2(OUTPUT_FILE_PRIMARY, fw_primary)
-        shutil.copy2(OUTPUT_FILE_ALIAS, fw_alias)
-        print(f"[OK] Mirrored bundles to qmk_firmware directory.")
+        fw_bundle = os.path.join(FIRMWARE_DIR, "luxqmk_studio.html")
+        shutil.copy2(OUTPUT_FILE_PRIMARY, fw_bundle)
+        print(f"[OK] Firmware Mirror -> {fw_bundle}")
+
+    # Finished bundling
+    print(f"[OK] Bundling complete.")
 
 if __name__ == "__main__":
     bundle()

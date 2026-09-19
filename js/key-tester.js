@@ -35,13 +35,34 @@
       this._updateStats();
     }
 
+    getActiveLayout() {
+      const profile = window.deviceManager ? window.deviceManager.getActiveProfile() : null;
+      if (window.LayoutEngine && typeof window.LayoutEngine.getLayoutForProfile === 'function') {
+        return window.LayoutEngine.getLayoutForProfile(profile);
+      }
+      return window.GMMK3_LAYOUT || [];
+    }
+
     renderTesterCanvas() {
       const container = document.getElementById("testerCanvas");
       if (!container) return;
 
       container.innerHTML = "";
 
-      window.GMMK3_LAYOUT.forEach(key => {
+      const profile = window.deviceManager ? window.deviceManager.getActiveProfile() : null;
+      const layout = this.getActiveLayout();
+      const bounds = window.LayoutEngine ? window.LayoutEngine.getLayoutBounds(layout) : { width: 22.5, height: 6.25 };
+
+      container.style.setProperty("--keyboard-width-units", bounds.width);
+      container.style.setProperty("--keyboard-height-units", bounds.height);
+      container.style.width = `calc(${bounds.width} * var(--key-unit) + 36px)`;
+      container.style.height = `calc(${bounds.height} * var(--key-unit) + 36px)`;
+
+      // Toggle side diffusers visibility on chassis based on device profile capabilities
+      const hasSidelights = !!(profile && profile.capabilities && profile.capabilities.hasSidelights);
+      container.classList.toggle("has-sidelights", hasSidelights);
+
+      layout.forEach(key => {
         const keyEl = document.createElement("div");
         keyEl.className = "tester-keycap";
         keyEl.id = `test-key-${key.id}`;
@@ -54,11 +75,18 @@
         if (this.testedKeys.has(key.id)) keyEl.classList.add("tested");
         if (this.pressedKeys.has(key.id)) keyEl.classList.add("pressed");
 
-        keyEl.innerHTML = `<span class="t-label">${key.label}</span>`;
+        if (key.isLogo) {
+          keyEl.innerHTML = "";
+        } else if (key.isKnob) {
+          keyEl.innerHTML = `<span class="t-label">🎛️</span>`;
+        } else {
+          keyEl.innerHTML = `<span class="t-label">${key.label}</span>`;
+        }
         container.appendChild(keyEl);
       });
 
       window.gUI?.fitKeyboardPreviews();
+      this._updateStats();
     }
 
     _handleKeyDown(e) {
@@ -102,8 +130,10 @@
 
     _updateStats() {
       const countEl = document.getElementById("testedKeysCount");
+      const layout = this.getActiveLayout();
+      const totalKeys = layout.filter(k => !k.isLogo).length || 105;
       if (countEl) {
-        countEl.textContent = `${this.testedKeys.size} / 105`;
+        countEl.textContent = `${this.testedKeys.size} / ${totalKeys}`;
       }
 
       const listEl = document.getElementById("testerHistoryList");

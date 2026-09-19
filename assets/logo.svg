@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Subtle Depth Shadow for the Chassis -->
+    <filter id="softDrop" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- ==================== KEYBOARD BASE ==================== -->
+  <!-- Main Case (Center X = 256) -->
+  <rect x="64" y="64" width="384" height="384" rx="64" 
+        fill="#181b24" stroke="#252a38" stroke-width="3" 
+        filter="url(#softDrop)"/>
+
+  <!-- Recessed Switch Plate (Width: 336, Left/Right Margins: 16px) -->
+  <rect x="88" y="88" width="336" height="336" rx="46" 
+        fill="#0f1118"/>
+
+  <!-- ==================== ROW 1 ==================== -->
+  <rect x="104" y="112" width="44" height="44" rx="12" fill="#E63946"/>
+  <rect x="156" y="112" width="44" height="44" rx="12" fill="#F77F00"/>
+  <rect x="208" y="112" width="44" height="44" rx="12" fill="#06D6A0"/>
+  <rect x="260" y="112" width="44" height="44" rx="12" fill="#00B4D8"/>
+  <rect x="312" y="112" width="44" height="44" rx="12" fill="#4361EE"/>
+
+  <!-- Top-Right Rotary Knob (Centered on Col 6, X = 386) -->
+  <g transform="translate(386, 134)">
+    <circle cx="0" cy="0" r="21" fill="#14161f" stroke="#262c3b" stroke-width="2"/>
+    <circle cx="0" cy="0" r="17" fill="#F59E0B"/>
+    <circle cx="0" cy="0" r="14" fill="#FBBF24"/>
+    <circle cx="6" cy="-6" r="2.5" fill="#FFFFFF"/>
+  </g>
+
+  <!-- ==================== ROW 2 ==================== -->
+  <rect x="104" y="164" width="44" height="44" rx="12" fill="#FCBF49"/>
+  <rect x="156" y="164" width="44" height="44" rx="12" fill="#2EC4B6"/>
+  <rect x="208" y="164" width="44" height="44" rx="12" fill="#38BDF8"/>
+  <rect x="260" y="164" width="44" height="44" rx="12" fill="#3A86FF"/>
+  <rect x="312" y="164" width="44" height="44" rx="12" fill="#7209B7"/>
+  <rect x="364" y="164" width="44" height="44" rx="12" fill="#F72585"/>
+
+  <!-- ==================== ROW 3 ==================== -->
+  <rect x="104" y="216" width="44" height="44" rx="12" fill="#10B981"/>
+  <rect x="156" y="216" width="44" height="44" rx="12" fill="#00D2D3"/>
+  <rect x="208" y="216" width="44" height="44" rx="12" fill="#2563EB"/>
+  <rect x="260" y="216" width="44" height="44" rx="12" fill="#8338EC"/>
+  <rect x="312" y="216" width="44" height="44" rx="12" fill="#E63946"/>
+  <rect x="364" y="216" width="44" height="44" rx="12" fill="#FB8500"/>
+
+  <!-- ==================== ROW 4 ==================== -->
+  <rect x="104" y="268" width="44" height="44" rx="12" fill="#00CED1"/>
+  <rect x="156" y="268" width="44" height="44" rx="12" fill="#4F46E5"/>
+  <rect x="208" y="268" width="44" height="44" rx="12" fill="#C77DFF"/>
+  <rect x="260" y="268" width="44" height="44" rx="12" fill="#D90429"/>
+  <rect x="312" y="268" width="44" height="44" rx="12" fill="#F59E0B"/>
+  <rect x="364" y="268" width="44" height="44" rx="12" fill="#2EC4B6"/>
+
+  <!-- ==================== ROW 5: BOTTOM ROW ==================== -->
+  <!-- Left Modifier (Col 1) -->
+  <rect x="104" y="320" width="44" height="44" rx="12" fill="#3F37C9"/>
+
+  <!-- Perfectly Centered Spacebar (Span: 156 to 356, Center X = 256) -->
+  <g>
+    <rect x="156" y="320" width="200" height="44" rx="13" fill="#1D4ED8"/>
+    
+    <!-- Centered LUX Vector Cutout (Span: 218 to 294, Center X = 256) -->
+    <g fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+      <!-- L -->
+      <path d="M 218,332 V 352 H 232"/>
+      <!-- U -->
+      <path d="M 246,332 V 345 A 6,6 0 0,0 252,352 H 260 A 6,6 0 0,0 266,345 V 332"/>
+      <!-- X -->
+      <path d="M 280,332 L 294,352 M 294,332 L 280,352"/>
+    </g>
+  </g>
+
+  <!-- Right Modifier (Col 6) -->
+  <rect x="364" y="320" width="44" height="44" rx="12" fill="#7209B7"/>
+
+  <!-- ==================== QMK BRANDING ==================== -->
+  <!-- Subdued Chin Accent (Center X = 256) -->
+  <g fill="none" stroke="#5a657d" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9">
+    <!-- Q -->
+    <rect x="208" y="386" width="18" height="18" rx="5"/>
+    <path d="M 220,398 L 226,404"/>
+
+    <!-- M -->
+    <path d="M 246,404 V 386 L 256,396 L 266,386 V 404"/>
+
+    <!-- K -->
+    <path d="M 286,386 V 404 M 304,386 L 288,395 L 304,404"/>
+  </g>
+</svg>

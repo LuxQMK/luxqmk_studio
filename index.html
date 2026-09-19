@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LuxQMK Studio - QMK / VIA Configuration Hub</title>
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+  <link rel="alternate icon" type="image/png" href="assets/icon.png">
   
   <!-- Modular Stylesheets -->
   <link rel="stylesheet" href="css/variables.css">
@@ -18,7 +20,7 @@
     <aside class="sidebar">
       <div class="sidebar-brand">
         <div class="sidebar-logo-badge">
-          <img src="assets/icon.png" alt="LuxQMK" class="sidebar-logo-img">
+          <img src="assets/logo.svg" alt="LuxQMK" class="sidebar-logo-img">
         </div>
         <div class="sidebar-brand-text">
           <h2 data-i18n="appName">LuxQMK Studio</h2>
@@ -146,14 +148,48 @@
       <!-- 1. VIEW: KEYMAP EDITOR -->
       <section class="view-container active" id="view-keymap">
         <div class="keyboard-canvas-card">
-          <div class="keyboard-canvas-header">
-            <div class="layer-selector">
-              <button class="layer-btn active" data-layer="0" data-i18n="layer0">Layer 0 (Base)</button>
-              <button class="layer-btn" data-layer="1" data-i18n="layer1">Layer 1 (Fn)</button>
-              <button class="layer-btn" data-layer="2" data-i18n="layer2">Layer 2 (Custom)</button>
+          <div class="keyboard-canvas-header" style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+              <div class="layer-selector">
+                <button class="layer-btn active" data-layer="0" data-i18n="layer0">Layer 0 (Base)</button>
+                <button class="layer-btn" data-layer="1" data-i18n="layer1">Layer 1 (Fn)</button>
+                <button class="layer-btn" data-layer="2" data-i18n="layer2">Layer 2 (Custom)</button>
+              </div>
+              <div id="selectedKeyBanner" style="font-size: 0.8rem;">
+                <span class="muted-text" data-i18n="selectedKeyDefault">Click any keycap on the keyboard to remap it</span>
+              </div>
             </div>
-            <div id="selectedKeyBanner">
-              <span class="muted-text" data-i18n="selectedKeyDefault">Click any keycap on the keyboard to remap it</span>
+
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <!-- Offline / Demo layout picker (shown when disconnected) -->
+              <div id="layoutPresetWrap" style="display: flex; align-items: center; gap: 0.4rem;">
+                <span class="badge-demo-pill" style="background: rgba(255,170,0,0.15); color: #ffaa00; border: 1px solid rgba(255,170,0,0.3); padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.04em;">DEMO</span>
+                <select id="layoutPresetSelect" class="form-control" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.8rem; height: auto;">
+                  <option value="gmmk3-100-ansi">Glorious GMMK 3 100% ANSI</option>
+                  <option value="gmmk3-75-ansi">Glorious GMMK 3 75% ANSI</option>
+                  <option value="gmmk3-65-ansi">Glorious GMMK 3 65% ANSI</option>
+                  <option value="gmmk2-96-ansi">Glorious GMMK 2 96% ANSI</option>
+                  <option value="gmmk2-65-ansi">Glorious GMMK 2 65% ANSI</option>
+                  <option value="generic-tkl">Standard TKL 80%</option>
+                  <option value="generic-60">Standard 60%</option>
+                  <option value="generic-via">Generic Universal VIA</option>
+                </select>
+              </div>
+
+              <!-- Connected Device Badge (shown when physically connected) -->
+              <div id="connectedDeviceBadgeWrap" style="display: none; align-items: center; gap: 0.5rem;">
+                <div class="connected-device-badge" style="display: inline-flex; align-items: center; gap: 0.45rem; background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.25); padding: 0.22rem 0.6rem; border-radius: 6px;">
+                  <span class="live-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #00ff88; box-shadow: 0 0 6px #00ff88; display: inline-block;"></span>
+                  <span id="connectedDeviceBadgeName" style="font-weight: 600; color: #fff; font-size: 0.82rem;">Glorious GMMK 3 100% ANSI</span>
+                  <span id="connectedDeviceBadgeVidPid" class="badge-subpill" style="font-size: 0.72rem; background: rgba(255,255,255,0.08); color: var(--text-dim); padding: 0.05rem 0.35rem; border-radius: 4px; font-family: var(--font-mono, monospace);">VID: 0x320F</span>
+                  <span id="connectedDeviceBadgeProto" class="badge-subpill" style="font-size: 0.72rem; background: rgba(0,229,255,0.12); color: #00e5ff; border: 1px solid rgba(0,229,255,0.2); padding: 0.05rem 0.35rem; border-radius: 4px; font-weight: 600;">LuxQMK</span>
+                </div>
+              </div>
+
+              <input type="file" id="viaJsonFileInput" accept=".json" style="display: none;">
+              <button class="btn btn-secondary btn-sm" id="btnLoadViaJson" style="font-size: 0.78rem; padding: 0.25rem 0.55rem;">
+                <span>📂 <span data-i18n="btnLoadViaLayout">Load VIA (.json)</span></span>
+              </button>
             </div>
           </div>
 
@@ -803,7 +839,7 @@
                 <button type="button" class="debounce-pill" data-val="2" data-i18n="debounce2">2 ms (Ultra Fast)</button>
                 <button type="button" class="debounce-pill active" data-val="5" data-i18n="debounce5">5 ms (Balanced QMK)</button>
                 <button type="button" class="debounce-pill" data-val="8" data-i18n="debounce8">8 ms (Standard)</button>
-                <button type="button" class="debounce-pill" data-val="16" data-i18n="debounce16">16 ms (Safe / Glorious Core)</button>
+                <button type="button" class="debounce-pill" data-val="16" data-i18n="debounce16">16 ms (Safe)</button>
               </div>
             </div>
 
@@ -868,7 +904,7 @@
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblProtocolVersion">Firmware & Engine:</span>
-                <span id="hw-protocol-version" class="hardware-info-value" data-i18n="valProtocolVersion">LuxQMK v0.1.0 (QMK v0.34.4 / VIA v12)</span>
+                <span id="hw-protocol-version" class="hardware-info-value">—</span>
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblMatrixLayout">Physical Matrix:</span>
@@ -876,11 +912,11 @@
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblEepromSize">Custom EEPROM Buffer:</span>
-                <span id="hw-eeprom-size" class="hardware-info-value" data-i18n="valEepromSize">32 Bytes Dedicated Storage</span>
+                <span id="hw-eeprom-size" class="hardware-info-value" data-i18n="valEepromSize">36 Bytes Dedicated Storage</span>
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblCompatibilityStatus">Compatibility Status:</span>
-                <span id="hw-compat-status" class="hardware-info-value" style="color: var(--accent-green, #00ff88);" data-i18n="valCompatibilityStatus">✓ Fully Compatible (LuxQMK Studio v1.0.0)</span>
+                <span id="hw-compat-status" class="hardware-info-value" style="color: var(--text-muted, #888888);">—</span>
               </div>
             </div>
 
@@ -948,12 +984,12 @@
     <div class="modal-card">
       <div class="modal-header">
         <div class="modal-title-wrap">
-          <div class="sidebar-logo-badge" style="width: 32px; height: 32px;">
-            <img src="assets/icon.png" alt="LuxQMK" class="sidebar-logo-img">
+          <div class="sidebar-logo-badge" style="width: 34px; height: 34px;">
+            <img src="assets/logo.svg" alt="LuxQMK" class="sidebar-logo-img">
           </div>
           <div>
             <h3 class="modal-title" data-i18n="modalAboutTitle">About LuxQMK Studio</h3>
-            <span style="font-size: 0.75rem; color: var(--text-dim);">Version 1.0.0 (Build 2026.09)</span>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">Version 1.1.0 (Build 2026.09)</span>
           </div>
         </div>
         <button class="modal-close-btn" id="btnCloseAboutModal">&times;</button>
@@ -974,7 +1010,7 @@
             <span>📜</span> <span data-i18n="lblLicenseTitle">License</span>
           </div>
           <div class="modal-section-content" style="font-size: 0.85rem;" data-i18n="lblLicenseDesc">
-            • <strong>LuxQMK Studio Application</strong>: Open Source MIT License<br>
+            • <strong>LuxQMK Studio Application</strong>: GNU General Public License v3 (GPLv3)<br>
             • <strong>LuxQMK Firmware</strong>: GNU General Public License v2 / v3 (GPL)
           </div>
         </div>

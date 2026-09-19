@@ -23,6 +23,14 @@
       this.onKeycodeChange = null;
     }
 
+    getActiveLayout() {
+      const profile = window.deviceManager ? window.deviceManager.getActiveProfile() : null;
+      if (window.LayoutEngine && typeof window.LayoutEngine.getLayoutForProfile === 'function') {
+        return window.LayoutEngine.getLayoutForProfile(profile);
+      }
+      return window.GMMK3_LAYOUT || [];
+    }
+
     init() {
       // Pre-populate layer 0 with default keycodes and layer 1 with QMK default FL keycodes
       const defaultFLMap = {
@@ -32,12 +40,15 @@
         UP: 0x7C03, DOWN: 0x7C02, LEFT: 0x7C00, RGHT: 0x7C01
       };
 
-      if (window.GMMK3_LAYOUT) {
-        window.GMMK3_LAYOUT.forEach(k => {
+      const layout = this.getActiveLayout();
+      if (layout) {
+        layout.forEach(k => {
           const [r, c] = k.matrix;
-          this.layerData[0].set(`${r},${c}`, k.defaultKeycode || 0x0000);
-          this.layerData[1].set(`${r},${c}`, defaultFLMap[k.id] || 0x0001 /* KC_TRNS */);
-          this.layerData[2].set(`${r},${c}`, 0x0001 /* KC_TRNS */);
+          if (r >= 0 && c >= 0) {
+            this.layerData[0].set(`${r},${c}`, k.defaultKeycode || 0x0000);
+            this.layerData[1].set(`${r},${c}`, defaultFLMap[k.id] || 0x0001 /* KC_TRNS */);
+            this.layerData[2].set(`${r},${c}`, 0x0001 /* KC_TRNS */);
+          }
         });
       }
 
@@ -186,7 +197,21 @@
 
       container.innerHTML = "";
 
-      window.GMMK3_LAYOUT.forEach(key => {
+      const profile = window.deviceManager ? window.deviceManager.getActiveProfile() : null;
+      const layout = this.getActiveLayout();
+      const bounds = window.LayoutEngine ? window.LayoutEngine.getLayoutBounds(layout) : { width: 22.5, height: 6.25 };
+
+      // Dynamically size the canvas container for auto-scaling
+      container.style.setProperty("--keyboard-width-units", bounds.width);
+      container.style.setProperty("--keyboard-height-units", bounds.height);
+      container.style.width = `calc(${bounds.width} * var(--key-unit) + 36px)`;
+      container.style.height = `calc(${bounds.height} * var(--key-unit) + 36px)`;
+
+      // Toggle side diffusers visibility on chassis based on device profile capabilities
+      const hasSidelights = !!(profile && profile.capabilities && profile.capabilities.hasSidelights);
+      container.classList.toggle("has-sidelights", hasSidelights);
+
+      layout.forEach(key => {
         const keyEl = document.createElement("div");
         keyEl.className = `keycap-btn key-group-${key.group}`;
         keyEl.id = `key-${key.id}`;
@@ -203,7 +228,7 @@
         if (currentCode === undefined || currentCode === null) {
           currentCode = (this.activeLayer === 0) ? (key.defaultKeycode || 0x0000) : 0x0001;
         }
-        const kcMeta = window.getKeycodeInfo(currentCode);
+        const kcMeta = window.getKeycodeInfo ? window.getKeycodeInfo(currentCode) : { label: key.label, name: "" };
 
         const primaryLabel = kcMeta.label || key.label;
         const isSelected = this.selectedKey && this.selectedKey.id === key.id;
@@ -232,7 +257,7 @@
             this.selectKey({
               type: "encoder",
               id: "ENCODER_PRESS",
-              matrix: [11, 6],
+              matrix: (key.matrix && key.matrix[0] >= 0) ? key.matrix : [11, 6],
               direction: "Press",
               defaultLabel: "Knob Press"
             });

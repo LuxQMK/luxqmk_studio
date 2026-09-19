@@ -1,52 +1,73 @@
-# GMMK 3 Companion & Backup Hub
+# LuxQMK Studio (v1.1.0)
 
-A dedicated, lightweight web application for managing, creating complete backups, and restoring configurations for **Glorious GMMK 3 Series** keyboards running **QMK Firmware** and the **VIA v12 Protocol**.
-
-Compatible with **all GMMK 3 variants** (GMMK 3 65%, GMMK 3 75%, GMMK 3 100%, ANSI & ISO layouts).
+Professional WebHID / Desktop companion suite for real-time keymap remapping, lighting configuration, reactive effect layering, audio visualizers, raw HID diagnostics, and backup/restore workflows for keyboards running **LuxQMK** / **QMK Firmware** and the **VIA v12 Protocol**.
 
 ---
 
-## 🌐 Multilingual Support (i18n)
+## 🌟 Key Features
 
-- **Default Language**: English (EN)
-- **Optional Language**: Polish (PL)
-- **Automatic Detection**: Automatically detects browser locale (`navigator.language`) and switches accordingly.
-- **Language Switcher**: Dedicated dropdown in the header with persistent preferences (`localStorage`).
+- **Universal Dynamic VIA Layout Engine**: Native matrix rendering for 100%, 96%, 80% TKL, 75%, 65%, and 60% form factors (ANSI & ISO), plus on-the-fly custom VIA `design_layout.json` & QMK `keyboard.json` importing.
+- **Visual Keymap & Rotary Encoder Editor**: Interactive real-time keycode remapping across layers 0 to 2, full VIA keycode categories (Basic, Media, Macro, Layers, Special, Lighting, Custom), and rotary knob action configuration.
+- **Lighting Studio & Reactive Engine**: 1:1 parity with QMK RGB Matrix animation algorithms, custom Lux Wave & Cycle Dynamic modes, dual-layer reactive overlays, per-layer lighting, and Logo Badge / Sidelight controls.
+- **Web Audio Visualizer**: Real-time microphone/system audio frequency visualizer mapped to keyboard backlighting.
+- **Live Keystroke & Matrix Tester**: Low-latency switch actuation tester with keycode logging and hit tracking.
+- **Hardware Profile & Capability Detection**: Auto-detects GMMK 3 (100%, 75%, 65%), GMMK 2 (96%, 65%), Keychron, and generic VIA/QMK keyboards, dynamically adapting peripheral UI elements.
+- **Full Settings Backup & Restore**: One-click JSON serialization and safe chunked restore for EEPROM settings.
+- **Multilingual Support (i18n)**: English (EN) and Polish (PL) localization with automatic browser detection and persistent preferences.
 
 ---
 
-## 📁 Modular Directory Structure
+## 📁 Modular Architecture
 
 ```text
-gmmk3-companion/
-├── index.html               # Semantic HTML5 template
+luxqmk-studio/
+├── index.html               # Semantic HTML5 UI shell
 ├── css/
 │   ├── variables.css        # CSS design system tokens (colors, glow, radiuses)
-│   ├── layout.css           # Responsive grid, flexbox layout, header & main sections
-│   └── components.css       # Glassmorphism cards, buttons, dropzone, chips, language switcher
+│   ├── sidebar.css          # Navigation sidebar styling
+│   ├── layout.css           # Responsive grids, flexbox, and dynamic auto-scaling canvases
+│   └── components.css       # Glassmorphism cards, buttons, palettes, sliders, toasts
 ├── js/
-│   ├── app.js               # Main application coordinator
-│   ├── i18n.js              # Internationalization dictionary & manager (EN/PL)
+│   ├── app.js               # Application bootstrap & event lifecycle
+│   ├── layout-data.js       # Universal physical layout definitions & VIA JSON parser
+│   ├── device-manager.js    # Multi-device detection and capability manager (v1.1.0)
+│   ├── devices/             # Device hardware profile descriptors (gmmk3, gmmk2, generic-via)
 │   ├── hid-protocol.js      # Low-level WebHID communication layer (VIA v12 & Raw HID)
-│   ├── backup-manager.js    # Serialization and restore engine (100% settings)
-│   └── ui-controller.js     # DOM controller, event handling, live color chips, console
-└── README.md                # Documentation & Architecture roadmap
+│   ├── keycodes-db.js       # Comprehensive VIA / QMK keycodes database
+│   ├── keymap-editor.js     # Visual key remapping & encoder manager
+│   ├── lighting-controller.js# Real-time RGB visualizer and hardware sync engine
+│   ├── audio-visualizer.js  # Web Audio API reactive spectrum visualizer
+│   ├── key-tester.js        # Switch actuation tester & keycode history
+│   ├── backup-manager.js    # JSON configuration backup & restore engine
+│   ├── ui-controller.js     # DOM controller, modal management, toasts, tabs
+│   └── i18n.js              # Internationalization dictionary & manager (EN/PL)
+├── main.js                  # Electron desktop application main process
+└── util/
+    ├── bundle_studio.py     # Standalone portable HTML bundler
+    └── update_companion_html.py
 ```
 
 ---
 
-## 🚀 How to Run?
+## 🚀 How to Run
 
-1. Open `index.html` directly in any Chromium-based web browser supporting **WebHID** (Google Chrome, Microsoft Edge, Brave, Opera).
-2. Click **"⚡ Connect Keyboard"** and select your GMMK 3 keyboard from the list.
-3. Click **"💾 Download Full Backup (.json)"** to export all your settings.
-4. To restore, drag & drop your backup file onto the restore area and click **"⚡ Apply Settings to Keyboard"**.
+### Standalone Web Version (WebHID)
+Open `index.html` (or single-file bundle `luxqmk_studio.html`) in any Chromium browser (Google Chrome, Microsoft Edge, Brave, Opera).
+
+### Desktop Application (Electron)
+```bash
+# Install dependencies
+npm install
+
+# Start development app
+npm start
+
+# Build portable and installer executables (.exe)
+npm run dist
+```
 
 ---
 
-## 🗺️ Feature Roadmap (Future Expansions)
-
-- [ ] **Visual Keymap Editor (VIA Overlay)** – Interactive on-screen keyboard matrix allowing real-time keycode remapping.
-- [ ] **Dynamic Macro Creator** – In-app text string and keystroke delay recorder.
-- [ ] **Real-time Lighting Palette** – Color pickers & sliders for immediate RGB Matrix & Logo LED tuning.
-- [ ] **Switch Tester (Key Tester)** – Built-in switch actuation & rotary encoder tester.
+## 📜 License
+- **LuxQMK Studio Application**: Open Source GNU General Public License v3 ([GPLv3](LICENSE))
+- **LuxQMK Firmware**: GNU General Public License v2 / v3 (GPL)

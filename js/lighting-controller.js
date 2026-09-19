@@ -153,16 +153,52 @@
       this.startDevicePolling();
     }
 
+    getActiveLayout() {
+      const profile = window.deviceManager ? window.deviceManager.getActiveProfile() : null;
+      if (window.LayoutEngine && typeof window.LayoutEngine.getLayoutForProfile === 'function') {
+        return window.LayoutEngine.getLayoutForProfile(profile);
+      }
+      return window.GMMK3_LAYOUT || [];
+    }
+
     renderVisualizerCanvas() {
       const container = document.getElementById("lightingKeyboardCanvas");
-      if (!container || !window.GMMK3_LAYOUT) return;
+      if (!container) return;
+
+      const profile = window.deviceManager ? window.deviceManager.getActiveProfile() : null;
+      const layout = this.getActiveLayout();
+      if (!layout || layout.length === 0) return;
+
+      const bounds = window.LayoutEngine ? window.LayoutEngine.getLayoutBounds(layout) : { width: 22.5, height: 6.25 };
+      container.style.setProperty("--keyboard-width-units", bounds.width);
+      container.style.setProperty("--keyboard-height-units", bounds.height);
+      container.style.width = `calc(${bounds.width} * var(--key-unit) + 36px)`;
+      container.style.height = `calc(${bounds.height} * var(--key-unit) + 36px)`;
+
+      // Toggle side diffusers visibility on chassis based on device profile capabilities
+      const hasSidelights = !!(profile && profile.capabilities && profile.capabilities.hasSidelights);
+      container.classList.toggle("has-sidelights", hasSidelights);
 
       container.innerHTML = "";
       this.visualizerKeys = [];
       this.sideDiffusers = [];
 
+      // Determine radial animation center / origin (Exact 1:1 match with physical keyboard firmware: Key P)
+      let centerX = 109;
+      let centerY = 27;
+
+      const keyP = layout.find(k => k.id === "P" || k.label === "P");
+      if (keyP) {
+        centerX = (keyP.qmkPoint && keyP.qmkPoint[0] !== undefined)
+          ? keyP.qmkPoint[0]
+          : Math.round((keyP.x / bounds.width) * 224);
+        centerY = (keyP.qmkPoint && keyP.qmkPoint[1] !== undefined)
+          ? keyP.qmkPoint[1]
+          : Math.round((keyP.y / bounds.height) * 64);
+      }
+
       // 1. Render all Keys + Logo Badge + Rotary Knob
-      window.GMMK3_LAYOUT.forEach((key, idx) => {
+      layout.forEach((key, idx) => {
         const keyEl = document.createElement("div");
         keyEl.className = `lighting-keycap key-group-${key.group}`;
         keyEl.id = `vis-key-${key.id}`;
@@ -183,13 +219,13 @@
           keyEl.innerHTML = `<span class="l-legend">${key.label}</span>`;
         }
 
-        // Use exact QMK hardware point coordinates from ansi.c
-        const qmkX = (key.qmkPoint && key.qmkPoint[0] !== undefined) ? key.qmkPoint[0] : Math.round((key.x / 22.5) * 224);
-        const qmkY = (key.qmkPoint && key.qmkPoint[1] !== undefined) ? key.qmkPoint[1] : Math.round((key.y / 6.25) * 64);
+        // Use exact QMK hardware point coordinates from layout or proportional mapping
+        const qmkX = (key.qmkPoint && key.qmkPoint[0] !== undefined) ? key.qmkPoint[0] : Math.round((key.x / bounds.width) * 224);
+        const qmkY = (key.qmkPoint && key.qmkPoint[1] !== undefined) ? key.qmkPoint[1] : Math.round((key.y / bounds.height) * 64);
         
-        // Exact QMK matrix center is Key 'P' at (109, 27)
-        const dx = qmkX - 109;
-        const dy = qmkY - 27;
+        // Exact distance from natural typing center (between G and H)
+        const dx = qmkX - centerX;
+        const dy = qmkY - centerY;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         const keyObj = {
@@ -223,7 +259,7 @@
               window.gKeymapEditor.selectKey({
                 type: "encoder",
                 id: "ENCODER_PRESS",
-                matrix: [11, 6],
+                matrix: (key.matrix && key.matrix[0] >= 0) ? key.matrix : [11, 6],
                 direction: "Press",
                 defaultLabel: "Knob Press"
               });
@@ -237,11 +273,11 @@
         this.visualizerKeys.push(keyObj);
       });
 
-      // 2. Render Left & Right Side Diffuser Lightbars (10 LEDs left + 10 LEDs right)
-      const diffContainer = document.createElement("div");
-      diffContainer.className = "side-diffusers-container";
+      // 2. Render Left & Right Side Diffuser Lightbars (only if supported)
+      if (hasSidelights && window.GMMK3_SIDE_LEDS) {
+        const diffContainer = document.createElement("div");
+        diffContainer.className = "side-diffusers-container";
 
-      if (window.GMMK3_SIDE_LEDS) {
         // Left side (SLED1 - SLED10, spans from Esc bottom to Left Ctrl top)
         window.GMMK3_SIDE_LEDS.left.forEach((sled) => {
           const sEl = document.createElement("div");
@@ -250,9 +286,9 @@
           diffContainer.appendChild(sEl);
 
           const qmkX = sled.qmkPoint ? sled.qmkPoint[0] : 0;
-          const qmkY = sled.qmkPoint ? sled.qmkPoint[1] : Math.round((sled.y / 6.25) * 64);
-          const dx = qmkX - 109;
-          const dy = qmkY - 27;
+          const qmkY = sled.qmkPoint ? sled.qmkPoint[1] : Math.round((sled.y / bounds.height) * 64);
+          const dx = qmkX - centerX;
+          const dy = qmkY - centerY;
           this.sideDiffusers.push({ id: sled.id, qmkX, qmkY, dx, dy, dist: Math.sqrt(dx * dx + dy * dy), el: sEl, isLeft: true });
         });
 
@@ -261,17 +297,19 @@
           const sEl = document.createElement("div");
           sEl.className = "side-diffuser-segment side-diffuser-right";
           sEl.style.top = `calc(${sled.y} * var(--key-unit) + 18px)`;
+          sEl.style.left = `calc(${bounds.width} * var(--key-unit) + 26px)`;
           diffContainer.appendChild(sEl);
 
           const qmkX = sled.qmkPoint ? sled.qmkPoint[0] : 224;
-          const qmkY = sled.qmkPoint ? sled.qmkPoint[1] : Math.round((sled.y / 6.25) * 64);
-          const dx = qmkX - 109;
-          const dy = qmkY - 27;
+          const qmkY = sled.qmkPoint ? sled.qmkPoint[1] : Math.round((sled.y / bounds.height) * 64);
+          const dx = qmkX - centerX;
+          const dy = qmkY - centerY;
           this.sideDiffusers.push({ id: sled.id, qmkX, qmkY, dx, dy, dist: Math.sqrt(dx * dx + dy * dy), el: sEl, isLeft: false });
         });
+
+        container.appendChild(diffContainer);
       }
 
-      container.appendChild(diffContainer);
       window.gUI?.fitKeyboardPreviews();
     }
 
@@ -574,7 +612,7 @@
 
         case 17: // CYCLE_OUT_IN_DUAL (QMK: 3 * dist + (rev ? -time : time))
           {
-            const dxDual = 54 - Math.abs(k.dx);
+            const dxDual = 56 - Math.abs(k.dx);
             const distDual = Math.sqrt(dxDual * dxDual + k.dy * k.dy);
             h = (Math.round(3 * distDual) + (rev ? (255 - tByte) : tByte)) & 0xFF;
             s = 255; v = baseV;

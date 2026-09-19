@@ -55,7 +55,8 @@
     REACTIVE_SPEED: 23,
     REACTIVE_BLEND: 24,
     LUXQMK_VERSION: 25,
-    QMK_VERSION: 26
+    QMK_VERSION: 26,
+    DEBOUNCE_TIME: 27
   };
 
   const RGB_MATRIX_VAL = {
@@ -516,6 +517,23 @@
       } catch (e) {
         return "QMK";
       }
+    }
+
+    async getDebounceTime() {
+      try {
+        const res = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DEBOUNCE_TIME);
+        if (!res || res[0] === 0xFF || res[1] !== CHANNELS.CUSTOM || res[2] !== CUSTOM_VAL.DEBOUNCE_TIME) {
+          return 5;
+        }
+        return res[3];
+      } catch (e) {
+        return 5;
+      }
+    }
+
+    async setDebounceTime(ms) {
+      await this.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DEBOUNCE_TIME, parseInt(ms, 10) || 5);
+      await this.saveCustomConfig();
     }
 
     async resetEEPROM() {

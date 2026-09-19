@@ -168,6 +168,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   window.i18n.onChange(async () => {
     await refreshDeviceList();
+    if (window.deviceManager) {
+      window.deviceManager.applyProfileUI();
+    }
   });
 
   async function handleDeviceConnected(dev) {
@@ -195,6 +198,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       await keymapEditor.loadKeymapFromDevice();
       await lightingController.loadFromDevice();
+      const debounceVal = await protocol.getDebounceTime();
+      if (ui.updateDebounceFromDevice) {
+        ui.updateDebounceFromDevice(debounceVal);
+      }
     } catch (err) {
       console.warn("Could not load initial device configuration:", err);
     }
@@ -241,6 +248,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   btnConnect?.addEventListener("click", async () => {
     if (protocol.isConnected) {
       await protocol.disconnect();
+      if (window.deviceManager) {
+        window.deviceManager.setFirmwareInfo(null);
+      }
       ui.setDeviceConnectedState(false);
       await refreshDeviceList();
       return;
@@ -252,11 +262,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   protocol.onDevicesChanged = async () => {
     await refreshDeviceList();
     if (!protocol.isConnected) {
+      if (window.deviceManager) {
+        window.deviceManager.setFirmwareInfo(null);
+      }
       await performAutoConnect();
     }
   };
 
   protocol.onDisconnect = async () => {
+    if (window.deviceManager) {
+      window.deviceManager.setFirmwareInfo(null);
+    }
     ui.setDeviceConnectedState(false);
     if (window.gLightingController) {
       window.gLightingController.clearStaleHits();
