@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LuxQMK Studio - QMK / VIA Configuration Hub</title>
   <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
   <link rel="alternate icon" type="image/png" href="assets/icon.png">
-  
+
   <!-- Modular Stylesheets -->
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/sidebar.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
 </head>
+
 <body>
 
-<div class="app-wrapper">
+  <div class="app-wrapper">
     <!-- LEFT SIDEBAR NAVIGATION -->
     <aside class="sidebar">
       <div class="sidebar-brand">
@@ -84,26 +86,31 @@
         <div class="top-bar-left">
           <div class="view-title-wrap">
             <h1 id="topBarViewTitle" data-i18n="viewKeymapTitle">Visual Keymap Editor</h1>
-            <p id="topBarViewSubtitle" data-i18n="viewKeymapSubtitle">Real-time key assignment for hardware layers 0 to 2</p>
+            <p id="topBarViewSubtitle" data-i18n="viewKeymapSubtitle">Real-time key assignment for hardware layers 0 to
+              2</p>
           </div>
         </div>
 
         <!-- Center Device Selector (Top Bar) -->
         <div class="top-bar-center">
           <div class="custom-device-selector" id="customDeviceSelector">
-            <button class="device-selector-btn" id="deviceSelectorBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <button class="device-selector-btn" id="deviceSelectorBtn" type="button" aria-haspopup="listbox"
+              aria-expanded="false">
               <span class="device-status-dot" id="deviceSelectorDot"></span>
               <span class="device-icon">⌨️</span>
               <span class="device-name-display" id="deviceNameDisplay">Searching for devices...</span>
               <span class="device-badge" id="deviceStatusBadge">Disconnected</span>
               <span class="device-chevron">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
               </span>
             </button>
-            <button id="btnAddDevice" class="btn-pair-device" title="Add / Pair New Device (+)" data-i18n-title="tooltipAddDevice" type="button">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <button id="btnAddDevice" class="btn-pair-device" title="Add / Pair New Device (+)"
+              data-i18n-title="tooltipAddDevice" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
@@ -116,7 +123,8 @@
               <div class="device-dropdown-divider"></div>
               <button class="device-dropdown-item add-device-item" id="deviceDropdownAddBtn" type="button">
                 <span class="item-icon-svg">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                   </svg>
@@ -148,7 +156,8 @@
       <!-- 1. VIEW: KEYMAP EDITOR -->
       <section class="view-container active" id="view-keymap">
         <div class="keyboard-canvas-card">
-          <div class="keyboard-canvas-header" style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+          <div class="keyboard-canvas-header"
+            style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
             <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
               <div class="layer-selector">
                 <button class="layer-btn active" data-layer="0" data-i18n="layer0">Layer 0 (Base)</button>
@@ -156,15 +165,18 @@
                 <button class="layer-btn" data-layer="2" data-i18n="layer2">Layer 2 (Custom)</button>
               </div>
               <div id="selectedKeyBanner" style="font-size: 0.8rem;">
-                <span class="muted-text" data-i18n="selectedKeyDefault">Click any keycap on the keyboard to remap it</span>
+                <span class="muted-text" data-i18n="selectedKeyDefault">Click any keycap on the keyboard to remap
+                  it</span>
               </div>
             </div>
 
             <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
               <!-- Offline / Demo layout picker (shown when disconnected) -->
               <div id="layoutPresetWrap" style="display: flex; align-items: center; gap: 0.4rem;">
-                <span class="badge-demo-pill" style="background: rgba(255,170,0,0.15); color: #ffaa00; border: 1px solid rgba(255,170,0,0.3); padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.04em;">DEMO</span>
-                <select id="layoutPresetSelect" class="form-control" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.8rem; height: auto;">
+                <span class="badge-demo-pill"
+                  style="background: rgba(255,170,0,0.15); color: #ffaa00; border: 1px solid rgba(255,170,0,0.3); padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.04em;">DEMO</span>
+                <select id="layoutPresetSelect" class="form-control"
+                  style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.8rem; height: auto;">
                   <option value="gmmk3-100-ansi">Glorious GMMK 3 100% ANSI</option>
                   <option value="gmmk3-75-ansi">Glorious GMMK 3 75% ANSI</option>
                   <option value="gmmk3-65-ansi">Glorious GMMK 3 65% ANSI</option>
@@ -178,16 +190,23 @@
 
               <!-- Connected Device Badge (shown when physically connected) -->
               <div id="connectedDeviceBadgeWrap" style="display: none; align-items: center; gap: 0.5rem;">
-                <div class="connected-device-badge" style="display: inline-flex; align-items: center; gap: 0.45rem; background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.25); padding: 0.22rem 0.6rem; border-radius: 6px;">
-                  <span class="live-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #00ff88; box-shadow: 0 0 6px #00ff88; display: inline-block;"></span>
-                  <span id="connectedDeviceBadgeName" style="font-weight: 600; color: #fff; font-size: 0.82rem;">Glorious GMMK 3 100% ANSI</span>
-                  <span id="connectedDeviceBadgeVidPid" class="badge-subpill" style="font-size: 0.72rem; background: rgba(255,255,255,0.08); color: var(--text-dim); padding: 0.05rem 0.35rem; border-radius: 4px; font-family: var(--font-mono, monospace);">VID: 0x320F</span>
-                  <span id="connectedDeviceBadgeProto" class="badge-subpill" style="font-size: 0.72rem; background: rgba(0,229,255,0.12); color: #00e5ff; border: 1px solid rgba(0,229,255,0.2); padding: 0.05rem 0.35rem; border-radius: 4px; font-weight: 600;">LuxQMK</span>
+                <div class="connected-device-badge"
+                  style="display: inline-flex; align-items: center; gap: 0.45rem; background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.25); padding: 0.22rem 0.6rem; border-radius: 6px;">
+                  <span class="live-dot"
+                    style="width: 7px; height: 7px; border-radius: 50%; background: #00ff88; box-shadow: 0 0 6px #00ff88; display: inline-block;"></span>
+                  <span id="connectedDeviceBadgeName"
+                    style="font-weight: 600; color: #fff; font-size: 0.82rem;">Glorious GMMK 3 100% ANSI</span>
+                  <span id="connectedDeviceBadgeVidPid" class="badge-subpill"
+                    style="font-size: 0.72rem; background: rgba(255,255,255,0.08); color: var(--text-dim); padding: 0.05rem 0.35rem; border-radius: 4px; font-family: var(--font-mono, monospace);">VID:
+                    0x320F</span>
+                  <span id="connectedDeviceBadgeProto" class="badge-subpill"
+                    style="font-size: 0.72rem; background: rgba(0,229,255,0.12); color: #00e5ff; border: 1px solid rgba(0,229,255,0.2); padding: 0.05rem 0.35rem; border-radius: 4px; font-weight: 600;">LuxQMK</span>
                 </div>
               </div>
 
               <input type="file" id="viaJsonFileInput" accept=".json" style="display: none;">
-              <button class="btn btn-secondary btn-sm" id="btnLoadViaJson" style="font-size: 0.78rem; padding: 0.25rem 0.55rem;">
+              <button class="btn btn-secondary btn-sm" id="btnLoadViaJson"
+                style="font-size: 0.78rem; padding: 0.25rem 0.55rem;">
                 <span>📂 <span data-i18n="btnLoadViaLayout">Load VIA (.json)</span></span>
               </button>
             </div>
@@ -223,7 +242,8 @@
       <section class="view-container" id="view-encoder">
         <div class="keyboard-canvas-card" style="margin-bottom: 1.5rem;">
           <h3 style="margin-bottom: 0.5rem;" data-i18n="viewEncoderTitle">Rotary Knob Configuration</h3>
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;" data-i18n="viewEncoderSubtitle">
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;"
+            data-i18n="viewEncoderSubtitle">
             Assign Clockwise, Counter-Clockwise, and Press actions for active layer.
           </p>
 
@@ -263,7 +283,8 @@
           <div class="keyboard-canvas-header">
             <div style="display: flex; align-items: center; gap: 1.5rem;">
               <h3 data-i18n="viewTesterTitle">Interactive Key Tester</h3>
-              <div class="badge-target"><span data-i18n="testedKeys">Tested Keys:</span> <strong id="testedKeysCount">0 / 105</strong></div>
+              <div class="badge-target"><span data-i18n="testedKeys">Tested Keys:</span> <strong id="testedKeysCount">0
+                  / 105</strong></div>
             </div>
             <button class="btn btn-secondary" id="btnResetKeyTest" data-i18n="btnResetTest">🔄 Reset Test</button>
           </div>
@@ -275,7 +296,8 @@
           </div>
 
           <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;" data-i18n="testerRecentKeys">Recently pressed keys:</label>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;"
+              data-i18n="testerRecentKeys">Recently pressed keys:</label>
             <div id="testerHistoryList" style="display: flex; flex-wrap: wrap; gap: 0.35rem; min-height: 38px;"></div>
           </div>
         </div>
@@ -288,15 +310,18 @@
           <div class="keyboard-canvas-header">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
               <span class="live-dot-pulse"></span>
-              <h3 style="font-size: 1.05rem; font-weight: 600;" data-i18n="lightingLivePreviewTitle">Live Lighting Preview & RGB Visualizer (1:1 QMK)</h3>
+              <h3 style="font-size: 1.05rem; font-weight: 600;" data-i18n="lightingLivePreviewTitle">Live Lighting
+                Preview & RGB Visualizer (1:1 QMK)</h3>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
               <div class="layer-selector" id="visLayerSelector" style="padding: 0.15rem;">
-                <button class="layer-btn active" id="btnVisLayer0" data-vlayer="0" data-i18n="layer0">Layer 0 (Base)</button>
+                <button class="layer-btn active" id="btnVisLayer0" data-vlayer="0" data-i18n="layer0">Layer 0
+                  (Base)</button>
                 <button class="layer-btn" id="btnVisLayer1" data-vlayer="1" data-i18n="layer1">Layer 1 (Fn)</button>
                 <button class="layer-btn" id="btnVisLayer2" data-vlayer="2" data-i18n="layer2">Layer 2 (Custom)</button>
               </div>
-              <button class="btn btn-secondary" id="btnHoldFnSim" data-i18n="btnHoldFn" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-color: rgba(99, 102, 241, 0.4);">
+              <button class="btn btn-secondary" id="btnHoldFnSim" data-i18n="btnHoldFn"
+                style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-color: rgba(99, 102, 241, 0.4);">
                 🔘 Hold Fn
               </button>
               <div class="lighting-preview-status">
@@ -367,13 +392,16 @@
               <label data-i18n="lblRgbColor">Effect Color</label>
               <div class="color-input-wrap">
                 <input type="color" id="rgbColorPicker" class="color-picker-input" value="#00ffff">
-                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="hintSingleColor">Set color for single-color effects</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="hintSingleColor">Set color for
+                  single-color effects</span>
               </div>
             </div>
 
-            <div class="switch-wrap" style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
+            <div class="switch-wrap"
+              style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
               <div>
-                <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblReverse">Reverse Animation Direction</span>
+                <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblReverse">Reverse
+                  Animation Direction</span>
               </div>
               <label class="switch">
                 <input type="checkbox" id="chkRgbReverse">
@@ -387,16 +415,20 @@
         <div class="lighting-subview" id="lighting-tab-reactive">
           <div class="palette-card" style="max-width: 680px; margin: 0 auto;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
-              <h3 style="font-size: 1.05rem;" data-i18n="reactiveSectionTitle">⚡ Reactive Layer (Dual-Layer Overlay)</h3>
-              <span class="badge-pill" id="reactiveStatusBadge" style="font-size: 0.75rem;" data-i18n="badgeDisabled">Disabled</span>
+              <h3 style="font-size: 1.05rem;" data-i18n="reactiveSectionTitle">⚡ Reactive Layer (Dual-Layer Overlay)
+              </h3>
+              <span class="badge-pill" id="reactiveStatusBadge" style="font-size: 0.75rem;"
+                data-i18n="badgeDisabled">Disabled</span>
             </div>
-            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 1.25rem;" data-i18n="reactiveDesc">
+            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 1.25rem;"
+              data-i18n="reactiveDesc">
               Layer a reactive keystroke effect directly on top of your background animation.
             </p>
 
             <div class="switch-wrap" style="margin-bottom: 1.25rem;">
               <div>
-                <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblReactiveEnable">Enable Reactive Overlay on Background</span>
+                <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblReactiveEnable">Enable
+                  Reactive Overlay on Background</span>
               </div>
               <label class="switch">
                 <input type="checkbox" id="chkReactiveEnable">
@@ -422,7 +454,8 @@
               <label data-i18n="lblReactiveColor">Reactive Effect Color</label>
               <div class="color-input-wrap">
                 <input type="color" id="reactiveColorPicker" class="color-picker-input" value="#ffffff">
-                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblReactiveColorHint">Color of ripples and reactive flashes</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblReactiveColorHint">Color of
+                  ripples and reactive flashes</span>
               </div>
             </div>
 
@@ -451,9 +484,11 @@
           <div class="palette-card" style="max-width: 680px; margin: 0 auto;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
               <h3 style="font-size: 1.05rem;" data-i18n="winLockSectionTitle">🔒 Windows Key Lock (Win Lock)</h3>
-              <span class="badge-pill" id="winLockStatusBadge" style="font-size: 0.75rem;" data-i18n="badgeUnlocked">Unlocked</span>
+              <span class="badge-pill" id="winLockStatusBadge" style="font-size: 0.75rem;"
+                data-i18n="badgeUnlocked">Unlocked</span>
             </div>
-            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 1.25rem;" data-i18n="winLockDesc">
+            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 1.25rem;"
+              data-i18n="winLockDesc">
               Configure the Windows key LED behavior when Win Lock is toggled (default Fn + Win).
             </p>
 
@@ -470,14 +505,18 @@
               <label data-i18n="lblWinLockColor">Win Lock Indicator Color</label>
               <div class="color-input-wrap">
                 <input type="color" id="winLockColorPicker" class="color-picker-input" value="#ff0000">
-                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblWinLockColorHint">Color of the Win key LED when locked</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblWinLockColorHint">Color of the
+                  Win key LED when locked</span>
               </div>
             </div>
 
-            <div class="switch-wrap" style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
+            <div class="switch-wrap"
+              style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
               <div>
-                <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblWinLockToggle">Toggle Win Lock (Fn + Win)</span>
-                <span style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="lblWinLockToggleHint">Test Windows key GUI lock state</span>
+                <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblWinLockToggle">Toggle
+                  Win Lock (Fn + Win)</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="lblWinLockToggleHint">Test
+                  Windows key GUI lock state</span>
               </div>
               <label class="switch">
                 <input type="checkbox" id="chkWinLockToggle">
@@ -495,7 +534,8 @@
 
               <div class="switch-wrap" style="margin-bottom: 1.25rem;">
                 <div>
-                  <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblLayerLightingEnable">Dim Inactive & Highlight Active Keys</span>
+                  <span style="display: block; font-weight: 600; font-size: 0.9rem;"
+                    data-i18n="lblLayerLightingEnable">Dim Inactive & Highlight Active Keys</span>
                 </div>
                 <label class="switch">
                   <input type="checkbox" id="chkLayerLighting" checked>
@@ -515,7 +555,8 @@
             </div>
 
             <div class="palette-card" style="display: flex; flex-direction: column; gap: 0.85rem;">
-              <h3 style="margin-bottom: 0.5rem; font-size: 1.05rem;" data-i18n="layerColorsTitle">Active Layer Colors</h3>
+              <h3 style="margin-bottom: 0.5rem; font-size: 1.05rem;" data-i18n="layerColorsTitle">Active Layer Colors
+              </h3>
 
               <div class="color-item-card">
                 <div class="color-item-info">
@@ -547,7 +588,8 @@
         <!-- Sub-Tab 5: Logo & Locks -->
         <div class="lighting-subview" id="lighting-tab-logo">
           <div class="palette-card" style="margin-bottom: 1.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
               <div>
                 <h3 style="font-size: 1.05rem; margin-bottom: 0.25rem;" data-i18n="tabLogo">Logo & Locks</h3>
                 <p style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="logoSubtitle">
@@ -555,7 +597,8 @@
                 </p>
               </div>
               <div style="min-width: 280px;">
-                <label style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.35rem; display: block;" data-i18n="lblLogoMode">Logo Mode</label>
+                <label style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.35rem; display: block;"
+                  data-i18n="lblLogoMode">Logo Mode</label>
                 <select id="logoModeSelect" class="form-control">
                   <option value="0" data-i18n="optLogoRgb">RGB Matrix Effect (Default)</option>
                   <option value="1" data-i18n="optLogoLockRgb">Lock Indicator (RGB when inactive)</option>
@@ -631,7 +674,8 @@
         <div class="palette-card" style="max-width: 820px; margin: 0 auto 1.5rem auto;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
             <div>
-              <h3 style="font-size: 1.15rem; margin-bottom: 0.25rem;" data-i18n="audioCardTitle">🎵 Real-Time Audio Visualizer & Spectrum</h3>
+              <h3 style="font-size: 1.15rem; margin-bottom: 0.25rem;" data-i18n="audioCardTitle">🎵 Real-Time Audio
+                Visualizer & Spectrum</h3>
               <p style="color: var(--text-muted); font-size: 0.85rem;" data-i18n="audioDesc">
                 Synchronize your keyboard LEDs to music, YouTube, Spotify, and gaming sounds in real time.
               </p>
@@ -640,7 +684,8 @@
           </div>
 
           <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
-            <button class="btn btn-primary" id="btnAudioToggle" style="padding: 0.75rem 1.5rem; font-weight: 600;" data-i18n="btnAudioStart">
+            <button class="btn btn-primary" id="btnAudioToggle" style="padding: 0.75rem 1.5rem; font-weight: 600;"
+              data-i18n="btnAudioStart">
               ▶️ Start Audio Visualizer
             </button>
           </div>
@@ -669,7 +714,8 @@
             <label data-i18n="lblAudioSingleColor">Audio Accent Color</label>
             <div class="color-input-wrap">
               <input type="color" id="audioColorPicker" class="color-picker-input" value="#00ffff">
-              <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblAudioSingleColorHint">Color of frequency bars and pulses</span>
+              <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblAudioSingleColorHint">Color of
+                frequency bars and pulses</span>
             </div>
           </div>
 
@@ -679,7 +725,8 @@
               <span id="audioSensVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">1.2x</span>
             </div>
             <div class="range-slider-wrap">
-              <input type="range" id="audioSensitivitySlider" class="range-slider" min="0.5" max="3.0" step="0.1" value="1.2">
+              <input type="range" id="audioSensitivitySlider" class="range-slider" min="0.5" max="3.0" step="0.1"
+                value="1.2">
             </div>
           </div>
         </div>
@@ -688,7 +735,8 @@
         <div class="palette-card" id="desktopAutostartCard" style="display: none; max-width: 820px; margin: 0 auto;">
           <div class="switch-wrap">
             <div>
-              <span style="display: block; font-weight: 600; font-size: 0.95rem;" data-i18n="lblAutostart">Launch LuxQMK Studio on Windows Startup</span>
+              <span style="display: block; font-weight: 600; font-size: 0.95rem;" data-i18n="lblAutostart">Launch LuxQMK
+                Studio on Windows Startup</span>
               <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblAutostartHint">
                 Runs quietly in the System Tray and operates audio visualizers in the background.
               </span>
@@ -707,7 +755,8 @@
           <!-- Backup Card -->
           <div class="palette-card" style="display: flex; flex-direction: column;">
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-              <span style="font-size: 1.5rem; background: rgba(0, 240, 255, 0.1); padding: 0.5rem; border-radius: var(--radius-md); color: var(--accent-cyan);">💾</span>
+              <span
+                style="font-size: 1.5rem; background: rgba(0, 240, 255, 0.1); padding: 0.5rem; border-radius: var(--radius-md); color: var(--accent-cyan);">💾</span>
               <div>
                 <h3 data-i18n="backupTitle">Create Complete Backup</h3>
                 <p style="color: var(--text-muted); font-size: 0.8rem;" data-i18n="backupDesc">
@@ -716,7 +765,8 @@
               </div>
             </div>
 
-            <ul class="feature-checklist" style="margin: 0.75rem 0 1.25rem 0; font-size: 0.82rem; color: var(--text-muted); list-style: none; display: flex; flex-direction: column; gap: 0.4rem;">
+            <ul class="feature-checklist"
+              style="margin: 0.75rem 0 1.25rem 0; font-size: 0.82rem; color: var(--text-muted); list-style: none; display: flex; flex-direction: column; gap: 0.4rem;">
               <li data-i18n="backupFeatureLayers">✓ 3 Hardware Keymap Layers (Base, Fn, Custom)</li>
               <li data-i18n="backupFeatureEncoder">✓ Rotary Knob Configuration (CCW, CW, Press)</li>
               <li data-i18n="backupFeatureMacros">✓ Macro Memory & Dynamic Keycodes</li>
@@ -725,7 +775,8 @@
             </ul>
 
             <div class="progress-container" id="backupProgress" style="display: none; margin-bottom: 1rem;">
-              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 0.35rem; color: var(--text-muted);">
+              <div
+                style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 0.35rem; color: var(--text-muted);">
                 <span id="backupProgressText" data-i18n="backupProgressReading">Reading data from keyboard...</span>
                 <span id="backupProgressPercent">0%</span>
               </div>
@@ -735,7 +786,8 @@
             </div>
 
             <div style="margin-top: auto; padding-top: 1rem;">
-              <button class="btn btn-primary" id="btnCreateBackup" style="width: 100%;" disabled data-i18n="btnDownloadBackup">
+              <button class="btn btn-primary" id="btnCreateBackup" style="width: 100%;" disabled
+                data-i18n="btnDownloadBackup">
                 💾 Download JSON Backup File
               </button>
             </div>
@@ -744,7 +796,8 @@
           <!-- Restore Card -->
           <div class="palette-card" style="display: flex; flex-direction: column;">
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-              <span style="font-size: 1.5rem; background: rgba(139, 92, 246, 0.1); padding: 0.5rem; border-radius: var(--radius-md); color: var(--secondary);">⚡</span>
+              <span
+                style="font-size: 1.5rem; background: rgba(139, 92, 246, 0.1); padding: 0.5rem; border-radius: var(--radius-md); color: var(--secondary);">⚡</span>
               <div>
                 <h3 data-i18n="restoreTitle">Restore from Backup</h3>
                 <p style="color: var(--text-muted); font-size: 0.8rem;" data-i18n="restoreDesc">
@@ -757,7 +810,8 @@
               <input type="file" id="fileInput" accept=".json" style="display: none;">
               <div style="font-size: 1.8rem; margin-bottom: 0.35rem;">📂</div>
               <strong data-i18n="dropzoneTextTitle">Click or drag & drop backup file here</strong>
-              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;" data-i18n="dropzoneText">Accepts JSON configuration snapshots exported from LuxQMK Studio</p>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;" data-i18n="dropzoneText">
+                Accepts JSON configuration snapshots exported from LuxQMK Studio</p>
             </div>
 
             <div class="file-preview-card" id="filePreview" style="display: none; margin-bottom: 1rem;">
@@ -766,16 +820,22 @@
                 <span id="prevDate" style="font-size: 0.75rem; color: var(--text-dim);">-</span>
               </div>
               <div class="preview-stats-grid">
-                <div class="stat-pill"><span class="stat-lbl" data-i18n="lblStatLayers">Layers:</span> <strong id="prevLayers">-</strong></div>
-                <div class="stat-pill"><span class="stat-lbl" data-i18n="lblStatEncoder">Encoder:</span> <strong id="prevEncoder">-</strong></div>
-                <div class="stat-lbl-box"><span class="stat-lbl" data-i18n="lblStatRgb">RGB:</span> <strong id="prevRgb">-</strong></div>
-                <div class="stat-lbl-box"><span class="stat-lbl" data-i18n="lblStatCustom">GMMK 3:</span> <strong id="prevCustom">-</strong></div>
+                <div class="stat-pill"><span class="stat-lbl" data-i18n="lblStatLayers">Layers:</span> <strong
+                    id="prevLayers">-</strong></div>
+                <div class="stat-pill"><span class="stat-lbl" data-i18n="lblStatEncoder">Encoder:</span> <strong
+                    id="prevEncoder">-</strong></div>
+                <div class="stat-lbl-box"><span class="stat-lbl" data-i18n="lblStatRgb">RGB:</span> <strong
+                    id="prevRgb">-</strong></div>
+                <div class="stat-lbl-box"><span class="stat-lbl" data-i18n="lblStatCustom">GMMK 3:</span> <strong
+                    id="prevCustom">-</strong></div>
               </div>
             </div>
 
             <div class="progress-container" id="restoreProgress" style="display: none; margin-bottom: 1rem;">
-              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 0.35rem; color: var(--text-muted);">
-                <span id="restoreProgressText" data-i18n="restoreProgressWriting">Writing settings to EEPROM memory...</span>
+              <div
+                style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 0.35rem; color: var(--text-muted);">
+                <span id="restoreProgressText" data-i18n="restoreProgressWriting">Writing settings to EEPROM
+                  memory...</span>
                 <span id="restoreProgressPercent">0%</span>
               </div>
               <div class="progress-track">
@@ -784,7 +844,8 @@
             </div>
 
             <div style="margin-top: auto; padding-top: 1rem;">
-              <button class="btn btn-primary" id="btnRestoreBackup" style="width: 100%;" disabled data-i18n="btnFlashBackup">
+              <button class="btn btn-primary" id="btnRestoreBackup" style="width: 100%;" disabled
+                data-i18n="btnFlashBackup">
                 ⚡ Restore & Flash to Keyboard Memory
               </button>
             </div>
@@ -796,7 +857,8 @@
           <div class="console-header">
             <div style="display: flex; align-items: center; gap: 0.6rem;">
               <span style="font-size: 1.1rem;">📟</span>
-              <h4 style="font-size: 0.92rem; font-weight: 600;" data-i18n="consoleTitle">Hardware HID Communication Console</h4>
+              <h4 style="font-size: 0.92rem; font-weight: 600;" data-i18n="consoleTitle">Hardware HID Communication
+                Console</h4>
             </div>
             <button class="btn btn-secondary" id="btnClearLog" style="padding: 0.3rem 0.75rem; font-size: 0.75rem;">
               🗑️ <span data-i18n="btnClearLog">Clear Console</span>
@@ -805,7 +867,8 @@
           <div class="console-log" id="consoleLog">
             <div class="log-line">
               <span class="log-time">[00:00:00]</span>
-              <span class="log-info" id="consoleInitialMsg" data-i18n="consoleInitialLog">Ready. Connect keyboard via WebHID to start transmission.</span>
+              <span class="log-info" id="consoleInitialMsg" data-i18n="consoleInitialLog">Ready. Connect keyboard via
+                WebHID to start transmission.</span>
             </div>
           </div>
         </div>
@@ -818,26 +881,44 @@
           <!-- CARD 1: PERFORMANCE & LATENCY -->
           <div class="palette-card settings-card">
             <div class="settings-card-header">
-              <span class="settings-card-icon" style="background: rgba(0, 240, 255, 0.1); color: var(--accent-cyan);">⚡</span>
+              <span class="settings-card-icon"
+                style="background: rgba(0, 240, 255, 0.1); color: var(--accent-cyan);">⚡</span>
               <div>
                 <h3 data-i18n="cardPerformanceTitle">Performance & Input Latency</h3>
-                <p class="settings-card-subtitle" data-i18n="cardPerformanceSubtitle">Configure switch debounce filtering, NKRO rollover mode, and USB polling rate</p>
+                <p class="settings-card-subtitle" data-i18n="cardPerformanceSubtitle">Configure switch debounce
+                  filtering, NKRO rollover mode, and USB polling rate</p>
+              </div>
+            </div>
+
+            <!-- Debounce Algorithm Selector -->
+            <div class="settings-group">
+              <div class="settings-label-row">
+                <span class="settings-item-title" data-i18n="lblDebounceType">Debounce Engine / Algorithm</span>
+                <span class="settings-badge" id="currentDebounceTypeBadge">Symmetric Defer (QMK Default)</span>
+              </div>
+              <p class="settings-item-desc" data-i18n="descDebounceType">
+                Choose the matrix switch scanning algorithm. Asymmetric Eager activates immediately upon press (0 ms actuation lag) while filtering release chatter; Symmetric Defer ensures maximum contact stability for typing.
+              </p>
+              <div class="debounce-pills" id="debounceTypePillsContainer">
+                <button type="button" class="debounce-pill debounce-type-pill active" data-val="0" data-i18n="debounceTypeDefer">🛡️ Symmetric Defer (QMK Default / Safe)</button>
+                <button type="button" class="debounce-pill debounce-type-pill" data-val="1" data-i18n="debounceTypeAsymEager">⚡ Asymmetric Eager (0ms Press / Esports)</button>
+                <button type="button" class="debounce-pill debounce-type-pill" data-val="2" data-i18n="debounceTypeSymEager">🚀 Symmetric Eager (Ultra Fast)</button>
               </div>
             </div>
 
             <!-- Debounce Time Selector -->
             <div class="settings-group">
               <div class="settings-label-row">
-                <span class="settings-item-title" data-i18n="lblDebounceTime">Debounce Time / Input Latency</span>
+                <span class="settings-item-title" data-i18n="lblDebounceTime">Debounce Time / Filtering Window</span>
                 <span class="settings-badge" id="currentDebounceBadge">5 ms</span>
               </div>
               <p class="settings-item-desc" data-i18n="descDebounce">
                 Filters mechanical contact vibrations (switch chatter). 0–2 ms offers ultra-fast esports response; 16 ms provides safe operation preventing accidental double clicks on older switches.
               </p>
               <div class="debounce-pills" id="debouncePillsContainer">
-                <button type="button" class="debounce-pill" data-val="0" data-i18n="debounce0">0 ms (Esports / Eager)</button>
+                <button type="button" class="debounce-pill" data-val="0" data-i18n="debounce0">0 ms (Esports Pass-through)</button>
                 <button type="button" class="debounce-pill" data-val="2" data-i18n="debounce2">2 ms (Ultra Fast)</button>
-                <button type="button" class="debounce-pill active" data-val="5" data-i18n="debounce5">5 ms (Balanced QMK)</button>
+                <button type="button" class="debounce-pill active" data-val="5" data-i18n="debounce5">5 ms (QMK Default / Balanced)</button>
                 <button type="button" class="debounce-pill" data-val="8" data-i18n="debounce8">8 ms (Standard)</button>
                 <button type="button" class="debounce-pill" data-val="16" data-i18n="debounce16">16 ms (Safe)</button>
               </div>
@@ -882,25 +963,30 @@
           <!-- CARD 2: HARDWARE INFO -->
           <div class="palette-card settings-card">
             <div class="settings-card-header">
-              <span class="settings-card-icon" style="background: rgba(189, 0, 255, 0.1); color: var(--accent-magenta);">ℹ️</span>
+              <span class="settings-card-icon"
+                style="background: rgba(189, 0, 255, 0.1); color: var(--accent-magenta);">ℹ️</span>
               <div>
                 <h3 data-i18n="cardHardwareTitle">Hardware Information & Diagnostics</h3>
-                <p class="settings-card-subtitle" data-i18n="cardHardwareSubtitle">Controller specifications, memory status, and communication protocols</p>
+                <p class="settings-card-subtitle" data-i18n="cardHardwareSubtitle">Controller specifications, memory
+                  status, and communication protocols</p>
               </div>
             </div>
 
             <div class="hardware-info-grid">
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblKeyboardModel">Keyboard Model:</span>
-                <span id="hw-keyboard-model" class="hardware-info-value highlight" data-i18n="valKeyboardModel">Glorious GMMK 3 100% ANSI</span>
+                <span id="hw-keyboard-model" class="hardware-info-value highlight" data-i18n="valKeyboardModel">Glorious
+                  GMMK 3 100% ANSI</span>
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblMcuChip">MCU Microcontroller:</span>
-                <span id="hw-mcu-chip" class="hardware-info-value" data-i18n="valMcuChip">WB32FQ95 (ARM Cortex-M4)</span>
+                <span id="hw-mcu-chip" class="hardware-info-value" data-i18n="valMcuChip">WB32FQ95 (ARM
+                  Cortex-M4)</span>
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblUsbVidPid">USB VID / PID:</span>
-                <span id="hw-usb-vidpid" class="hardware-info-value" data-i18n="valUsbVidPid">VID: 0x504B | PID: 0x320F</span>
+                <span id="hw-usb-vidpid" class="hardware-info-value" data-i18n="valUsbVidPid">VID: 0x504B | PID:
+                  0x320F</span>
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblProtocolVersion">Firmware & Engine:</span>
@@ -908,22 +994,27 @@
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblMatrixLayout">Physical Matrix:</span>
-                <span id="hw-matrix-layout" class="hardware-info-value" data-i18n="valMatrixLayout">14 Rows × 8 Cols (112 Key Positions)</span>
+                <span id="hw-matrix-layout" class="hardware-info-value" data-i18n="valMatrixLayout">14 Rows × 8 Cols
+                  (112 Key Positions)</span>
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblEepromSize">Custom EEPROM Buffer:</span>
-                <span id="hw-eeprom-size" class="hardware-info-value" data-i18n="valEepromSize">36 Bytes Dedicated Storage</span>
+                <span id="hw-eeprom-size" class="hardware-info-value" data-i18n="valEepromSize">36 Bytes Dedicated
+                  Storage</span>
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblCompatibilityStatus">Compatibility Status:</span>
-                <span id="hw-compat-status" class="hardware-info-value" style="color: var(--text-muted, #888888);">—</span>
+                <span id="hw-compat-status" class="hardware-info-value"
+                  style="color: var(--text-muted, #888888);">—</span>
               </div>
             </div>
 
             <!-- Autostart card if desktop Electron -->
-            <div id="desktopAutostartCard" style="display: none; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color);">
+            <div id="desktopAutostartCard"
+              style="display: none; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color);">
               <div class="settings-label-row">
-                <span class="settings-item-title" data-i18n="lblDesktopAutostart">Start LuxQMK Studio on System Boot</span>
+                <span class="settings-item-title" data-i18n="lblDesktopAutostart">Start LuxQMK Studio on System
+                  Boot</span>
                 <label class="switch-control">
                   <input type="checkbox" id="chkDesktopAutostart">
                   <span class="switch-slider"></span>
@@ -935,10 +1026,12 @@
           <!-- CARD 3: MAINTENANCE & EEPROM TOOLS -->
           <div class="palette-card settings-card">
             <div class="settings-card-header">
-              <span class="settings-card-icon" style="background: rgba(255, 170, 0, 0.1); color: var(--accent-amber);">🛠️</span>
+              <span class="settings-card-icon"
+                style="background: rgba(255, 170, 0, 0.1); color: var(--accent-amber);">🛠️</span>
               <div>
                 <h3 data-i18n="cardMaintenanceTitle">Maintenance & EEPROM Tools</h3>
-                <p class="settings-card-subtitle" data-i18n="cardMaintenanceSubtitle">Advanced operations on controller memory and flashing mode</p>
+                <p class="settings-card-subtitle" data-i18n="cardMaintenanceSubtitle">Advanced operations on controller
+                  memory and flashing mode</p>
               </div>
             </div>
 
@@ -946,7 +1039,8 @@
               <div class="maintenance-action-item">
                 <div class="maintenance-action-text">
                   <strong data-i18n="lblBootloaderTitle">Reboot to Bootloader (DFU Mode)</strong>
-                  <p data-i18n="btnBootloaderDesc">Puts the keyboard into DFU Bootloader mode for flashing new firmware (.bin/.hex).</p>
+                  <p data-i18n="btnBootloaderDesc">Puts the keyboard into DFU Bootloader mode for flashing new firmware
+                    (.bin/.hex).</p>
                 </div>
                 <button class="btn btn-secondary" id="btnJumpBootloader" disabled data-i18n="btnBootloader">
                   🚀 Reboot to Bootloader (DFU Mode)
@@ -956,7 +1050,8 @@
               <div class="maintenance-action-item">
                 <div class="maintenance-action-text">
                   <strong data-i18n="lblResetEepromTitle">Factory Reset EEPROM</strong>
-                  <p data-i18n="btnResetEepromDesc">Clears keyboard EEPROM memory and restores factory default keymaps, lighting, and macros.</p>
+                  <p data-i18n="btnResetEepromDesc">Clears keyboard EEPROM memory and restores factory default keymaps,
+                    lighting, and macros.</p>
                 </div>
                 <button class="btn btn-danger" id="btnResetEEPROM" disabled data-i18n="btnResetEeprom">
                   ⚠️ Factory Reset EEPROM
@@ -966,7 +1061,8 @@
               <div class="maintenance-action-item">
                 <div class="maintenance-action-text">
                   <strong data-i18n="lblQuickBackupTitle">Quick Profile Backup</strong>
-                  <p data-i18n="btnQuickBackupDesc">Quickly export a full snapshot of your current layers and lighting configuration.</p>
+                  <p data-i18n="btnQuickBackupDesc">Quickly export a full snapshot of your current layers and lighting
+                    configuration.</p>
                 </div>
                 <button class="btn btn-secondary" id="btnQuickBackup" disabled data-i18n="btnQuickBackup">
                   💾 Export Profile Backup
@@ -1001,7 +1097,8 @@
           </div>
           <div class="modal-section-content">
             <strong style="font-size: 1.05rem; color: #ffffff;" data-i18n="lblAuthorName">Dorian Piwnik</strong>
-            <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.2rem;" data-i18n="lblAuthorRole">Creator & Lead Developer of the LuxQMK Project</p>
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.2rem;" data-i18n="lblAuthorRole">Creator
+              & Lead Developer of the LuxQMK Project</p>
           </div>
         </div>
 
@@ -1037,10 +1134,14 @@
           <div class="modal-section-title">
             <span>⚖️</span> <span data-i18n="lblLegalTitle">Legal Notices & Disclaimer</span>
           </div>
-          <div class="modal-section-content" style="font-size: 0.78rem; color: var(--text-dim); line-height: 1.55;" data-i18n="lblLegalDesc">
-            LuxQMK Studio is an independent companion configuration suite developed for keyboards running LuxQMK custom firmware (fork of QMK Firmware) communicating via standard WebHID / VIA protocol channels.<br><br>
-            QMK Firmware is open-source software licensed under GPLv2+. VIA is an open configuration protocol standard.<br><br>
-            All product names, logos, trademarks, and registered trademarks (including Glorious, GMMK 3, GMMK 2, WB32) are property of their respective owners and are used solely for identification and compatibility purposes.
+          <div class="modal-section-content" style="font-size: 0.78rem; color: var(--text-dim); line-height: 1.55;"
+            data-i18n="lblLegalDesc">
+            LuxQMK Studio is an independent companion configuration suite developed for keyboards running LuxQMK custom
+            firmware (fork of QMK Firmware) communicating via standard WebHID / VIA protocol channels.<br><br>
+            QMK Firmware is open-source software licensed under GPLv2+. VIA is an open configuration protocol
+            standard.<br><br>
+            All product names, logos, trademarks, and registered trademarks (including Glorious, GMMK 3, GMMK 2, WB32)
+            are property of their respective owners and are used solely for identification and compatibility purposes.
           </div>
         </div>
       </div>
@@ -1072,4 +1173,5 @@
   <script src="js/ui-controller.js"></script>
   <script src="js/app.js"></script>
 </body>
+
 </html>

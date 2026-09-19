@@ -131,7 +131,7 @@
       if (this.device) {
         try {
           this.device.removeEventListener('inputreport', this._reportListener);
-        } catch (e) {}
+        } catch (e) { }
       }
       if (this._pending) {
         if (this._pending.timer) clearTimeout(this._pending.timer);
@@ -250,7 +250,7 @@
           if (this.device.opened) {
             await this.device.close();
           }
-        } catch (e) {}
+        } catch (e) { }
       }
       this.cleanup();
       const msg = window.i18n ? window.i18n.t("logDisconnected") : "Keyboard disconnected";
@@ -309,8 +309,8 @@
         }
       };
 
-      const nextPromise = this._lock.catch(() => {}).then(currentAction);
-      this._lock = nextPromise.catch(() => {});
+      const nextPromise = this._lock.catch(() => { }).then(currentAction);
+      this._lock = nextPromise.catch(() => { });
       return nextPromise;
     }
 
@@ -552,7 +552,7 @@
       // QMK VIA standard bootloader jump command
       try {
         await this.sendCommand([0x05, 0xFF]);
-      } catch (e) {}
+      } catch (e) { }
     }
   }
 
