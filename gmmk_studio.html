@@ -631,6 +631,8 @@ body {
   cursor: pointer;
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition: transform 0.08s ease;
+  contain: layout style;
+  will-change: background-color;
 }
 
 .lighting-keycap:hover {
@@ -688,7 +690,9 @@ body {
   min-height: 0 !important;
   padding: 0 !important;
   box-sizing: border-box !important;
-  transition: background-color 0.1s ease, box-shadow 0.1s ease !important;
+  transition: transform 0.08s ease !important;
+  contain: layout style;
+  will-change: background-color;
 }
 
 .keycap-logo-badge {
@@ -726,8 +730,9 @@ body {
   width: 4px;
   height: 18px;
   border-radius: 2px;
-  transition: background-color 0.05s ease, box-shadow 0.05s ease;
   pointer-events: none;
+  contain: layout style;
+  will-change: background-color;
 }
 
 .side-diffuser-left {
@@ -3209,6 +3214,552 @@ input:checked + .switch-slider:before {
   transform: translateY(0);
 }
 
+/* ==========================================================================
+   Per-Key Custom RGB Profile Studio Styles & Responsive Grid
+   ========================================================================== */
+.backlight-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 680px;
+  margin: 0 auto;
+  gap: 1.25rem;
+  align-items: start;
+  transition: max-width 0.25s ease;
+}
+
+.backlight-layout-grid.perkey-active {
+  grid-template-columns: 1fr 1.25fr;
+  max-width: 1280px;
+}
+
+@media (max-width: 1080px) {
+  .backlight-layout-grid.perkey-active {
+    grid-template-columns: 1fr;
+    max-width: 680px;
+  }
+}
+
+.backlight-settings-card,
+.perkey-studio-card {
+  width: 100%;
+}
+
+.perkey-profile-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.perkey-prof-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.perkey-prof-tab-btn:hover {
+  background: rgba(0, 229, 255, 0.1);
+  border-color: rgba(0, 229, 255, 0.3);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.perkey-prof-tab-btn.active {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(99, 102, 241, 0.25));
+  border-color: var(--accent-cyan);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+}
+
+.perkey-palette-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 1rem;
+}
+
+.perkey-swatches-grid {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.perkey-swatch-item {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+  flex-shrink: 0;
+}
+
+.perkey-swatch-item:hover {
+  transform: scale(1.18);
+  border-color: #fff;
+  box-shadow: 0 0 8px currentColor;
+  z-index: 2;
+}
+
+.perkey-swatch-item.active {
+  border: 2px solid #fff;
+  transform: scale(1.15);
+  box-shadow: 0 0 10px #fff;
+}
+
+.perkey-groups-bar {
+  margin-bottom: 1rem;
+}
+
+.perkey-group-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.perkey-grp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  padding: 0.28rem 0.55rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.perkey-grp-btn:hover {
+  background: rgba(0, 229, 255, 0.12);
+  border-color: var(--accent-cyan);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.perkey-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.85rem;
+}
+
+.template-item-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.template-item-btn:hover {
+  background: rgba(0, 229, 255, 0.15);
+  color: var(--accent-cyan);
+}
+
+/* Keycap Selection Highlight on Upper Visualizer */
+.lighting-keycap.perkey-selected,
+.side-diffuser-segment.perkey-selected,
+.lighting-logo-badge.perkey-selected {
+  outline: 2px solid #00ffff !important;
+  outline-offset: 1px;
+  box-shadow: 0 0 14px #00ffff, inset 0 0 6px rgba(0, 255, 255, 0.5) !important;
+  animation: pulse-selection 1.5s infinite alternate ease-in-out;
+  z-index: 10;
+}
+
+@keyframes pulse-selection {
+  0% {
+    outline-color: #00ffff;
+    box-shadow: 0 0 10px #00ffff;
+  }
+  100% {
+    outline-color: #ff00ff;
+    box-shadow: 0 0 16px #ff00ff;
+  }
+}
+
+/* Marquee Drag Box Selection Rectangle */
+.perkey-marquee-box {
+  position: absolute;
+  border: 1px dashed var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.12);
+  pointer-events: none;
+  z-index: 999;
+  border-radius: 4px;
+}
+
+/* --- Per-Key Live Visualizer Hint Bar --- */
+.perkey-live-hint-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.5rem;
+  background: rgba(14, 18, 28, 0.75);
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: fadeIn 0.25s ease;
+}
+
+.perkey-hint-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+}
+
+.perkey-hint-chip svg {
+  color: var(--accent-cyan);
+  flex-shrink: 0;
+}
+
+/* --- Per-Key Instructions & Tips Guide Accordion Card --- */
+.perkey-instructions-card {
+  margin-top: 1rem;
+  background: var(--bg-darker);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.perkey-instructions-card:hover {
+  border-color: rgba(0, 229, 255, 0.3);
+}
+
+.perkey-instructions-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.9rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: none;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.perkey-instructions-toggle:hover {
+  background: rgba(0, 229, 255, 0.06);
+}
+
+.perkey-instructions-toggle svg {
+  color: var(--accent-cyan);
+}
+
+.perkey-instructions-toggle .chevron-icon {
+  color: var(--text-muted);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.perkey-instructions-card.collapsed .perkey-instructions-toggle .chevron-icon {
+  transform: rotate(-90deg);
+}
+
+.perkey-instructions-content {
+  padding: 0.85rem 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(10, 14, 22, 0.5);
+  display: block;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+}
+
+.perkey-instructions-card.collapsed .perkey-instructions-content {
+  display: none;
+}
+
+.perkey-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.65rem;
+}
+
+.perkey-guide-item {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.perkey-guide-item:hover {
+  background: rgba(0, 229, 255, 0.04);
+  border-color: rgba(0, 229, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.perkey-guide-item .guide-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0.3rem;
+}
+
+.perkey-guide-item .guide-header svg {
+  color: var(--accent-cyan);
+  flex-shrink: 0;
+}
+
+.perkey-guide-item .guide-header strong {
+  font-size: 0.78rem;
+  color: var(--text-main);
+}
+
+.perkey-guide-item p {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.perkey-guide-item kbd {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--accent-cyan);
+}
+
+.perkey-guide-item em {
+  color: var(--text-main);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* --- Unsaved Changes Floating Action Bar (Prominent & Clear) --- */
+.unsaved-changes-banner {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(160%);
+  z-index: 10000;
+  background: rgba(14, 18, 28, 0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(245, 158, 11, 0.85);
+  border-radius: 14px;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85), 0 0 35px rgba(245, 158, 11, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  min-width: 480px;
+  max-width: 90vw;
+}
+
+.unsaved-changes-banner.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.unsaved-changes-banner.saved-success {
+  border-color: rgba(34, 197, 94, 0.9);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85), 0 0 35px rgba(34, 197, 94, 0.4);
+}
+
+.unsaved-icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: pulseIcon 2s infinite ease-in-out;
+}
+
+.unsaved-changes-banner.saved-success .unsaved-icon-badge {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+  animation: none;
+}
+
+@keyframes pulseIcon {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+  50% { transform: scale(1.08); box-shadow: 0 0 16px 4px rgba(245, 158, 11, 0.35); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+.unsaved-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.unsaved-banner-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unsaved-banner-sub {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+.btn-unsaved-save {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-unsaved-discard {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-unsaved-discard:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  transform: translateY(-2px);
+}
+
+.unsaved-changes-banner.saved-success .btn-unsaved-save,
+.unsaved-changes-banner.saved-success .btn-unsaved-discard {
+  display: none;
+}
+
+/* Top bar unsaved changes badge */
+.topbar-unsaved-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  border-radius: 20px;
+  padding: 4px 12px 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.unsaved-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 10px #f59e0b;
+  animation: pulseDot 1.5s infinite ease-in-out;
+  flex-shrink: 0;
+}
+
+@keyframes pulseDot {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+.btn-topbar-save {
+  background: #f59e0b;
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.btn-topbar-save:hover {
+  background: #fbbf24;
+  transform: scale(1.05);
+}
+
+/* Pulsating animation for all card EEPROM save buttons when unsaved */
+.btn-save-eeprom-pulse {
+  animation: eepromSavePulse 1.8s infinite ease-in-out !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.9) !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.6) !important;
+}
+
+@keyframes eepromSavePulse {
+  0% { transform: scale(1); box-shadow: 0 0 8px rgba(245, 158, 11, 0.35); }
+  50% { transform: scale(1.035); box-shadow: 0 0 24px rgba(245, 158, 11, 0.85); }
+  100% { transform: scale(1); box-shadow: 0 0 8px rgba(245, 158, 11, 0.35); }
+}
+
+
 
 
 
@@ -3410,6 +3961,19 @@ input:checked + .switch-slider:before {
         </div>
 
         <div class="top-bar-actions">
+          <div id="topBarUnsavedBadge" class="topbar-unsaved-badge" style="display: none;">
+            <span class="unsaved-badge-dot"></span>
+            <span class="topbar-unsaved-text" data-i18n="unsavedBadgeText">Niezapisane zmiany</span>
+            <button type="button" class="btn-topbar-save" id="btnTopBarSave" title="Zapisz w pamięci EEPROM">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              <span data-i18n="unsavedChangesSaveBtn">Zapisz</span>
+            </button>
+          </div>
+
           <button class="btn btn-secondary" id="btnRefreshDevice" disabled>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="23 4 23 10 17 10"></polyline>
@@ -3786,9 +4350,29 @@ input:checked + .switch-slider:before {
             </div>
           </div>
 
-          <div class="keyboard-scroll-wrapper">
+          <div class="keyboard-scroll-wrapper" id="lightingKeyboardScrollWrapper">
             <div class="keyboard-canvas" id="lightingKeyboardCanvas">
               <!-- Dynamically populated 105 animated RGB keycaps -->
+            </div>
+          </div>
+
+          <!-- Per-Key Live Selection & Paint Quick Hint Bar -->
+          <div class="perkey-live-hint-bar" id="perKeyVisualizerHint" style="display: none;">
+            <div class="perkey-hint-chip">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 3 7 18 3-7 7-3L3 3z"></path></svg>
+              <span data-i18n="hintPerKeyClick">Kliknięcie: Malowanie</span>
+            </div>
+            <div class="perkey-hint-chip">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 3"></rect></svg>
+              <span data-i18n="hintPerKeyMarquee">Przeciągnięcie tła: Ramka zaznaczenia</span>
+            </div>
+            <div class="perkey-hint-chip">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M7 15h10M7 9l5-5 5 5"></path></svg>
+              <span data-i18n="hintPerKeyShift">Shift + Zaznaczenie: Dodawanie klawiszy</span>
+            </div>
+            <div class="perkey-hint-chip">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              <span data-i18n="hintPerKeyGroups">Szybkie grupy: WASD, Litery itd.</span>
             </div>
           </div>
         </div>
@@ -3901,103 +4485,317 @@ input:checked + .switch-slider:before {
                 <input type="color" id="monochromeTintPicker" class="color-picker-input" value="#ffffff">
               </div>
             </div>
+
+            <!-- Save to EEPROM Action Button -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; margin-top: 1.25rem; display: flex; justify-content: flex-end;">
+              <button type="button" class="btn btn-primary" id="btnSaveMonochromeEEPROM" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span data-i18n="btnSaveLightingEEPROM">Save lighting settings to keyboard memory</span>
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- Sub-Tab 1: Backlight (RGB Matrix Main) -->
         <div class="lighting-subview active" id="lighting-tab-backlight">
-          <div class="palette-card" style="max-width: 680px; margin: 0 auto;">
-            <h3 style="margin-bottom: 1.25rem; font-size: 1.05rem;" data-i18n="tabBacklight">Main Backlight</h3>
-
-            <div class="form-group">
-              <div style="display: flex; justify-content: space-between;">
-                <label data-i18n="lblBrightness">Master Brightness</label>
-                <span id="rgbBriVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">255</span>
+          <div class="backlight-layout-grid" id="backlightLayoutGrid">
+            <!-- Left Column: Master Backlight Parameters -->
+            <div class="palette-card backlight-settings-card">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+                <h3 style="margin: 0; font-size: 1.05rem;" data-i18n="tabBacklight">Main Backlight</h3>
+                <span class="badge-pill" id="backlightModeBadge" style="font-size: 0.72rem; color: var(--accent-cyan); display: none;">Per-Key Studio Active</span>
               </div>
-              <div class="range-slider-wrap">
-                <input type="range" id="rgbBrightnessSlider" class="range-slider" min="0" max="255" value="255">
-              </div>
-            </div>
 
-            <div class="form-group">
-              <label data-i18n="lblEffect">Lighting Effect</label>
-              <select id="rgbEffectSelect" class="form-control">
-                <!-- All effects populated dynamically -->
-              </select>
-            </div>
-
-            <div class="form-group" id="rgbSpeedGroup">
-              <div style="display: flex; justify-content: space-between;">
-                <label data-i18n="lblSpeed">Animation Speed</label>
-                <span id="rgbSpdVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">128</span>
-              </div>
-              <div class="range-slider-wrap">
-                <input type="range" id="rgbSpeedSlider" class="range-slider" min="0" max="255" value="128">
-              </div>
-            </div>
-
-            <div class="form-group" id="rgbDensityGroup">
-              <div style="display: flex; justify-content: space-between;">
-                <div>
-                  <label data-i18n="lblRgbDensity">Effect Density</label>
-                  <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 1px;" data-i18n="hintRgbDensity">Adjusts wave density and spatial frequency (128 = 1.0x)</span>
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between;">
+                  <label data-i18n="lblBrightness">Master Brightness</label>
+                  <span id="rgbBriVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">255</span>
                 </div>
-                <span id="rgbDensityVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">128</span>
+                <div class="range-slider-wrap">
+                  <input type="range" id="rgbBrightnessSlider" class="range-slider" min="0" max="255" value="255">
+                </div>
               </div>
-              <div class="range-slider-wrap">
-                <input type="range" id="rgbDensitySlider" class="range-slider" min="32" max="255" value="128">
-              </div>
-            </div>
 
-            <div class="form-group" id="rgbColorGroup">
-              <label data-i18n="lblRgbColor">Effect Color</label>
-              <div class="color-input-wrap">
-                <input type="color" id="rgbColorPicker" class="color-picker-input" value="#00ffff">
-                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="hintSingleColor">Set color for
-                  single-color effects</span>
+              <div class="form-group">
+                <label data-i18n="lblEffect">Lighting Effect</label>
+                <select id="rgbEffectSelect" class="form-control">
+                  <!-- All effects populated dynamically -->
+                </select>
               </div>
-            </div>
 
-            <!-- Hardware Multi-Stop Gradient Selector & Editor -->
-            <div class="form-group" id="hardwareGradientGroup" style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <label data-i18n="lblHardwareGradientPreset">Hardware Gradient Palette</label>
-                <span class="badge-pill" style="font-size: 0.72rem; color: var(--accent-cyan);" data-i18n="lblStandaloneHardware">EEPROM Standalone</span>
+              <div class="form-group" id="rgbSpeedGroup">
+                <div style="display: flex; justify-content: space-between;">
+                  <label data-i18n="lblSpeed">Animation Speed</label>
+                  <span id="rgbSpdVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">128</span>
+                </div>
+                <div class="range-slider-wrap">
+                  <input type="range" id="rgbSpeedSlider" class="range-slider" min="0" max="255" value="128">
+                </div>
               </div>
-              <select id="hardwareGradientPresetSelect" class="form-control">
-                <option value="0" data-i18n="optPresetRainbow">Rainbow (Classic Spectrum)</option>
-                <option value="1" data-i18n="optPresetCyberpunk">Cyberpunk (Cyan / Pink / Yellow)</option>
-                <option value="2" data-i18n="optPresetSynthwave">Synthwave (Indigo / Hot Pink / Orange / Gold)</option>
-                <option value="3" data-i18n="optPresetSunset">Sunset Horizon (Purple / Crimson / Amber)</option>
-                <option value="4" data-i18n="optPresetToxic">Toxic Lime (Acid Lime / Yellow / Neon Green)</option>
-                <option value="5" data-i18n="optPresetOcean">Ocean Breeze (Navy / Azure / Aqua / Sky Blue)</option>
-                <option value="6" data-i18n="optPresetFireIce">Fire & Ice (Ice Blue / White / Flame / Crimson)</option>
-                <option value="7" data-i18n="optPresetPastel">Pastel Dream (Lavender / Mint / Peach / Pink)</option>
-                <option value="8" data-i18n="optPresetCustom1">Custom Gradient Profile 1 (Hardware EEPROM)</option>
-                <option value="9" data-i18n="optPresetCustom2">Custom Gradient Profile 2 (Hardware EEPROM)</option>
-              </select>
-            </div>
 
-            <div class="form-group" id="hardwareGradientEditorGroup" style="display: none; margin-top: 0.75rem;">
-              <div id="hardwareGradientEditorContainer"></div>
-              <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
-                <button type="button" class="btn btn-primary btn-sm" id="btnSaveHardwareGradient" style="display: inline-flex; align-items: center; gap: 6px;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                  <span data-i18n="btnSaveToEeprom">Save Profile to Keyboard EEPROM</span>
+              <div class="form-group" id="rgbDensityGroup">
+                <div style="display: flex; justify-content: space-between;">
+                  <div>
+                    <label data-i18n="lblRgbDensity">Effect Density</label>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 1px;" data-i18n="hintRgbDensity">Adjusts wave density and spatial frequency (128 = 1.0x)</span>
+                  </div>
+                  <span id="rgbDensityVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">128</span>
+                </div>
+                <div class="range-slider-wrap">
+                  <input type="range" id="rgbDensitySlider" class="range-slider" min="32" max="255" value="128">
+                </div>
+              </div>
+
+              <div class="form-group" id="rgbColorGroup">
+                <label data-i18n="lblRgbColor">Effect Color</label>
+                <div class="color-input-wrap">
+                  <input type="color" id="rgbColorPicker" class="color-picker-input" value="#00ffff">
+                  <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="hintSingleColor">Set color for single-color effects</span>
+                </div>
+              </div>
+
+              <!-- Hardware Multi-Stop Gradient Selector & Editor -->
+              <div class="form-group" id="hardwareGradientGroup" style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                  <label data-i18n="lblHardwareGradientPreset">Hardware Gradient Palette</label>
+                  <span class="badge-pill" style="font-size: 0.72rem; color: var(--accent-cyan);" data-i18n="lblStandaloneHardware">EEPROM Standalone</span>
+                </div>
+                <select id="hardwareGradientPresetSelect" class="form-control">
+                  <option value="0" data-i18n="optPresetRainbow">Rainbow (Classic Spectrum)</option>
+                  <option value="1" data-i18n="optPresetCyberpunk">Cyberpunk (Cyan / Pink / Yellow)</option>
+                  <option value="2" data-i18n="optPresetSynthwave">Synthwave (Indigo / Hot Pink / Orange / Gold)</option>
+                  <option value="3" data-i18n="optPresetSunset">Sunset Horizon (Purple / Crimson / Amber)</option>
+                  <option value="4" data-i18n="optPresetToxic">Toxic Lime (Acid Lime / Yellow / Neon Green)</option>
+                  <option value="5" data-i18n="optPresetOcean">Ocean Breeze (Navy / Azure / Aqua / Sky Blue)</option>
+                  <option value="6" data-i18n="optPresetFireIce">Fire & Ice (Ice Blue / White / Flame / Crimson)</option>
+                  <option value="7" data-i18n="optPresetPastel">Pastel Dream (Lavender / Mint / Peach / Pink)</option>
+                  <option value="8" data-i18n="optPresetCustom1">Custom Gradient Profile 1 (Hardware EEPROM)</option>
+                  <option value="9" data-i18n="optPresetCustom2">Custom Gradient Profile 2 (Hardware EEPROM)</option>
+                </select>
+              </div>
+
+              <div class="switch-wrap" id="rgbReverseWrap"
+                style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
+                <div>
+                  <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblReverse">Reverse Animation Direction</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="chkRgbReverse">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Save / Discard EEPROM Action Buttons -->
+              <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; margin-top: 1.25rem; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary btn-sm" id="btnDiscardBacklightEEPROM" style="display: inline-flex; align-items: center; gap: 6px;" title="Cofnij niezapisane zmiany oświetlenia i przywróć stan z pamięci klawiatury">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+                  <span data-i18n="btnDiscardLightingEEPROM">Cofnij do zapisanych</span>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" id="btnSaveBacklightEEPROM" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                  <span data-i18n="btnSaveLightingEEPROM">Save lighting settings to keyboard memory</span>
                 </button>
               </div>
             </div>
 
-            <div class="switch-wrap"
-              style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
-              <div>
-                <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblReverse">Reverse
-                  Animation Direction</span>
+            <!-- Right Column: Dedicated Per-Key Custom RGB Profile Studio Dock -->
+            <div class="palette-card perkey-studio-card" id="perKeyProfileEditorGroup" style="display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="live-dot-pulse" style="width: 8px; height: 8px; background: var(--accent-cyan);"></span>
+                  <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0;" data-i18n="lblPerKeyStudioTitle">Per-Key Color Studio (EEPROM)</h3>
+                </div>
+                <span class="badge-pill" id="perKeyProfileBadge" style="font-size: 0.72rem; color: var(--accent-cyan);" data-i18n="lblStandaloneHardware">EEPROM Standalone</span>
               </div>
-              <label class="switch">
-                <input type="checkbox" id="chkRgbReverse">
-                <span class="slider"></span>
-              </label>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;" data-i18n="perKeyStudioDesc">
+                Click any keycap, side LED, or logo on the visualizer above to paint it. Drag to select multiple keys.
+              </p>
+
+              <!-- Profile Switcher Tabs -->
+              <div class="perkey-profile-tabs">
+                <button type="button" class="perkey-prof-tab-btn active" data-prof="0" id="btnPerKeyProf0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+                  <span data-i18n="profFPS">Profile 1</span>
+                </button>
+                <button type="button" class="perkey-prof-tab-btn" data-prof="1" id="btnPerKeyProf1">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                  <span data-i18n="profMOBA">Profile 2</span>
+                </button>
+                <button type="button" class="perkey-prof-tab-btn" data-prof="2" id="btnPerKeyProf2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9z"></path></svg>
+                  <span data-i18n="profMMO">Profile 3</span>
+                </button>
+              </div>
+
+              <!-- Color Palette & Swatches -->
+              <div class="perkey-palette-bar">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <div class="color-picker-wrapper" style="position: relative;">
+                    <input type="color" id="perKeyActiveColorPicker" class="color-picker-input" value="#00ffff" style="width: 36px; height: 36px; border-radius: 6px; cursor: pointer;">
+                  </div>
+                  <div>
+                    <span style="font-size: 0.72rem; color: var(--text-muted); display: block;" data-i18n="lblActivePaintColor">Active Paint Color:</span>
+                    <strong id="perKeyActiveColorHex" style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-cyan);">#00FFFF</strong>
+                  </div>
+                </div>
+
+                <!-- Swatches Container -->
+                <div class="perkey-swatches-grid" id="perKeySwatchesContainer">
+                  <!-- Dynamically populated 14 vibrant RGB swatches -->
+                </div>
+              </div>
+
+              <!-- Quick Group Selectors (Clean inline SVG icons, NO emojis) -->
+              <div class="perkey-groups-bar">
+                <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.4rem;" data-i18n="lblQuickSelectGroup">Quick Key Selection:</label>
+                <div class="perkey-group-buttons">
+                  <button type="button" class="btn btn-secondary btn-sm perkey-grp-btn" data-group-select="all">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    <span data-i18n="grpAll">All</span>
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm perkey-grp-btn" data-group-select="wasd">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8M8 12h8"></path></svg>
+                    <span data-i18n="grpWASD">WASD</span>
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm perkey-grp-btn" data-group-select="alpha">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16M7 20l5-16 5 16M9 14h6"></path></svg>
+                    <span data-i18n="grpAlphas">Alphas</span>
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm perkey-grp-btn" data-group-select="mod">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span data-i18n="grpMods">Modifiers</span>
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm perkey-grp-btn" data-group-select="num">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
+                    <span data-i18n="grpNumbers">Numbers</span>
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm perkey-grp-btn" data-group-select="numpad">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line><line x1="9" y1="15" x2="9.01" y2="15"></line><line x1="15" y1="15" x2="15.01" y2="15"></line></svg>
+                    <span data-i18n="grpNumpad">Numpad</span>
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm perkey-grp-btn" data-group-select="nav">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 19 12 5 5 12"></polyline><polyline points="19 12 12 5 12 19"></polyline></svg>
+                    <span data-i18n="grpArrows">Arrows</span>
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm perkey-grp-btn" data-group-select="func">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><path d="M9 10h6M9 14h4"></path></svg>
+                    <span data-i18n="grpFunc">Function (F1-F12)</span>
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm perkey-grp-btn" data-group-select="sidelights">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="4" x2="2" y2="20"></line><line x1="22" y1="4" x2="22" y2="20"></line><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>
+                    <span data-i18n="grpSidelights">Sidelights</span>
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm perkey-grp-btn" data-group-select="logo">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12l4 6-10 13L2 9z"></path></svg>
+                    <span data-i18n="grpLogo">Logo</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Action Toolbar & Quick Templates -->
+              <div class="perkey-actions-bar">
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                  <button type="button" class="btn btn-secondary btn-sm" id="btnPerKeyFillSelected" style="display: inline-flex; align-items: center; gap: 5px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z"></path><path d="m5 2 5 5"></path><path d="M2 13h15"></path><path d="M22 20a2 2 0 1 1-4 0c0-1.6 1.7-2.4 2-4 .3 1.6 2 2.4 2 4Z"></path></svg>
+                    <span data-i18n="btnFillSelected">Fill Selected</span>
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" id="btnPerKeyClear" style="display: inline-flex; align-items: center; gap: 5px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    <span data-i18n="btnClearProfile">Clear (Off)</span>
+                  </button>
+                  
+                  <div class="dropdown-wrapper" style="position: relative;">
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnPerKeyTemplates" style="display: inline-flex; align-items: center; gap: 5px;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                      <span data-i18n="btnPresetsTemplates">Templates</span>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="perkey-templates-menu" id="perKeyTemplatesMenu" style="display: none; position: absolute; bottom: 100%; left: 0; margin-bottom: 6px; background: var(--card-bg, #1a1e29); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px; z-index: 50; box-shadow: 0 8px 24px rgba(0,0,0,0.5); min-width: 220px;">
+                      <button type="button" class="template-item-btn" data-template="fps" data-i18n="tplFPS">FPS / Shooter (CS2/Valorant)</button>
+                      <button type="button" class="template-item-btn" data-template="moba" data-i18n="tplMOBA">MOBA / Arena (LoL/Dota)</button>
+                      <button type="button" class="template-item-btn" data-template="mmo" data-i18n="tplMMO">MMO / RPG (WoW/Diablo)</button>
+                      <button type="button" class="template-item-btn" data-template="racing" data-i18n="tplRacing">Racing / Simulator</button>
+                      <button type="button" class="template-item-btn" data-template="cyberpunk" data-i18n="tplCyberpunk">Cyberpunk (Cyan/Pink/Gold)</button>
+                      <button type="button" class="template-item-btn" data-template="matrix" data-i18n="tplMatrix">Matrix Phosphor Code</button>
+                      <button type="button" class="template-item-btn" data-template="office" data-i18n="tplOffice">Clean Office / Typing</button>
+                      <button type="button" class="template-item-btn" data-template="rainbow" data-i18n="tplRainbow">Rainbow Spectrum Wave</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-secondary btn-sm" id="btnDiscardPerKeyProfile" style="display: inline-flex; align-items: center; gap: 6px;" title="Cofnij niezapisane zmiany i przywróć profil z pamięci klawiatury">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+                    <span data-i18n="btnDiscardProfileEEPROM">Cofnij do zapisanych</span>
+                  </button>
+                  <button type="button" class="btn btn-primary btn-sm" id="btnSavePerKeyProfile" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    <span data-i18n="btnSaveProfileEEPROM">Save Profile to EEPROM</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Comprehensive Instructions & Tips Accordion Guide -->
+              <div class="perkey-instructions-card" id="perKeyInstructionsCard">
+                <button type="button" class="perkey-instructions-toggle" id="btnTogglePerKeyInstructions">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span style="font-weight: 600; font-size: 0.82rem;" data-i18n="perKeyHelpTitle">Instrukcja obsługi i zaznaczania klawiszy (Skróty i porady)</span>
+                  </div>
+                  <svg class="chevron-icon" id="perKeyInstructionsChevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="perkey-instructions-content" id="perKeyInstructionsContent">
+                  <div class="perkey-guide-grid">
+                    <div class="perkey-guide-item">
+                      <div class="guide-header">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 3 7 18 3-7 7-3L3 3z"></path></svg>
+                        <strong data-i18n="guidePaintTitle">Pojedyncze malowanie</strong>
+                      </div>
+                      <p data-i18n="guidePaintDesc">Kliknij dowolny klawisz, diodę logo lub segment paska bocznego na podglądzie powyżej, aby natychmiast nadać mu wybrany kolor z palety.</p>
+                    </div>
+
+                    <div class="perkey-guide-item">
+                      <div class="guide-header">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 3"></rect></svg>
+                        <strong data-i18n="guideMarqueeTitle">Zaznaczanie ramką (Marquee)</strong>
+                      </div>
+                      <p data-i18n="guideMarqueeDesc">Kliknij na ciemnym tle obok klawiszy i przeciągnij kursor z wciśniętym lewym przyciskiem myszy, aby zaznaczyć prostokątny obszar wielu klawiszy naraz.</p>
+                    </div>
+
+                    <div class="perkey-guide-item">
+                      <div class="guide-header">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M7 15h10M7 9l5-5 5 5"></path></svg>
+                        <strong data-i18n="guideShiftTitle">Wielokrotne zaznaczanie (Shift)</strong>
+                      </div>
+                      <p data-i18n="guideShiftDesc">Przytrzymaj klawisz Shift podczas klikania lub przeciągania ramki, aby dodawać kolejne klawisze do aktualnego zaznaczenia bez utraty poprzednich.</p>
+                    </div>
+
+                    <div class="perkey-guide-item">
+                      <div class="guide-header">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                        <strong data-i18n="guideGroupsTitle">Szybkie grupy klawiszy</strong>
+                      </div>
+                      <p data-i18n="guideGroupsDesc">Skorzystaj z przycisków szybkiego wyboru (WASD, Litery, Modyfikatory, Strzałki, Paski boczne, Logo), aby jednym kliknięciem wybrać całą strefę.</p>
+                    </div>
+
+                    <div class="perkey-guide-item">
+                      <div class="guide-header">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z"></path><path d="M22 20a2 2 0 1 1-4 0c0-1.6 1.7-2.4 2-4 .3 1.6 2 2.4 2 4Z"></path></svg>
+                        <strong data-i18n="guideFillTitle">Wypełnianie i wygaszanie</strong>
+                      </div>
+                      <p data-i18n="guideFillDesc">Kliknij 'Wypełnij zaznaczone', aby zastosować aktywny kolor do wszystkich zaznaczonych klawiszy, lub 'Wyczyść', aby wyłączyć ich podświetlenie.</p>
+                    </div>
+
+                    <div class="perkey-guide-item">
+                      <div class="guide-header">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline></svg>
+                        <strong data-i18n="guideSaveTitle">Zapis do pamięci EEPROM</strong>
+                      </div>
+                      <p data-i18n="guideSaveDesc">Wprowadzone zmiany działają na żywo w pamięci RAM. Aby zachować profil po odłączeniu kabla USB, kliknij 'Zapisz ustawienia profilu w pamięci'.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -4066,6 +4864,14 @@ input:checked + .switch-slider:before {
                 <option value="1" data-i18n="optBlendOverride">Solid Override</option>
               </select>
             </div>
+
+            <!-- Save to EEPROM Action Button -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; margin-top: 1.25rem; display: flex; justify-content: flex-end;">
+              <button type="button" class="btn btn-primary" id="btnSaveReactiveEEPROM" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span data-i18n="btnSaveLightingEEPROM">Save lighting settings to keyboard memory</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -4112,6 +4918,14 @@ input:checked + .switch-slider:before {
                 <input type="checkbox" id="chkWinLockToggle">
                 <span class="slider"></span>
               </label>
+            </div>
+
+            <!-- Save to EEPROM Action Button -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; margin-top: 1.25rem; display: flex; justify-content: flex-end;">
+              <button type="button" class="btn btn-primary" id="btnSaveWinLockEEPROM" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span data-i18n="btnSaveLightingEEPROM">Save lighting settings to keyboard memory</span>
+              </button>
             </div>
           </div>
         </div>
@@ -4172,6 +4986,14 @@ input:checked + .switch-slider:before {
                 <input type="color" id="layer3ColorPicker" class="color-picker-input" value="#b400ff">
               </div>
             </div>
+          </div>
+
+          <!-- Save to EEPROM Action Button -->
+          <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+            <button type="button" class="btn btn-primary" id="btnSaveLayersEEPROM" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span data-i18n="btnSaveLightingEEPROM">Save lighting settings to keyboard memory</span>
+            </button>
           </div>
         </div>
 
@@ -4255,6 +5077,14 @@ input:checked + .switch-slider:before {
               </div>
               <input type="color" id="colorAll" class="color-picker-input" value="#ffffff">
             </div>
+          </div>
+
+          <!-- Save to EEPROM Action Button -->
+          <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end;">
+            <button type="button" class="btn btn-primary" id="btnSaveLogoEEPROM" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span data-i18n="btnSaveLightingEEPROM">Save lighting settings to keyboard memory</span>
+            </button>
           </div>
         </div>
       </section>
@@ -4866,6 +5696,14 @@ input:checked + .switch-slider:before {
                 <option value="125" data-i18n="polling125">125 Hz (8.0 ms)</option>
               </select>
             </div>
+
+            <!-- Save to EEPROM Action Button -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; margin-top: 1.25rem; display: flex; justify-content: flex-end;">
+              <button type="button" class="btn btn-primary" id="btnSavePerformanceEEPROM" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span data-i18n="btnSaveToEeprom">Save to Keyboard Memory</span>
+              </button>
+            </div>
           </div>
 
           <!-- CARD 2: HARDWARE INFO -->
@@ -4920,8 +5758,7 @@ input:checked + .switch-slider:before {
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblEepromSize">Custom EEPROM Buffer:</span>
-                <span id="hw-eeprom-size" class="hardware-info-value" data-i18n="valEepromSize">104 Bytes Dedicated
-                  Storage</span>
+                <span id="hw-eeprom-size" class="hardware-info-value" data-i18n="valEepromSize">1408 Bytes Dedicated Storage (Per-Key RGB Profiles)</span>
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblCompatibilityStatus">Compatibility Status:</span>
@@ -5359,6 +6196,31 @@ input:checked + .switch-slider:before {
       <div class="modal-footer">
         <button class="btn btn-primary" id="btnOkAboutModal" style="min-width: 90px;" data-i18n="btnOk">OK</button>
       </div>
+    </div>
+  <!-- Floating Unsaved Changes Warning Banner (Foolproof Live RAM Notification) -->
+  <div id="unsavedChangesBanner" class="unsaved-changes-banner" role="alert">
+    <div class="unsaved-icon-badge">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+    </div>
+    <div class="unsaved-banner-text">
+      <span class="unsaved-banner-title">
+        <span id="unsavedBannerTitle" data-i18n="unsavedChangesTitle">Unsaved changes (RAM live preview)</span>
+      </span>
+      <span class="unsaved-banner-sub" id="unsavedBannerSub" data-i18n="unsavedChangesSub">Changes are active on keyboard, but will reset after disconnect.</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <button type="button" class="btn-unsaved-discard" id="btnDiscardChangesBanner" title="Przywróć stan z pamięci EEPROM i wyczyść zmiany w RAM">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+        <span data-i18n="unsavedChangesDiscardBtn">Odrzuć zmiany (z pamięci)</span>
+      </button>
+      <button type="button" class="btn-unsaved-save" id="btnFloatingSaveEEPROM">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        <span data-i18n="unsavedChangesSaveBtn">Save to Memory (EEPROM)</span>
+      </button>
     </div>
   </div>
 
@@ -6481,8 +7343,8 @@ input:checked + .switch-slider:before {
  * LuxQMK Studio - Device Manager & Adaptive Capability Engine
  */
 (function () {
-  const STUDIO_VERSION = "1.2.0";
-  const REQUIRED_FW_VERSION = { major: 0, minor: 2, patch: 0 };
+  const STUDIO_VERSION = "1.2.1";
+  const REQUIRED_FW_VERSION = { major: 0, minor: 2, patch: 1 };
 
   class DeviceManager {
     constructor() {
@@ -6629,12 +7491,14 @@ input:checked + .switch-slider:before {
 
       const hwEeprom = document.getElementById('hw-eeprom-size');
       if (hwEeprom) {
-        if (this.firmwareInfo && (this.firmwareInfo.major > 0 || this.firmwareInfo.minor >= 2)) {
+        if (this.firmwareInfo && (this.firmwareInfo.major > 0 || this.firmwareInfo.minor > 2 || (this.firmwareInfo.minor === 2 && this.firmwareInfo.patch >= 1))) {
+          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSize1408') : '1408 Bytes Dedicated Storage (Per-Key RGB Profiles)';
+        } else if (this.firmwareInfo && (this.firmwareInfo.major > 0 || this.firmwareInfo.minor >= 2)) {
           hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSize104') : '104 Bytes Dedicated Storage';
         } else if (this.firmwareInfo) {
-          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSize36') : '36 Bytes Dedicated Storage';
+          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSize36') : '36 Bytes Dedicated Storage (Legacy)';
         } else {
-          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSizeDefault') : '104 Bytes Dedicated Storage';
+          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSizeDefault') : '1408 Bytes Dedicated Storage (Per-Key RGB Profiles)';
         }
       }
 
@@ -6669,7 +7533,7 @@ input:checked + .switch-slider:before {
 
           if (isOlderThanRequired) {
             const detectedStr = `(v${fw.major}.${fw.minor}.${fw.patch})`;
-            hwCompat.textContent = i18n ? `${i18n.t('statusFwUpdateRequired')} ${detectedStr}` : `Firmware Update Recommended (LuxQMK v0.2.0+) ${detectedStr}`;
+            hwCompat.textContent = i18n ? `${i18n.t('statusFwUpdateRequired')} ${detectedStr}` : `Firmware Update Recommended (LuxQMK v0.2.1+) ${detectedStr}`;
             hwCompat.style.color = 'var(--accent-amber, #ffaa00)';
           } else if (fw.major > REQUIRED_FW_VERSION.major || (fw.major === REQUIRED_FW_VERSION.major && fw.minor > REQUIRED_FW_VERSION.minor)) {
             hwCompat.textContent = i18n ? i18n.t('statusFwNewer') : 'Newer Firmware Detected (Update Studio)';
@@ -9506,7 +10370,7 @@ input:checked + .switch-slider:before {
       lblLegalTitle: "Legal Notices & License",
       lblLegalDesc: "LuxQMK Studio is an independent companion configuration suite developed for keyboards running LuxQMK custom firmware (fork of QMK Firmware) communicating via standard WebHID / VIA protocol channels.<br><br>• <strong>LuxQMK Studio Application</strong>: GNU General Public License v3 (GPLv3)<br>• <strong>LuxQMK Firmware</strong>: GNU General Public License v2 / v3 (GPL)<br>• <strong>QMK Firmware</strong>: Open-source software licensed under GPLv2+. VIA is an open configuration protocol standard.<br><br>All product names, logos, trademarks, and registered trademarks (including Glorious, GMMK 3, GMMK 2, WB32) are property of their respective owners and are used solely for identification and compatibility purposes.",
       msgUpdateCheckTitle: "LuxQMK Studio Updates",
-      msgUpdateCheckLatest: "You are running the latest version of LuxQMK Studio (v1.2.0). Automatic update downloads will be available soon!",
+      msgUpdateCheckLatest: "You are running the latest version of LuxQMK Studio (v1.2.1). Automatic update downloads will be available soon!",
       tooltipAddDevice: "Add / Pair New Device (+)",
       optSearchingDevices: "Searching for devices...",
       optNoDevices: "No devices found (Click + to connect)",
@@ -9611,6 +10475,73 @@ input:checked + .switch-slider:before {
       hintRainbowColor: "Rainbow effect — color sets initial hue phase offset and saturation",
       hintGradientColor: "Gradient palette active — color adjusts palette phase shift (starting hue) and saturation",
       lblLogoMode: "Logo Mode",
+
+      // Per-Key RGB Profiles (EEPROM)
+      lblPerKeyStudioTitle: "Hardware Per-Key RGB Profiles (EEPROM)",
+      perKeyStudioDesc: "Customize individual LED colors for every keycap, side lightstrip, and logo badge stored in hardware memory.",
+      profFPS: "Profile 1",
+      profMOBA: "Profile 2",
+      profMMO: "Profile 3",
+      lblActivePaintColor: "Active Paint Color:",
+      lblQuickSelectGroup: "Quick Select Group:",
+      grpAll: "All Keys",
+      grpWASD: "WASD",
+      grpAlphas: "Alphas",
+      grpMods: "Modifiers",
+      grpNumbers: "Numbers",
+      grpNumpad: "Numpad",
+      grpArrows: "Arrows",
+      grpFunc: "Function (F1-F12)",
+      grpSidelights: "Side Lightstrips",
+      grpLogo: "Logo Badge",
+      btnFillSelected: "Fill Selected",
+      btnClearProfile: "Clear / Black",
+      btnPresetsTemplates: "Templates",
+      tplFPS: "FPS Tactical (Red / Amber)",
+      tplMOBA: "MOBA Pro (Teal / Gold)",
+      tplMMO: "MMO / RPG (Gold / Emerald / Blue)",
+      tplRacing: "Racing Speed (Green / Red / Blue)",
+      tplCyberpunk: "Cyberpunk Neon (Cyan / Hot Pink)",
+      tplMatrix: "Matrix Code (Digital Green)",
+      tplOffice: "Clean White (Studio White)",
+      tplRainbow: "Rainbow Static Map",
+      btnSaveLightingEEPROM: "Save lighting settings to keyboard memory",
+      btnSaveProfileEEPROM: "Save profile settings to keyboard memory",
+      btnSaveHardwareGradient: "Save gradient settings to keyboard memory",
+      btnSaveToEeprom: "Save to Keyboard Memory",
+      perKeyHelpTitle: "How to Select & Paint Keys (Guide & Shortcuts)",
+      perKeyHelpToggle: "Guide & Shortcuts",
+      hintPerKeyClick: "Click key: Paint color",
+      hintPerKeyMarquee: "Drag background: Box select",
+      hintPerKeyShift: "Shift + Select: Multi-select",
+      hintPerKeyGroups: "Quick groups: WASD, Alphas, etc.",
+      guidePaintTitle: "Single Key Painting",
+      guidePaintDesc: "Click any keycap, side lightstrip segment, or logo badge on the visualizer above to immediately apply the active palette color.",
+      guideMarqueeTitle: "Marquee Box Selection",
+      guideMarqueeDesc: "Click and drag on the dark background canvas surrounding the keyboard to draw a rectangular selection box and select multiple keys simultaneously.",
+      guideShiftTitle: "Multi-Selection (Shift)",
+      guideShiftDesc: "Hold the Shift key while clicking keys or dragging the selection box to add keys to your current selection without resetting it.",
+      guideGroupsTitle: "Quick Selection Groups",
+      guideGroupsDesc: "Use the quick group buttons (e.g., WASD, Alphas, Modifiers, Numpad, Sidelights, Logo) to select entire keyboard sections with a single click.",
+      guideFillTitle: "Fill & Clear Selected",
+      guideFillDesc: "Click 'Fill Selected' to apply the active color to all highlighted keys at once, or 'Clear (Off)' to turn them off (black).",
+      guideSaveTitle: "Save Permanently (EEPROM)",
+      guideSaveDesc: "Changes are previewed live in keyboard RAM. Click 'Save Profile to EEPROM' to permanently store the layout in controller memory.",
+      toastSavedToEEPROM: "Settings permanently saved to keyboard memory (EEPROM)!",
+      toastProfileSavedEEPROM: "Hardware Per-Key RGB Profile saved to keyboard EEPROM successfully!",
+      toastProfileBlocksStreaming: "Streaming colors to keyboard...",
+      unsavedChangesTitle: "Unsaved changes (RAM live preview)",
+      unsavedChangesSub: "Changes are active on keyboard, but will reset after disconnect.",
+      unsavedChangesSaveBtn: "Save to Memory (EEPROM)",
+      unsavedChangesDiscardBtn: "Discard (Revert to saved)",
+      btnDiscardProfileEEPROM: "Discard (Revert to saved)",
+      btnDiscardLightingEEPROM: "Discard (Revert to saved)",
+      unsavedChangesSavedTitle: "Saved successfully!",
+      unsavedChangesSavedSub: "Settings permanently saved to keyboard EEPROM.",
+      unsavedBadgeText: "Unsaved changes",
+      unsavedWarningDialog: "You have unsaved changes that will be lost on disconnect. Do you want to save them to EEPROM memory now?",
+      toastDiscardingChanges: "Reverting to saved EEPROM settings...",
+      toastDiscardedSuccess: "Settings successfully restored from keyboard EEPROM!",
 
       // Reactive Layer Overlay
       reactiveSectionTitle: "Reactive Layer (Dual-Layer Overlay)",
@@ -9787,7 +10718,6 @@ input:checked + .switch-slider:before {
       lblGradientPresets: "Presets:",
       lblHardwareGradientPreset: "Hardware Gradient Palette",
       lblStandaloneHardware: "EEPROM Standalone",
-      btnSaveToEeprom: "Save Profile to Keyboard EEPROM",
       toastGradientSavedToEeprom: "Multi-stop gradient profile saved to keyboard EEPROM!",
       optPresetRainbow: "Rainbow (Classic Spectrum)",
       optPresetCyberpunk: "Cyberpunk (Cyan / Pink / Yellow)",
@@ -9945,15 +10875,16 @@ input:checked + .switch-slider:before {
       lblMatrixLayout: "Physical Matrix:",
       valMatrixLayout: "14 Rows × 8 Cols (112 Key Positions)",
       lblEepromSize: "Custom EEPROM Buffer:",
-      valEepromSize: "104 Bytes Dedicated Storage",
+      valEepromSize: "1408 Bytes Dedicated Storage (Per-Key RGB Profiles)",
+      valEepromSize1408: "1408 Bytes Dedicated Storage (Per-Key RGB Profiles)",
       valEepromSize104: "104 Bytes Dedicated Storage",
       valEepromSize36: "36 Bytes Dedicated Storage (Legacy)",
-      valEepromSizeDefault: "104 Bytes Dedicated Storage",
+      valEepromSizeDefault: "1408 Bytes Dedicated Storage (Per-Key RGB Profiles)",
       lblCompatibilityStatus: "Compatibility Status:",
       valCompatibilityStatus: "— (Connect keyboard to inspect)",
       statusFwNotConnected: "— (Connect keyboard to inspect)",
-      statusFwCompatible: "Fully Compatible (LuxQMK Studio v1.2.0)",
-      statusFwUpdateRequired: "Firmware Update Recommended (LuxQMK v0.2.0+)",
+      statusFwCompatible: "Fully Compatible (LuxQMK Studio v1.2.1)",
+      statusFwUpdateRequired: "Firmware Update Recommended (LuxQMK v0.2.1+)",
       // Settings View - Smart Firmware Flasher
       cardFlasherTitle: "Smart Firmware Upgrade (Zero Data Loss)",
       cardFlasherSubtitle: "Safely flash new LuxQMK & QMK firmware with automatic pre-flash backup and post-flash memory restoration.",
@@ -10069,7 +11000,7 @@ input:checked + .switch-slider:before {
       lblLegalTitle: "Informacje prawne i nota licencyjna",
       lblLegalDesc: "LuxQMK Studio jest niezależnym oprogramowaniem towarzyszącym do konfiguracji klawiatur bazującym na protokole WebHID oraz VIA.<br><br>• <strong>Aplikacja LuxQMK Studio</strong>: GNU General Public License v3 (GPLv3)<br>• <strong>Firmware LuxQMK</strong>: GNU General Public License v2 / v3 (GPL)<br>• <strong>QMK Firmware</strong>: Oprogramowanie open-source na licencji GPLv2+. VIA jest otwartym standardem protokołu konfiguracji.<br><br>Wszelkie nazwy produktów, logotypy, znaki towarowe i zarejestrowane znaki handlowe (w tym Glorious, GMMK 3, GMMK 2, WB32) należą do ich prawnych właścicieli i zostały użyte wyłącznie w celach informacyjnych oraz identyfikacji kompatybilności sprzętowej.",
       msgUpdateCheckTitle: "Aktualizacje LuxQMK Studio",
-      msgUpdateCheckLatest: "Posiadasz najnowszą wersję LuxQMK Studio (v1.2.0). Automatyczne pobieranie aktualizacji z poziomu programu będzie dostępne wkrótce!",
+      msgUpdateCheckLatest: "Posiadasz najnowszą wersję LuxQMK Studio (v1.2.1). Automatyczne pobieranie aktualizacji z poziomu programu będzie dostępne wkrótce!",
       tooltipAddDevice: "Dodaj / Połącz nowe urządzenie (+)",
       optSearchingDevices: "Wyszukiwanie urządzeń...",
       optNoDevices: "Brak urządzeń (Kliknij + aby połączyć)",
@@ -10174,6 +11105,73 @@ input:checked + .switch-slider:before {
       hintRainbowColor: "Efekt tęczowy — kolor ustala przesunięcie fazy (odcień startowy) i nasycenie",
       hintGradientColor: "Paleta gradientowa aktywna — kolor ustala przesunięcie kąta palety (początkowy odcień) oraz nasycenie",
       lblLogoMode: "Tryb diody logo",
+
+      // Per-Key RGB Profiles (EEPROM)
+      lblPerKeyStudioTitle: "Sprzętowe profile podświetlenia per-key (EEPROM)",
+      perKeyStudioDesc: "Dostosuj indywidualne kolory podświetlenia dla każdego klawisza, pasków bocznych oraz logo w pamięci klawiatury.",
+      profFPS: "Profil 1",
+      profMOBA: "Profil 2",
+      profMMO: "Profil 3",
+      lblActivePaintColor: "Aktywny kolor pędzla:",
+      lblQuickSelectGroup: "Szybkie zaznaczanie grup:",
+      grpAll: "Wszystkie",
+      grpWASD: "WASD",
+      grpAlphas: "Litery (A-Z)",
+      grpMods: "Modyfikatory",
+      grpNumbers: "Cyfry",
+      grpNumpad: "Klaw. numeryczna",
+      grpArrows: "Strzałki",
+      grpFunc: "Funkcyjne (F1-F12)",
+      grpSidelights: "Paski boczne",
+      grpLogo: "Dioda logo",
+      btnFillSelected: "Wypełnij zaznaczone",
+      btnClearProfile: "Wyczyść (wygaś)",
+      btnPresetsTemplates: "Szablony",
+      tplFPS: "FPS Tactical (Czerwony / Pomarańczowy)",
+      tplMOBA: "MOBA Pro (Morski / Złoty)",
+      tplMMO: "MMO / RPG (Złoto / Szmaragd / Błękit)",
+      tplRacing: "Wyścigi (Zielony / Czerwony / Niebieski)",
+      tplCyberpunk: "Cyberpunk Neon (Błękit / Neonowy róż)",
+      tplMatrix: "Matrix Code (Cyfrowa zieleń)",
+      tplOffice: "Czysta biel (Studio White)",
+      tplRainbow: "Statyczna mapa tęczy",
+      btnSaveLightingEEPROM: "Zapisz ustawienia oświetlenia w pamięci",
+      btnSaveProfileEEPROM: "Zapisz ustawienia profilu w pamięci",
+      btnSaveHardwareGradient: "Zapisz ustawienia gradientu w pamięci",
+      btnSaveToEeprom: "Zapisz w pamięci klawiatury",
+      perKeyHelpTitle: "Instrukcja obsługi i zaznaczania klawiszy (Skróty i porady)",
+      perKeyHelpToggle: "Instrukcja i skróty",
+      hintPerKeyClick: "Kliknięcie: Malowanie",
+      hintPerKeyMarquee: "Przeciągnięcie tła: Ramka zaznaczenia",
+      hintPerKeyShift: "Shift + Zaznaczenie: Dodawanie klawiszy",
+      hintPerKeyGroups: "Szybkie grupy: WASD, Litery itd.",
+      guidePaintTitle: "Pojedyncze malowanie",
+      guidePaintDesc: "Kliknij dowolny klawisz, diodę logo lub segment paska bocznego na podglądzie powyżej, aby natychmiast nadać mu wybrany kolor z palety.",
+      guideMarqueeTitle: "Zaznaczanie ramką (Marquee)",
+      guideMarqueeDesc: "Kliknij na ciemnym tle obok klawiszy i przeciągnij kursor z wciśniętym lewym przyciskiem myszy, aby zaznaczyć prostokątny obszar wielu klawiszy naraz.",
+      guideShiftTitle: "Wielokrotne zaznaczanie (Shift)",
+      guideShiftDesc: "Przytrzymaj klawisz Shift podczas klikania lub przeciągania ramki, aby dodawać kolejne klawisze do aktualnego zaznaczenia bez utraty poprzednich.",
+      guideGroupsTitle: "Szybkie grupy klawiszy",
+      guideGroupsDesc: "Skorzystaj z przycisków szybkiego wyboru (WASD, Litery, Modyfikatory, Strzałki, Paski boczne, Logo), aby jednym kliknięciem wybrać całą strefę.",
+      guideFillTitle: "Wypełnianie i wygaszanie",
+      guideFillDesc: "Kliknij 'Wypełnij zaznaczone', aby zastosować aktywny kolor do wszystkich zaznaczonych klawiszy, lub 'Wyczyść', aby wyłączyć ich podświetlenie.",
+      guideSaveTitle: "Zapis do pamięci EEPROM",
+      guideSaveDesc: "Wprowadzone zmiany działają na żywo w pamięci RAM. Aby zachować profil po odłączeniu kabla USB, kliknij 'Zapisz ustawienia profilu w pamięci'.",
+      toastSavedToEEPROM: "Ustawienia zostały trwale zapisane w pamięci EEPROM klawiatury!",
+      toastProfileSavedEEPROM: "Sprzętowy profil podświetlenia został pomyślnie zapisany w pamięci EEPROM klawiatury!",
+      toastProfileBlocksStreaming: "Wysyłanie kolorów do klawiatury...",
+      unsavedChangesTitle: "Masz niezapisane zmiany (podgląd na żywo RAM)",
+      unsavedChangesSub: "Wprowadzone zmiany działają na żywo na klawiaturze, ale zostaną utracone po odłączeniu USB.",
+      unsavedChangesSaveBtn: "Zapisz w pamięci (EEPROM)",
+      unsavedChangesDiscardBtn: "Odrzuć zmiany (z pamięci)",
+      btnDiscardProfileEEPROM: "Cofnij do zapisanych",
+      btnDiscardLightingEEPROM: "Cofnij do zapisanych",
+      unsavedChangesSavedTitle: "Zapisano pomyślnie!",
+      unsavedChangesSavedSub: "Ustawienia zostały trwale zapisane w pamięci EEPROM klawiatury.",
+      unsavedBadgeText: "Niezapisane zmiany",
+      unsavedWarningDialog: "Masz niezapisane zmiany, które znikną po odłączeniu klawiatury. Czy chcesz je teraz trwale zapisać w pamięci EEPROM?",
+      toastDiscardingChanges: "Przywracanie zapisanych ustawień z pamięci EEPROM...",
+      toastDiscardedSuccess: "Ustawienia zostały pomyślnie przywrócone z pamięci EEPROM!",
 
       // Reactive Layer Overlay
       reactiveSectionTitle: "Warstwa reaktywna (Dual-Layer)",
@@ -10349,7 +11347,6 @@ input:checked + .switch-slider:before {
       lblGradientPresets: "Presety:",
       lblHardwareGradientPreset: "Paleta gradientu sprzętowego",
       lblStandaloneHardware: "Autonomiczny w EEPROM",
-      btnSaveToEeprom: "Zapisz profil w pamięci EEPROM klawiatury",
       toastGradientSavedToEeprom: "Wielopunktowy profil gradientu zapisany w pamięci EEPROM klawiatury!",
       optPresetRainbow: "Tęcza (Pełne klasyczne spektrum)",
       optPresetCyberpunk: "Cyberpunk (Cyjan / Róż / Żółty)",
@@ -10507,15 +11504,16 @@ input:checked + .switch-slider:before {
       lblMatrixLayout: "Matryca fizyczna:",
       valMatrixLayout: "14 wierszy × 8 kolumn (112 pozycji)",
       lblEepromSize: "Pamięć niestandardowa EEPROM:",
-      valEepromSize: "104 bajty pamięci trwałej",
+      valEepromSize: "1408 bajtów pamięci trwałej (Profile Per-Key RGB)",
+      valEepromSize1408: "1408 bajtów pamięci trwałej (Profile Per-Key RGB)",
       valEepromSize104: "104 bajty pamięci trwałej",
       valEepromSize36: "36 bajtów pamięci trwałej (Starszy firmware)",
-      valEepromSizeDefault: "104 bajty pamięci trwałej",
+      valEepromSizeDefault: "1408 bajtów pamięci trwałej (Profile Per-Key RGB)",
       lblCompatibilityStatus: "Status zgodności:",
       valCompatibilityStatus: "— (Podłącz klawiaturę, aby sprawdzić)",
       statusFwNotConnected: "— (Podłącz klawiaturę, aby sprawdzić)",
-      statusFwCompatible: "W pełni zgodny (LuxQMK Studio v1.2.0)",
-      statusFwUpdateRequired: "Zalecana aktualizacja firmware (LuxQMK v0.2.0+)",
+      statusFwCompatible: "W pełni zgodny (LuxQMK Studio v1.2.1)",
+      statusFwUpdateRequired: "Zalecana aktualizacja firmware (LuxQMK v0.2.1+)",
       // Settings View - Smart Firmware Flasher
       cardFlasherTitle: "Inteligentna aktualizacja firmware (bezstratna)",
       cardFlasherSubtitle: "Bezpiecznie wgrywaj nowy firmware z automatyczną kopią zapasową i przywracaniem mapowania, makr oraz RGB.",
@@ -10738,6 +11736,11 @@ input:checked + .switch-slider:before {
     GRADIENT_CUSTOM_STOP: 35,
     EFFECT_DENSITY: 36,
     GRADIENT_SAVE_EEPROM: 37,
+    PERKEY_PROFILE_GET_BLOCK: 38,
+    PERKEY_PROFILE_SET_BLOCK: 39,
+    PERKEY_PROFILE_SAVE_EEPROM: 40,
+    PERKEY_PROFILE_ACTIVE: 41,
+    RELOAD_EEPROM: 42,
     BOOTLOADER_JUMP: 0xFE
   };
 
@@ -11148,6 +12151,14 @@ input:checked + .switch-slider:before {
       return await this.sendCommand([VIA_CMD.CUSTOM_SAVE, channel]);
     }
 
+    async reloadEEPROM(channel = CHANNELS.CUSTOM) {
+      try {
+        await this.setCustomValue(channel, CUSTOM_VAL.RELOAD_EEPROM, 1);
+      } catch (e) {
+        console.warn("Could not send reloadEEPROM to device:", e);
+      }
+    }
+
     async getActiveLayer() {
       const res = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.ACTIVE_LAYER);
       if (!res || res[0] === 0xFF || res[1] !== CHANNELS.CUSTOM || res[2] !== CUSTOM_VAL.ACTIVE_LAYER) {
@@ -11191,7 +12202,8 @@ input:checked + .switch-slider:before {
             layerLighting: (capFlags & 0x10) !== 0,
             heatmap: (capFlags & 0x20) !== 0,
             directLighting: (capFlags & 0x40) !== 0,
-            multiGradients: (capFlags & 0x80) !== 0
+            multiGradients: (capFlags & 0x80) !== 0,
+            perKeyProfiles: (capFlags & 0x100) !== 0 || (major > 0 || minor > 2 || (minor === 2 && patch >= 1))
           }
         };
       } catch (e) {
@@ -11232,7 +12244,6 @@ input:checked + .switch-slider:before {
       const num = parseInt(ms, 10);
       const val = (!isNaN(num) && num >= 0 && num <= 30) ? num : 5;
       await this.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DEBOUNCE_TIME, val);
-      await this.saveCustomConfig();
     }
 
     async resetEEPROM() {
@@ -11281,6 +12292,125 @@ input:checked + .switch-slider:before {
       }
       try {
         await this.device.sendReport(0x00, report);
+      } catch (e) { }
+    }
+
+    // --- Per-Key Hardware RGB Profiles (Profile 1: FPS, Profile 2: MOBA, Profile 3: MMO) ---
+    async getPerKeyProfile(profileIdx = 0, totalLeds = 144) {
+      if (!this.isConnected) return null;
+      const CHUNK_LEDS = 8;
+      const rgbArray = [];
+      const safeTotal = Math.min(144, Math.max(1, totalLeds));
+
+      for (let startLed = 0; startLed < safeTotal; startLed += CHUNK_LEDS) {
+        const count = Math.min(CHUNK_LEDS, safeTotal - startLed);
+        try {
+          const res = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.PERKEY_PROFILE_GET_BLOCK, profileIdx, startLed, count);
+          if (res && res.length >= 6 + (count * 3)) {
+            for (let i = 0; i < count; i++) {
+              rgbArray.push({
+                r: res[6 + (i * 3) + 0],
+                g: res[6 + (i * 3) + 1],
+                b: res[6 + (i * 3) + 2]
+              });
+            }
+          } else {
+            for (let i = 0; i < count; i++) {
+              rgbArray.push({ r: 0, g: 0, b: 0 });
+            }
+          }
+        } catch (e) {
+          for (let i = 0; i < count; i++) {
+            rgbArray.push({ r: 0, g: 0, b: 0 });
+          }
+        }
+      }
+      return rgbArray;
+    }
+
+    async setPerKeyProfileBlock(profileIdx, startIdx, rgbData) {
+      if (!this.device || !this.device.opened || !rgbData || rgbData.length === 0) return;
+      let triplets = [];
+      let count = 0;
+      if (typeof rgbData[0] === 'object' && rgbData[0] !== null) {
+        count = Math.min(8, rgbData.length);
+        for (let i = 0; i < count; i++) {
+          const c = rgbData[i] || { r: 0, g: 0, b: 0 };
+          triplets.push(c.r ?? 0, c.g ?? 0, c.b ?? 0);
+        }
+      } else {
+        count = Math.min(8, Math.floor(rgbData.length / 3));
+        triplets = rgbData.slice(0, count * 3);
+      }
+
+      const payload = [
+        VIA_CMD.CUSTOM_SET_VALUE,
+        CHANNELS.CUSTOM,
+        CUSTOM_VAL.PERKEY_PROFILE_SET_BLOCK,
+        profileIdx,
+        startIdx,
+        count,
+        ...triplets
+      ];
+      try {
+        await this.sendCommand(payload, 300, 1);
+      } catch (e) { }
+    }
+
+    async setFullPerKeyProfile(profileIdx, rgbArray) {
+      if (!this.isConnected || !Array.isArray(rgbArray) || rgbArray.length === 0) return;
+      const CHUNK_LEDS = 8;
+      const totalLeds = Math.min(144, rgbArray.length);
+
+      for (let startLed = 0; startLed < totalLeds; startLed += CHUNK_LEDS) {
+        const count = Math.min(CHUNK_LEDS, totalLeds - startLed);
+        const triplets = [];
+        for (let i = 0; i < count; i++) {
+          const c = rgbArray[startLed + i] || { r: 0, g: 0, b: 0 };
+          triplets.push(c.r || 0, c.g || 0, c.b || 0);
+        }
+        await this.setPerKeyProfileBlock(profileIdx, startLed, triplets);
+        await this.sleep(4);
+      }
+    }
+
+    async savePerKeyProfileToEEPROM(profileIdx = 0xFF) {
+      if (!this.isConnected) return;
+      try {
+        await this.sendCommand([
+          VIA_CMD.CUSTOM_SET_VALUE,
+          CHANNELS.CUSTOM,
+          CUSTOM_VAL.PERKEY_PROFILE_SAVE_EEPROM,
+          profileIdx
+        ], 1000, 1);
+        this.log(window.i18n ? window.i18n.t("toastProfileSavedEEPROM") : `Profile ${profileIdx + 1} saved to EEPROM`, "success");
+      } catch (e) {
+        this.log(`Error saving profile to EEPROM: ${e.message}`, "error");
+      }
+    }
+
+    async getActivePerKeyProfile() {
+      if (!this.isConnected) return 0;
+      try {
+        const res = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.PERKEY_PROFILE_ACTIVE);
+        if (res && res[0] !== 0xFF && res[1] === CHANNELS.CUSTOM && res[2] === CUSTOM_VAL.PERKEY_PROFILE_ACTIVE) {
+          return res[3] || 0;
+        }
+        return 0;
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    async setActivePerKeyProfile(profileIdx) {
+      if (!this.isConnected) return;
+      try {
+        await this.sendCommand([
+          VIA_CMD.CUSTOM_SET_VALUE,
+          CHANNELS.CUSTOM,
+          CUSTOM_VAL.PERKEY_PROFILE_ACTIVE,
+          profileIdx
+        ]);
       } catch (e) { }
     }
   }
@@ -11772,7 +12902,10 @@ input:checked + .switch-slider:before {
     { id: 35, name: "Gradient Cycle (Multi-Stop)", isRainbow: true },
     { id: 36, name: "Gradient Wave (Multi-Stop)", isRainbow: true },
     { id: 37, name: "Gradient Spiral (Multi-Stop)", isRainbow: true },
-    { id: 38, name: "Gradient Breathe (Multi-Stop)", isRainbow: true }
+    { id: 38, name: "Gradient Breathe (Multi-Stop)", isRainbow: true },
+    { id: 39, name: "Profile 1", isRainbow: false, isPerKey: true },
+    { id: 40, name: "Profile 2", isRainbow: false, isPerKey: true },
+    { id: 41, name: "Profile 3", isRainbow: false, isPerKey: true }
   ];
 
   const HARDWARE_GRADIENT_PRESETS = [
@@ -11924,6 +13057,11 @@ input:checked + .switch-slider:before {
               { pos: 85, r: 255, g: 60, b: 0 },
               { pos: 170, r: 255, g: 215, b: 0 }
             ]
+          ],
+          perKeyProfiles: [
+            this._generateDefaultPerKeyProfile(0), // FPS Gaming
+            this._generateDefaultPerKeyProfile(1), // MOBA Gaming
+            this._generateDefaultPerKeyProfile(2)  // MMO / RPG
           ]
         },
         monochrome: {
@@ -11939,6 +13077,13 @@ input:checked + .switch-slider:before {
         }
       };
 
+      this.activePerKeyProfile = 0; // 0: FPS, 1: MOBA, 2: MMO
+      this.perKeyPaintColor = "#ff1e27";
+      this.perKeySelection = new Set();
+      this._pendingPerKeyBlocks = new Map();
+      this._perKeyStreamTimer = null;
+      this._isStreamingPerKey = false;
+
       this._gradientLut = null;
       this._pendingStopsProf = 0;
       this._pendingStops = null;
@@ -11953,14 +13098,18 @@ input:checked + .switch-slider:before {
     init() {
       this._rebuildGradientLut();
       this._populateEffectsDropdown();
+      if (window.i18n && typeof window.i18n.onLanguageChange === "function") {
+        window.i18n.onLanguageChange(() => this._populateEffectsDropdown());
+      }
       this._bindTabs();
       this._bindEvents();
+      this._initPerKeyStudio();
       this._bindLayerVisualizerControls();
       this._bindGlobalKeyListeners();
       this.renderVisualizerCanvas();
       this.setControlsEnabled(true);
       this.updateUI();
-      this.startVisualizer();
+      // Visualizer loop is cleanly triggered by UIController.switchView when entering lighting view
       this.startDevicePolling();
     }
 
@@ -12061,8 +13210,12 @@ input:checked + .switch-slider:before {
             keyEl.innerHTML = `<span class="l-legend">${key.label}</span>`;
           }
 
-          // Pointer click/touch triggers live reactive hit or tab switch
+          // Pointer click/touch triggers live reactive hit, tab switch, or per-key painting
           keyEl.addEventListener("pointerdown", (e) => {
+            if (this.state.rgb.effect >= 39 && this.state.rgb.effect <= 41) {
+              // In per-key mode, allow event to bubble to unified canvas drag/click handler
+              return;
+            }
             e.preventDefault();
             if (key.isLogo) {
               this._switchTab("logo");
@@ -12108,7 +13261,9 @@ input:checked + .switch-slider:before {
           isKnob: !!key.isKnob,
           isLogo: !!key.isLogo,
           els: keyEls,
-          el: keyEls[0]
+          el: keyEls[0],
+          // Pre-cached element targets to eliminate per-frame allocations during 60fps tick
+          lightingEls: keyEls.filter(el => !el.id || !el.id.includes("studioLightingKeyboardCanvas"))
         };
 
         this.visualizerKeys.push(keyObj);
@@ -12125,6 +13280,13 @@ input:checked + .switch-slider:before {
             const sEl = document.createElement("div");
             sEl.className = "side-diffuser-segment side-diffuser-left";
             sEl.style.top = `calc(${sled.y} * var(--key-unit) + 18px)`;
+            sEl.addEventListener("pointerdown", (e) => {
+              if (this.state.rgb.effect >= 39 && this.state.rgb.effect <= 41) {
+                // In per-key mode, allow event to bubble to unified canvas drag/click handler
+                return;
+              }
+              e.preventDefault();
+            });
             diffContainer.appendChild(sEl);
 
             const qmkX = sled.qmkPoint ? sled.qmkPoint[0] : 0;
@@ -12134,10 +13296,22 @@ input:checked + .switch-slider:before {
             
             let existing = this.sideDiffusers.find(sd => sd.id === sled.id);
             if (!existing) {
-              existing = { id: sled.id, qmkX, qmkY, dx, dy, dist: Math.sqrt(dx * dx + dy * dy), els: [sEl], el: sEl, isLeft: true };
+              existing = {
+                id: sled.id,
+                qmkX,
+                qmkY,
+                dx,
+                dy,
+                dist: Math.sqrt(dx * dx + dy * dy),
+                els: [sEl],
+                el: sEl,
+                isLeft: true,
+                lightingEls: [sEl]
+              };
               this.sideDiffusers.push(existing);
             } else {
               existing.els.push(sEl);
+              existing.lightingEls = existing.els.filter(el => !el.closest || !el.closest("#studioLightingKeyboardCanvas"));
             }
           });
 
@@ -12147,6 +13321,13 @@ input:checked + .switch-slider:before {
             sEl.className = "side-diffuser-segment side-diffuser-right";
             sEl.style.top = `calc(${sled.y} * var(--key-unit) + 18px)`;
             sEl.style.left = `calc(${bounds.width} * var(--key-unit) + 26px)`;
+            sEl.addEventListener("pointerdown", (e) => {
+              if (this.state.rgb.effect >= 39 && this.state.rgb.effect <= 41) {
+                // In per-key mode, allow event to bubble to unified canvas drag/click handler
+                return;
+              }
+              e.preventDefault();
+            });
             diffContainer.appendChild(sEl);
 
             const qmkX = sled.qmkPoint ? sled.qmkPoint[0] : 224;
@@ -12156,10 +13337,22 @@ input:checked + .switch-slider:before {
 
             let existing = this.sideDiffusers.find(sd => sd.id === sled.id);
             if (!existing) {
-              existing = { id: sled.id, qmkX, qmkY, dx, dy, dist: Math.sqrt(dx * dx + dy * dy), els: [sEl], el: sEl, isLeft: false };
+              existing = {
+                id: sled.id,
+                qmkX,
+                qmkY,
+                dx,
+                dy,
+                dist: Math.sqrt(dx * dx + dy * dy),
+                els: [sEl],
+                el: sEl,
+                isLeft: false,
+                lightingEls: [sEl]
+              };
               this.sideDiffusers.push(existing);
             } else {
               existing.els.push(sEl);
+              existing.lightingEls = existing.els.filter(el => !el.closest || !el.closest("#studioLightingKeyboardCanvas"));
             }
           });
 
@@ -12431,11 +13624,151 @@ input:checked + .switch-slider:before {
         b = Math.round(b * vScale);
       }
 
-      return {
+        return {
         r: Math.min(255, Math.max(0, r)),
         g: Math.min(255, Math.max(0, g)),
         b: Math.min(255, Math.max(0, b))
       };
+    }
+
+    _generateDefaultPerKeyProfile(profIdx) {
+      const colors = new Array(144);
+      for (let i = 0; i < 144; i++) {
+        colors[i] = { r: 0, g: 0, b: 0 };
+      }
+
+      if (profIdx === 0) {
+        // --- PROFILE 1: FPS GAMING ---
+        // Base / unassigned keys: Deep Midnight Navy
+        for (let i = 0; i < 144; i++) {
+          colors[i] = { r: 10, g: 18, b: 35 };
+        }
+        // WASD, Shift, Ctrl, Space: Crimson Red
+        const redKeys = ["W", "A", "S", "D", "LSFT", "LCTL", "SPC"];
+        // 1, 2, 3, 4, 5, R, G, E, Q, F, C, V, TAB: Bright Amber
+        const amberKeys = ["1", "2", "3", "4", "5", "R", "G", "E", "Q", "F", "C", "V", "TAB"];
+        // Arrows: Crimson Red
+        const arrowKeys = ["UP", "DOWN", "LEFT", "RGHT"];
+
+        redKeys.concat(arrowKeys).forEach(kId => {
+          const idx = this._getLedIndexForElement(kId);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 255, g: 30, b: 45 };
+        });
+        amberKeys.forEach(kId => {
+          const idx = this._getLedIndexForElement(kId);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 255, g: 140, b: 0 };
+        });
+
+        // Sidelights: Deep Red
+        for (let s = 1; s <= 20; s++) {
+          const idx = this._getLedIndexForElement(`SLED${s}`);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 255, g: 0, b: 40 };
+        }
+        // Logo Badge: Cyan
+        const logoIdx = this._getLedIndexForElement("LOGO");
+        if (logoIdx >= 0 && logoIdx < 144) colors[logoIdx] = { r: 0, g: 240, b: 255 };
+
+      } else if (profIdx === 1) {
+        // --- PROFILE 2: MOBA GAMING ---
+        // Base / unassigned keys: Deep Slate Violet
+        for (let i = 0; i < 144; i++) {
+          colors[i] = { r: 16, g: 10, b: 32 };
+        }
+        // Q, W, E, R, D, F, 1, 2, 3, 4, 5, 6: Electric Cyan / Neon Teal
+        const tealKeys = ["Q", "W", "E", "R", "D", "F", "1", "2", "3", "4", "5", "6", "TAB", "ESC"];
+        // B, P, Space, 7, 8, Y, U, I, O: Bright Gold / Sunburst
+        const goldKeys = ["B", "P", "SPC", "7", "8", "Y", "U", "I", "O", "LSFT", "LCTL", "LALT"];
+
+        tealKeys.forEach(kId => {
+          const idx = this._getLedIndexForElement(kId);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 0, g: 235, b: 255 };
+        });
+        goldKeys.forEach(kId => {
+          const idx = this._getLedIndexForElement(kId);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 255, g: 175, b: 0 };
+        });
+
+        // Sidelights: Electric Cyan
+        for (let s = 1; s <= 20; s++) {
+          const idx = this._getLedIndexForElement(`SLED${s}`);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 0, g: 200, b: 255 };
+        }
+        // Logo: Hot Pink
+        const logoIdx = this._getLedIndexForElement("LOGO");
+        if (logoIdx >= 0 && logoIdx < 144) colors[logoIdx] = { r: 255, g: 0, b: 128 };
+
+      } else {
+        // --- PROFILE 3: MMO / RPG ---
+        // Base: Dark Regal Indigo
+        for (let i = 0; i < 144; i++) {
+          colors[i] = { r: 20, g: 6, b: 28 };
+        }
+        // Number Row (1..0, -, =): Gold
+        const numKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "MINS", "EQL"];
+        // Movement & Navigation (WASD, Q, E, Space): Emerald Green
+        const greenKeys = ["W", "A", "S", "D", "Q", "E", "SPC", "TAB", "LSFT", "LCTL"];
+        // Function keys (F1..F12): Sapphire Blue
+        const blueKeys = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"];
+        // Arrows: Emerald Green
+        const arrowKeys = ["UP", "DOWN", "LEFT", "RGHT"];
+
+        numKeys.forEach(kId => {
+          const idx = this._getLedIndexForElement(kId);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 255, g: 205, b: 0 };
+        });
+        greenKeys.concat(arrowKeys).forEach(kId => {
+          const idx = this._getLedIndexForElement(kId);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 0, g: 255, b: 100 };
+        });
+        blueKeys.forEach(kId => {
+          const idx = this._getLedIndexForElement(kId);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 0, g: 140, b: 255 };
+        });
+
+        // Sidelights: Deep Violet
+        for (let s = 1; s <= 20; s++) {
+          const idx = this._getLedIndexForElement(`SLED${s}`);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 170, g: 0, b: 255 };
+        }
+        // Logo: Golden Sun
+        const logoIdx = this._getLedIndexForElement("LOGO");
+        if (logoIdx >= 0 && logoIdx < 144) colors[logoIdx] = { r: 255, g: 215, b: 0 };
+      }
+
+      return colors;
+    }
+
+    _getLedIndexForElement(elOrKey) {
+      const profile = window.deviceManager ? window.deviceManager.getActiveProfile() : null;
+      const layout = this.getActiveLayout() || [];
+
+      // 1. Is it a logo badge?
+      if (elOrKey && (elOrKey.isLogo || elOrKey === "LOGO")) {
+        if (profile && profile.capabilities && Number.isFinite(profile.capabilities.logoLedIndex)) {
+          return profile.capabilities.logoLedIndex;
+        }
+        return 143;
+      }
+
+      // 2. Is it a side diffuser?
+      let sledId = null;
+      if (typeof elOrKey === "string" && elOrKey.startsWith("SLED")) {
+        sledId = elOrKey;
+      } else if (elOrKey && elOrKey.id && String(elOrKey.id).startsWith("SLED")) {
+        sledId = elOrKey.id;
+      }
+      if (sledId) {
+        const num = parseInt(sledId.replace("SLED", ""), 10);
+        const matrixKeys = layout.filter(k => !k.isKnob && !k.isLogo);
+        const baseOffset = matrixKeys.length;
+        return baseOffset + (isNaN(num) ? 0 : num - 1);
+      }
+
+      // 3. Regular matrix key
+      const keyId = typeof elOrKey === "string" ? elOrKey : (elOrKey.id || elOrKey);
+      const matrixKeys = layout.filter(k => !k.isKnob && !k.isLogo);
+      const idx = matrixKeys.findIndex(k => k.id === keyId);
+      return idx >= 0 ? idx : -1;
     }
 
     // --- 1:1 QMK ALGORITHM ENGINE ---
@@ -12805,6 +14138,29 @@ input:checked + .switch-slider:before {
             return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255), h: 0, s: 0, v: baseV };
           }
 
+        case 39: // CUSTOM_PER_KEY_PROFILE_1
+        case 40: // CUSTOM_PER_KEY_PROFILE_2
+        case 41: // CUSTOM_PER_KEY_PROFILE_3
+          {
+            const profIdx = effect - 39;
+            const profiles = this.state.custom.perKeyProfiles;
+            const profile = (profiles && profiles[profIdx]) || this._generateDefaultPerKeyProfile(profIdx);
+            const ledIdx = this._getLedIndexForElement(k);
+            if (ledIdx >= 0 && ledIdx < profile.length) {
+              const c = profile[ledIdx] || { r: 0, g: 0, b: 0 };
+              const scaledV = baseV / 255;
+              return {
+                rgb: {
+                  r: Math.round((c.r || 0) * scaledV),
+                  g: Math.round((c.g || 0) * scaledV),
+                  b: Math.round((c.b || 0) * scaledV)
+                },
+                h: 0, s: 0, v: baseV
+              };
+            }
+            return { rgb: { r: 0, g: 0, b: 0 }, h: 0, s: 0, v: 0 };
+          }
+
         default:
           {
             const w1 = Math.sin(now * 0.003 * spdFactor + (k.qmkX / 224) * 6.28 * (rev ? 1 : -1));
@@ -12872,8 +14228,8 @@ input:checked + .switch-slider:before {
     _tickVisualizer(timestamp) {
       if (!this.isVisualizerRunning) return;
 
-      // If user is on the Studio Lighting tab, yield the thread to Studio Lighting
-      if (window.gStudioLighting && window.gStudioLighting.isRunning && window.gUI && window.gUI.currentView === "studio_lighting") {
+      // Yield to Studio Lighting if active
+      if (window.gStudioLighting && window.gStudioLighting.isRunning && window.gUI && window.gUI.activeView === "studio_lighting") {
         this.animFrameId = requestAnimationFrame(this._tickBound);
         return;
       }
@@ -12903,7 +14259,7 @@ input:checked + .switch-slider:before {
           for (let i = 0; i < this.visualizerKeys.length; i++) {
             const k = this.visualizerKeys[i];
             if (!k || k.isKnob) continue;
-            const keyTargets = k.els || [k.el];
+            const keyTargets = k.lightingEls || [k.el];
             for (let t = 0; t < keyTargets.length; t++) {
               const el = keyTargets[t];
               if (!el) continue;
@@ -12943,7 +14299,7 @@ input:checked + .switch-slider:before {
           for (let i = 0; i < this.visualizerKeys.length; i++) {
             const k = this.visualizerKeys[i];
             if (!k || k.isKnob) continue;
-            const keyTargets = k.els || [k.el];
+            const keyTargets = k.lightingEls || [k.el];
             for (let t = 0; t < keyTargets.length; t++) {
               const el = keyTargets[t];
               if (!el) continue;
@@ -12962,9 +14318,14 @@ input:checked + .switch-slider:before {
           }
           for (let i = 0; i < this.sideDiffusers.length; i++) {
             const s = this.sideDiffusers[i];
-            if (!s || !s.el) continue;
-            s.el.style.backgroundColor = monoBri > 0 ? `rgb(${monoR}, ${monoG}, ${monoB})` : 'transparent';
-            s.el.style.boxShadow = monoBri > 0 ? `0 0 10px rgba(${monoR}, ${monoG}, ${monoB}, ${glowAlpha})` : 'none';
+            if (!s) continue;
+            const sdTargets = s.lightingEls || [s.el];
+            for (let t = 0; t < sdTargets.length; t++) {
+              const el = sdTargets[t];
+              if (!el) continue;
+              el.style.backgroundColor = monoBri > 0 ? `rgb(${monoR}, ${monoG}, ${monoB})` : 'transparent';
+              el.style.boxShadow = monoBri > 0 ? `0 0 10px rgba(${monoR}, ${monoG}, ${monoB}, ${glowAlpha})` : 'none';
+            }
           }
           this.animFrameId = requestAnimationFrame(this._tickBound);
           return;
@@ -13051,7 +14412,7 @@ input:checked + .switch-slider:before {
             }
 
             const rgb = this._hsvToRgb(h, s, v);
-            const logoTargets = (k.els || [k.el]).filter(el => !el.id || !el.id.includes("studioLightingKeyboardCanvas"));
+            const logoTargets = k.lightingEls || [k.el];
             for (let t = 0; t < logoTargets.length; t++) {
               const el = logoTargets[t];
               if (!el) continue;
@@ -13261,7 +14622,7 @@ input:checked + .switch-slider:before {
           const glowAlpha = Math.min(0.85, (avgBri / 255) * 0.75);
           const textColor = (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114) > 140 ? '#111827' : '#ffffff';
 
-          const targets = (k.els || [k.el]).filter(el => !el.id || !el.id.includes("studioLightingKeyboardCanvas"));
+          const targets = k.lightingEls || [k.el];
           for (let t = 0; t < targets.length; t++) {
             const el = targets[t];
             if (!el) continue;
@@ -13280,7 +14641,7 @@ input:checked + .switch-slider:before {
           let v = res.v * (isLayerActive ? layerDim : 1.0);
           const rgb = res.rgb ? res.rgb : this._hsvToRgb(res.h, res.s, v);
 
-          const sdTargets = (sd.els || [sd.el]).filter(el => !el.closest || !el.closest("#studioLightingKeyboardCanvas"));
+          const sdTargets = sd.lightingEls || [sd.el];
           for (let t = 0; t < sdTargets.length; t++) {
             const el = sdTargets[t];
             if (!el) continue;
@@ -13289,7 +14650,7 @@ input:checked + .switch-slider:before {
           }
         }
 
-        // 3. Update Status Badge
+        // 3. Update Status Badge (throttled/cached)
         this._updateStatusBadge(effect, brightness, isLayerActive, activeLyr);
       } catch (err) {
         console.warn("Visualizer tick loop warning:", err);
@@ -13306,23 +14667,29 @@ input:checked + .switch-slider:before {
 
       const eff = RGB_EFFECTS.find(e => e.id === effectId) || RGB_EFFECTS[13];
       const pct = Math.round(brightness * 100);
+      let newHtml = "";
 
       if (isLayerActive) {
         const dimVal = Math.round((this.state.custom.layerDimLevel / 255) * 100);
-        badge.innerHTML = window.i18n ? window.i18n.t("badgeLayerActive", { layer: activeLyr, dim: dimVal }) : `Layer ${activeLyr} Active • Dimming: ${dimVal}%`;
+        newHtml = window.i18n ? window.i18n.t("badgeLayerActive", { layer: activeLyr, dim: dimVal }) : `Layer ${activeLyr} Active • Dimming: ${dimVal}%`;
       } else if (this.activeTab === "reactive") {
         const rEffNames = ["Disabled", "Fade", "Splash Ripple", "Rainbow Splash", "Cross +", "Nexus X", "Wide Wave", "Typing Heatmap"];
         const curRMode = this.state.custom.reactiveMode || 0;
         const modeLabel = rEffNames[curRMode] || 'Active';
-        badge.innerHTML = this.state.custom.reactiveEnable
+        newHtml = this.state.custom.reactiveEnable
           ? (window.i18n ? window.i18n.t("badgeReactiveActive", { mode: modeLabel }) : `Reactive Layer: Enabled (${modeLabel})`)
           : (window.i18n ? window.i18n.t("badgeReactiveDisabled") : `Reactive Layer: Disabled`);
       } else if (this.activeTab === "logo") {
-        badge.innerHTML = window.i18n ? window.i18n.t("badgeLogoPreview") : `Logo & Knob Lock Indicator Preview`;
+        newHtml = window.i18n ? window.i18n.t("badgeLogoPreview") : `Logo & Knob Lock Indicator Preview`;
       } else if (this.activeTab === "winlock") {
-        badge.innerHTML = window.i18n ? window.i18n.t("badgeWinLockPreview") : `Windows Key Lock Preview (Win Lock)`;
+        newHtml = window.i18n ? window.i18n.t("badgeWinLockPreview") : `Windows Key Lock Preview (Win Lock)`;
       } else {
-        badge.innerHTML = window.i18n ? window.i18n.t("badgeEffectBrightness", { name: eff.name, pct }) : `${eff.name} • ${pct}% Brightness`;
+        newHtml = window.i18n ? window.i18n.t("badgeEffectBrightness", { name: eff.name, pct }) : `${eff.name} • ${pct}% Brightness`;
+      }
+
+      if (this._lastStatusHtml !== newHtml) {
+        this._lastStatusHtml = newHtml;
+        badge.innerHTML = newHtml;
       }
     }
 
@@ -13354,10 +14721,13 @@ input:checked + .switch-slider:before {
     _hexToRgb(hex) {
       let c = (hex || "#ffffff").replace('#', '');
       if (c.length === 3) c = c.split('').map(x => x + x).join('');
+      const r = parseInt(c.substring(0, 2), 16);
+      const g = parseInt(c.substring(2, 4), 16);
+      const b = parseInt(c.substring(4, 6), 16);
       return {
-        r: parseInt(c.substring(0, 2), 16) || 255,
-        g: parseInt(c.substring(2, 4), 16) || 255,
-        b: parseInt(c.substring(4, 6), 16) || 255
+        r: isNaN(r) ? 255 : Math.max(0, Math.min(255, r)),
+        g: isNaN(g) ? 255 : Math.max(0, Math.min(255, g)),
+        b: isNaN(b) ? 255 : Math.max(0, Math.min(255, b))
       };
     }
 
@@ -13587,6 +14957,23 @@ input:checked + .switch-slider:before {
           }
         }
 
+        // Hardware Per-Key RGB Profiles (Profiles 0, 1, 2)
+        try {
+          const activeProf = await this.protocol.getActivePerKeyProfile();
+          if (activeProf !== undefined && activeProf >= 0 && activeProf <= 2) {
+            this.activePerKeyProfile = activeProf;
+          }
+
+          for (let p = 0; p < 3; p++) {
+            const colors = await this.protocol.getPerKeyProfile(p, 144);
+            if (colors && colors.length === 144) {
+              this.state.custom.perKeyProfiles[p] = colors;
+            }
+          }
+        } catch (err) {
+          console.warn("Could not load per-key profiles from device:", err);
+        }
+
         if (this.hardwareGradientEditor) {
           const activeProfIdx = (this.state.custom.activeGradient === 9) ? 1 : 0;
           if (this.state.custom.customProfiles && this.state.custom.customProfiles[activeProfIdx]) {
@@ -13605,6 +14992,45 @@ input:checked + .switch-slider:before {
       // 1. Backlight Tab
       const selEffect = document.getElementById("rgbEffectSelect");
       if (selEffect) selEffect.value = this.state.rgb.effect;
+
+      // Per-Key Profile Group Visibility & Active Profile Tab
+      const isPerKeyActive = this.state.rgb.effect >= 39 && this.state.rgb.effect <= 41;
+      const perKeyGroup = document.getElementById("perKeyProfileEditorGroup");
+      if (perKeyGroup) {
+        perKeyGroup.style.display = isPerKeyActive ? "block" : "none";
+      }
+
+      const visualizerHint = document.getElementById("perKeyVisualizerHint");
+      if (visualizerHint) {
+        visualizerHint.style.display = isPerKeyActive ? "flex" : "none";
+      }
+
+      const backlightGrid = document.getElementById("backlightLayoutGrid");
+      if (backlightGrid) {
+        backlightGrid.classList.toggle("perkey-active", isPerKeyActive);
+      }
+
+      const backlightBadge = document.getElementById("backlightModeBadge");
+      if (backlightBadge) {
+        backlightBadge.style.display = isPerKeyActive ? "inline-block" : "none";
+      }
+
+      if (isPerKeyActive) {
+        this.activePerKeyProfile = this.state.rgb.effect - 39;
+        [0, 1, 2].forEach(p => {
+          const tab = document.getElementById(`btnPerKeyProf${p}`);
+          if (tab) tab.classList.toggle("active", p === this.activePerKeyProfile);
+        });
+      }
+
+      const activeColorPicker = document.getElementById("perKeyActiveColorPicker");
+      if (activeColorPicker && this.perKeyPaintColor) {
+        activeColorPicker.value = this.perKeyPaintColor;
+      }
+      const activeColorHex = document.getElementById("perKeyActiveColorHex");
+      if (activeColorHex && this.perKeyPaintColor) {
+        activeColorHex.textContent = this.perKeyPaintColor.toUpperCase();
+      }
 
       const sliderBri = document.getElementById("rgbBrightnessSlider");
       if (sliderBri) sliderBri.value = this.state.rgb.brightness;
@@ -13627,22 +15053,51 @@ input:checked + .switch-slider:before {
       const chkReverse = document.getElementById("chkRgbReverse");
       if (chkReverse) chkReverse.checked = this.state.rgb.reverse;
 
-      // Update Color Picker visibility/state according to active effect
+      // Hide animation controls in Per-Key static profile mode
+      const speedGroup = document.getElementById("rgbSpeedGroup");
+      if (speedGroup) speedGroup.style.display = isPerKeyActive ? "none" : "block";
+
       const curEff = RGB_EFFECTS.find(e => e.id === this.state.rgb.effect);
+      const densityGroup = document.getElementById("rgbDensityGroup");
+      if (densityGroup) {
+        const isDensityCapable = curEff && (
+          curEff.isRainbow ||
+          curEff.isGradient ||
+          (curEff.id >= 3 && curEff.id <= 4) ||
+          (curEff.id >= 6 && curEff.id <= 22) ||
+          (curEff.id >= 27 && curEff.id <= 30) ||
+          (curEff.id >= 33 && curEff.id <= 38)
+        );
+        densityGroup.style.display = (isPerKeyActive || !isDensityCapable) ? "none" : "block";
+      }
+
       const colorGroup = document.getElementById("rgbColorGroup");
-      if (colorGroup && curEff) {
-        const descSpan = colorGroup.querySelector("span");
-        if (descSpan) {
-          if (curEff.isRainbow) {
-            if (this.state.custom.activeGradient > 0) {
-              descSpan.textContent = window.i18n ? window.i18n.t("hintGradientColor") : "Gradient palette active — color adjusts palette phase shift (starting hue) and saturation";
+      if (colorGroup) {
+        colorGroup.style.display = isPerKeyActive ? "none" : "block";
+        if (curEff) {
+          const descSpan = colorGroup.querySelector("span");
+          if (descSpan) {
+            if (curEff.isRainbow) {
+              if (this.state.custom.activeGradient > 0) {
+                descSpan.textContent = window.i18n ? window.i18n.t("hintGradientColor") : "Gradient palette active — color adjusts palette phase shift (starting hue) and saturation";
+              } else {
+                descSpan.textContent = window.i18n ? window.i18n.t("hintRainbowColor") : "Rainbow effect — color sets initial hue phase offset and saturation";
+              }
             } else {
-              descSpan.textContent = window.i18n ? window.i18n.t("hintRainbowColor") : "Rainbow effect — color sets initial hue phase offset and saturation";
+              descSpan.textContent = window.i18n ? window.i18n.t("hintSingleColor") : "Set color for single-color effects";
             }
-          } else {
-            descSpan.textContent = window.i18n ? window.i18n.t("hintSingleColor") : "Set color for single-color effects";
           }
         }
+      }
+
+      const gradientGroup = document.getElementById("hardwareGradientGroup");
+      if (gradientGroup) {
+        gradientGroup.style.display = (isPerKeyActive || !curEff || (!curEff.isGradient && !curEff.isRainbow)) ? "none" : "block";
+      }
+
+      const reverseWrap = document.getElementById("rgbReverseWrap");
+      if (reverseWrap) {
+        reverseWrap.style.display = isPerKeyActive ? "none" : "flex";
       }
 
       // Reactive Layer UI
@@ -13774,10 +15229,24 @@ input:checked + .switch-slider:before {
       }
     }
 
+    _markUnsaved(domain = "lighting") {
+      if (window.gUI && typeof window.gUI.setUnsavedChanges === "function") {
+        window.gUI.setUnsavedChanges(true, domain);
+      }
+    }
+
     _populateEffectsDropdown() {
       const sel = document.getElementById("rgbEffectSelect");
       if (!sel) return;
-      sel.innerHTML = RGB_EFFECTS.map(eff => `<option value="${eff.id}">${eff.name}</option>`).join("");
+      const getLocalizedName = (eff) => {
+        if (eff.id === 39) return window.i18n ? window.i18n.t("profFPS") : "Profile 1";
+        if (eff.id === 40) return window.i18n ? window.i18n.t("profMOBA") : "Profile 2";
+        if (eff.id === 41) return window.i18n ? window.i18n.t("profMMO") : "Profile 3";
+        return eff.name;
+      };
+      const curVal = sel.value;
+      sel.innerHTML = RGB_EFFECTS.map(eff => `<option value="${eff.id}">${getLocalizedName(eff)}</option>`).join("");
+      if (curVal) sel.value = curVal;
     }
 
     _throttleHid(key, fn, delay = 80) {
@@ -13853,6 +15322,7 @@ input:checked + .switch-slider:before {
         const isEnabled = e.target.checked;
         if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
         this.state.monochrome.enabled = isEnabled;
+        this._markUnsaved("lighting");
         const badge = document.getElementById("monochromeStatusBadge");
         if (badge) {
           badge.textContent = isEnabled ? `Active • ${Math.round(this.state.monochrome.brightness / 2.55)}%` : "Disabled";
@@ -13869,6 +15339,7 @@ input:checked + .switch-slider:before {
         const val = parseInt(e.target.value, 10);
         if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
         this.state.monochrome.brightness = val;
+        this._markUnsaved("lighting");
         const lbl = document.getElementById("monochromeBriVal");
         if (lbl) lbl.textContent = `${Math.round(val / 2.55)}% (${val})`;
         const badge = document.getElementById("monochromeStatusBadge");
@@ -13886,6 +15357,7 @@ input:checked + .switch-slider:before {
         const isBreathing = e.target.checked;
         if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
         this.state.monochrome.breathing = isBreathing;
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           try {
             await this.protocol.setBacklightValue?.(2, isBreathing ? 1 : 0);
@@ -13896,6 +15368,7 @@ input:checked + .switch-slider:before {
       document.getElementById("monochromeTintPicker")?.addEventListener("change", (e) => {
         if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
         this.state.monochrome.tint = e.target.value;
+        this._markUnsaved("lighting");
       });
 
       // 1. Backlight Events
@@ -13903,15 +15376,16 @@ input:checked + .switch-slider:before {
         const val = parseInt(e.target.value, 10);
         this.state.rgb.effect = val;
         this.updateUI();
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setRGBMatrixValue(C.RGB_MATRIX_VAL.EFFECT, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.RGB_MATRIX);
         }
       });
 
       document.getElementById("rgbBrightnessSlider")?.addEventListener("input", (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.rgb.brightness = val;
+        this._markUnsaved("lighting");
         const lbl = document.getElementById("rgbBriVal");
         if (lbl) lbl.textContent = val;
         if (this.protocol && this.protocol.device) {
@@ -13922,15 +15396,16 @@ input:checked + .switch-slider:before {
       });
 
       document.getElementById("rgbBrightnessSlider")?.addEventListener("change", async () => {
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setRGBMatrixValue(C.RGB_MATRIX_VAL.BRIGHTNESS, this.state.rgb.brightness);
-          await this.protocol.saveCustomConfig(C.CHANNELS.RGB_MATRIX);
         }
       });
 
       document.getElementById("rgbSpeedSlider")?.addEventListener("input", (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.rgb.speed = val;
+        this._markUnsaved("lighting");
         const lbl = document.getElementById("rgbSpdVal");
         if (lbl) lbl.textContent = val;
         if (this.protocol && this.protocol.device) {
@@ -13941,15 +15416,16 @@ input:checked + .switch-slider:before {
       });
 
       document.getElementById("rgbSpeedSlider")?.addEventListener("change", async () => {
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setRGBMatrixValue(C.RGB_MATRIX_VAL.EFFECT_SPEED, this.state.rgb.speed);
-          await this.protocol.saveCustomConfig(C.CHANNELS.RGB_MATRIX);
         }
       });
 
       document.getElementById("rgbDensitySlider")?.addEventListener("input", (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.custom.effectDensity = val;
+        this._markUnsaved("lighting");
         const lbl = document.getElementById("rgbDensityVal");
         if (lbl) lbl.textContent = val;
         if (this.protocol && this.protocol.device) {
@@ -13960,27 +15436,27 @@ input:checked + .switch-slider:before {
       });
 
       document.getElementById("rgbDensitySlider")?.addEventListener("change", async () => {
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 36, this.state.custom.effectDensity ?? 128);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("rgbColorPicker")?.addEventListener("change", async (e) => {
         const [h, s] = this._hexToHs(e.target.value);
         this.state.rgb.hs = [h, s];
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setRGBMatrixValue(C.RGB_MATRIX_VAL.COLOR, h, s);
-          await this.protocol.saveCustomConfig(C.CHANNELS.RGB_MATRIX);
         }
       });
 
       document.getElementById("chkRgbReverse")?.addEventListener("change", async (e) => {
         const val = e.target.checked ? 1 : 0;
         this.state.rgb.reverse = e.target.checked;
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.RGB_REVERSE, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
@@ -13988,6 +15464,7 @@ input:checked + .switch-slider:before {
       document.getElementById("chkReactiveEnable")?.addEventListener("change", async (e) => {
         const val = e.target.checked ? 1 : 0;
         this.state.custom.reactiveEnable = e.target.checked;
+        this._markUnsaved("lighting");
         const badge = document.getElementById("reactiveStatusBadge");
         if (badge) {
           badge.textContent = e.target.checked ? (window.i18n ? window.i18n.t("badgeEnabled") : "Enabled") : (window.i18n ? window.i18n.t("badgeDisabled") : "Disabled");
@@ -13995,35 +15472,35 @@ input:checked + .switch-slider:before {
         }
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.REACTIVE_ENABLE, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("reactiveModeSelect")?.addEventListener("change", async (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.custom.reactiveMode = val;
+        this._markUnsaved("lighting");
         const colorGrp = document.getElementById("reactiveColorGroup");
         if (colorGrp) {
           colorGrp.style.display = (val === 3 || val === 7) ? "none" : "block";
         }
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.REACTIVE_MODE, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("reactiveColorPicker")?.addEventListener("change", async (e) => {
         const [h, s] = this._hexToHs(e.target.value);
         this.state.custom.reactiveColor = [h, s];
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.REACTIVE_COLOR, h, s);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("reactiveSpeedSlider")?.addEventListener("input", (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.custom.reactiveSpeed = val;
+        this._markUnsaved("lighting");
         const lbl = document.getElementById("reactiveSpdVal");
         if (lbl) lbl.textContent = val;
         if (this.protocol && this.protocol.device) {
@@ -14034,18 +15511,18 @@ input:checked + .switch-slider:before {
       });
 
       document.getElementById("reactiveSpeedSlider")?.addEventListener("change", async () => {
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.REACTIVE_SPEED, this.state.custom.reactiveSpeed);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("reactiveBlendSelect")?.addEventListener("change", async (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.custom.reactiveBlend = val;
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.REACTIVE_BLEND, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
@@ -14053,26 +15530,27 @@ input:checked + .switch-slider:before {
       document.getElementById("winLockModeSelect")?.addEventListener("change", async (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.custom.winLockMode = val;
+        this._markUnsaved("lighting");
         const colorGrp = document.getElementById("winLockColorGroup");
         if (colorGrp) colorGrp.style.display = val === 2 ? "block" : "none";
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.WIN_LOCK_MODE, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("winLockColorPicker")?.addEventListener("change", async (e) => {
         const [h, s] = this._hexToHs(e.target.value);
         this.state.custom.winLockColor = [h, s];
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.WIN_LOCK_COLOR, h, s);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("chkWinLockToggle")?.addEventListener("change", async (e) => {
         const isLocked = e.target.checked;
         this.state.custom.winLockActive = isLocked;
+        this._markUnsaved("lighting");
         const badge = document.getElementById("winLockStatusBadge");
         if (badge) {
           badge.textContent = isLocked ? (window.i18n ? window.i18n.t("badgeLocked") : "Locked") : (window.i18n ? window.i18n.t("badgeUnlocked") : "Unlocked");
@@ -14087,15 +15565,16 @@ input:checked + .switch-slider:before {
       document.getElementById("chkLayerLighting")?.addEventListener("change", async (e) => {
         const val = e.target.checked ? 1 : 0;
         this.state.custom.layerLightingEnable = e.target.checked;
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.LAYER_LIGHTING_ENABLE, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("layerDimSlider")?.addEventListener("input", (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.custom.layerDimLevel = val;
+        this._markUnsaved("lighting");
         const lbl = document.getElementById("layerDimVal");
         if (lbl) lbl.textContent = val;
         if (this.protocol && this.protocol.device) {
@@ -14106,9 +15585,9 @@ input:checked + .switch-slider:before {
       });
 
       document.getElementById("layerDimSlider")?.addEventListener("change", async () => {
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.LAYER_DIM_LEVEL, this.state.custom.layerDimLevel);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
@@ -14120,13 +15599,13 @@ input:checked + .switch-slider:before {
       document.getElementById("logoModeSelect")?.addEventListener("change", async (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.custom.logoMode = val;
+        this._markUnsaved("lighting");
         const logoColorsWrap = document.getElementById("logoColorsContainer");
         if (logoColorsWrap) {
           logoColorsWrap.style.display = val === 0 ? "none" : "grid";
         }
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.LOGO_MODE, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
@@ -14138,7 +15617,28 @@ input:checked + .switch-slider:before {
       this._bindLockColorPicker("colorNumScroll", C.CUSTOM_VAL.LOGO_COLOR_NUM_SCROLL, "numScroll");
       this._bindLockColorPicker("colorAll", C.CUSTOM_VAL.LOGO_COLOR_ALL, "all");
 
-      // 4. Hardware Multi-Stop Gradient Events
+      // 4. Dedicated Save & Discard Buttons for Keyboard Memory (EEPROM)
+      const bindSaveBtn = (id) => {
+        document.getElementById(id)?.addEventListener("click", () => this.saveLightingToEEPROM());
+      };
+      bindSaveBtn("btnSaveBacklightEEPROM");
+      bindSaveBtn("btnSaveReactiveEEPROM");
+      bindSaveBtn("btnSaveWinLockEEPROM");
+      bindSaveBtn("btnSaveLayersEEPROM");
+      bindSaveBtn("btnSaveLogoEEPROM");
+      bindSaveBtn("btnSaveMonochromeEEPROM");
+
+      const bindDiscardBtn = (id) => {
+        document.getElementById(id)?.addEventListener("click", () => this.discardLightingFromEEPROM());
+      };
+      bindDiscardBtn("btnDiscardBacklightEEPROM");
+      bindDiscardBtn("btnDiscardReactiveEEPROM");
+      bindDiscardBtn("btnDiscardWinLockEEPROM");
+      bindDiscardBtn("btnDiscardLayersEEPROM");
+      bindDiscardBtn("btnDiscardLogoEEPROM");
+      bindDiscardBtn("btnDiscardMonochromeEEPROM");
+
+      // 5. Hardware Multi-Stop Gradient Events
       const selHwGrad = document.getElementById("hardwareGradientPresetSelect");
       const hwGradEditorGroup = document.getElementById("hardwareGradientEditorGroup");
       if (selHwGrad) {
@@ -14147,6 +15647,7 @@ input:checked + .switch-slider:before {
           this.state.custom.activeGradient = val;
           this._rebuildGradientLut();
           this.updateUI();
+          this._markUnsaved("lighting");
           if (hwGradEditorGroup) {
             hwGradEditorGroup.style.display = (val === 8 || val === 9) ? "block" : "none";
           }
@@ -14161,7 +15662,6 @@ input:checked + .switch-slider:before {
             this._throttleHid("hw_gradient", async () => {
               try {
                 await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 33, val);
-                await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
               } catch (err) {
                 console.warn("Could not set hardware gradient preset:", err);
               }
@@ -14182,6 +15682,7 @@ input:checked + .switch-slider:before {
             const prof = (this.state.custom.activeGradient === 9) ? 1 : 0;
             this.state.custom.customProfiles[prof] = stops;
             this._rebuildGradientLut();
+            this._markUnsaved("gradient");
             if (this.protocol && this.protocol.isConnected && (this.state.custom.activeGradient === 8 || this.state.custom.activeGradient === 9)) {
               this._sendCustomGradientStopsThrottled(prof, stops);
             }
@@ -14205,6 +15706,9 @@ input:checked + .switch-slider:before {
               await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 35, prof, s, stops[s].pos, stops[s].r, stops[s].g, stops[s].b);
             }
             await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 37, prof, 1);
+            if (window.gUI && typeof window.gUI.setUnsavedChanges === "function") {
+              window.gUI.setUnsavedChanges(false, "gradient");
+            }
             if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastGradientSavedToEeprom") : "Gradient profile saved to EEPROM", "success");
           } catch (err) {
             if (window.gUI) window.gUI.showToast(err.message, "error");
@@ -14213,14 +15717,98 @@ input:checked + .switch-slider:before {
       }
     }
 
+    async saveLightingToEEPROM() {
+      if (!this.protocol || !this.protocol.isConnected) {
+        if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+        return;
+      }
+      try {
+        const C = window.GMMK3_CONSTANTS;
+        await this.protocol.saveCustomConfig(C.CHANNELS.RGB_MATRIX);
+        await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
+        if (window.gUI && typeof window.gUI.setUnsavedChanges === "function") {
+          window.gUI.setUnsavedChanges(false, "lighting");
+        }
+        if (window.gUI) {
+          window.gUI.showToast(window.i18n ? window.i18n.t("toastSavedToEEPROM") : "Settings permanently saved to keyboard memory (EEPROM)!", "success");
+        }
+      } catch (err) {
+        if (window.gUI) window.gUI.showToast("Save error: " + err.message, "error");
+      }
+    }
+
+    async discardLightingFromEEPROM() {
+      if (!this.protocol || !this.protocol.isConnected) {
+        if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+        return;
+      }
+      try {
+        if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastDiscardingChanges") : "Reverting to saved EEPROM settings...", "info");
+        if (typeof this.protocol.reloadEEPROM === "function") {
+          await this.protocol.reloadEEPROM();
+          await this.protocol.sleep(60);
+        }
+        await this.loadFromDevice();
+        if (window.gUI && typeof window.gUI.setUnsavedChanges === "function") {
+          window.gUI.setUnsavedChanges(false, "lighting");
+          window.gUI.setUnsavedChanges(false, "gradient");
+        }
+        if (window.gUI) {
+          window.gUI.showToast(window.i18n ? window.i18n.t("toastDiscardedSuccess") : "Settings restored from keyboard EEPROM!", "success");
+        }
+      } catch (err) {
+        if (window.gUI) window.gUI.showToast("Discard error: " + err.message, "error");
+      }
+    }
+
+    async discardPerKeyProfileFromEEPROM() {
+      if (!this.protocol || !this.protocol.isConnected) {
+        if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+        return;
+      }
+      try {
+        const profIdx = this.activePerKeyProfile;
+        if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastDiscardingChanges") : "Reverting profile to saved EEPROM settings...", "info");
+
+        // 1. Tell keyboard firmware to reload its EEPROM storage to RAM
+        if (typeof this.protocol.reloadEEPROM === "function") {
+          await this.protocol.reloadEEPROM();
+          await this.protocol.sleep(60);
+        }
+
+        // 2. Fetch restored profile from device RAM
+        try {
+          const colors = await this.protocol.getPerKeyProfile(profIdx, 144);
+          if (colors && colors.length === 144) {
+            this.state.custom.perKeyProfiles[profIdx] = colors;
+          }
+        } catch (err) {
+          console.warn("Could not reload per-key profile:", err);
+        }
+
+        this.perKeySelection.clear();
+        this._updatePerKeySelectionVisuals();
+        this.updateUI();
+
+        if (window.gUI && typeof window.gUI.setUnsavedChanges === "function") {
+          window.gUI.setUnsavedChanges(false, "profile");
+        }
+        if (window.gUI) {
+          window.gUI.showToast(window.i18n ? window.i18n.t("toastDiscardedSuccess") : "Profile restored from keyboard EEPROM!", "success");
+        }
+      } catch (err) {
+        if (window.gUI) window.gUI.showToast("Discard error: " + err.message, "error");
+      }
+    }
+
     _bindColorPicker(id, valId, stateKey) {
       document.getElementById(id)?.addEventListener("change", async (e) => {
         const [h, s] = this._hexToHs(e.target.value);
         this.state.custom[stateKey] = [h, s];
+        this._markUnsaved();
         if (this.protocol && this.protocol.device) {
           const C = window.GMMK3_CONSTANTS;
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, valId, h, s);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
     }
@@ -14229,12 +15817,671 @@ input:checked + .switch-slider:before {
       document.getElementById(id)?.addEventListener("change", async (e) => {
         const [h, s] = this._hexToHs(e.target.value);
         this.state.custom.lockColors[lockKey] = [h, s];
+        this._markUnsaved();
         if (this.protocol && this.protocol.device) {
           const C = window.GMMK3_CONSTANTS;
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, valId, h, s);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
+    }
+
+    // --- HARDWARE PER-KEY RGB STUDIO (EEPROM PROFILES) ---
+    _initPerKeyStudio() {
+      // 1. Profile Switcher Tabs
+      [0, 1, 2].forEach(p => {
+        const tabBtn = document.getElementById(`btnPerKeyProf${p}`);
+        if (tabBtn) {
+          tabBtn.addEventListener("click", async () => {
+            this.activePerKeyProfile = p;
+            this.state.rgb.effect = 39 + p;
+            const selEff = document.getElementById("rgbEffectSelect");
+            if (selEff) selEff.value = 39 + p;
+            [0, 1, 2].forEach(idx => {
+              const b = document.getElementById(`btnPerKeyProf${idx}`);
+              if (b) b.classList.toggle("active", idx === p);
+            });
+            this.perKeySelection.clear();
+            this._updatePerKeySelectionVisuals();
+            this.updateUI();
+            this._markUnsaved();
+
+            if (this.protocol && this.protocol.isConnected) {
+              try {
+                const C = window.GMMK3_CONSTANTS;
+                await this.protocol.setRGBMatrixValue(C.RGB_MATRIX_VAL.EFFECT, 39 + p);
+                await this.protocol.setActivePerKeyProfile(p);
+              } catch (err) {
+                console.warn("Failed to switch active per-key profile on device:", err);
+              }
+            }
+          });
+        }
+      });
+
+      // 2. Active Paint Color & Dynamic Swatches Generation
+      const colorPicker = document.getElementById("perKeyActiveColorPicker");
+      const hexLabel = document.getElementById("perKeyActiveColorHex");
+      const swatchesGrid = document.getElementById("perKeySwatchesContainer");
+
+      const updateActiveColor = (hex, updatePicker = true) => {
+        const cleanHex = hex.toUpperCase();
+        this.perKeyPaintColor = cleanHex;
+        if (updatePicker && colorPicker) colorPicker.value = cleanHex;
+        if (hexLabel) hexLabel.textContent = cleanHex;
+
+        if (swatchesGrid) {
+          swatchesGrid.querySelectorAll(".perkey-swatch-item").forEach(sw => {
+            sw.classList.toggle("active", sw.dataset.color.toUpperCase() === cleanHex);
+          });
+        }
+      };
+
+      if (colorPicker) {
+        colorPicker.addEventListener("input", (e) => {
+          updateActiveColor(e.target.value, false);
+        });
+        colorPicker.addEventListener("change", (e) => {
+          updateActiveColor(e.target.value, false);
+          if (this.perKeySelection.size > 0) {
+            this._fillPerKeySelection(this.perKeyPaintColor);
+          }
+        });
+      }
+
+      const SWATCH_PALETTE = [
+        "#00FFFF", "#FF0055", "#FFCC00", "#00FF66",
+        "#9900FF", "#0088FF", "#FF3300", "#FF0000",
+        "#00FF00", "#0000FF", "#FF00FF", "#FFFF00",
+        "#FFFFFF", "#000000"
+      ];
+
+      if (swatchesGrid) {
+        swatchesGrid.innerHTML = "";
+        SWATCH_PALETTE.forEach(hex => {
+          const sw = document.createElement("button");
+          sw.type = "button";
+          sw.className = "perkey-swatch-item";
+          sw.dataset.color = hex;
+          sw.style.backgroundColor = hex;
+          sw.title = hex;
+          if (hex.toUpperCase() === this.perKeyPaintColor.toUpperCase()) {
+            sw.classList.add("active");
+          }
+          sw.addEventListener("click", () => {
+            updateActiveColor(hex, true);
+            if (this.perKeySelection.size > 0) {
+              this._fillPerKeySelection(hex);
+            }
+          });
+          swatchesGrid.appendChild(sw);
+        });
+      }
+
+      // 3. Quick Selection Groups
+      document.querySelectorAll(".perkey-grp-btn, [data-group-select]").forEach(grpBtn => {
+        grpBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const grp = grpBtn.dataset.groupSelect;
+          this._selectPerKeyGroup(grp);
+        });
+      });
+
+      // 4. Fill Selected & Clear Actions
+      const btnFill = document.getElementById("btnPerKeyFillSelected");
+      if (btnFill) {
+        btnFill.addEventListener("click", () => {
+          this._fillPerKeySelection(this.perKeyPaintColor);
+        });
+      }
+
+      const btnClear = document.getElementById("btnPerKeyClear");
+      if (btnClear) {
+        btnClear.addEventListener("click", () => {
+          this._fillPerKeySelection("#000000");
+        });
+      }
+
+      // 5. Gaming Templates Dropdown Toggle & Selection
+      const btnTemplatesToggle = document.getElementById("btnPerKeyTemplates");
+      const templatesMenu = document.getElementById("perKeyTemplatesMenu");
+      if (btnTemplatesToggle && templatesMenu) {
+        btnTemplatesToggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const isVisible = templatesMenu.style.display === "block";
+          templatesMenu.style.display = isVisible ? "none" : "block";
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!templatesMenu.contains(e.target) && e.target !== btnTemplatesToggle && !btnTemplatesToggle.contains(e.target)) {
+            templatesMenu.style.display = "none";
+          }
+        });
+
+        document.querySelectorAll(".template-item-btn, [data-template]").forEach(tplItem => {
+          tplItem.addEventListener("click", async (e) => {
+            e.preventDefault();
+            templatesMenu.style.display = "none";
+            const tpl = tplItem.dataset.template;
+            await this._applyGamingTemplate(tpl);
+          });
+        });
+      }
+
+      // 6. Save Profile to EEPROM Action
+      const btnSaveEEPROM = document.getElementById("btnSavePerKeyProfile");
+      if (btnSaveEEPROM) {
+        btnSaveEEPROM.addEventListener("click", async () => {
+          if (!this.protocol || !this.protocol.isConnected) {
+            if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+            return;
+          }
+
+          const profIdx = this.activePerKeyProfile;
+          const colors = this.state.custom.perKeyProfiles[profIdx];
+          if (!colors || colors.length === 0) return;
+
+          try {
+            btnSaveEEPROM.disabled = true;
+            if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastProfileBlocksStreaming") : "Saving profile to keyboard EEPROM...", "info");
+
+            await this.protocol.setFullPerKeyProfile(profIdx, colors);
+            await this.protocol.savePerKeyProfileToEEPROM(profIdx);
+
+            if (window.gUI && typeof window.gUI.setUnsavedChanges === "function") {
+              window.gUI.setUnsavedChanges(false, "profile");
+            }
+            if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastProfileSavedEEPROM") : "Profile saved to EEPROM successfully!", "success");
+          } catch (err) {
+            if (window.gUI) window.gUI.showToast(err.message, "error");
+          } finally {
+            btnSaveEEPROM.disabled = false;
+          }
+        });
+      }
+
+      const btnDiscardPerKey = document.getElementById("btnDiscardPerKeyProfile");
+      if (btnDiscardPerKey) {
+        btnDiscardPerKey.addEventListener("click", () => this.discardPerKeyProfileFromEEPROM());
+      }
+
+      // 7. Instructions Accordion Toggle
+      const btnToggleHelp = document.getElementById("btnTogglePerKeyInstructions");
+      const helpCard = document.getElementById("perKeyInstructionsCard");
+      if (btnToggleHelp && helpCard) {
+        btnToggleHelp.addEventListener("click", () => {
+          helpCard.classList.toggle("collapsed");
+        });
+      }
+
+      // 8. Attach Marquee selection box on keyboard visualizer container
+      this._bindPerKeyMarquee();
+    }
+
+    _bindPerKeyMarquee() {
+      const canvas = document.getElementById("lightingKeyboardCanvas");
+      const wrapper = document.getElementById("lightingKeyboardScrollWrapper") || canvas?.parentElement;
+      if (!canvas) return;
+
+      let dragState = null;
+      let marqueeBox = null;
+
+      const onPointerDown = (e) => {
+        // Only active when per-key profile effect (39..41) is active
+        if (this.state.rgb.effect < 39 || this.state.rgb.effect > 41) return;
+        // Only primary mouse button or single touch
+        if (e.button !== undefined && e.button !== 0) return;
+
+        dragState = {
+          startX: e.clientX,
+          startY: e.clientY,
+          targetEl: e.target,
+          shiftKey: Boolean(e.shiftKey),
+          didDrag: false,
+          initialSelection: new Set(this.perKeySelection)
+        };
+      };
+
+      if (wrapper) {
+        wrapper.addEventListener("pointerdown", onPointerDown);
+      } else {
+        canvas.addEventListener("pointerdown", onPointerDown);
+      }
+
+      window.addEventListener("pointermove", (e) => {
+        if (!dragState) return;
+
+        const dist = Math.hypot(e.clientX - dragState.startX, e.clientY - dragState.startY);
+        if (!dragState.didDrag && dist > 4) {
+          dragState.didDrag = true;
+          if (!marqueeBox) {
+            marqueeBox = document.createElement("div");
+            marqueeBox.className = "perkey-marquee-box";
+            canvas.appendChild(marqueeBox);
+          }
+        }
+
+        if (dragState.didDrag && marqueeBox) {
+          const rect = canvas.getBoundingClientRect();
+          const scale = rect.width / (canvas.offsetWidth || 1);
+
+          const startCanvasX = (dragState.startX - rect.left) / scale;
+          const startCanvasY = (dragState.startY - rect.top) / scale;
+          const curCanvasX = (e.clientX - rect.left) / scale;
+          const curCanvasY = (e.clientY - rect.top) / scale;
+
+          const minX = Math.min(startCanvasX, curCanvasX);
+          const minY = Math.min(startCanvasY, curCanvasY);
+          const w = Math.abs(curCanvasX - startCanvasX);
+          const h = Math.abs(curCanvasY - startCanvasY);
+
+          marqueeBox.style.left = `${minX}px`;
+          marqueeBox.style.top = `${minY}px`;
+          marqueeBox.style.width = `${w}px`;
+          marqueeBox.style.height = `${h}px`;
+
+          const mLeft = minX;
+          const mTop = minY;
+          const mRight = minX + w;
+          const mBottom = minY + h;
+
+          const nextSelection = dragState.shiftKey
+            ? new Set(dragState.initialSelection)
+            : new Set();
+
+          // Intersect visualizer keys
+          for (let i = 0; i < this.visualizerKeys.length; i++) {
+            const k = this.visualizerKeys[i];
+            if (!k || k.isKnob) continue;
+            const kEl = k.el;
+            if (!kEl) continue;
+
+            const kL = kEl.offsetLeft;
+            const kT = kEl.offsetTop;
+            const kR = kL + kEl.offsetWidth;
+            const kB = kT + kEl.offsetHeight;
+
+            if (kL < mRight && kR > mLeft && kT < mBottom && kB > mTop) {
+              nextSelection.add(k.isLogo ? "LOGO" : k.id);
+            }
+          }
+
+          // Intersect side diffusers
+          for (let i = 0; i < this.sideDiffusers.length; i++) {
+            const sd = this.sideDiffusers[i];
+            if (!sd) continue;
+            const sEl = sd.el;
+            if (!sEl) continue;
+
+            const sL = sEl.offsetLeft;
+            const sT = sEl.offsetTop;
+            const sR = sL + sEl.offsetWidth;
+            const sB = sT + sEl.offsetHeight;
+
+            if (sL < mRight && sR > mLeft && sT < mBottom && sB > mTop) {
+              nextSelection.add(sd.id);
+            }
+          }
+
+          this.perKeySelection = nextSelection;
+          this._updatePerKeySelectionVisuals();
+        }
+      });
+
+      window.addEventListener("pointerup", (e) => {
+        if (!dragState) return;
+
+        const currentDrag = dragState;
+        dragState = null;
+
+        if (marqueeBox) {
+          if (marqueeBox.parentNode) {
+            marqueeBox.parentNode.removeChild(marqueeBox);
+          }
+          marqueeBox = null;
+        }
+
+        if (currentDrag.didDrag) {
+          // Drag finished — selection is already updated in real-time
+          return;
+        }
+
+        // It was a simple click (distance <= 4px)
+        const target = currentDrag.targetEl;
+        const keyCap = target.closest(".lighting-keycap");
+        const sideEl = target.closest(".side-diffuser-segment");
+        const logoEl = target.closest(".lighting-logo-badge");
+
+        if (logoEl) {
+          this._handlePerKeyElementClick("LOGO", { shiftKey: currentDrag.shiftKey });
+        } else if (sideEl) {
+          const foundSd = this.sideDiffusers.find(sd => sd.el === sideEl || (sd.els && sd.els.includes(sideEl)));
+          if (foundSd) {
+            this._handlePerKeyElementClick(foundSd.id, { shiftKey: currentDrag.shiftKey });
+          }
+        } else if (keyCap) {
+          const foundKey = this.visualizerKeys.find(k => k.el === keyCap || (k.els && k.els.includes(keyCap)));
+          if (foundKey) {
+            this._handlePerKeyElementClick(foundKey.isLogo ? "LOGO" : foundKey.id, { shiftKey: currentDrag.shiftKey });
+          }
+        } else {
+          // Clicked empty background without Shift -> clear selection!
+          if (!currentDrag.shiftKey) {
+            this.perKeySelection.clear();
+            this._updatePerKeySelectionVisuals();
+          }
+        }
+      });
+    }
+
+    _handlePerKeyElementClick(elementId, event) {
+      if (this.state.rgb.effect < 39 || this.state.rgb.effect > 41) return;
+
+      const profIdx = this.activePerKeyProfile;
+      const rgb = this._hexToRgb(this.perKeyPaintColor);
+
+      if (event && event.shiftKey) {
+        // Toggle selection
+        if (this.perKeySelection.has(elementId)) {
+          this.perKeySelection.delete(elementId);
+        } else {
+          this.perKeySelection.add(elementId);
+        }
+        this._updatePerKeySelectionVisuals();
+        return;
+      }
+
+      // If key is part of an active multi-selection and user clicks it -> paint all selected keys!
+      if (this.perKeySelection.size > 0 && this.perKeySelection.has(elementId)) {
+        this._fillPerKeySelection(this.perKeyPaintColor);
+        return;
+      }
+
+      // Otherwise, clear any multi-selection and paint this single element
+      this.perKeySelection.clear();
+      this._updatePerKeySelectionVisuals();
+
+      const ledIdx = this._getLedIndexForElement(elementId);
+      if (ledIdx >= 0 && ledIdx < 144) {
+        if (!this.state.custom.perKeyProfiles[profIdx]) {
+          this.state.custom.perKeyProfiles[profIdx] = this._generateDefaultPerKeyProfile(profIdx);
+        }
+        this.state.custom.perKeyProfiles[profIdx][ledIdx] = { r: rgb.r, g: rgb.g, b: rgb.b };
+        this._markUnsaved("profile");
+        this._sendPerKeyProfileBlockThrottled(profIdx, Math.floor(ledIdx / 8));
+      }
+    }
+
+    _selectPerKeyGroup(groupName) {
+      const layout = this.getActiveLayout() || [];
+      this.perKeySelection.clear();
+
+      switch (groupName) {
+        case "all":
+          this.visualizerKeys.forEach(k => {
+            if (!k.isKnob) this.perKeySelection.add(k.isLogo ? "LOGO" : k.id);
+          });
+          this.sideDiffusers.forEach(sd => this.perKeySelection.add(sd.id));
+          break;
+
+        case "wasd":
+          ["W", "A", "S", "D"].forEach(id => this.perKeySelection.add(id));
+          break;
+
+        case "alpha":
+        case "alphas":
+          layout.forEach(k => {
+            if (k.group === "alpha" && !k.isKnob && !k.isLogo) this.perKeySelection.add(k.id);
+          });
+          break;
+
+        case "mod":
+        case "modifiers":
+          layout.forEach(k => {
+            if (k.group === "mod" || ["SPC", "ENT", "BSPC", "TAB", "CAPS", "LSFT", "RSFT", "LCTL", "RCTL", "LALT", "RALT", "LWIN"].includes(k.id)) {
+              if (!k.isKnob && !k.isLogo) this.perKeySelection.add(k.id);
+            }
+          });
+          break;
+
+        case "num":
+        case "numbers":
+          ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "MINS", "EQL"].forEach(id => this.perKeySelection.add(id));
+          break;
+
+        case "numpad":
+          layout.forEach(k => {
+            if (k.group === "numpad" || String(k.id).startsWith("P")) {
+              if (!k.isKnob && !k.isLogo) this.perKeySelection.add(k.id);
+            }
+          });
+          break;
+
+        case "nav":
+        case "arrows":
+          ["UP", "DOWN", "LEFT", "RGHT", "INS", "DEL", "HOME", "END", "PGUP", "PGDN"].forEach(id => this.perKeySelection.add(id));
+          break;
+
+        case "func":
+        case "function":
+          ["ESC", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].forEach(id => this.perKeySelection.add(id));
+          break;
+
+        case "sidelights":
+          this.sideDiffusers.forEach(sd => this.perKeySelection.add(sd.id));
+          break;
+
+        case "logo":
+          this.perKeySelection.add("LOGO");
+          break;
+      }
+
+      this._updatePerKeySelectionVisuals();
+    }
+
+    _fillPerKeySelection(colorHex) {
+      const profIdx = this.activePerKeyProfile;
+      const rgb = this._hexToRgb(colorHex);
+      if (!this.state.custom.perKeyProfiles[profIdx]) {
+        this.state.custom.perKeyProfiles[profIdx] = this._generateDefaultPerKeyProfile(profIdx);
+      }
+      const profile = this.state.custom.perKeyProfiles[profIdx];
+
+      const targets = this.perKeySelection.size > 0
+        ? Array.from(this.perKeySelection)
+        : this.visualizerKeys.map(k => (k.isLogo ? "LOGO" : k.id)).concat(this.sideDiffusers.map(sd => sd.id));
+
+      const touchedBlocks = new Set();
+      targets.forEach(elId => {
+        const ledIdx = this._getLedIndexForElement(elId);
+        if (ledIdx >= 0 && ledIdx < 144) {
+          profile[ledIdx] = { r: rgb.r, g: rgb.g, b: rgb.b };
+          touchedBlocks.add(Math.floor(ledIdx / 8));
+        }
+      });
+
+      this._markUnsaved("profile");
+      touchedBlocks.forEach(blockIdx => {
+        this._sendPerKeyProfileBlockThrottled(profIdx, blockIdx);
+      });
+    }
+
+    _updatePerKeySelectionVisuals() {
+      // Clear or update .perkey-selected across all visualizer keycaps, side diffusers, and logo
+      this.visualizerKeys.forEach(k => {
+        const id = k.isLogo ? "LOGO" : k.id;
+        const isSel = this.perKeySelection.has(id);
+        const targets = k.els || [k.el];
+        targets.forEach(el => {
+          if (el) el.classList.toggle("perkey-selected", isSel);
+        });
+      });
+
+      this.sideDiffusers.forEach(sd => {
+        const isSel = this.perKeySelection.has(sd.id);
+        const targets = sd.els || [sd.el];
+        targets.forEach(el => {
+          if (el) el.classList.toggle("perkey-selected", isSel);
+        });
+      });
+    }
+
+    _sendPerKeyProfileBlockThrottled(profIdx, blockIdx) {
+      if (!this.protocol || !this.protocol.isConnected) return;
+      this._pendingPerKeyBlocks.set(blockIdx, profIdx);
+
+      if (this._perKeyStreamTimer) clearTimeout(this._perKeyStreamTimer);
+      this._perKeyStreamTimer = setTimeout(() => {
+        this._flushPerKeyBlocks();
+      }, 50);
+    }
+
+    async _flushPerKeyBlocks() {
+      if (this._isStreamingPerKey) return;
+      if (!this.protocol || !this.protocol.isConnected || this._pendingPerKeyBlocks.size === 0) return;
+
+      this._isStreamingPerKey = true;
+      try {
+        const entries = Array.from(this._pendingPerKeyBlocks.entries());
+        this._pendingPerKeyBlocks.clear();
+
+        for (const [blockIdx, profIdx] of entries) {
+          const profile = this.state.custom.perKeyProfiles[profIdx];
+          if (!profile) continue;
+          const startLed = blockIdx * 8;
+          const blockColors = profile.slice(startLed, startLed + 8);
+          await this.protocol.setPerKeyProfileBlock(profIdx, startLed, blockColors);
+        }
+      } catch (err) {
+        console.warn("Failed to stream per-key blocks:", err);
+      } finally {
+        this._isStreamingPerKey = false;
+        if (this._pendingPerKeyBlocks.size > 0) {
+          this._flushPerKeyBlocks();
+        }
+      }
+    }
+
+    async _applyGamingTemplate(templateKey) {
+      const profIdx = this.activePerKeyProfile;
+      const colors = new Array(144);
+      for (let i = 0; i < 144; i++) colors[i] = { r: 0, g: 0, b: 0 };
+
+      const key = String(templateKey).toLowerCase().replace(/^tpl-/, "");
+
+      switch (key) {
+        case "fps":
+          colors.splice(0, 144, ...this._generateDefaultPerKeyProfile(0));
+          break;
+
+        case "moba":
+          colors.splice(0, 144, ...this._generateDefaultPerKeyProfile(1));
+          break;
+
+        case "mmo":
+          colors.splice(0, 144, ...this._generateDefaultPerKeyProfile(2));
+          break;
+
+        case "racing":
+          for (let i = 0; i < 144; i++) colors[i] = { r: 12, g: 12, b: 20 };
+          ["W"].forEach(id => {
+            const idx = this._getLedIndexForElement(id);
+            if (idx >= 0) colors[idx] = { r: 0, g: 255, b: 68 }; // Acceleration Green
+          });
+          ["A", "D"].forEach(id => {
+            const idx = this._getLedIndexForElement(id);
+            if (idx >= 0) colors[idx] = { r: 255, g: 200, b: 0 }; // Steering Yellow
+          });
+          ["S"].forEach(id => {
+            const idx = this._getLedIndexForElement(id);
+            if (idx >= 0) colors[idx] = { r: 255, g: 0, b: 30 }; // Brake Red
+          });
+          ["SPC"].forEach(id => {
+            const idx = this._getLedIndexForElement(id);
+            if (idx >= 0) colors[idx] = { r: 255, g: 120, b: 0 }; // Handbrake Orange
+          });
+          for (let s = 1; s <= 20; s++) {
+            const idx = this._getLedIndexForElement(`SLED${s}`);
+            if (idx >= 0) colors[idx] = { r: 0, g: 170, b: 255 };
+          }
+          break;
+
+        case "cyberpunk":
+          for (let i = 0; i < 144; i++) colors[i] = { r: 255, g: 0, b: 128 }; // Hot Pink base
+          this.visualizerKeys.forEach(k => {
+            if (k.group === "alpha" && !k.isKnob && !k.isLogo) {
+              const idx = this._getLedIndexForElement(k.id);
+              if (idx >= 0) colors[idx] = { r: 0, g: 255, b: 255 }; // Neon Cyan alphas
+            }
+          });
+          ["UP", "DOWN", "LEFT", "RGHT", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].forEach(id => {
+            const idx = this._getLedIndexForElement(id);
+            if (idx >= 0) colors[idx] = { r: 255, g: 255, b: 0 }; // Neon Yellow
+          });
+          break;
+
+        case "matrix":
+          for (let i = 0; i < 144; i++) colors[i] = { r: 0, g: 40, b: 10 }; // Deep Green
+          this.visualizerKeys.forEach(k => {
+            if (k.group === "alpha" && !k.isKnob && !k.isLogo) {
+              const idx = this._getLedIndexForElement(k.id);
+              if (idx >= 0) colors[idx] = { r: 0, g: 255, b: 60 }; // Matrix Bright Green
+            }
+          });
+          for (let s = 1; s <= 20; s++) {
+            const idx = this._getLedIndexForElement(`SLED${s}`);
+            if (idx >= 0) colors[idx] = { r: 0, g: 220, b: 50 };
+          }
+          break;
+
+        case "office":
+          for (let i = 0; i < 144; i++) colors[i] = { r: 255, g: 255, b: 255 }; // Studio White
+          break;
+
+        case "rainbow":
+          this.visualizerKeys.forEach(k => {
+            if (!k.isKnob && !k.isLogo) {
+              const hue = Math.round((k.qmkX / 224) * 255) & 0xFF;
+              const rgb = this._hsvToRgb(hue, 255, 255);
+              const idx = this._getLedIndexForElement(k.id);
+              if (idx >= 0) colors[idx] = rgb;
+            }
+          });
+          for (let s = 1; s <= 20; s++) {
+            const idx = this._getLedIndexForElement(`SLED${s}`);
+            if (idx >= 0) {
+              const hue = Math.round((s / 20) * 255) & 0xFF;
+              colors[idx] = this._hsvToRgb(hue, 255, 255);
+            }
+          }
+          break;
+      }
+
+      this.state.custom.perKeyProfiles[profIdx] = colors;
+      this.perKeySelection.clear();
+      this._updatePerKeySelectionVisuals();
+      this._markUnsaved("profile");
+
+      if (this.protocol && this.protocol.isConnected) {
+        try {
+          await this.protocol.setFullPerKeyProfile(profIdx, colors);
+        } catch (e) {
+          console.warn("Failed to stream template to keyboard:", e);
+        }
+      }
+
+      if (window.gUI) {
+        const msg = window.i18n ? `${window.i18n.t("btnPresetsTemplates")}: ${key.toUpperCase()}` : `Applied template: ${key.toUpperCase()}`;
+        window.gUI.showToast(msg, "info");
+      }
+    }
+
+    _rgbStringToHex(rgbStr) {
+      const match = rgbStr.match(/\d+/g);
+      if (!match || match.length < 3) return "#ff0055";
+      const r = parseInt(match[0], 10).toString(16).padStart(2, "0");
+      const g = parseInt(match[1], 10).toString(16).padStart(2, "0");
+      const b = parseInt(match[2], 10).toString(16).padStart(2, "0");
+      return `#${r}${g}${b}`;
     }
 
     _hexToHs(hex) {
@@ -17613,7 +19860,21 @@ input:checked + .switch-slider:before {
           };
         } catch (e) {}
 
-        this._log("Successfully read debounce time, layer colors, reactive layer, Win Lock, 7 Logo Lock indicators, and gradient profiles.", "success");
+        // Hardware Per-Key RGB Profiles (Profiles 0, 1, 2)
+        try {
+          const perKeyProfiles = [];
+          for (let p = 0; p < 3; p++) {
+            const colors = await this.protocol.getPerKeyProfile(p, 144);
+            if (colors && colors.length > 0) {
+              perKeyProfiles.push(colors);
+            }
+          }
+          if (perKeyProfiles.length > 0) {
+            backup.custom_settings.per_key_profiles = perKeyProfiles;
+          }
+        } catch (e) {}
+
+        this._log("Successfully read debounce time, layer colors, reactive layer, Win Lock, 7 Logo Lock indicators, gradient profiles, and per-key RGB profiles.", "success");
       } catch (err) {
         this._log("Custom settings read warning: " + err.message, "warning");
       }
@@ -17738,58 +19999,72 @@ input:checked + .switch-slider:before {
         this._log("Restoring debounce latency, layer colors, reactive settings, Win Lock, and 7 Logo Lock states...", "info");
         try {
           if (cust.debounce_time !== undefined) {
-            await this.protocol.setDebounceTime(cust.debounce_time);
+            const db = (typeof cust.debounce_time === "number" && !isNaN(cust.debounce_time) && cust.debounce_time >= 0 && cust.debounce_time <= 30) ? cust.debounce_time : 5;
+            await this.protocol.setDebounceTime(db);
+            await new Promise(r => setTimeout(r, 10));
           }
-          if (cust.rgb_reverse !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.RGB_REVERSE, cust.rgb_reverse ? 1 : 0);
-          if (cust.layer_lighting_enable !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, cust.layer_lighting_enable ? 1 : 0);
-          if (cust.layer_dim_level !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL, cust.layer_dim_level);
+          if (cust.rgb_reverse !== undefined) {
+            await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.RGB_REVERSE, cust.rgb_reverse ? 1 : 0);
+            await new Promise(r => setTimeout(r, 10));
+          }
+          if (cust.layer_lighting_enable !== undefined) {
+            await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, cust.layer_lighting_enable ? 1 : 0);
+            await new Promise(r => setTimeout(r, 10));
+          }
+          if (cust.layer_dim_level !== undefined) {
+            await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL, cust.layer_dim_level);
+            await new Promise(r => setTimeout(r, 10));
+          }
 
           if (cust.layer_colors) {
             const lc = cust.layer_colors;
-            if (lc.layer_1) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_1_COLOR, lc.layer_1.h, lc.layer_1.s);
-            if (lc.layer_2) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_2_COLOR, lc.layer_2.h, lc.layer_2.s);
-            if (lc.layer_3) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_3_COLOR, lc.layer_3.h, lc.layer_3.s);
+            if (lc.layer_1) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_1_COLOR, lc.layer_1.h, lc.layer_1.s); await new Promise(r => setTimeout(r, 10)); }
+            if (lc.layer_2) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_2_COLOR, lc.layer_2.h, lc.layer_2.s); await new Promise(r => setTimeout(r, 10)); }
+            if (lc.layer_3) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_3_COLOR, lc.layer_3.h, lc.layer_3.s); await new Promise(r => setTimeout(r, 10)); }
           }
 
           if (cust.reactive_layer) {
             const rl = cust.reactive_layer;
-            if (rl.enable !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_ENABLE, rl.enable ? 1 : 0);
-            if (rl.mode !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_MODE, rl.mode);
-            if (rl.color) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_COLOR, rl.color.h, rl.color.s);
-            if (rl.speed !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_SPEED, rl.speed);
-            if (rl.blend !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_BLEND, rl.blend);
+            if (rl.enable !== undefined) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_ENABLE, rl.enable ? 1 : 0); await new Promise(r => setTimeout(r, 10)); }
+            if (rl.mode !== undefined) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_MODE, rl.mode); await new Promise(r => setTimeout(r, 10)); }
+            if (rl.color) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_COLOR, rl.color.h, rl.color.s); await new Promise(r => setTimeout(r, 10)); }
+            if (rl.speed !== undefined) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_SPEED, rl.speed); await new Promise(r => setTimeout(r, 10)); }
+            if (rl.blend !== undefined) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_BLEND, rl.blend); await new Promise(r => setTimeout(r, 10)); }
           }
 
           if (cust.win_lock) {
             const wl = cust.win_lock;
-            if (wl.mode !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.WIN_LOCK_MODE, wl.mode);
-            if (wl.color) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.WIN_LOCK_COLOR, wl.color.h, wl.color.s);
+            if (wl.mode !== undefined) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.WIN_LOCK_MODE, wl.mode); await new Promise(r => setTimeout(r, 10)); }
+            if (wl.color) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.WIN_LOCK_COLOR, wl.color.h, wl.color.s); await new Promise(r => setTimeout(r, 10)); }
           }
 
           if (cust.logo_led) {
             const ll = cust.logo_led;
-            if (ll.mode !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_MODE, ll.mode);
-            if (ll.caps) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_CAPS, ll.caps.h, ll.caps.s);
-            if (ll.num) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_NUM, ll.num.h, ll.num.s);
-            if (ll.scroll) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_SCROLL, ll.scroll.h, ll.scroll.s);
-            if (ll.caps_num) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_CAPS_NUM, ll.caps_num.h, ll.caps_num.s);
-            if (ll.caps_scroll) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_CAPS_SCROLL, ll.caps_scroll.h, ll.caps_scroll.s);
-            if (ll.num_scroll) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_NUM_SCROLL, ll.num_scroll.h, ll.num_scroll.s);
-            if (ll.all) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_ALL, ll.all.h, ll.all.s);
+            if (ll.mode !== undefined) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_MODE, ll.mode); await new Promise(r => setTimeout(r, 10)); }
+            if (ll.caps) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_CAPS, ll.caps.h, ll.caps.s); await new Promise(r => setTimeout(r, 10)); }
+            if (ll.num) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_NUM, ll.num.h, ll.num.s); await new Promise(r => setTimeout(r, 10)); }
+            if (ll.scroll) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_SCROLL, ll.scroll.h, ll.scroll.s); await new Promise(r => setTimeout(r, 10)); }
+            if (ll.caps_num) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_CAPS_NUM, ll.caps_num.h, ll.caps_num.s); await new Promise(r => setTimeout(r, 10)); }
+            if (ll.caps_scroll) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_CAPS_SCROLL, ll.caps_scroll.h, ll.caps_scroll.s); await new Promise(r => setTimeout(r, 10)); }
+            if (ll.num_scroll) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_NUM_SCROLL, ll.num_scroll.h, ll.num_scroll.s); await new Promise(r => setTimeout(r, 10)); }
+            if (ll.all) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_ALL, ll.all.h, ll.all.s); await new Promise(r => setTimeout(r, 10)); }
           }
 
           if (cust.hardware_gradient) {
             const hg = cust.hardware_gradient;
             if (Number.isFinite(hg.active_gradient)) {
               await this.protocol.setCustomValue(CHANNELS.CUSTOM, 33, hg.active_gradient);
+              await new Promise(r => setTimeout(r, 10));
             }
             if (Array.isArray(hg.profiles)) {
               for (let p = 0; p < hg.profiles.length && p < 2; p++) {
                 const stops = hg.profiles[p];
                 if (Array.isArray(stops) && stops.length >= 2) {
                   await this.protocol.setCustomValue(CHANNELS.CUSTOM, 34, p, stops.length);
+                  await new Promise(r => setTimeout(r, 10));
                   for (let s = 0; s < stops.length && s < 8; s++) {
                     await this.protocol.setCustomValue(CHANNELS.CUSTOM, 35, p, s, stops[s].pos, stops[s].r, stops[s].g, stops[s].b);
+                    await new Promise(r => setTimeout(r, 10));
                   }
                 }
               }
@@ -17798,6 +20073,18 @@ input:checked + .switch-slider:before {
 
           if (cust.effect_density !== undefined && Number.isFinite(cust.effect_density)) {
             await this.protocol.setCustomValue(CHANNELS.CUSTOM, 36, cust.effect_density);
+            await new Promise(r => setTimeout(r, 10));
+          }
+
+          if (Array.isArray(cust.per_key_profiles)) {
+            for (let p = 0; p < cust.per_key_profiles.length && p < 3; p++) {
+              const colors = cust.per_key_profiles[p];
+              if (Array.isArray(colors) && colors.length > 0) {
+                await this.protocol.setFullPerKeyProfile(p, colors);
+                await this.protocol.savePerKeyProfileToEEPROM(p);
+                await new Promise(r => setTimeout(r, 20));
+              }
+            }
           }
 
           await this.protocol.saveCustomConfig(CHANNELS.CUSTOM);
@@ -19236,6 +21523,13 @@ input:checked + .switch-slider:before {
       this.toastTimeout = null;
       this.isConnected = false;
       this.deviceName = "GMMK 3 100% ANSI";
+      this.unsavedDomains = {
+        lighting: false,
+        profile: false,
+        gradient: false,
+        performance: false
+      };
+      this.hasUnsavedChanges = false;
     }
 
     init() {
@@ -19246,6 +21540,7 @@ input:checked + .switch-slider:before {
       this._initSettingsControls();
       this._initFooterAndModals();
       this._initResponsiveKeyboardFit();
+      this._initUnsavedChangesBanner();
     }
 
     _initLayoutControls() {
@@ -19535,6 +21830,7 @@ input:checked + .switch-slider:before {
             if (proto && proto.isConnected) {
               try {
                 await proto.setDebounceTime(parseInt(val, 10));
+                this.setUnsavedChanges(true, "performance");
               } catch (e) {
                 console.warn("Failed to set debounce on device:", e);
               }
@@ -19615,14 +21911,222 @@ input:checked + .switch-slider:before {
         });
       }
 
-      // Sync badges when language is switched
+      // 6. Save Performance Settings to EEPROM
+      const btnSavePerf = document.getElementById("btnSavePerformanceEEPROM");
+      if (btnSavePerf) {
+        btnSavePerf.addEventListener("click", async () => {
+          const proto = window.gProtocol || window.gmmkProtocol;
+          if (!proto || !proto.isConnected) {
+            this.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+            return;
+          }
+          try {
+            await proto.saveCustomConfig();
+            this.setUnsavedChanges(false, "performance");
+            this.showToast(window.i18n ? window.i18n.t("toastSavedToEEPROM") : "Settings saved to keyboard memory (EEPROM)!", "success");
+          } catch (err) {
+            this.showToast("Save error: " + err.message, "error");
+          }
+        });
+      }
+
+      // Sync badges and banner when language is switched
       if (window.i18n && typeof window.i18n.onChange === "function") {
         window.i18n.onChange(() => {
           const currentType = localStorage.getItem("gmmk_debounce_type") || "0";
           updateDebounceTypeBadgeText(currentType);
           const currentNkro = localStorage.getItem("gmmk_nkro_enabled") !== "0";
           this._updateNkroBadge(currentNkro);
+          this._updateUnsavedUI();
         });
+      }
+    }
+
+    _initUnsavedChangesBanner() {
+      const btnSaveFloating = document.getElementById("btnFloatingSaveEEPROM");
+      if (btnSaveFloating) {
+        btnSaveFloating.addEventListener("click", () => this.saveAllToEEPROM());
+      }
+      const btnDiscardFloating = document.getElementById("btnDiscardChangesBanner");
+      if (btnDiscardFloating) {
+        btnDiscardFloating.addEventListener("click", () => this.discardAllUnsavedChanges());
+      }
+      const btnTopBarSave = document.getElementById("btnTopBarSave");
+      if (btnTopBarSave) {
+        btnTopBarSave.addEventListener("click", () => this.saveAllToEEPROM());
+      }
+
+      window.addEventListener("beforeunload", (e) => {
+        if (this.hasUnsavedChanges) {
+          e.preventDefault();
+          e.returnValue = "";
+          return "";
+        }
+      });
+    }
+
+    setUnsavedChanges(hasUnsaved = true, domain = "lighting") {
+      if (hasUnsaved) {
+        if (domain === "all") {
+          this.unsavedDomains.lighting = true;
+          this.unsavedDomains.profile = true;
+          this.unsavedDomains.gradient = true;
+          this.unsavedDomains.performance = true;
+        } else if (this.unsavedDomains[domain] !== undefined) {
+          this.unsavedDomains[domain] = true;
+        } else {
+          this.unsavedDomains.lighting = true;
+        }
+      } else {
+        if (!domain || domain === "all") {
+          this.unsavedDomains.lighting = false;
+          this.unsavedDomains.profile = false;
+          this.unsavedDomains.gradient = false;
+          this.unsavedDomains.performance = false;
+        } else if (this.unsavedDomains[domain] !== undefined) {
+          this.unsavedDomains[domain] = false;
+        }
+      }
+
+      this.hasUnsavedChanges = Object.values(this.unsavedDomains).some(Boolean);
+      this._updateUnsavedUI();
+    }
+
+    _updateUnsavedUI() {
+      const banner = document.getElementById("unsavedChangesBanner");
+      const topBarBadge = document.getElementById("topBarUnsavedBadge");
+
+      // 1. Update pulsating highlight on lighting save buttons
+      const lightingButtons = document.querySelectorAll(
+        "#btnSaveBacklightEEPROM, #btnSaveReactiveEEPROM, #btnSaveWinLockEEPROM, #btnSaveLayersEEPROM, #btnSaveLogoEEPROM, #btnSaveMonochromeEEPROM"
+      );
+      lightingButtons.forEach(btn => {
+        btn.classList.toggle("btn-save-eeprom-pulse", Boolean(this.unsavedDomains.lighting));
+      });
+
+      // 2. Update pulsating highlight on per-key profile save button
+      const profileBtn = document.getElementById("btnSavePerKeyProfile");
+      if (profileBtn) {
+        profileBtn.classList.toggle("btn-save-eeprom-pulse", Boolean(this.unsavedDomains.profile));
+      }
+
+      // 3. Update pulsating highlight on hardware gradient save button
+      const gradBtn = document.getElementById("btnSaveHardwareGradient");
+      if (gradBtn) {
+        gradBtn.classList.toggle("btn-save-eeprom-pulse", Boolean(this.unsavedDomains.gradient));
+      }
+
+      // 4. Update pulsating highlight on performance save button
+      const perfBtn = document.getElementById("btnSavePerformanceEEPROM");
+      if (perfBtn) {
+        perfBtn.classList.toggle("btn-save-eeprom-pulse", Boolean(this.unsavedDomains.performance));
+      }
+
+      // 5. Update global banner and top bar indicator
+      if (this.hasUnsavedChanges) {
+        if (topBarBadge) topBarBadge.style.display = "inline-flex";
+        if (banner) {
+          banner.classList.remove("saved-success");
+          banner.classList.add("visible");
+          const title = document.getElementById("unsavedBannerTitle");
+          const sub = document.getElementById("unsavedBannerSub");
+          if (title) title.textContent = window.i18n ? window.i18n.t("unsavedChangesTitle") : "Unsaved changes (RAM live preview)";
+          if (sub) sub.textContent = window.i18n ? window.i18n.t("unsavedChangesSub") : "Changes are active on keyboard, but will reset after disconnect.";
+        }
+      } else {
+        if (topBarBadge) topBarBadge.style.display = "none";
+        if (banner) {
+          banner.classList.add("saved-success");
+          const title = document.getElementById("unsavedBannerTitle");
+          const sub = document.getElementById("unsavedBannerSub");
+          if (title) title.textContent = window.i18n ? window.i18n.t("unsavedChangesSavedTitle") : "Saved successfully!";
+          if (sub) sub.textContent = window.i18n ? window.i18n.t("unsavedChangesSavedSub") : "Settings permanently saved to keyboard EEPROM.";
+        }
+
+        setTimeout(() => {
+          if (!this.hasUnsavedChanges && banner) {
+            banner.classList.remove("visible", "saved-success");
+          }
+        }, 2200);
+      }
+    }
+
+    async saveAllToEEPROM() {
+      const proto = window.gProtocol || window.gmmkProtocol;
+      if (!proto || !proto.isConnected) {
+        this.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+        return;
+      }
+      try {
+        const C = window.GMMK3_CONSTANTS || { CHANNELS: { CUSTOM: 1, RGB_MATRIX: 2 } };
+        // 1. Save standard RGB matrix & custom config to EEPROM
+        await proto.saveCustomConfig(C.CHANNELS.RGB_MATRIX);
+        await proto.saveCustomConfig(C.CHANNELS.CUSTOM);
+
+        // 2. Commit per-key profile to EEPROM if present
+        if (window.gLightingController && window.gLightingController.activePerKeyProfile !== undefined) {
+          const profIdx = window.gLightingController.activePerKeyProfile;
+          const colors = window.gLightingController.state?.custom?.perKeyProfiles?.[profIdx];
+          if (colors && colors.length > 0 && typeof proto.savePerKeyProfileToEEPROM === "function") {
+            try {
+              await proto.setFullPerKeyProfile(profIdx, colors);
+              await proto.savePerKeyProfileToEEPROM(profIdx);
+            } catch (perKeyErr) {
+              console.warn("Could not commit per-key profile in saveAll:", perKeyErr);
+            }
+          }
+        }
+
+        // 3. Commit custom gradient stops if present
+        if (window.gLightingController && (window.gLightingController.state?.custom?.activeGradient === 8 || window.gLightingController.state?.custom?.activeGradient === 9)) {
+          const prof = (window.gLightingController.state.custom.activeGradient === 9) ? 1 : 0;
+          const stops = window.gLightingController.hardwareGradientEditor ? window.gLightingController.hardwareGradientEditor.getStops() : (window.gLightingController.state.custom.customProfiles?.[prof] || []);
+          try {
+            await proto.setCustomValue(C.CHANNELS.CUSTOM, 34, prof, stops.length);
+            for (let s = 0; s < stops.length && s < 8; s++) {
+              await proto.setCustomValue(C.CHANNELS.CUSTOM, 35, prof, s, stops[s].pos, stops[s].r, stops[s].g, stops[s].b);
+            }
+            await proto.setCustomValue(C.CHANNELS.CUSTOM, 37, prof, 1);
+          } catch (gradErr) {
+            console.warn("Could not commit gradient stops in saveAll:", gradErr);
+          }
+        }
+
+        this.setUnsavedChanges(false, "all");
+        this.showToast(window.i18n ? window.i18n.t("toastSavedToEEPROM") : "Settings permanently saved to keyboard memory (EEPROM)!", "success");
+      } catch (err) {
+        this.showToast("Save error: " + err.message, "error");
+      }
+    }
+
+    async discardAllUnsavedChanges() {
+      const proto = window.gProtocol || window.gmmkProtocol;
+      if (!proto || !proto.isConnected) {
+        this.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+        return;
+      }
+      try {
+        this.showToast(window.i18n ? window.i18n.t("toastDiscardingChanges") : "Reverting to saved EEPROM settings...", "info");
+
+        // 1. Tell keyboard firmware to reload its RAM variables from EEPROM
+        if (typeof proto.reloadEEPROM === "function") {
+          await proto.reloadEEPROM();
+          await proto.sleep(60);
+        }
+
+        // 2. Reload lighting controller & keymap editor state from device EEPROM
+        if (window.gLightingController) {
+          await window.gLightingController.loadFromDevice();
+        }
+        if (window.gKeymapEditor) {
+          await window.gKeymapEditor.loadKeymapFromDevice();
+        }
+
+        // 3. Clear unsaved dirty flags across all domains
+        this.setUnsavedChanges(false, "all");
+        this.showToast(window.i18n ? window.i18n.t("toastDiscardedSuccess") : "Settings restored from keyboard EEPROM!", "success");
+      } catch (err) {
+        this.showToast("Discard error: " + err.message, "error");
       }
     }
 
@@ -20133,7 +22637,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (window.gLightingController) {
         window.gLightingController.clearStaleHits();
-        window.gLightingController.startVisualizer();
+        if (ui && (ui.activeView === "lighting" || ui.activeView === "studio_lighting" || ui.activeView === "audio")) {
+          window.gLightingController.startVisualizer();
+        }
       }
       await keymapEditor.loadKeymapFromDevice();
       await lightingController.loadFromDevice();

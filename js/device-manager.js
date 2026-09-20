@@ -2,8 +2,8 @@
  * LuxQMK Studio - Device Manager & Adaptive Capability Engine
  */
 (function () {
-  const STUDIO_VERSION = "1.2.0";
-  const REQUIRED_FW_VERSION = { major: 0, minor: 2, patch: 0 };
+  const STUDIO_VERSION = "1.2.1";
+  const REQUIRED_FW_VERSION = { major: 0, minor: 2, patch: 1 };
 
   class DeviceManager {
     constructor() {
@@ -150,12 +150,14 @@
 
       const hwEeprom = document.getElementById('hw-eeprom-size');
       if (hwEeprom) {
-        if (this.firmwareInfo && (this.firmwareInfo.major > 0 || this.firmwareInfo.minor >= 2)) {
+        if (this.firmwareInfo && (this.firmwareInfo.major > 0 || this.firmwareInfo.minor > 2 || (this.firmwareInfo.minor === 2 && this.firmwareInfo.patch >= 1))) {
+          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSize1408') : '1408 Bytes Dedicated Storage (Per-Key RGB Profiles)';
+        } else if (this.firmwareInfo && (this.firmwareInfo.major > 0 || this.firmwareInfo.minor >= 2)) {
           hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSize104') : '104 Bytes Dedicated Storage';
         } else if (this.firmwareInfo) {
-          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSize36') : '36 Bytes Dedicated Storage';
+          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSize36') : '36 Bytes Dedicated Storage (Legacy)';
         } else {
-          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSizeDefault') : '104 Bytes Dedicated Storage';
+          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSizeDefault') : '1408 Bytes Dedicated Storage (Per-Key RGB Profiles)';
         }
       }
 
@@ -190,7 +192,7 @@
 
           if (isOlderThanRequired) {
             const detectedStr = `(v${fw.major}.${fw.minor}.${fw.patch})`;
-            hwCompat.textContent = i18n ? `${i18n.t('statusFwUpdateRequired')} ${detectedStr}` : `Firmware Update Recommended (LuxQMK v0.2.0+) ${detectedStr}`;
+            hwCompat.textContent = i18n ? `${i18n.t('statusFwUpdateRequired')} ${detectedStr}` : `Firmware Update Recommended (LuxQMK v0.2.1+) ${detectedStr}`;
             hwCompat.style.color = 'var(--accent-amber, #ffaa00)';
           } else if (fw.major > REQUIRED_FW_VERSION.major || (fw.major === REQUIRED_FW_VERSION.major && fw.minor > REQUIRED_FW_VERSION.minor)) {
             hwCompat.textContent = i18n ? i18n.t('statusFwNewer') : 'Newer Firmware Detected (Update Studio)';

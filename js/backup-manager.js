@@ -227,7 +227,21 @@
           };
         } catch (e) {}
 
-        this._log("Successfully read debounce time, layer colors, reactive layer, Win Lock, 7 Logo Lock indicators, and gradient profiles.", "success");
+        // Hardware Per-Key RGB Profiles (Profiles 0, 1, 2)
+        try {
+          const perKeyProfiles = [];
+          for (let p = 0; p < 3; p++) {
+            const colors = await this.protocol.getPerKeyProfile(p, 144);
+            if (colors && colors.length > 0) {
+              perKeyProfiles.push(colors);
+            }
+          }
+          if (perKeyProfiles.length > 0) {
+            backup.custom_settings.per_key_profiles = perKeyProfiles;
+          }
+        } catch (e) {}
+
+        this._log("Successfully read debounce time, layer colors, reactive layer, Win Lock, 7 Logo Lock indicators, gradient profiles, and per-key RGB profiles.", "success");
       } catch (err) {
         this._log("Custom settings read warning: " + err.message, "warning");
       }
@@ -352,58 +366,72 @@
         this._log("Restoring debounce latency, layer colors, reactive settings, Win Lock, and 7 Logo Lock states...", "info");
         try {
           if (cust.debounce_time !== undefined) {
-            await this.protocol.setDebounceTime(cust.debounce_time);
+            const db = (typeof cust.debounce_time === "number" && !isNaN(cust.debounce_time) && cust.debounce_time >= 0 && cust.debounce_time <= 30) ? cust.debounce_time : 5;
+            await this.protocol.setDebounceTime(db);
+            await new Promise(r => setTimeout(r, 10));
           }
-          if (cust.rgb_reverse !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.RGB_REVERSE, cust.rgb_reverse ? 1 : 0);
-          if (cust.layer_lighting_enable !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, cust.layer_lighting_enable ? 1 : 0);
-          if (cust.layer_dim_level !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL, cust.layer_dim_level);
+          if (cust.rgb_reverse !== undefined) {
+            await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.RGB_REVERSE, cust.rgb_reverse ? 1 : 0);
+            await new Promise(r => setTimeout(r, 10));
+          }
+          if (cust.layer_lighting_enable !== undefined) {
+            await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, cust.layer_lighting_enable ? 1 : 0);
+            await new Promise(r => setTimeout(r, 10));
+          }
+          if (cust.layer_dim_level !== undefined) {
+            await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL, cust.layer_dim_level);
+            await new Promise(r => setTimeout(r, 10));
+          }
 
           if (cust.layer_colors) {
             const lc = cust.layer_colors;
-            if (lc.layer_1) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_1_COLOR, lc.layer_1.h, lc.layer_1.s);
-            if (lc.layer_2) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_2_COLOR, lc.layer_2.h, lc.layer_2.s);
-            if (lc.layer_3) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_3_COLOR, lc.layer_3.h, lc.layer_3.s);
+            if (lc.layer_1) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_1_COLOR, lc.layer_1.h, lc.layer_1.s); await new Promise(r => setTimeout(r, 10)); }
+            if (lc.layer_2) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_2_COLOR, lc.layer_2.h, lc.layer_2.s); await new Promise(r => setTimeout(r, 10)); }
+            if (lc.layer_3) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_3_COLOR, lc.layer_3.h, lc.layer_3.s); await new Promise(r => setTimeout(r, 10)); }
           }
 
           if (cust.reactive_layer) {
             const rl = cust.reactive_layer;
-            if (rl.enable !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_ENABLE, rl.enable ? 1 : 0);
-            if (rl.mode !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_MODE, rl.mode);
-            if (rl.color) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_COLOR, rl.color.h, rl.color.s);
-            if (rl.speed !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_SPEED, rl.speed);
-            if (rl.blend !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_BLEND, rl.blend);
+            if (rl.enable !== undefined) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_ENABLE, rl.enable ? 1 : 0); await new Promise(r => setTimeout(r, 10)); }
+            if (rl.mode !== undefined) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_MODE, rl.mode); await new Promise(r => setTimeout(r, 10)); }
+            if (rl.color) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_COLOR, rl.color.h, rl.color.s); await new Promise(r => setTimeout(r, 10)); }
+            if (rl.speed !== undefined) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_SPEED, rl.speed); await new Promise(r => setTimeout(r, 10)); }
+            if (rl.blend !== undefined) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.REACTIVE_BLEND, rl.blend); await new Promise(r => setTimeout(r, 10)); }
           }
 
           if (cust.win_lock) {
             const wl = cust.win_lock;
-            if (wl.mode !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.WIN_LOCK_MODE, wl.mode);
-            if (wl.color) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.WIN_LOCK_COLOR, wl.color.h, wl.color.s);
+            if (wl.mode !== undefined) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.WIN_LOCK_MODE, wl.mode); await new Promise(r => setTimeout(r, 10)); }
+            if (wl.color) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.WIN_LOCK_COLOR, wl.color.h, wl.color.s); await new Promise(r => setTimeout(r, 10)); }
           }
 
           if (cust.logo_led) {
             const ll = cust.logo_led;
-            if (ll.mode !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_MODE, ll.mode);
-            if (ll.caps) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_CAPS, ll.caps.h, ll.caps.s);
-            if (ll.num) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_NUM, ll.num.h, ll.num.s);
-            if (ll.scroll) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_SCROLL, ll.scroll.h, ll.scroll.s);
-            if (ll.caps_num) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_CAPS_NUM, ll.caps_num.h, ll.caps_num.s);
-            if (ll.caps_scroll) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_CAPS_SCROLL, ll.caps_scroll.h, ll.caps_scroll.s);
-            if (ll.num_scroll) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_NUM_SCROLL, ll.num_scroll.h, ll.num_scroll.s);
-            if (ll.all) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_ALL, ll.all.h, ll.all.s);
+            if (ll.mode !== undefined) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_MODE, ll.mode); await new Promise(r => setTimeout(r, 10)); }
+            if (ll.caps) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_CAPS, ll.caps.h, ll.caps.s); await new Promise(r => setTimeout(r, 10)); }
+            if (ll.num) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_NUM, ll.num.h, ll.num.s); await new Promise(r => setTimeout(r, 10)); }
+            if (ll.scroll) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_SCROLL, ll.scroll.h, ll.scroll.s); await new Promise(r => setTimeout(r, 10)); }
+            if (ll.caps_num) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_CAPS_NUM, ll.caps_num.h, ll.caps_num.s); await new Promise(r => setTimeout(r, 10)); }
+            if (ll.caps_scroll) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_CAPS_SCROLL, ll.caps_scroll.h, ll.caps_scroll.s); await new Promise(r => setTimeout(r, 10)); }
+            if (ll.num_scroll) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_NUM_SCROLL, ll.num_scroll.h, ll.num_scroll.s); await new Promise(r => setTimeout(r, 10)); }
+            if (ll.all) { await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_ALL, ll.all.h, ll.all.s); await new Promise(r => setTimeout(r, 10)); }
           }
 
           if (cust.hardware_gradient) {
             const hg = cust.hardware_gradient;
             if (Number.isFinite(hg.active_gradient)) {
               await this.protocol.setCustomValue(CHANNELS.CUSTOM, 33, hg.active_gradient);
+              await new Promise(r => setTimeout(r, 10));
             }
             if (Array.isArray(hg.profiles)) {
               for (let p = 0; p < hg.profiles.length && p < 2; p++) {
                 const stops = hg.profiles[p];
                 if (Array.isArray(stops) && stops.length >= 2) {
                   await this.protocol.setCustomValue(CHANNELS.CUSTOM, 34, p, stops.length);
+                  await new Promise(r => setTimeout(r, 10));
                   for (let s = 0; s < stops.length && s < 8; s++) {
                     await this.protocol.setCustomValue(CHANNELS.CUSTOM, 35, p, s, stops[s].pos, stops[s].r, stops[s].g, stops[s].b);
+                    await new Promise(r => setTimeout(r, 10));
                   }
                 }
               }
@@ -412,6 +440,18 @@
 
           if (cust.effect_density !== undefined && Number.isFinite(cust.effect_density)) {
             await this.protocol.setCustomValue(CHANNELS.CUSTOM, 36, cust.effect_density);
+            await new Promise(r => setTimeout(r, 10));
+          }
+
+          if (Array.isArray(cust.per_key_profiles)) {
+            for (let p = 0; p < cust.per_key_profiles.length && p < 3; p++) {
+              const colors = cust.per_key_profiles[p];
+              if (Array.isArray(colors) && colors.length > 0) {
+                await this.protocol.setFullPerKeyProfile(p, colors);
+                await this.protocol.savePerKeyProfileToEEPROM(p);
+                await new Promise(r => setTimeout(r, 20));
+              }
+            }
           }
 
           await this.protocol.saveCustomConfig(CHANNELS.CUSTOM);

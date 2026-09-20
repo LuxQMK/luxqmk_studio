@@ -65,6 +65,11 @@
     GRADIENT_CUSTOM_STOP: 35,
     EFFECT_DENSITY: 36,
     GRADIENT_SAVE_EEPROM: 37,
+    PERKEY_PROFILE_GET_BLOCK: 38,
+    PERKEY_PROFILE_SET_BLOCK: 39,
+    PERKEY_PROFILE_SAVE_EEPROM: 40,
+    PERKEY_PROFILE_ACTIVE: 41,
+    RELOAD_EEPROM: 42,
     BOOTLOADER_JUMP: 0xFE
   };
 
@@ -475,6 +480,14 @@
       return await this.sendCommand([VIA_CMD.CUSTOM_SAVE, channel]);
     }
 
+    async reloadEEPROM(channel = CHANNELS.CUSTOM) {
+      try {
+        await this.setCustomValue(channel, CUSTOM_VAL.RELOAD_EEPROM, 1);
+      } catch (e) {
+        console.warn("Could not send reloadEEPROM to device:", e);
+      }
+    }
+
     async getActiveLayer() {
       const res = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.ACTIVE_LAYER);
       if (!res || res[0] === 0xFF || res[1] !== CHANNELS.CUSTOM || res[2] !== CUSTOM_VAL.ACTIVE_LAYER) {
@@ -518,7 +531,8 @@
             layerLighting: (capFlags & 0x10) !== 0,
             heatmap: (capFlags & 0x20) !== 0,
             directLighting: (capFlags & 0x40) !== 0,
-            multiGradients: (capFlags & 0x80) !== 0
+            multiGradients: (capFlags & 0x80) !== 0,
+            perKeyProfiles: (capFlags & 0x100) !== 0 || (major > 0 || minor > 2 || (minor === 2 && patch >= 1))
           }
         };
       } catch (e) {
@@ -559,7 +573,6 @@
       const num = parseInt(ms, 10);
       const val = (!isNaN(num) && num >= 0 && num <= 30) ? num : 5;
       await this.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DEBOUNCE_TIME, val);
-      await this.saveCustomConfig();
     }
 
     async resetEEPROM() {
@@ -608,6 +621,125 @@
       }
       try {
         await this.device.sendReport(0x00, report);
+      } catch (e) { }
+    }
+
+    // --- Per-Key Hardware RGB Profiles (Profile 1: FPS, Profile 2: MOBA, Profile 3: MMO) ---
+    async getPerKeyProfile(profileIdx = 0, totalLeds = 144) {
+      if (!this.isConnected) return null;
+      const CHUNK_LEDS = 8;
+      const rgbArray = [];
+      const safeTotal = Math.min(144, Math.max(1, totalLeds));
+
+      for (let startLed = 0; startLed < safeTotal; startLed += CHUNK_LEDS) {
+        const count = Math.min(CHUNK_LEDS, safeTotal - startLed);
+        try {
+          const res = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.PERKEY_PROFILE_GET_BLOCK, profileIdx, startLed, count);
+          if (res && res.length >= 6 + (count * 3)) {
+            for (let i = 0; i < count; i++) {
+              rgbArray.push({
+                r: res[6 + (i * 3) + 0],
+                g: res[6 + (i * 3) + 1],
+                b: res[6 + (i * 3) + 2]
+              });
+            }
+          } else {
+            for (let i = 0; i < count; i++) {
+              rgbArray.push({ r: 0, g: 0, b: 0 });
+            }
+          }
+        } catch (e) {
+          for (let i = 0; i < count; i++) {
+            rgbArray.push({ r: 0, g: 0, b: 0 });
+          }
+        }
+      }
+      return rgbArray;
+    }
+
+    async setPerKeyProfileBlock(profileIdx, startIdx, rgbData) {
+      if (!this.device || !this.device.opened || !rgbData || rgbData.length === 0) return;
+      let triplets = [];
+      let count = 0;
+      if (typeof rgbData[0] === 'object' && rgbData[0] !== null) {
+        count = Math.min(8, rgbData.length);
+        for (let i = 0; i < count; i++) {
+          const c = rgbData[i] || { r: 0, g: 0, b: 0 };
+          triplets.push(c.r ?? 0, c.g ?? 0, c.b ?? 0);
+        }
+      } else {
+        count = Math.min(8, Math.floor(rgbData.length / 3));
+        triplets = rgbData.slice(0, count * 3);
+      }
+
+      const payload = [
+        VIA_CMD.CUSTOM_SET_VALUE,
+        CHANNELS.CUSTOM,
+        CUSTOM_VAL.PERKEY_PROFILE_SET_BLOCK,
+        profileIdx,
+        startIdx,
+        count,
+        ...triplets
+      ];
+      try {
+        await this.sendCommand(payload, 300, 1);
+      } catch (e) { }
+    }
+
+    async setFullPerKeyProfile(profileIdx, rgbArray) {
+      if (!this.isConnected || !Array.isArray(rgbArray) || rgbArray.length === 0) return;
+      const CHUNK_LEDS = 8;
+      const totalLeds = Math.min(144, rgbArray.length);
+
+      for (let startLed = 0; startLed < totalLeds; startLed += CHUNK_LEDS) {
+        const count = Math.min(CHUNK_LEDS, totalLeds - startLed);
+        const triplets = [];
+        for (let i = 0; i < count; i++) {
+          const c = rgbArray[startLed + i] || { r: 0, g: 0, b: 0 };
+          triplets.push(c.r || 0, c.g || 0, c.b || 0);
+        }
+        await this.setPerKeyProfileBlock(profileIdx, startLed, triplets);
+        await this.sleep(4);
+      }
+    }
+
+    async savePerKeyProfileToEEPROM(profileIdx = 0xFF) {
+      if (!this.isConnected) return;
+      try {
+        await this.sendCommand([
+          VIA_CMD.CUSTOM_SET_VALUE,
+          CHANNELS.CUSTOM,
+          CUSTOM_VAL.PERKEY_PROFILE_SAVE_EEPROM,
+          profileIdx
+        ], 1000, 1);
+        this.log(window.i18n ? window.i18n.t("toastProfileSavedEEPROM") : `Profile ${profileIdx + 1} saved to EEPROM`, "success");
+      } catch (e) {
+        this.log(`Error saving profile to EEPROM: ${e.message}`, "error");
+      }
+    }
+
+    async getActivePerKeyProfile() {
+      if (!this.isConnected) return 0;
+      try {
+        const res = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.PERKEY_PROFILE_ACTIVE);
+        if (res && res[0] !== 0xFF && res[1] === CHANNELS.CUSTOM && res[2] === CUSTOM_VAL.PERKEY_PROFILE_ACTIVE) {
+          return res[3] || 0;
+        }
+        return 0;
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    async setActivePerKeyProfile(profileIdx) {
+      if (!this.isConnected) return;
+      try {
+        await this.sendCommand([
+          VIA_CMD.CUSTOM_SET_VALUE,
+          CHANNELS.CUSTOM,
+          CUSTOM_VAL.PERKEY_PROFILE_ACTIVE,
+          profileIdx
+        ]);
       } catch (e) { }
     }
   }

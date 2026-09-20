@@ -46,7 +46,10 @@
     { id: 35, name: "Gradient Cycle (Multi-Stop)", isRainbow: true },
     { id: 36, name: "Gradient Wave (Multi-Stop)", isRainbow: true },
     { id: 37, name: "Gradient Spiral (Multi-Stop)", isRainbow: true },
-    { id: 38, name: "Gradient Breathe (Multi-Stop)", isRainbow: true }
+    { id: 38, name: "Gradient Breathe (Multi-Stop)", isRainbow: true },
+    { id: 39, name: "Profile 1", isRainbow: false, isPerKey: true },
+    { id: 40, name: "Profile 2", isRainbow: false, isPerKey: true },
+    { id: 41, name: "Profile 3", isRainbow: false, isPerKey: true }
   ];
 
   const HARDWARE_GRADIENT_PRESETS = [
@@ -198,6 +201,11 @@
               { pos: 85, r: 255, g: 60, b: 0 },
               { pos: 170, r: 255, g: 215, b: 0 }
             ]
+          ],
+          perKeyProfiles: [
+            this._generateDefaultPerKeyProfile(0), // FPS Gaming
+            this._generateDefaultPerKeyProfile(1), // MOBA Gaming
+            this._generateDefaultPerKeyProfile(2)  // MMO / RPG
           ]
         },
         monochrome: {
@@ -213,6 +221,13 @@
         }
       };
 
+      this.activePerKeyProfile = 0; // 0: FPS, 1: MOBA, 2: MMO
+      this.perKeyPaintColor = "#ff1e27";
+      this.perKeySelection = new Set();
+      this._pendingPerKeyBlocks = new Map();
+      this._perKeyStreamTimer = null;
+      this._isStreamingPerKey = false;
+
       this._gradientLut = null;
       this._pendingStopsProf = 0;
       this._pendingStops = null;
@@ -227,14 +242,18 @@
     init() {
       this._rebuildGradientLut();
       this._populateEffectsDropdown();
+      if (window.i18n && typeof window.i18n.onLanguageChange === "function") {
+        window.i18n.onLanguageChange(() => this._populateEffectsDropdown());
+      }
       this._bindTabs();
       this._bindEvents();
+      this._initPerKeyStudio();
       this._bindLayerVisualizerControls();
       this._bindGlobalKeyListeners();
       this.renderVisualizerCanvas();
       this.setControlsEnabled(true);
       this.updateUI();
-      this.startVisualizer();
+      // Visualizer loop is cleanly triggered by UIController.switchView when entering lighting view
       this.startDevicePolling();
     }
 
@@ -335,8 +354,12 @@
             keyEl.innerHTML = `<span class="l-legend">${key.label}</span>`;
           }
 
-          // Pointer click/touch triggers live reactive hit or tab switch
+          // Pointer click/touch triggers live reactive hit, tab switch, or per-key painting
           keyEl.addEventListener("pointerdown", (e) => {
+            if (this.state.rgb.effect >= 39 && this.state.rgb.effect <= 41) {
+              // In per-key mode, allow event to bubble to unified canvas drag/click handler
+              return;
+            }
             e.preventDefault();
             if (key.isLogo) {
               this._switchTab("logo");
@@ -382,7 +405,9 @@
           isKnob: !!key.isKnob,
           isLogo: !!key.isLogo,
           els: keyEls,
-          el: keyEls[0]
+          el: keyEls[0],
+          // Pre-cached element targets to eliminate per-frame allocations during 60fps tick
+          lightingEls: keyEls.filter(el => !el.id || !el.id.includes("studioLightingKeyboardCanvas"))
         };
 
         this.visualizerKeys.push(keyObj);
@@ -399,6 +424,13 @@
             const sEl = document.createElement("div");
             sEl.className = "side-diffuser-segment side-diffuser-left";
             sEl.style.top = `calc(${sled.y} * var(--key-unit) + 18px)`;
+            sEl.addEventListener("pointerdown", (e) => {
+              if (this.state.rgb.effect >= 39 && this.state.rgb.effect <= 41) {
+                // In per-key mode, allow event to bubble to unified canvas drag/click handler
+                return;
+              }
+              e.preventDefault();
+            });
             diffContainer.appendChild(sEl);
 
             const qmkX = sled.qmkPoint ? sled.qmkPoint[0] : 0;
@@ -408,10 +440,22 @@
             
             let existing = this.sideDiffusers.find(sd => sd.id === sled.id);
             if (!existing) {
-              existing = { id: sled.id, qmkX, qmkY, dx, dy, dist: Math.sqrt(dx * dx + dy * dy), els: [sEl], el: sEl, isLeft: true };
+              existing = {
+                id: sled.id,
+                qmkX,
+                qmkY,
+                dx,
+                dy,
+                dist: Math.sqrt(dx * dx + dy * dy),
+                els: [sEl],
+                el: sEl,
+                isLeft: true,
+                lightingEls: [sEl]
+              };
               this.sideDiffusers.push(existing);
             } else {
               existing.els.push(sEl);
+              existing.lightingEls = existing.els.filter(el => !el.closest || !el.closest("#studioLightingKeyboardCanvas"));
             }
           });
 
@@ -421,6 +465,13 @@
             sEl.className = "side-diffuser-segment side-diffuser-right";
             sEl.style.top = `calc(${sled.y} * var(--key-unit) + 18px)`;
             sEl.style.left = `calc(${bounds.width} * var(--key-unit) + 26px)`;
+            sEl.addEventListener("pointerdown", (e) => {
+              if (this.state.rgb.effect >= 39 && this.state.rgb.effect <= 41) {
+                // In per-key mode, allow event to bubble to unified canvas drag/click handler
+                return;
+              }
+              e.preventDefault();
+            });
             diffContainer.appendChild(sEl);
 
             const qmkX = sled.qmkPoint ? sled.qmkPoint[0] : 224;
@@ -430,10 +481,22 @@
 
             let existing = this.sideDiffusers.find(sd => sd.id === sled.id);
             if (!existing) {
-              existing = { id: sled.id, qmkX, qmkY, dx, dy, dist: Math.sqrt(dx * dx + dy * dy), els: [sEl], el: sEl, isLeft: false };
+              existing = {
+                id: sled.id,
+                qmkX,
+                qmkY,
+                dx,
+                dy,
+                dist: Math.sqrt(dx * dx + dy * dy),
+                els: [sEl],
+                el: sEl,
+                isLeft: false,
+                lightingEls: [sEl]
+              };
               this.sideDiffusers.push(existing);
             } else {
               existing.els.push(sEl);
+              existing.lightingEls = existing.els.filter(el => !el.closest || !el.closest("#studioLightingKeyboardCanvas"));
             }
           });
 
@@ -705,11 +768,151 @@
         b = Math.round(b * vScale);
       }
 
-      return {
+        return {
         r: Math.min(255, Math.max(0, r)),
         g: Math.min(255, Math.max(0, g)),
         b: Math.min(255, Math.max(0, b))
       };
+    }
+
+    _generateDefaultPerKeyProfile(profIdx) {
+      const colors = new Array(144);
+      for (let i = 0; i < 144; i++) {
+        colors[i] = { r: 0, g: 0, b: 0 };
+      }
+
+      if (profIdx === 0) {
+        // --- PROFILE 1: FPS GAMING ---
+        // Base / unassigned keys: Deep Midnight Navy
+        for (let i = 0; i < 144; i++) {
+          colors[i] = { r: 10, g: 18, b: 35 };
+        }
+        // WASD, Shift, Ctrl, Space: Crimson Red
+        const redKeys = ["W", "A", "S", "D", "LSFT", "LCTL", "SPC"];
+        // 1, 2, 3, 4, 5, R, G, E, Q, F, C, V, TAB: Bright Amber
+        const amberKeys = ["1", "2", "3", "4", "5", "R", "G", "E", "Q", "F", "C", "V", "TAB"];
+        // Arrows: Crimson Red
+        const arrowKeys = ["UP", "DOWN", "LEFT", "RGHT"];
+
+        redKeys.concat(arrowKeys).forEach(kId => {
+          const idx = this._getLedIndexForElement(kId);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 255, g: 30, b: 45 };
+        });
+        amberKeys.forEach(kId => {
+          const idx = this._getLedIndexForElement(kId);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 255, g: 140, b: 0 };
+        });
+
+        // Sidelights: Deep Red
+        for (let s = 1; s <= 20; s++) {
+          const idx = this._getLedIndexForElement(`SLED${s}`);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 255, g: 0, b: 40 };
+        }
+        // Logo Badge: Cyan
+        const logoIdx = this._getLedIndexForElement("LOGO");
+        if (logoIdx >= 0 && logoIdx < 144) colors[logoIdx] = { r: 0, g: 240, b: 255 };
+
+      } else if (profIdx === 1) {
+        // --- PROFILE 2: MOBA GAMING ---
+        // Base / unassigned keys: Deep Slate Violet
+        for (let i = 0; i < 144; i++) {
+          colors[i] = { r: 16, g: 10, b: 32 };
+        }
+        // Q, W, E, R, D, F, 1, 2, 3, 4, 5, 6: Electric Cyan / Neon Teal
+        const tealKeys = ["Q", "W", "E", "R", "D", "F", "1", "2", "3", "4", "5", "6", "TAB", "ESC"];
+        // B, P, Space, 7, 8, Y, U, I, O: Bright Gold / Sunburst
+        const goldKeys = ["B", "P", "SPC", "7", "8", "Y", "U", "I", "O", "LSFT", "LCTL", "LALT"];
+
+        tealKeys.forEach(kId => {
+          const idx = this._getLedIndexForElement(kId);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 0, g: 235, b: 255 };
+        });
+        goldKeys.forEach(kId => {
+          const idx = this._getLedIndexForElement(kId);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 255, g: 175, b: 0 };
+        });
+
+        // Sidelights: Electric Cyan
+        for (let s = 1; s <= 20; s++) {
+          const idx = this._getLedIndexForElement(`SLED${s}`);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 0, g: 200, b: 255 };
+        }
+        // Logo: Hot Pink
+        const logoIdx = this._getLedIndexForElement("LOGO");
+        if (logoIdx >= 0 && logoIdx < 144) colors[logoIdx] = { r: 255, g: 0, b: 128 };
+
+      } else {
+        // --- PROFILE 3: MMO / RPG ---
+        // Base: Dark Regal Indigo
+        for (let i = 0; i < 144; i++) {
+          colors[i] = { r: 20, g: 6, b: 28 };
+        }
+        // Number Row (1..0, -, =): Gold
+        const numKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "MINS", "EQL"];
+        // Movement & Navigation (WASD, Q, E, Space): Emerald Green
+        const greenKeys = ["W", "A", "S", "D", "Q", "E", "SPC", "TAB", "LSFT", "LCTL"];
+        // Function keys (F1..F12): Sapphire Blue
+        const blueKeys = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"];
+        // Arrows: Emerald Green
+        const arrowKeys = ["UP", "DOWN", "LEFT", "RGHT"];
+
+        numKeys.forEach(kId => {
+          const idx = this._getLedIndexForElement(kId);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 255, g: 205, b: 0 };
+        });
+        greenKeys.concat(arrowKeys).forEach(kId => {
+          const idx = this._getLedIndexForElement(kId);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 0, g: 255, b: 100 };
+        });
+        blueKeys.forEach(kId => {
+          const idx = this._getLedIndexForElement(kId);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 0, g: 140, b: 255 };
+        });
+
+        // Sidelights: Deep Violet
+        for (let s = 1; s <= 20; s++) {
+          const idx = this._getLedIndexForElement(`SLED${s}`);
+          if (idx >= 0 && idx < 144) colors[idx] = { r: 170, g: 0, b: 255 };
+        }
+        // Logo: Golden Sun
+        const logoIdx = this._getLedIndexForElement("LOGO");
+        if (logoIdx >= 0 && logoIdx < 144) colors[logoIdx] = { r: 255, g: 215, b: 0 };
+      }
+
+      return colors;
+    }
+
+    _getLedIndexForElement(elOrKey) {
+      const profile = window.deviceManager ? window.deviceManager.getActiveProfile() : null;
+      const layout = this.getActiveLayout() || [];
+
+      // 1. Is it a logo badge?
+      if (elOrKey && (elOrKey.isLogo || elOrKey === "LOGO")) {
+        if (profile && profile.capabilities && Number.isFinite(profile.capabilities.logoLedIndex)) {
+          return profile.capabilities.logoLedIndex;
+        }
+        return 143;
+      }
+
+      // 2. Is it a side diffuser?
+      let sledId = null;
+      if (typeof elOrKey === "string" && elOrKey.startsWith("SLED")) {
+        sledId = elOrKey;
+      } else if (elOrKey && elOrKey.id && String(elOrKey.id).startsWith("SLED")) {
+        sledId = elOrKey.id;
+      }
+      if (sledId) {
+        const num = parseInt(sledId.replace("SLED", ""), 10);
+        const matrixKeys = layout.filter(k => !k.isKnob && !k.isLogo);
+        const baseOffset = matrixKeys.length;
+        return baseOffset + (isNaN(num) ? 0 : num - 1);
+      }
+
+      // 3. Regular matrix key
+      const keyId = typeof elOrKey === "string" ? elOrKey : (elOrKey.id || elOrKey);
+      const matrixKeys = layout.filter(k => !k.isKnob && !k.isLogo);
+      const idx = matrixKeys.findIndex(k => k.id === keyId);
+      return idx >= 0 ? idx : -1;
     }
 
     // --- 1:1 QMK ALGORITHM ENGINE ---
@@ -1079,6 +1282,29 @@
             return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255), h: 0, s: 0, v: baseV };
           }
 
+        case 39: // CUSTOM_PER_KEY_PROFILE_1
+        case 40: // CUSTOM_PER_KEY_PROFILE_2
+        case 41: // CUSTOM_PER_KEY_PROFILE_3
+          {
+            const profIdx = effect - 39;
+            const profiles = this.state.custom.perKeyProfiles;
+            const profile = (profiles && profiles[profIdx]) || this._generateDefaultPerKeyProfile(profIdx);
+            const ledIdx = this._getLedIndexForElement(k);
+            if (ledIdx >= 0 && ledIdx < profile.length) {
+              const c = profile[ledIdx] || { r: 0, g: 0, b: 0 };
+              const scaledV = baseV / 255;
+              return {
+                rgb: {
+                  r: Math.round((c.r || 0) * scaledV),
+                  g: Math.round((c.g || 0) * scaledV),
+                  b: Math.round((c.b || 0) * scaledV)
+                },
+                h: 0, s: 0, v: baseV
+              };
+            }
+            return { rgb: { r: 0, g: 0, b: 0 }, h: 0, s: 0, v: 0 };
+          }
+
         default:
           {
             const w1 = Math.sin(now * 0.003 * spdFactor + (k.qmkX / 224) * 6.28 * (rev ? 1 : -1));
@@ -1146,8 +1372,8 @@
     _tickVisualizer(timestamp) {
       if (!this.isVisualizerRunning) return;
 
-      // If user is on the Studio Lighting tab, yield the thread to Studio Lighting
-      if (window.gStudioLighting && window.gStudioLighting.isRunning && window.gUI && window.gUI.currentView === "studio_lighting") {
+      // Yield to Studio Lighting if active
+      if (window.gStudioLighting && window.gStudioLighting.isRunning && window.gUI && window.gUI.activeView === "studio_lighting") {
         this.animFrameId = requestAnimationFrame(this._tickBound);
         return;
       }
@@ -1177,7 +1403,7 @@
           for (let i = 0; i < this.visualizerKeys.length; i++) {
             const k = this.visualizerKeys[i];
             if (!k || k.isKnob) continue;
-            const keyTargets = k.els || [k.el];
+            const keyTargets = k.lightingEls || [k.el];
             for (let t = 0; t < keyTargets.length; t++) {
               const el = keyTargets[t];
               if (!el) continue;
@@ -1217,7 +1443,7 @@
           for (let i = 0; i < this.visualizerKeys.length; i++) {
             const k = this.visualizerKeys[i];
             if (!k || k.isKnob) continue;
-            const keyTargets = k.els || [k.el];
+            const keyTargets = k.lightingEls || [k.el];
             for (let t = 0; t < keyTargets.length; t++) {
               const el = keyTargets[t];
               if (!el) continue;
@@ -1236,9 +1462,14 @@
           }
           for (let i = 0; i < this.sideDiffusers.length; i++) {
             const s = this.sideDiffusers[i];
-            if (!s || !s.el) continue;
-            s.el.style.backgroundColor = monoBri > 0 ? `rgb(${monoR}, ${monoG}, ${monoB})` : 'transparent';
-            s.el.style.boxShadow = monoBri > 0 ? `0 0 10px rgba(${monoR}, ${monoG}, ${monoB}, ${glowAlpha})` : 'none';
+            if (!s) continue;
+            const sdTargets = s.lightingEls || [s.el];
+            for (let t = 0; t < sdTargets.length; t++) {
+              const el = sdTargets[t];
+              if (!el) continue;
+              el.style.backgroundColor = monoBri > 0 ? `rgb(${monoR}, ${monoG}, ${monoB})` : 'transparent';
+              el.style.boxShadow = monoBri > 0 ? `0 0 10px rgba(${monoR}, ${monoG}, ${monoB}, ${glowAlpha})` : 'none';
+            }
           }
           this.animFrameId = requestAnimationFrame(this._tickBound);
           return;
@@ -1325,7 +1556,7 @@
             }
 
             const rgb = this._hsvToRgb(h, s, v);
-            const logoTargets = (k.els || [k.el]).filter(el => !el.id || !el.id.includes("studioLightingKeyboardCanvas"));
+            const logoTargets = k.lightingEls || [k.el];
             for (let t = 0; t < logoTargets.length; t++) {
               const el = logoTargets[t];
               if (!el) continue;
@@ -1535,7 +1766,7 @@
           const glowAlpha = Math.min(0.85, (avgBri / 255) * 0.75);
           const textColor = (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114) > 140 ? '#111827' : '#ffffff';
 
-          const targets = (k.els || [k.el]).filter(el => !el.id || !el.id.includes("studioLightingKeyboardCanvas"));
+          const targets = k.lightingEls || [k.el];
           for (let t = 0; t < targets.length; t++) {
             const el = targets[t];
             if (!el) continue;
@@ -1554,7 +1785,7 @@
           let v = res.v * (isLayerActive ? layerDim : 1.0);
           const rgb = res.rgb ? res.rgb : this._hsvToRgb(res.h, res.s, v);
 
-          const sdTargets = (sd.els || [sd.el]).filter(el => !el.closest || !el.closest("#studioLightingKeyboardCanvas"));
+          const sdTargets = sd.lightingEls || [sd.el];
           for (let t = 0; t < sdTargets.length; t++) {
             const el = sdTargets[t];
             if (!el) continue;
@@ -1563,7 +1794,7 @@
           }
         }
 
-        // 3. Update Status Badge
+        // 3. Update Status Badge (throttled/cached)
         this._updateStatusBadge(effect, brightness, isLayerActive, activeLyr);
       } catch (err) {
         console.warn("Visualizer tick loop warning:", err);
@@ -1580,23 +1811,29 @@
 
       const eff = RGB_EFFECTS.find(e => e.id === effectId) || RGB_EFFECTS[13];
       const pct = Math.round(brightness * 100);
+      let newHtml = "";
 
       if (isLayerActive) {
         const dimVal = Math.round((this.state.custom.layerDimLevel / 255) * 100);
-        badge.innerHTML = window.i18n ? window.i18n.t("badgeLayerActive", { layer: activeLyr, dim: dimVal }) : `Layer ${activeLyr} Active • Dimming: ${dimVal}%`;
+        newHtml = window.i18n ? window.i18n.t("badgeLayerActive", { layer: activeLyr, dim: dimVal }) : `Layer ${activeLyr} Active • Dimming: ${dimVal}%`;
       } else if (this.activeTab === "reactive") {
         const rEffNames = ["Disabled", "Fade", "Splash Ripple", "Rainbow Splash", "Cross +", "Nexus X", "Wide Wave", "Typing Heatmap"];
         const curRMode = this.state.custom.reactiveMode || 0;
         const modeLabel = rEffNames[curRMode] || 'Active';
-        badge.innerHTML = this.state.custom.reactiveEnable
+        newHtml = this.state.custom.reactiveEnable
           ? (window.i18n ? window.i18n.t("badgeReactiveActive", { mode: modeLabel }) : `Reactive Layer: Enabled (${modeLabel})`)
           : (window.i18n ? window.i18n.t("badgeReactiveDisabled") : `Reactive Layer: Disabled`);
       } else if (this.activeTab === "logo") {
-        badge.innerHTML = window.i18n ? window.i18n.t("badgeLogoPreview") : `Logo & Knob Lock Indicator Preview`;
+        newHtml = window.i18n ? window.i18n.t("badgeLogoPreview") : `Logo & Knob Lock Indicator Preview`;
       } else if (this.activeTab === "winlock") {
-        badge.innerHTML = window.i18n ? window.i18n.t("badgeWinLockPreview") : `Windows Key Lock Preview (Win Lock)`;
+        newHtml = window.i18n ? window.i18n.t("badgeWinLockPreview") : `Windows Key Lock Preview (Win Lock)`;
       } else {
-        badge.innerHTML = window.i18n ? window.i18n.t("badgeEffectBrightness", { name: eff.name, pct }) : `${eff.name} • ${pct}% Brightness`;
+        newHtml = window.i18n ? window.i18n.t("badgeEffectBrightness", { name: eff.name, pct }) : `${eff.name} • ${pct}% Brightness`;
+      }
+
+      if (this._lastStatusHtml !== newHtml) {
+        this._lastStatusHtml = newHtml;
+        badge.innerHTML = newHtml;
       }
     }
 
@@ -1628,10 +1865,13 @@
     _hexToRgb(hex) {
       let c = (hex || "#ffffff").replace('#', '');
       if (c.length === 3) c = c.split('').map(x => x + x).join('');
+      const r = parseInt(c.substring(0, 2), 16);
+      const g = parseInt(c.substring(2, 4), 16);
+      const b = parseInt(c.substring(4, 6), 16);
       return {
-        r: parseInt(c.substring(0, 2), 16) || 255,
-        g: parseInt(c.substring(2, 4), 16) || 255,
-        b: parseInt(c.substring(4, 6), 16) || 255
+        r: isNaN(r) ? 255 : Math.max(0, Math.min(255, r)),
+        g: isNaN(g) ? 255 : Math.max(0, Math.min(255, g)),
+        b: isNaN(b) ? 255 : Math.max(0, Math.min(255, b))
       };
     }
 
@@ -1861,6 +2101,23 @@
           }
         }
 
+        // Hardware Per-Key RGB Profiles (Profiles 0, 1, 2)
+        try {
+          const activeProf = await this.protocol.getActivePerKeyProfile();
+          if (activeProf !== undefined && activeProf >= 0 && activeProf <= 2) {
+            this.activePerKeyProfile = activeProf;
+          }
+
+          for (let p = 0; p < 3; p++) {
+            const colors = await this.protocol.getPerKeyProfile(p, 144);
+            if (colors && colors.length === 144) {
+              this.state.custom.perKeyProfiles[p] = colors;
+            }
+          }
+        } catch (err) {
+          console.warn("Could not load per-key profiles from device:", err);
+        }
+
         if (this.hardwareGradientEditor) {
           const activeProfIdx = (this.state.custom.activeGradient === 9) ? 1 : 0;
           if (this.state.custom.customProfiles && this.state.custom.customProfiles[activeProfIdx]) {
@@ -1879,6 +2136,45 @@
       // 1. Backlight Tab
       const selEffect = document.getElementById("rgbEffectSelect");
       if (selEffect) selEffect.value = this.state.rgb.effect;
+
+      // Per-Key Profile Group Visibility & Active Profile Tab
+      const isPerKeyActive = this.state.rgb.effect >= 39 && this.state.rgb.effect <= 41;
+      const perKeyGroup = document.getElementById("perKeyProfileEditorGroup");
+      if (perKeyGroup) {
+        perKeyGroup.style.display = isPerKeyActive ? "block" : "none";
+      }
+
+      const visualizerHint = document.getElementById("perKeyVisualizerHint");
+      if (visualizerHint) {
+        visualizerHint.style.display = isPerKeyActive ? "flex" : "none";
+      }
+
+      const backlightGrid = document.getElementById("backlightLayoutGrid");
+      if (backlightGrid) {
+        backlightGrid.classList.toggle("perkey-active", isPerKeyActive);
+      }
+
+      const backlightBadge = document.getElementById("backlightModeBadge");
+      if (backlightBadge) {
+        backlightBadge.style.display = isPerKeyActive ? "inline-block" : "none";
+      }
+
+      if (isPerKeyActive) {
+        this.activePerKeyProfile = this.state.rgb.effect - 39;
+        [0, 1, 2].forEach(p => {
+          const tab = document.getElementById(`btnPerKeyProf${p}`);
+          if (tab) tab.classList.toggle("active", p === this.activePerKeyProfile);
+        });
+      }
+
+      const activeColorPicker = document.getElementById("perKeyActiveColorPicker");
+      if (activeColorPicker && this.perKeyPaintColor) {
+        activeColorPicker.value = this.perKeyPaintColor;
+      }
+      const activeColorHex = document.getElementById("perKeyActiveColorHex");
+      if (activeColorHex && this.perKeyPaintColor) {
+        activeColorHex.textContent = this.perKeyPaintColor.toUpperCase();
+      }
 
       const sliderBri = document.getElementById("rgbBrightnessSlider");
       if (sliderBri) sliderBri.value = this.state.rgb.brightness;
@@ -1901,22 +2197,51 @@
       const chkReverse = document.getElementById("chkRgbReverse");
       if (chkReverse) chkReverse.checked = this.state.rgb.reverse;
 
-      // Update Color Picker visibility/state according to active effect
+      // Hide animation controls in Per-Key static profile mode
+      const speedGroup = document.getElementById("rgbSpeedGroup");
+      if (speedGroup) speedGroup.style.display = isPerKeyActive ? "none" : "block";
+
       const curEff = RGB_EFFECTS.find(e => e.id === this.state.rgb.effect);
+      const densityGroup = document.getElementById("rgbDensityGroup");
+      if (densityGroup) {
+        const isDensityCapable = curEff && (
+          curEff.isRainbow ||
+          curEff.isGradient ||
+          (curEff.id >= 3 && curEff.id <= 4) ||
+          (curEff.id >= 6 && curEff.id <= 22) ||
+          (curEff.id >= 27 && curEff.id <= 30) ||
+          (curEff.id >= 33 && curEff.id <= 38)
+        );
+        densityGroup.style.display = (isPerKeyActive || !isDensityCapable) ? "none" : "block";
+      }
+
       const colorGroup = document.getElementById("rgbColorGroup");
-      if (colorGroup && curEff) {
-        const descSpan = colorGroup.querySelector("span");
-        if (descSpan) {
-          if (curEff.isRainbow) {
-            if (this.state.custom.activeGradient > 0) {
-              descSpan.textContent = window.i18n ? window.i18n.t("hintGradientColor") : "Gradient palette active — color adjusts palette phase shift (starting hue) and saturation";
+      if (colorGroup) {
+        colorGroup.style.display = isPerKeyActive ? "none" : "block";
+        if (curEff) {
+          const descSpan = colorGroup.querySelector("span");
+          if (descSpan) {
+            if (curEff.isRainbow) {
+              if (this.state.custom.activeGradient > 0) {
+                descSpan.textContent = window.i18n ? window.i18n.t("hintGradientColor") : "Gradient palette active — color adjusts palette phase shift (starting hue) and saturation";
+              } else {
+                descSpan.textContent = window.i18n ? window.i18n.t("hintRainbowColor") : "Rainbow effect — color sets initial hue phase offset and saturation";
+              }
             } else {
-              descSpan.textContent = window.i18n ? window.i18n.t("hintRainbowColor") : "Rainbow effect — color sets initial hue phase offset and saturation";
+              descSpan.textContent = window.i18n ? window.i18n.t("hintSingleColor") : "Set color for single-color effects";
             }
-          } else {
-            descSpan.textContent = window.i18n ? window.i18n.t("hintSingleColor") : "Set color for single-color effects";
           }
         }
+      }
+
+      const gradientGroup = document.getElementById("hardwareGradientGroup");
+      if (gradientGroup) {
+        gradientGroup.style.display = (isPerKeyActive || !curEff || (!curEff.isGradient && !curEff.isRainbow)) ? "none" : "block";
+      }
+
+      const reverseWrap = document.getElementById("rgbReverseWrap");
+      if (reverseWrap) {
+        reverseWrap.style.display = isPerKeyActive ? "none" : "flex";
       }
 
       // Reactive Layer UI
@@ -2048,10 +2373,24 @@
       }
     }
 
+    _markUnsaved(domain = "lighting") {
+      if (window.gUI && typeof window.gUI.setUnsavedChanges === "function") {
+        window.gUI.setUnsavedChanges(true, domain);
+      }
+    }
+
     _populateEffectsDropdown() {
       const sel = document.getElementById("rgbEffectSelect");
       if (!sel) return;
-      sel.innerHTML = RGB_EFFECTS.map(eff => `<option value="${eff.id}">${eff.name}</option>`).join("");
+      const getLocalizedName = (eff) => {
+        if (eff.id === 39) return window.i18n ? window.i18n.t("profFPS") : "Profile 1";
+        if (eff.id === 40) return window.i18n ? window.i18n.t("profMOBA") : "Profile 2";
+        if (eff.id === 41) return window.i18n ? window.i18n.t("profMMO") : "Profile 3";
+        return eff.name;
+      };
+      const curVal = sel.value;
+      sel.innerHTML = RGB_EFFECTS.map(eff => `<option value="${eff.id}">${getLocalizedName(eff)}</option>`).join("");
+      if (curVal) sel.value = curVal;
     }
 
     _throttleHid(key, fn, delay = 80) {
@@ -2127,6 +2466,7 @@
         const isEnabled = e.target.checked;
         if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
         this.state.monochrome.enabled = isEnabled;
+        this._markUnsaved("lighting");
         const badge = document.getElementById("monochromeStatusBadge");
         if (badge) {
           badge.textContent = isEnabled ? `Active • ${Math.round(this.state.monochrome.brightness / 2.55)}%` : "Disabled";
@@ -2143,6 +2483,7 @@
         const val = parseInt(e.target.value, 10);
         if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
         this.state.monochrome.brightness = val;
+        this._markUnsaved("lighting");
         const lbl = document.getElementById("monochromeBriVal");
         if (lbl) lbl.textContent = `${Math.round(val / 2.55)}% (${val})`;
         const badge = document.getElementById("monochromeStatusBadge");
@@ -2160,6 +2501,7 @@
         const isBreathing = e.target.checked;
         if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
         this.state.monochrome.breathing = isBreathing;
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           try {
             await this.protocol.setBacklightValue?.(2, isBreathing ? 1 : 0);
@@ -2170,6 +2512,7 @@
       document.getElementById("monochromeTintPicker")?.addEventListener("change", (e) => {
         if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
         this.state.monochrome.tint = e.target.value;
+        this._markUnsaved("lighting");
       });
 
       // 1. Backlight Events
@@ -2177,15 +2520,16 @@
         const val = parseInt(e.target.value, 10);
         this.state.rgb.effect = val;
         this.updateUI();
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setRGBMatrixValue(C.RGB_MATRIX_VAL.EFFECT, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.RGB_MATRIX);
         }
       });
 
       document.getElementById("rgbBrightnessSlider")?.addEventListener("input", (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.rgb.brightness = val;
+        this._markUnsaved("lighting");
         const lbl = document.getElementById("rgbBriVal");
         if (lbl) lbl.textContent = val;
         if (this.protocol && this.protocol.device) {
@@ -2196,15 +2540,16 @@
       });
 
       document.getElementById("rgbBrightnessSlider")?.addEventListener("change", async () => {
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setRGBMatrixValue(C.RGB_MATRIX_VAL.BRIGHTNESS, this.state.rgb.brightness);
-          await this.protocol.saveCustomConfig(C.CHANNELS.RGB_MATRIX);
         }
       });
 
       document.getElementById("rgbSpeedSlider")?.addEventListener("input", (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.rgb.speed = val;
+        this._markUnsaved("lighting");
         const lbl = document.getElementById("rgbSpdVal");
         if (lbl) lbl.textContent = val;
         if (this.protocol && this.protocol.device) {
@@ -2215,15 +2560,16 @@
       });
 
       document.getElementById("rgbSpeedSlider")?.addEventListener("change", async () => {
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setRGBMatrixValue(C.RGB_MATRIX_VAL.EFFECT_SPEED, this.state.rgb.speed);
-          await this.protocol.saveCustomConfig(C.CHANNELS.RGB_MATRIX);
         }
       });
 
       document.getElementById("rgbDensitySlider")?.addEventListener("input", (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.custom.effectDensity = val;
+        this._markUnsaved("lighting");
         const lbl = document.getElementById("rgbDensityVal");
         if (lbl) lbl.textContent = val;
         if (this.protocol && this.protocol.device) {
@@ -2234,27 +2580,27 @@
       });
 
       document.getElementById("rgbDensitySlider")?.addEventListener("change", async () => {
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 36, this.state.custom.effectDensity ?? 128);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("rgbColorPicker")?.addEventListener("change", async (e) => {
         const [h, s] = this._hexToHs(e.target.value);
         this.state.rgb.hs = [h, s];
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setRGBMatrixValue(C.RGB_MATRIX_VAL.COLOR, h, s);
-          await this.protocol.saveCustomConfig(C.CHANNELS.RGB_MATRIX);
         }
       });
 
       document.getElementById("chkRgbReverse")?.addEventListener("change", async (e) => {
         const val = e.target.checked ? 1 : 0;
         this.state.rgb.reverse = e.target.checked;
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.RGB_REVERSE, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
@@ -2262,6 +2608,7 @@
       document.getElementById("chkReactiveEnable")?.addEventListener("change", async (e) => {
         const val = e.target.checked ? 1 : 0;
         this.state.custom.reactiveEnable = e.target.checked;
+        this._markUnsaved("lighting");
         const badge = document.getElementById("reactiveStatusBadge");
         if (badge) {
           badge.textContent = e.target.checked ? (window.i18n ? window.i18n.t("badgeEnabled") : "Enabled") : (window.i18n ? window.i18n.t("badgeDisabled") : "Disabled");
@@ -2269,35 +2616,35 @@
         }
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.REACTIVE_ENABLE, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("reactiveModeSelect")?.addEventListener("change", async (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.custom.reactiveMode = val;
+        this._markUnsaved("lighting");
         const colorGrp = document.getElementById("reactiveColorGroup");
         if (colorGrp) {
           colorGrp.style.display = (val === 3 || val === 7) ? "none" : "block";
         }
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.REACTIVE_MODE, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("reactiveColorPicker")?.addEventListener("change", async (e) => {
         const [h, s] = this._hexToHs(e.target.value);
         this.state.custom.reactiveColor = [h, s];
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.REACTIVE_COLOR, h, s);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("reactiveSpeedSlider")?.addEventListener("input", (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.custom.reactiveSpeed = val;
+        this._markUnsaved("lighting");
         const lbl = document.getElementById("reactiveSpdVal");
         if (lbl) lbl.textContent = val;
         if (this.protocol && this.protocol.device) {
@@ -2308,18 +2655,18 @@
       });
 
       document.getElementById("reactiveSpeedSlider")?.addEventListener("change", async () => {
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.REACTIVE_SPEED, this.state.custom.reactiveSpeed);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("reactiveBlendSelect")?.addEventListener("change", async (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.custom.reactiveBlend = val;
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.REACTIVE_BLEND, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
@@ -2327,26 +2674,27 @@
       document.getElementById("winLockModeSelect")?.addEventListener("change", async (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.custom.winLockMode = val;
+        this._markUnsaved("lighting");
         const colorGrp = document.getElementById("winLockColorGroup");
         if (colorGrp) colorGrp.style.display = val === 2 ? "block" : "none";
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.WIN_LOCK_MODE, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("winLockColorPicker")?.addEventListener("change", async (e) => {
         const [h, s] = this._hexToHs(e.target.value);
         this.state.custom.winLockColor = [h, s];
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.WIN_LOCK_COLOR, h, s);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("chkWinLockToggle")?.addEventListener("change", async (e) => {
         const isLocked = e.target.checked;
         this.state.custom.winLockActive = isLocked;
+        this._markUnsaved("lighting");
         const badge = document.getElementById("winLockStatusBadge");
         if (badge) {
           badge.textContent = isLocked ? (window.i18n ? window.i18n.t("badgeLocked") : "Locked") : (window.i18n ? window.i18n.t("badgeUnlocked") : "Unlocked");
@@ -2361,15 +2709,16 @@
       document.getElementById("chkLayerLighting")?.addEventListener("change", async (e) => {
         const val = e.target.checked ? 1 : 0;
         this.state.custom.layerLightingEnable = e.target.checked;
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.LAYER_LIGHTING_ENABLE, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
       document.getElementById("layerDimSlider")?.addEventListener("input", (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.custom.layerDimLevel = val;
+        this._markUnsaved("lighting");
         const lbl = document.getElementById("layerDimVal");
         if (lbl) lbl.textContent = val;
         if (this.protocol && this.protocol.device) {
@@ -2380,9 +2729,9 @@
       });
 
       document.getElementById("layerDimSlider")?.addEventListener("change", async () => {
+        this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.LAYER_DIM_LEVEL, this.state.custom.layerDimLevel);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
@@ -2394,13 +2743,13 @@
       document.getElementById("logoModeSelect")?.addEventListener("change", async (e) => {
         const val = parseInt(e.target.value, 10);
         this.state.custom.logoMode = val;
+        this._markUnsaved("lighting");
         const logoColorsWrap = document.getElementById("logoColorsContainer");
         if (logoColorsWrap) {
           logoColorsWrap.style.display = val === 0 ? "none" : "grid";
         }
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.LOGO_MODE, val);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
@@ -2412,7 +2761,28 @@
       this._bindLockColorPicker("colorNumScroll", C.CUSTOM_VAL.LOGO_COLOR_NUM_SCROLL, "numScroll");
       this._bindLockColorPicker("colorAll", C.CUSTOM_VAL.LOGO_COLOR_ALL, "all");
 
-      // 4. Hardware Multi-Stop Gradient Events
+      // 4. Dedicated Save & Discard Buttons for Keyboard Memory (EEPROM)
+      const bindSaveBtn = (id) => {
+        document.getElementById(id)?.addEventListener("click", () => this.saveLightingToEEPROM());
+      };
+      bindSaveBtn("btnSaveBacklightEEPROM");
+      bindSaveBtn("btnSaveReactiveEEPROM");
+      bindSaveBtn("btnSaveWinLockEEPROM");
+      bindSaveBtn("btnSaveLayersEEPROM");
+      bindSaveBtn("btnSaveLogoEEPROM");
+      bindSaveBtn("btnSaveMonochromeEEPROM");
+
+      const bindDiscardBtn = (id) => {
+        document.getElementById(id)?.addEventListener("click", () => this.discardLightingFromEEPROM());
+      };
+      bindDiscardBtn("btnDiscardBacklightEEPROM");
+      bindDiscardBtn("btnDiscardReactiveEEPROM");
+      bindDiscardBtn("btnDiscardWinLockEEPROM");
+      bindDiscardBtn("btnDiscardLayersEEPROM");
+      bindDiscardBtn("btnDiscardLogoEEPROM");
+      bindDiscardBtn("btnDiscardMonochromeEEPROM");
+
+      // 5. Hardware Multi-Stop Gradient Events
       const selHwGrad = document.getElementById("hardwareGradientPresetSelect");
       const hwGradEditorGroup = document.getElementById("hardwareGradientEditorGroup");
       if (selHwGrad) {
@@ -2421,6 +2791,7 @@
           this.state.custom.activeGradient = val;
           this._rebuildGradientLut();
           this.updateUI();
+          this._markUnsaved("lighting");
           if (hwGradEditorGroup) {
             hwGradEditorGroup.style.display = (val === 8 || val === 9) ? "block" : "none";
           }
@@ -2435,7 +2806,6 @@
             this._throttleHid("hw_gradient", async () => {
               try {
                 await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 33, val);
-                await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
               } catch (err) {
                 console.warn("Could not set hardware gradient preset:", err);
               }
@@ -2456,6 +2826,7 @@
             const prof = (this.state.custom.activeGradient === 9) ? 1 : 0;
             this.state.custom.customProfiles[prof] = stops;
             this._rebuildGradientLut();
+            this._markUnsaved("gradient");
             if (this.protocol && this.protocol.isConnected && (this.state.custom.activeGradient === 8 || this.state.custom.activeGradient === 9)) {
               this._sendCustomGradientStopsThrottled(prof, stops);
             }
@@ -2479,6 +2850,9 @@
               await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 35, prof, s, stops[s].pos, stops[s].r, stops[s].g, stops[s].b);
             }
             await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 37, prof, 1);
+            if (window.gUI && typeof window.gUI.setUnsavedChanges === "function") {
+              window.gUI.setUnsavedChanges(false, "gradient");
+            }
             if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastGradientSavedToEeprom") : "Gradient profile saved to EEPROM", "success");
           } catch (err) {
             if (window.gUI) window.gUI.showToast(err.message, "error");
@@ -2487,14 +2861,98 @@
       }
     }
 
+    async saveLightingToEEPROM() {
+      if (!this.protocol || !this.protocol.isConnected) {
+        if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+        return;
+      }
+      try {
+        const C = window.GMMK3_CONSTANTS;
+        await this.protocol.saveCustomConfig(C.CHANNELS.RGB_MATRIX);
+        await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
+        if (window.gUI && typeof window.gUI.setUnsavedChanges === "function") {
+          window.gUI.setUnsavedChanges(false, "lighting");
+        }
+        if (window.gUI) {
+          window.gUI.showToast(window.i18n ? window.i18n.t("toastSavedToEEPROM") : "Settings permanently saved to keyboard memory (EEPROM)!", "success");
+        }
+      } catch (err) {
+        if (window.gUI) window.gUI.showToast("Save error: " + err.message, "error");
+      }
+    }
+
+    async discardLightingFromEEPROM() {
+      if (!this.protocol || !this.protocol.isConnected) {
+        if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+        return;
+      }
+      try {
+        if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastDiscardingChanges") : "Reverting to saved EEPROM settings...", "info");
+        if (typeof this.protocol.reloadEEPROM === "function") {
+          await this.protocol.reloadEEPROM();
+          await this.protocol.sleep(60);
+        }
+        await this.loadFromDevice();
+        if (window.gUI && typeof window.gUI.setUnsavedChanges === "function") {
+          window.gUI.setUnsavedChanges(false, "lighting");
+          window.gUI.setUnsavedChanges(false, "gradient");
+        }
+        if (window.gUI) {
+          window.gUI.showToast(window.i18n ? window.i18n.t("toastDiscardedSuccess") : "Settings restored from keyboard EEPROM!", "success");
+        }
+      } catch (err) {
+        if (window.gUI) window.gUI.showToast("Discard error: " + err.message, "error");
+      }
+    }
+
+    async discardPerKeyProfileFromEEPROM() {
+      if (!this.protocol || !this.protocol.isConnected) {
+        if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+        return;
+      }
+      try {
+        const profIdx = this.activePerKeyProfile;
+        if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastDiscardingChanges") : "Reverting profile to saved EEPROM settings...", "info");
+
+        // 1. Tell keyboard firmware to reload its EEPROM storage to RAM
+        if (typeof this.protocol.reloadEEPROM === "function") {
+          await this.protocol.reloadEEPROM();
+          await this.protocol.sleep(60);
+        }
+
+        // 2. Fetch restored profile from device RAM
+        try {
+          const colors = await this.protocol.getPerKeyProfile(profIdx, 144);
+          if (colors && colors.length === 144) {
+            this.state.custom.perKeyProfiles[profIdx] = colors;
+          }
+        } catch (err) {
+          console.warn("Could not reload per-key profile:", err);
+        }
+
+        this.perKeySelection.clear();
+        this._updatePerKeySelectionVisuals();
+        this.updateUI();
+
+        if (window.gUI && typeof window.gUI.setUnsavedChanges === "function") {
+          window.gUI.setUnsavedChanges(false, "profile");
+        }
+        if (window.gUI) {
+          window.gUI.showToast(window.i18n ? window.i18n.t("toastDiscardedSuccess") : "Profile restored from keyboard EEPROM!", "success");
+        }
+      } catch (err) {
+        if (window.gUI) window.gUI.showToast("Discard error: " + err.message, "error");
+      }
+    }
+
     _bindColorPicker(id, valId, stateKey) {
       document.getElementById(id)?.addEventListener("change", async (e) => {
         const [h, s] = this._hexToHs(e.target.value);
         this.state.custom[stateKey] = [h, s];
+        this._markUnsaved();
         if (this.protocol && this.protocol.device) {
           const C = window.GMMK3_CONSTANTS;
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, valId, h, s);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
     }
@@ -2503,12 +2961,671 @@
       document.getElementById(id)?.addEventListener("change", async (e) => {
         const [h, s] = this._hexToHs(e.target.value);
         this.state.custom.lockColors[lockKey] = [h, s];
+        this._markUnsaved();
         if (this.protocol && this.protocol.device) {
           const C = window.GMMK3_CONSTANTS;
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, valId, h, s);
-          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
+    }
+
+    // --- HARDWARE PER-KEY RGB STUDIO (EEPROM PROFILES) ---
+    _initPerKeyStudio() {
+      // 1. Profile Switcher Tabs
+      [0, 1, 2].forEach(p => {
+        const tabBtn = document.getElementById(`btnPerKeyProf${p}`);
+        if (tabBtn) {
+          tabBtn.addEventListener("click", async () => {
+            this.activePerKeyProfile = p;
+            this.state.rgb.effect = 39 + p;
+            const selEff = document.getElementById("rgbEffectSelect");
+            if (selEff) selEff.value = 39 + p;
+            [0, 1, 2].forEach(idx => {
+              const b = document.getElementById(`btnPerKeyProf${idx}`);
+              if (b) b.classList.toggle("active", idx === p);
+            });
+            this.perKeySelection.clear();
+            this._updatePerKeySelectionVisuals();
+            this.updateUI();
+            this._markUnsaved();
+
+            if (this.protocol && this.protocol.isConnected) {
+              try {
+                const C = window.GMMK3_CONSTANTS;
+                await this.protocol.setRGBMatrixValue(C.RGB_MATRIX_VAL.EFFECT, 39 + p);
+                await this.protocol.setActivePerKeyProfile(p);
+              } catch (err) {
+                console.warn("Failed to switch active per-key profile on device:", err);
+              }
+            }
+          });
+        }
+      });
+
+      // 2. Active Paint Color & Dynamic Swatches Generation
+      const colorPicker = document.getElementById("perKeyActiveColorPicker");
+      const hexLabel = document.getElementById("perKeyActiveColorHex");
+      const swatchesGrid = document.getElementById("perKeySwatchesContainer");
+
+      const updateActiveColor = (hex, updatePicker = true) => {
+        const cleanHex = hex.toUpperCase();
+        this.perKeyPaintColor = cleanHex;
+        if (updatePicker && colorPicker) colorPicker.value = cleanHex;
+        if (hexLabel) hexLabel.textContent = cleanHex;
+
+        if (swatchesGrid) {
+          swatchesGrid.querySelectorAll(".perkey-swatch-item").forEach(sw => {
+            sw.classList.toggle("active", sw.dataset.color.toUpperCase() === cleanHex);
+          });
+        }
+      };
+
+      if (colorPicker) {
+        colorPicker.addEventListener("input", (e) => {
+          updateActiveColor(e.target.value, false);
+        });
+        colorPicker.addEventListener("change", (e) => {
+          updateActiveColor(e.target.value, false);
+          if (this.perKeySelection.size > 0) {
+            this._fillPerKeySelection(this.perKeyPaintColor);
+          }
+        });
+      }
+
+      const SWATCH_PALETTE = [
+        "#00FFFF", "#FF0055", "#FFCC00", "#00FF66",
+        "#9900FF", "#0088FF", "#FF3300", "#FF0000",
+        "#00FF00", "#0000FF", "#FF00FF", "#FFFF00",
+        "#FFFFFF", "#000000"
+      ];
+
+      if (swatchesGrid) {
+        swatchesGrid.innerHTML = "";
+        SWATCH_PALETTE.forEach(hex => {
+          const sw = document.createElement("button");
+          sw.type = "button";
+          sw.className = "perkey-swatch-item";
+          sw.dataset.color = hex;
+          sw.style.backgroundColor = hex;
+          sw.title = hex;
+          if (hex.toUpperCase() === this.perKeyPaintColor.toUpperCase()) {
+            sw.classList.add("active");
+          }
+          sw.addEventListener("click", () => {
+            updateActiveColor(hex, true);
+            if (this.perKeySelection.size > 0) {
+              this._fillPerKeySelection(hex);
+            }
+          });
+          swatchesGrid.appendChild(sw);
+        });
+      }
+
+      // 3. Quick Selection Groups
+      document.querySelectorAll(".perkey-grp-btn, [data-group-select]").forEach(grpBtn => {
+        grpBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const grp = grpBtn.dataset.groupSelect;
+          this._selectPerKeyGroup(grp);
+        });
+      });
+
+      // 4. Fill Selected & Clear Actions
+      const btnFill = document.getElementById("btnPerKeyFillSelected");
+      if (btnFill) {
+        btnFill.addEventListener("click", () => {
+          this._fillPerKeySelection(this.perKeyPaintColor);
+        });
+      }
+
+      const btnClear = document.getElementById("btnPerKeyClear");
+      if (btnClear) {
+        btnClear.addEventListener("click", () => {
+          this._fillPerKeySelection("#000000");
+        });
+      }
+
+      // 5. Gaming Templates Dropdown Toggle & Selection
+      const btnTemplatesToggle = document.getElementById("btnPerKeyTemplates");
+      const templatesMenu = document.getElementById("perKeyTemplatesMenu");
+      if (btnTemplatesToggle && templatesMenu) {
+        btnTemplatesToggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const isVisible = templatesMenu.style.display === "block";
+          templatesMenu.style.display = isVisible ? "none" : "block";
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!templatesMenu.contains(e.target) && e.target !== btnTemplatesToggle && !btnTemplatesToggle.contains(e.target)) {
+            templatesMenu.style.display = "none";
+          }
+        });
+
+        document.querySelectorAll(".template-item-btn, [data-template]").forEach(tplItem => {
+          tplItem.addEventListener("click", async (e) => {
+            e.preventDefault();
+            templatesMenu.style.display = "none";
+            const tpl = tplItem.dataset.template;
+            await this._applyGamingTemplate(tpl);
+          });
+        });
+      }
+
+      // 6. Save Profile to EEPROM Action
+      const btnSaveEEPROM = document.getElementById("btnSavePerKeyProfile");
+      if (btnSaveEEPROM) {
+        btnSaveEEPROM.addEventListener("click", async () => {
+          if (!this.protocol || !this.protocol.isConnected) {
+            if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+            return;
+          }
+
+          const profIdx = this.activePerKeyProfile;
+          const colors = this.state.custom.perKeyProfiles[profIdx];
+          if (!colors || colors.length === 0) return;
+
+          try {
+            btnSaveEEPROM.disabled = true;
+            if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastProfileBlocksStreaming") : "Saving profile to keyboard EEPROM...", "info");
+
+            await this.protocol.setFullPerKeyProfile(profIdx, colors);
+            await this.protocol.savePerKeyProfileToEEPROM(profIdx);
+
+            if (window.gUI && typeof window.gUI.setUnsavedChanges === "function") {
+              window.gUI.setUnsavedChanges(false, "profile");
+            }
+            if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastProfileSavedEEPROM") : "Profile saved to EEPROM successfully!", "success");
+          } catch (err) {
+            if (window.gUI) window.gUI.showToast(err.message, "error");
+          } finally {
+            btnSaveEEPROM.disabled = false;
+          }
+        });
+      }
+
+      const btnDiscardPerKey = document.getElementById("btnDiscardPerKeyProfile");
+      if (btnDiscardPerKey) {
+        btnDiscardPerKey.addEventListener("click", () => this.discardPerKeyProfileFromEEPROM());
+      }
+
+      // 7. Instructions Accordion Toggle
+      const btnToggleHelp = document.getElementById("btnTogglePerKeyInstructions");
+      const helpCard = document.getElementById("perKeyInstructionsCard");
+      if (btnToggleHelp && helpCard) {
+        btnToggleHelp.addEventListener("click", () => {
+          helpCard.classList.toggle("collapsed");
+        });
+      }
+
+      // 8. Attach Marquee selection box on keyboard visualizer container
+      this._bindPerKeyMarquee();
+    }
+
+    _bindPerKeyMarquee() {
+      const canvas = document.getElementById("lightingKeyboardCanvas");
+      const wrapper = document.getElementById("lightingKeyboardScrollWrapper") || canvas?.parentElement;
+      if (!canvas) return;
+
+      let dragState = null;
+      let marqueeBox = null;
+
+      const onPointerDown = (e) => {
+        // Only active when per-key profile effect (39..41) is active
+        if (this.state.rgb.effect < 39 || this.state.rgb.effect > 41) return;
+        // Only primary mouse button or single touch
+        if (e.button !== undefined && e.button !== 0) return;
+
+        dragState = {
+          startX: e.clientX,
+          startY: e.clientY,
+          targetEl: e.target,
+          shiftKey: Boolean(e.shiftKey),
+          didDrag: false,
+          initialSelection: new Set(this.perKeySelection)
+        };
+      };
+
+      if (wrapper) {
+        wrapper.addEventListener("pointerdown", onPointerDown);
+      } else {
+        canvas.addEventListener("pointerdown", onPointerDown);
+      }
+
+      window.addEventListener("pointermove", (e) => {
+        if (!dragState) return;
+
+        const dist = Math.hypot(e.clientX - dragState.startX, e.clientY - dragState.startY);
+        if (!dragState.didDrag && dist > 4) {
+          dragState.didDrag = true;
+          if (!marqueeBox) {
+            marqueeBox = document.createElement("div");
+            marqueeBox.className = "perkey-marquee-box";
+            canvas.appendChild(marqueeBox);
+          }
+        }
+
+        if (dragState.didDrag && marqueeBox) {
+          const rect = canvas.getBoundingClientRect();
+          const scale = rect.width / (canvas.offsetWidth || 1);
+
+          const startCanvasX = (dragState.startX - rect.left) / scale;
+          const startCanvasY = (dragState.startY - rect.top) / scale;
+          const curCanvasX = (e.clientX - rect.left) / scale;
+          const curCanvasY = (e.clientY - rect.top) / scale;
+
+          const minX = Math.min(startCanvasX, curCanvasX);
+          const minY = Math.min(startCanvasY, curCanvasY);
+          const w = Math.abs(curCanvasX - startCanvasX);
+          const h = Math.abs(curCanvasY - startCanvasY);
+
+          marqueeBox.style.left = `${minX}px`;
+          marqueeBox.style.top = `${minY}px`;
+          marqueeBox.style.width = `${w}px`;
+          marqueeBox.style.height = `${h}px`;
+
+          const mLeft = minX;
+          const mTop = minY;
+          const mRight = minX + w;
+          const mBottom = minY + h;
+
+          const nextSelection = dragState.shiftKey
+            ? new Set(dragState.initialSelection)
+            : new Set();
+
+          // Intersect visualizer keys
+          for (let i = 0; i < this.visualizerKeys.length; i++) {
+            const k = this.visualizerKeys[i];
+            if (!k || k.isKnob) continue;
+            const kEl = k.el;
+            if (!kEl) continue;
+
+            const kL = kEl.offsetLeft;
+            const kT = kEl.offsetTop;
+            const kR = kL + kEl.offsetWidth;
+            const kB = kT + kEl.offsetHeight;
+
+            if (kL < mRight && kR > mLeft && kT < mBottom && kB > mTop) {
+              nextSelection.add(k.isLogo ? "LOGO" : k.id);
+            }
+          }
+
+          // Intersect side diffusers
+          for (let i = 0; i < this.sideDiffusers.length; i++) {
+            const sd = this.sideDiffusers[i];
+            if (!sd) continue;
+            const sEl = sd.el;
+            if (!sEl) continue;
+
+            const sL = sEl.offsetLeft;
+            const sT = sEl.offsetTop;
+            const sR = sL + sEl.offsetWidth;
+            const sB = sT + sEl.offsetHeight;
+
+            if (sL < mRight && sR > mLeft && sT < mBottom && sB > mTop) {
+              nextSelection.add(sd.id);
+            }
+          }
+
+          this.perKeySelection = nextSelection;
+          this._updatePerKeySelectionVisuals();
+        }
+      });
+
+      window.addEventListener("pointerup", (e) => {
+        if (!dragState) return;
+
+        const currentDrag = dragState;
+        dragState = null;
+
+        if (marqueeBox) {
+          if (marqueeBox.parentNode) {
+            marqueeBox.parentNode.removeChild(marqueeBox);
+          }
+          marqueeBox = null;
+        }
+
+        if (currentDrag.didDrag) {
+          // Drag finished — selection is already updated in real-time
+          return;
+        }
+
+        // It was a simple click (distance <= 4px)
+        const target = currentDrag.targetEl;
+        const keyCap = target.closest(".lighting-keycap");
+        const sideEl = target.closest(".side-diffuser-segment");
+        const logoEl = target.closest(".lighting-logo-badge");
+
+        if (logoEl) {
+          this._handlePerKeyElementClick("LOGO", { shiftKey: currentDrag.shiftKey });
+        } else if (sideEl) {
+          const foundSd = this.sideDiffusers.find(sd => sd.el === sideEl || (sd.els && sd.els.includes(sideEl)));
+          if (foundSd) {
+            this._handlePerKeyElementClick(foundSd.id, { shiftKey: currentDrag.shiftKey });
+          }
+        } else if (keyCap) {
+          const foundKey = this.visualizerKeys.find(k => k.el === keyCap || (k.els && k.els.includes(keyCap)));
+          if (foundKey) {
+            this._handlePerKeyElementClick(foundKey.isLogo ? "LOGO" : foundKey.id, { shiftKey: currentDrag.shiftKey });
+          }
+        } else {
+          // Clicked empty background without Shift -> clear selection!
+          if (!currentDrag.shiftKey) {
+            this.perKeySelection.clear();
+            this._updatePerKeySelectionVisuals();
+          }
+        }
+      });
+    }
+
+    _handlePerKeyElementClick(elementId, event) {
+      if (this.state.rgb.effect < 39 || this.state.rgb.effect > 41) return;
+
+      const profIdx = this.activePerKeyProfile;
+      const rgb = this._hexToRgb(this.perKeyPaintColor);
+
+      if (event && event.shiftKey) {
+        // Toggle selection
+        if (this.perKeySelection.has(elementId)) {
+          this.perKeySelection.delete(elementId);
+        } else {
+          this.perKeySelection.add(elementId);
+        }
+        this._updatePerKeySelectionVisuals();
+        return;
+      }
+
+      // If key is part of an active multi-selection and user clicks it -> paint all selected keys!
+      if (this.perKeySelection.size > 0 && this.perKeySelection.has(elementId)) {
+        this._fillPerKeySelection(this.perKeyPaintColor);
+        return;
+      }
+
+      // Otherwise, clear any multi-selection and paint this single element
+      this.perKeySelection.clear();
+      this._updatePerKeySelectionVisuals();
+
+      const ledIdx = this._getLedIndexForElement(elementId);
+      if (ledIdx >= 0 && ledIdx < 144) {
+        if (!this.state.custom.perKeyProfiles[profIdx]) {
+          this.state.custom.perKeyProfiles[profIdx] = this._generateDefaultPerKeyProfile(profIdx);
+        }
+        this.state.custom.perKeyProfiles[profIdx][ledIdx] = { r: rgb.r, g: rgb.g, b: rgb.b };
+        this._markUnsaved("profile");
+        this._sendPerKeyProfileBlockThrottled(profIdx, Math.floor(ledIdx / 8));
+      }
+    }
+
+    _selectPerKeyGroup(groupName) {
+      const layout = this.getActiveLayout() || [];
+      this.perKeySelection.clear();
+
+      switch (groupName) {
+        case "all":
+          this.visualizerKeys.forEach(k => {
+            if (!k.isKnob) this.perKeySelection.add(k.isLogo ? "LOGO" : k.id);
+          });
+          this.sideDiffusers.forEach(sd => this.perKeySelection.add(sd.id));
+          break;
+
+        case "wasd":
+          ["W", "A", "S", "D"].forEach(id => this.perKeySelection.add(id));
+          break;
+
+        case "alpha":
+        case "alphas":
+          layout.forEach(k => {
+            if (k.group === "alpha" && !k.isKnob && !k.isLogo) this.perKeySelection.add(k.id);
+          });
+          break;
+
+        case "mod":
+        case "modifiers":
+          layout.forEach(k => {
+            if (k.group === "mod" || ["SPC", "ENT", "BSPC", "TAB", "CAPS", "LSFT", "RSFT", "LCTL", "RCTL", "LALT", "RALT", "LWIN"].includes(k.id)) {
+              if (!k.isKnob && !k.isLogo) this.perKeySelection.add(k.id);
+            }
+          });
+          break;
+
+        case "num":
+        case "numbers":
+          ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "MINS", "EQL"].forEach(id => this.perKeySelection.add(id));
+          break;
+
+        case "numpad":
+          layout.forEach(k => {
+            if (k.group === "numpad" || String(k.id).startsWith("P")) {
+              if (!k.isKnob && !k.isLogo) this.perKeySelection.add(k.id);
+            }
+          });
+          break;
+
+        case "nav":
+        case "arrows":
+          ["UP", "DOWN", "LEFT", "RGHT", "INS", "DEL", "HOME", "END", "PGUP", "PGDN"].forEach(id => this.perKeySelection.add(id));
+          break;
+
+        case "func":
+        case "function":
+          ["ESC", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].forEach(id => this.perKeySelection.add(id));
+          break;
+
+        case "sidelights":
+          this.sideDiffusers.forEach(sd => this.perKeySelection.add(sd.id));
+          break;
+
+        case "logo":
+          this.perKeySelection.add("LOGO");
+          break;
+      }
+
+      this._updatePerKeySelectionVisuals();
+    }
+
+    _fillPerKeySelection(colorHex) {
+      const profIdx = this.activePerKeyProfile;
+      const rgb = this._hexToRgb(colorHex);
+      if (!this.state.custom.perKeyProfiles[profIdx]) {
+        this.state.custom.perKeyProfiles[profIdx] = this._generateDefaultPerKeyProfile(profIdx);
+      }
+      const profile = this.state.custom.perKeyProfiles[profIdx];
+
+      const targets = this.perKeySelection.size > 0
+        ? Array.from(this.perKeySelection)
+        : this.visualizerKeys.map(k => (k.isLogo ? "LOGO" : k.id)).concat(this.sideDiffusers.map(sd => sd.id));
+
+      const touchedBlocks = new Set();
+      targets.forEach(elId => {
+        const ledIdx = this._getLedIndexForElement(elId);
+        if (ledIdx >= 0 && ledIdx < 144) {
+          profile[ledIdx] = { r: rgb.r, g: rgb.g, b: rgb.b };
+          touchedBlocks.add(Math.floor(ledIdx / 8));
+        }
+      });
+
+      this._markUnsaved("profile");
+      touchedBlocks.forEach(blockIdx => {
+        this._sendPerKeyProfileBlockThrottled(profIdx, blockIdx);
+      });
+    }
+
+    _updatePerKeySelectionVisuals() {
+      // Clear or update .perkey-selected across all visualizer keycaps, side diffusers, and logo
+      this.visualizerKeys.forEach(k => {
+        const id = k.isLogo ? "LOGO" : k.id;
+        const isSel = this.perKeySelection.has(id);
+        const targets = k.els || [k.el];
+        targets.forEach(el => {
+          if (el) el.classList.toggle("perkey-selected", isSel);
+        });
+      });
+
+      this.sideDiffusers.forEach(sd => {
+        const isSel = this.perKeySelection.has(sd.id);
+        const targets = sd.els || [sd.el];
+        targets.forEach(el => {
+          if (el) el.classList.toggle("perkey-selected", isSel);
+        });
+      });
+    }
+
+    _sendPerKeyProfileBlockThrottled(profIdx, blockIdx) {
+      if (!this.protocol || !this.protocol.isConnected) return;
+      this._pendingPerKeyBlocks.set(blockIdx, profIdx);
+
+      if (this._perKeyStreamTimer) clearTimeout(this._perKeyStreamTimer);
+      this._perKeyStreamTimer = setTimeout(() => {
+        this._flushPerKeyBlocks();
+      }, 50);
+    }
+
+    async _flushPerKeyBlocks() {
+      if (this._isStreamingPerKey) return;
+      if (!this.protocol || !this.protocol.isConnected || this._pendingPerKeyBlocks.size === 0) return;
+
+      this._isStreamingPerKey = true;
+      try {
+        const entries = Array.from(this._pendingPerKeyBlocks.entries());
+        this._pendingPerKeyBlocks.clear();
+
+        for (const [blockIdx, profIdx] of entries) {
+          const profile = this.state.custom.perKeyProfiles[profIdx];
+          if (!profile) continue;
+          const startLed = blockIdx * 8;
+          const blockColors = profile.slice(startLed, startLed + 8);
+          await this.protocol.setPerKeyProfileBlock(profIdx, startLed, blockColors);
+        }
+      } catch (err) {
+        console.warn("Failed to stream per-key blocks:", err);
+      } finally {
+        this._isStreamingPerKey = false;
+        if (this._pendingPerKeyBlocks.size > 0) {
+          this._flushPerKeyBlocks();
+        }
+      }
+    }
+
+    async _applyGamingTemplate(templateKey) {
+      const profIdx = this.activePerKeyProfile;
+      const colors = new Array(144);
+      for (let i = 0; i < 144; i++) colors[i] = { r: 0, g: 0, b: 0 };
+
+      const key = String(templateKey).toLowerCase().replace(/^tpl-/, "");
+
+      switch (key) {
+        case "fps":
+          colors.splice(0, 144, ...this._generateDefaultPerKeyProfile(0));
+          break;
+
+        case "moba":
+          colors.splice(0, 144, ...this._generateDefaultPerKeyProfile(1));
+          break;
+
+        case "mmo":
+          colors.splice(0, 144, ...this._generateDefaultPerKeyProfile(2));
+          break;
+
+        case "racing":
+          for (let i = 0; i < 144; i++) colors[i] = { r: 12, g: 12, b: 20 };
+          ["W"].forEach(id => {
+            const idx = this._getLedIndexForElement(id);
+            if (idx >= 0) colors[idx] = { r: 0, g: 255, b: 68 }; // Acceleration Green
+          });
+          ["A", "D"].forEach(id => {
+            const idx = this._getLedIndexForElement(id);
+            if (idx >= 0) colors[idx] = { r: 255, g: 200, b: 0 }; // Steering Yellow
+          });
+          ["S"].forEach(id => {
+            const idx = this._getLedIndexForElement(id);
+            if (idx >= 0) colors[idx] = { r: 255, g: 0, b: 30 }; // Brake Red
+          });
+          ["SPC"].forEach(id => {
+            const idx = this._getLedIndexForElement(id);
+            if (idx >= 0) colors[idx] = { r: 255, g: 120, b: 0 }; // Handbrake Orange
+          });
+          for (let s = 1; s <= 20; s++) {
+            const idx = this._getLedIndexForElement(`SLED${s}`);
+            if (idx >= 0) colors[idx] = { r: 0, g: 170, b: 255 };
+          }
+          break;
+
+        case "cyberpunk":
+          for (let i = 0; i < 144; i++) colors[i] = { r: 255, g: 0, b: 128 }; // Hot Pink base
+          this.visualizerKeys.forEach(k => {
+            if (k.group === "alpha" && !k.isKnob && !k.isLogo) {
+              const idx = this._getLedIndexForElement(k.id);
+              if (idx >= 0) colors[idx] = { r: 0, g: 255, b: 255 }; // Neon Cyan alphas
+            }
+          });
+          ["UP", "DOWN", "LEFT", "RGHT", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].forEach(id => {
+            const idx = this._getLedIndexForElement(id);
+            if (idx >= 0) colors[idx] = { r: 255, g: 255, b: 0 }; // Neon Yellow
+          });
+          break;
+
+        case "matrix":
+          for (let i = 0; i < 144; i++) colors[i] = { r: 0, g: 40, b: 10 }; // Deep Green
+          this.visualizerKeys.forEach(k => {
+            if (k.group === "alpha" && !k.isKnob && !k.isLogo) {
+              const idx = this._getLedIndexForElement(k.id);
+              if (idx >= 0) colors[idx] = { r: 0, g: 255, b: 60 }; // Matrix Bright Green
+            }
+          });
+          for (let s = 1; s <= 20; s++) {
+            const idx = this._getLedIndexForElement(`SLED${s}`);
+            if (idx >= 0) colors[idx] = { r: 0, g: 220, b: 50 };
+          }
+          break;
+
+        case "office":
+          for (let i = 0; i < 144; i++) colors[i] = { r: 255, g: 255, b: 255 }; // Studio White
+          break;
+
+        case "rainbow":
+          this.visualizerKeys.forEach(k => {
+            if (!k.isKnob && !k.isLogo) {
+              const hue = Math.round((k.qmkX / 224) * 255) & 0xFF;
+              const rgb = this._hsvToRgb(hue, 255, 255);
+              const idx = this._getLedIndexForElement(k.id);
+              if (idx >= 0) colors[idx] = rgb;
+            }
+          });
+          for (let s = 1; s <= 20; s++) {
+            const idx = this._getLedIndexForElement(`SLED${s}`);
+            if (idx >= 0) {
+              const hue = Math.round((s / 20) * 255) & 0xFF;
+              colors[idx] = this._hsvToRgb(hue, 255, 255);
+            }
+          }
+          break;
+      }
+
+      this.state.custom.perKeyProfiles[profIdx] = colors;
+      this.perKeySelection.clear();
+      this._updatePerKeySelectionVisuals();
+      this._markUnsaved("profile");
+
+      if (this.protocol && this.protocol.isConnected) {
+        try {
+          await this.protocol.setFullPerKeyProfile(profIdx, colors);
+        } catch (e) {
+          console.warn("Failed to stream template to keyboard:", e);
+        }
+      }
+
+      if (window.gUI) {
+        const msg = window.i18n ? `${window.i18n.t("btnPresetsTemplates")}: ${key.toUpperCase()}` : `Applied template: ${key.toUpperCase()}`;
+        window.gUI.showToast(msg, "info");
+      }
+    }
+
+    _rgbStringToHex(rgbStr) {
+      const match = rgbStr.match(/\d+/g);
+      if (!match || match.length < 3) return "#ff0055";
+      const r = parseInt(match[0], 10).toString(16).padStart(2, "0");
+      const g = parseInt(match[1], 10).toString(16).padStart(2, "0");
+      const b = parseInt(match[2], 10).toString(16).padStart(2, "0");
+      return `#${r}${g}${b}`;
     }
 
     _hexToHs(hex) {

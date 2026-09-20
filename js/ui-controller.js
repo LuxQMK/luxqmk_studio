@@ -9,6 +9,13 @@
       this.toastTimeout = null;
       this.isConnected = false;
       this.deviceName = "GMMK 3 100% ANSI";
+      this.unsavedDomains = {
+        lighting: false,
+        profile: false,
+        gradient: false,
+        performance: false
+      };
+      this.hasUnsavedChanges = false;
     }
 
     init() {
@@ -19,6 +26,7 @@
       this._initSettingsControls();
       this._initFooterAndModals();
       this._initResponsiveKeyboardFit();
+      this._initUnsavedChangesBanner();
     }
 
     _initLayoutControls() {
@@ -308,6 +316,7 @@
             if (proto && proto.isConnected) {
               try {
                 await proto.setDebounceTime(parseInt(val, 10));
+                this.setUnsavedChanges(true, "performance");
               } catch (e) {
                 console.warn("Failed to set debounce on device:", e);
               }
@@ -388,14 +397,222 @@
         });
       }
 
-      // Sync badges when language is switched
+      // 6. Save Performance Settings to EEPROM
+      const btnSavePerf = document.getElementById("btnSavePerformanceEEPROM");
+      if (btnSavePerf) {
+        btnSavePerf.addEventListener("click", async () => {
+          const proto = window.gProtocol || window.gmmkProtocol;
+          if (!proto || !proto.isConnected) {
+            this.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+            return;
+          }
+          try {
+            await proto.saveCustomConfig();
+            this.setUnsavedChanges(false, "performance");
+            this.showToast(window.i18n ? window.i18n.t("toastSavedToEEPROM") : "Settings saved to keyboard memory (EEPROM)!", "success");
+          } catch (err) {
+            this.showToast("Save error: " + err.message, "error");
+          }
+        });
+      }
+
+      // Sync badges and banner when language is switched
       if (window.i18n && typeof window.i18n.onChange === "function") {
         window.i18n.onChange(() => {
           const currentType = localStorage.getItem("gmmk_debounce_type") || "0";
           updateDebounceTypeBadgeText(currentType);
           const currentNkro = localStorage.getItem("gmmk_nkro_enabled") !== "0";
           this._updateNkroBadge(currentNkro);
+          this._updateUnsavedUI();
         });
+      }
+    }
+
+    _initUnsavedChangesBanner() {
+      const btnSaveFloating = document.getElementById("btnFloatingSaveEEPROM");
+      if (btnSaveFloating) {
+        btnSaveFloating.addEventListener("click", () => this.saveAllToEEPROM());
+      }
+      const btnDiscardFloating = document.getElementById("btnDiscardChangesBanner");
+      if (btnDiscardFloating) {
+        btnDiscardFloating.addEventListener("click", () => this.discardAllUnsavedChanges());
+      }
+      const btnTopBarSave = document.getElementById("btnTopBarSave");
+      if (btnTopBarSave) {
+        btnTopBarSave.addEventListener("click", () => this.saveAllToEEPROM());
+      }
+
+      window.addEventListener("beforeunload", (e) => {
+        if (this.hasUnsavedChanges) {
+          e.preventDefault();
+          e.returnValue = "";
+          return "";
+        }
+      });
+    }
+
+    setUnsavedChanges(hasUnsaved = true, domain = "lighting") {
+      if (hasUnsaved) {
+        if (domain === "all") {
+          this.unsavedDomains.lighting = true;
+          this.unsavedDomains.profile = true;
+          this.unsavedDomains.gradient = true;
+          this.unsavedDomains.performance = true;
+        } else if (this.unsavedDomains[domain] !== undefined) {
+          this.unsavedDomains[domain] = true;
+        } else {
+          this.unsavedDomains.lighting = true;
+        }
+      } else {
+        if (!domain || domain === "all") {
+          this.unsavedDomains.lighting = false;
+          this.unsavedDomains.profile = false;
+          this.unsavedDomains.gradient = false;
+          this.unsavedDomains.performance = false;
+        } else if (this.unsavedDomains[domain] !== undefined) {
+          this.unsavedDomains[domain] = false;
+        }
+      }
+
+      this.hasUnsavedChanges = Object.values(this.unsavedDomains).some(Boolean);
+      this._updateUnsavedUI();
+    }
+
+    _updateUnsavedUI() {
+      const banner = document.getElementById("unsavedChangesBanner");
+      const topBarBadge = document.getElementById("topBarUnsavedBadge");
+
+      // 1. Update pulsating highlight on lighting save buttons
+      const lightingButtons = document.querySelectorAll(
+        "#btnSaveBacklightEEPROM, #btnSaveReactiveEEPROM, #btnSaveWinLockEEPROM, #btnSaveLayersEEPROM, #btnSaveLogoEEPROM, #btnSaveMonochromeEEPROM"
+      );
+      lightingButtons.forEach(btn => {
+        btn.classList.toggle("btn-save-eeprom-pulse", Boolean(this.unsavedDomains.lighting));
+      });
+
+      // 2. Update pulsating highlight on per-key profile save button
+      const profileBtn = document.getElementById("btnSavePerKeyProfile");
+      if (profileBtn) {
+        profileBtn.classList.toggle("btn-save-eeprom-pulse", Boolean(this.unsavedDomains.profile));
+      }
+
+      // 3. Update pulsating highlight on hardware gradient save button
+      const gradBtn = document.getElementById("btnSaveHardwareGradient");
+      if (gradBtn) {
+        gradBtn.classList.toggle("btn-save-eeprom-pulse", Boolean(this.unsavedDomains.gradient));
+      }
+
+      // 4. Update pulsating highlight on performance save button
+      const perfBtn = document.getElementById("btnSavePerformanceEEPROM");
+      if (perfBtn) {
+        perfBtn.classList.toggle("btn-save-eeprom-pulse", Boolean(this.unsavedDomains.performance));
+      }
+
+      // 5. Update global banner and top bar indicator
+      if (this.hasUnsavedChanges) {
+        if (topBarBadge) topBarBadge.style.display = "inline-flex";
+        if (banner) {
+          banner.classList.remove("saved-success");
+          banner.classList.add("visible");
+          const title = document.getElementById("unsavedBannerTitle");
+          const sub = document.getElementById("unsavedBannerSub");
+          if (title) title.textContent = window.i18n ? window.i18n.t("unsavedChangesTitle") : "Unsaved changes (RAM live preview)";
+          if (sub) sub.textContent = window.i18n ? window.i18n.t("unsavedChangesSub") : "Changes are active on keyboard, but will reset after disconnect.";
+        }
+      } else {
+        if (topBarBadge) topBarBadge.style.display = "none";
+        if (banner) {
+          banner.classList.add("saved-success");
+          const title = document.getElementById("unsavedBannerTitle");
+          const sub = document.getElementById("unsavedBannerSub");
+          if (title) title.textContent = window.i18n ? window.i18n.t("unsavedChangesSavedTitle") : "Saved successfully!";
+          if (sub) sub.textContent = window.i18n ? window.i18n.t("unsavedChangesSavedSub") : "Settings permanently saved to keyboard EEPROM.";
+        }
+
+        setTimeout(() => {
+          if (!this.hasUnsavedChanges && banner) {
+            banner.classList.remove("visible", "saved-success");
+          }
+        }, 2200);
+      }
+    }
+
+    async saveAllToEEPROM() {
+      const proto = window.gProtocol || window.gmmkProtocol;
+      if (!proto || !proto.isConnected) {
+        this.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+        return;
+      }
+      try {
+        const C = window.GMMK3_CONSTANTS || { CHANNELS: { CUSTOM: 1, RGB_MATRIX: 2 } };
+        // 1. Save standard RGB matrix & custom config to EEPROM
+        await proto.saveCustomConfig(C.CHANNELS.RGB_MATRIX);
+        await proto.saveCustomConfig(C.CHANNELS.CUSTOM);
+
+        // 2. Commit per-key profile to EEPROM if present
+        if (window.gLightingController && window.gLightingController.activePerKeyProfile !== undefined) {
+          const profIdx = window.gLightingController.activePerKeyProfile;
+          const colors = window.gLightingController.state?.custom?.perKeyProfiles?.[profIdx];
+          if (colors && colors.length > 0 && typeof proto.savePerKeyProfileToEEPROM === "function") {
+            try {
+              await proto.setFullPerKeyProfile(profIdx, colors);
+              await proto.savePerKeyProfileToEEPROM(profIdx);
+            } catch (perKeyErr) {
+              console.warn("Could not commit per-key profile in saveAll:", perKeyErr);
+            }
+          }
+        }
+
+        // 3. Commit custom gradient stops if present
+        if (window.gLightingController && (window.gLightingController.state?.custom?.activeGradient === 8 || window.gLightingController.state?.custom?.activeGradient === 9)) {
+          const prof = (window.gLightingController.state.custom.activeGradient === 9) ? 1 : 0;
+          const stops = window.gLightingController.hardwareGradientEditor ? window.gLightingController.hardwareGradientEditor.getStops() : (window.gLightingController.state.custom.customProfiles?.[prof] || []);
+          try {
+            await proto.setCustomValue(C.CHANNELS.CUSTOM, 34, prof, stops.length);
+            for (let s = 0; s < stops.length && s < 8; s++) {
+              await proto.setCustomValue(C.CHANNELS.CUSTOM, 35, prof, s, stops[s].pos, stops[s].r, stops[s].g, stops[s].b);
+            }
+            await proto.setCustomValue(C.CHANNELS.CUSTOM, 37, prof, 1);
+          } catch (gradErr) {
+            console.warn("Could not commit gradient stops in saveAll:", gradErr);
+          }
+        }
+
+        this.setUnsavedChanges(false, "all");
+        this.showToast(window.i18n ? window.i18n.t("toastSavedToEEPROM") : "Settings permanently saved to keyboard memory (EEPROM)!", "success");
+      } catch (err) {
+        this.showToast("Save error: " + err.message, "error");
+      }
+    }
+
+    async discardAllUnsavedChanges() {
+      const proto = window.gProtocol || window.gmmkProtocol;
+      if (!proto || !proto.isConnected) {
+        this.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+        return;
+      }
+      try {
+        this.showToast(window.i18n ? window.i18n.t("toastDiscardingChanges") : "Reverting to saved EEPROM settings...", "info");
+
+        // 1. Tell keyboard firmware to reload its RAM variables from EEPROM
+        if (typeof proto.reloadEEPROM === "function") {
+          await proto.reloadEEPROM();
+          await proto.sleep(60);
+        }
+
+        // 2. Reload lighting controller & keymap editor state from device EEPROM
+        if (window.gLightingController) {
+          await window.gLightingController.loadFromDevice();
+        }
+        if (window.gKeymapEditor) {
+          await window.gKeymapEditor.loadKeymapFromDevice();
+        }
+
+        // 3. Clear unsaved dirty flags across all domains
+        this.setUnsavedChanges(false, "all");
+        this.showToast(window.i18n ? window.i18n.t("toastDiscardedSuccess") : "Settings restored from keyboard EEPROM!", "success");
+      } catch (err) {
+        this.showToast("Discard error: " + err.message, "error");
       }
     }
 

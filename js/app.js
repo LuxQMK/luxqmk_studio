@@ -204,7 +204,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (window.gLightingController) {
         window.gLightingController.clearStaleHits();
-        window.gLightingController.startVisualizer();
+        if (ui && (ui.activeView === "lighting" || ui.activeView === "studio_lighting" || ui.activeView === "audio")) {
+          window.gLightingController.startVisualizer();
+        }
       }
       await keymapEditor.loadKeymapFromDevice();
       await lightingController.loadFromDevice();
