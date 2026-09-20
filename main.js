@@ -343,128 +343,141 @@ ipcMain.handle("flasher:cancel-flash", () => {
   return { success: true };
 });
 
-ipcMain.handle("flasher:flash-firmware", (event, { filePath, toolType = "wb32" }) => {
-  return new Promise((resolve) => {
-    if (!fs.existsSync(filePath)) {
-      return resolve({ success: false, error: "Plik firmware nie istnieje: " + filePath });
-    }
+ipcMain.handle("flasher:flash-firmware", async (event, { filePath, toolType = "wb32" }) => {
+  if (!fs.existsSync(filePath)) {
+    return { success: false, error: "Plik firmware nie istnieje: " + filePath };
+  }
 
-    const toolExe = getFlasherToolPath(toolType);
-    if (!toolExe) {
-      return resolve({
-        success: false,
-        error: `Nie znaleziono narzędzia programującego (${toolType}).`
-      });
-    }
-
-    const isWb32 = toolType.toLowerCase().includes("wb32") || toolExe.toLowerCase().includes("wb32");
-    const args = isWb32
-      ? ["-t", "-s", "0x08000000", "-w", "-D", filePath, "-R"]
-      : ["-a", "0", "-s", "0x08000000:leave", "-D", filePath, "-R"];
-
-    const sendProgress = (percent, phase, log) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send("flasher:progress", { percent, phase, log });
-      }
+  const toolExe = getFlasherToolPath(toolType);
+  if (!toolExe) {
+    return {
+      success: false,
+      error: `Nie znaleziono narzędzia programującego (${toolType}).`
     };
+  }
 
-    sendProgress(10, "starting", `Uruchamianie ${path.basename(toolExe)}...`);
+  const isWb32 = toolType.toLowerCase().includes("wb32") || toolExe.toLowerCase().includes("wb32");
 
-    try {
+  const sendProgress = (percent, phase, log) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("flasher:progress", { percent, phase, log });
+    }
+  };
+
+  sendProgress(10, "starting", `Inicjalizacja programatora (${path.basename(toolExe)})...`);
+
+  // Helper to run a short command tool (e.g. list devices or reset)
+  const runTool = (args) => {
+    return new Promise((resolve) => {
+      let stdout = "";
+      let stderr = "";
       const child = spawn(toolExe, args, { windowsHide: true });
       currentFlasherProcess = child;
-      let fullOutput = "";
-      let dfuDetected = false;
 
-      // 15-second timeout for DFU mode detection
-      const dfuTimeout = setTimeout(() => {
-        if (!dfuDetected && currentFlasherProcess === child) {
-          try {
-            child.kill();
-          } catch (e) {}
-          currentFlasherProcess = null;
-          resolve({
-            success: false,
-            timeout: true,
-            error: "Nie wykryto klawiatury w trybie Bootloadera DFU w ciągu 15 sekund. Odłącz kabel USB, przytrzymaj klawisz Esc (lub przycisk Reset na płytce PCB) i podłącz kabel ponownie do portu USB."
-          });
-        }
-      }, 15000);
-
-      child.stdout.on("data", (data) => {
-        const str = data.toString();
-        fullOutput += str;
-        console.log("[Flasher STDOUT]:", str.trim());
-
-        const trimmed = str.trim();
-        // Filter out dot-only polling outputs
-        if (/^[\.\s]+$/.test(trimmed)) {
-          return;
-        }
-
-        if (str.includes("Waiting for device") || str.includes("Waiting for DFU") || str.includes("Scanning")) {
-          sendProgress(25, "waiting_dfu", "Oczekiwanie na wykrycie klawiatury w trybie Bootloadera DFU...");
-        } else if (str.includes("Erasing") || str.includes("erase") || str.includes("Device found") || str.includes("matched") || str.includes("Found DFU")) {
-          dfuDetected = true;
-          clearTimeout(dfuTimeout);
-          sendProgress(40, "erasing", "Wykryto urządzenie DFU! Czyszczenie pamięci Flash...");
-        } else if (str.includes("Downloading") || str.includes("Write") || str.includes("%")) {
-          dfuDetected = true;
-          clearTimeout(dfuTimeout);
-          const match = str.match(/(\d{1,3})%/);
-          const pct = match ? Math.min(95, Math.max(50, parseInt(match[1], 10))) : 70;
-          sendProgress(pct, "flashing", `Zapisywanie nowego firmware: ${match ? match[1] + "%" : "w toku..."}`);
-        } else if (dfuDetected && (str.includes("Reset") || str.includes("Success") || str.includes("done") || str.includes("Downloaded"))) {
-          clearTimeout(dfuTimeout);
-          sendProgress(95, "rebooting", "Resetowanie i restartowanie klawiatury...");
-        } else if (trimmed.length > 0) {
-          sendProgress(50, "flashing", trimmed.split("\n")[0]);
-        }
+      child.stdout?.on("data", (d) => {
+        stdout += d.toString();
       });
-
-      child.stderr.on("data", (data) => {
-        const str = data.toString();
-        fullOutput += str;
-        console.warn("[Flasher STDERR]:", str.trim());
-        const trimmed = str.trim();
-        if (!/^[\.\s]+$/.test(trimmed) && trimmed.length > 0) {
-          sendProgress(50, "flashing", trimmed.split("\n")[0]);
-        }
+      child.stderr?.on("data", (d) => {
+        stderr += d.toString();
       });
-
       child.on("error", (err) => {
-        clearTimeout(dfuTimeout);
-        currentFlasherProcess = null;
-        console.error("Flasher spawn error:", err);
-        resolve({ success: false, error: err.message, output: fullOutput });
+        resolve({ code: -1, stdout, stderr, error: err.message });
       });
-
       child.on("close", (code) => {
-        clearTimeout(dfuTimeout);
-        currentFlasherProcess = null;
-        const lowerOutput = fullOutput.toLowerCase();
-        const hasNoDeviceError = lowerOutput.includes("no dfu capable") || lowerOutput.includes("not found device") || lowerOutput.includes("no device");
-        
-        if (code === 0 && dfuDetected && !hasNoDeviceError) {
-          sendProgress(100, "done", "Firmware został pomyślnie wgrany do pamięci klawiatury!");
-          resolve({ success: true, code, output: fullOutput });
-        } else {
-          const errMsg = hasNoDeviceError
-            ? "Nie wykryto klawiatury w trybie DFU. Odłącz kabel USB, przytrzymaj klawisz Esc i podłącz ponownie."
-            : `Proces programatora zakończył się niepowodzeniem (kod: ${code}).\n${fullOutput.trim()}`;
-          resolve({
-            success: false,
-            code,
-            error: errMsg,
-            output: fullOutput
-          });
-        }
+        resolve({ code, stdout, stderr });
       });
-    } catch (e) {
-      currentFlasherProcess = null;
-      resolve({ success: false, error: e.message });
+    });
+  };
+
+  // Phase A: Wait for DFU device detection (up to 15 seconds)
+  sendProgress(25, "waiting_dfu", "Oczekiwanie na wykrycie klawiatury w trybie Bootloadera DFU...");
+  let dfuFound = false;
+  let dfuDetails = "";
+  const startWait = Date.now();
+
+  while (Date.now() - startWait < 15000) {
+    const listRes = await runTool(["-l"]);
+    const out = (listRes.stdout + listRes.stderr);
+    if (out.includes("Found DFU") || out.includes("Found runtime") || (out.includes("[") && out.includes("]"))) {
+      dfuFound = true;
+      dfuDetails = out.trim();
+      break;
     }
+    await new Promise((r) => setTimeout(r, 400));
+  }
+
+  if (!dfuFound) {
+    return {
+      success: false,
+      timeout: true,
+      error: "Nie wykryto klawiatury w trybie Bootloadera DFU w ciągu 15 sekund. Odłącz kabel USB, przytrzymaj klawisz Esc (lub przycisk Reset na płytce PCB) i podłącz ponownie."
+    };
+  }
+
+  sendProgress(40, "erasing", "Wykryto urządzenie DFU! Przygotowanie do zapisu pamięci Flash...");
+
+  // Phase B: Execute Flash Write
+  const flashArgs = isWb32
+    ? ["-t", "-s", "0x08000000", "-D", filePath]
+    : ["-a", "0", "-s", "0x08000000:leave", "-D", filePath];
+
+  sendProgress(50, "flashing", "Zapisywanie nowego firmware do pamięci Flash MCU...");
+
+  const flashResult = await new Promise((resolve) => {
+    let fullOutput = "";
+    const child = spawn(toolExe, flashArgs, { windowsHide: true });
+    currentFlasherProcess = child;
+
+    child.stdout?.on("data", (data) => {
+      const str = data.toString();
+      fullOutput += str;
+      console.log("[Flasher STDOUT]:", str.trim());
+      const match = str.match(/(\d{1,3})%/);
+      if (match) {
+        const pct = Math.min(95, Math.max(50, parseInt(match[1], 10)));
+        sendProgress(pct, "flashing", `Zapisywanie nowego firmware: ${match[1]}%`);
+      } else if (str.includes("Erasing") || str.includes("erase")) {
+        sendProgress(45, "erasing", "Czyszczenie pamięci Flash...");
+      } else if (str.includes("Downloading") || str.includes("Write")) {
+        sendProgress(70, "flashing", "Wgrywanie danych firmware do mikrokontrolera...");
+      }
+    });
+
+    child.stderr?.on("data", (data) => {
+      const str = data.toString();
+      fullOutput += str;
+      console.warn("[Flasher STDERR]:", str.trim());
+    });
+
+    child.on("error", (err) => {
+      currentFlasherProcess = null;
+      resolve({ success: false, error: err.message, output: fullOutput });
+    });
+
+    child.on("close", (code) => {
+      currentFlasherProcess = null;
+      const lower = fullOutput.toLowerCase();
+      const hasError = code !== 0 || lower.includes("error") || lower.includes("failed") || lower.includes("not found");
+      resolve({ success: !hasError, code, output: fullOutput });
+    });
   });
+
+  if (!flashResult.success) {
+    return {
+      success: false,
+      error: `Błąd podczas programowania pamięci Flash (kod: ${flashResult.code}).\n${flashResult.output}`,
+      output: flashResult.output
+    };
+  }
+
+  // Phase C: If WB32, issue reset command (-R) to reboot the keyboard into new firmware
+  if (isWb32) {
+    sendProgress(95, "rebooting", "Resetowanie i restartowanie klawiatury...");
+    await runTool(["-R"]);
+  }
+
+  sendProgress(100, "done", "Firmware został pomyślnie wgrany do pamięci klawiatury!");
+  return { success: true, output: flashResult.output };
 });
 
 app.whenReady().then(() => {
