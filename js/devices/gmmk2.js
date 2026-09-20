@@ -14,7 +14,11 @@
       mcu: 'WB32FQ95 (ARM Cortex-M4)',
       matrix: '13 Rows × 8 Cols (104 Key Positions)',
       ledTotal: 118,
+      lightingType: 'rgb_matrix',
       capabilities: {
+        hasLighting: true,
+        hasRgbMatrix: true,
+        hasMonochromeBacklight: false,
         hasRotaryEncoder: false,
         hasLogoBadgeLed: false,
         logoLedIndex: null,
@@ -39,7 +43,11 @@
       mcu: 'WB32FQ95 (ARM Cortex-M4)',
       matrix: '9 Rows × 8 Cols (72 Key Positions)',
       ledTotal: 84,
+      lightingType: 'rgb_matrix',
       capabilities: {
+        hasLighting: true,
+        hasRgbMatrix: true,
+        hasMonochromeBacklight: false,
         hasRotaryEncoder: false,
         hasLogoBadgeLed: false,
         logoLedIndex: null,

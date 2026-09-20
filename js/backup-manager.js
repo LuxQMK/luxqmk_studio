@@ -153,9 +153,13 @@
         const numScroll = await this.protocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_NUM_SCROLL);
         const all = await this.protocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_ALL);
 
+        const densityRes = await this.protocol.getCustomValue(CHANNELS.CUSTOM, 36);
+        const effectDensity = (densityRes && densityRes[0] !== 0xFF && Number.isFinite(densityRes[3])) ? densityRes[3] : 128;
+
         backup.custom_settings = {
           debounce_time: dbTime !== undefined ? dbTime : 5,
           rgb_reverse: rev ? rev[3] === 1 : false,
+          effect_density: effectDensity,
           layer_lighting_enable: lEn ? lEn[3] === 1 : true,
           layer_dim_level: lDim ? lDim[3] : 128,
           layer_colors: {
@@ -185,7 +189,45 @@
             all: all ? { h: all[3], s: all[4] } : { h: 0, s: 0 }
           }
         };
-        this._log("Successfully read debounce time, layer colors, reactive layer, Win Lock, and 7 Logo Lock indicators.", "success");
+
+        // Hardware Multi-Stop Gradient Settings
+        try {
+          let activeGrad = 0;
+          const gradRes = await this.protocol.getCustomValue(CHANNELS.CUSTOM, 33);
+          if (gradRes && gradRes[0] !== 0xFF && Number.isFinite(gradRes[3])) {
+            activeGrad = gradRes[3];
+          }
+
+          const customGradProfiles = [];
+          for (let p = 0; p < 2; p++) {
+            const countRes = await this.protocol.getCustomValue(CHANNELS.CUSTOM, 34, p);
+            if (countRes && countRes[0] !== 0xFF && Number.isFinite(countRes[4]) && countRes[4] >= 2 && countRes[4] <= 8) {
+              const count = countRes[4];
+              const stops = [];
+              for (let s = 0; s < count; s++) {
+                const stopRes = await this.protocol.getCustomValue(CHANNELS.CUSTOM, 35, p, s);
+                if (stopRes && stopRes[0] !== 0xFF && Number.isFinite(stopRes[5])) {
+                  stops.push({
+                    pos: stopRes[5],
+                    r: stopRes[6],
+                    g: stopRes[7],
+                    b: stopRes[8]
+                  });
+                }
+              }
+              if (stops.length >= 2) {
+                customGradProfiles.push(stops);
+              }
+            }
+          }
+
+          backup.custom_settings.hardware_gradient = {
+            active_gradient: activeGrad,
+            profiles: customGradProfiles
+          };
+        } catch (e) {}
+
+        this._log("Successfully read debounce time, layer colors, reactive layer, Win Lock, 7 Logo Lock indicators, and gradient profiles.", "success");
       } catch (err) {
         this._log("Custom settings read warning: " + err.message, "warning");
       }
@@ -348,6 +390,28 @@
             if (ll.caps_scroll) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_CAPS_SCROLL, ll.caps_scroll.h, ll.caps_scroll.s);
             if (ll.num_scroll) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_NUM_SCROLL, ll.num_scroll.h, ll.num_scroll.s);
             if (ll.all) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_ALL, ll.all.h, ll.all.s);
+          }
+
+          if (cust.hardware_gradient) {
+            const hg = cust.hardware_gradient;
+            if (Number.isFinite(hg.active_gradient)) {
+              await this.protocol.setCustomValue(CHANNELS.CUSTOM, 33, hg.active_gradient);
+            }
+            if (Array.isArray(hg.profiles)) {
+              for (let p = 0; p < hg.profiles.length && p < 2; p++) {
+                const stops = hg.profiles[p];
+                if (Array.isArray(stops) && stops.length >= 2) {
+                  await this.protocol.setCustomValue(CHANNELS.CUSTOM, 34, p, stops.length);
+                  for (let s = 0; s < stops.length && s < 8; s++) {
+                    await this.protocol.setCustomValue(CHANNELS.CUSTOM, 35, p, s, stops[s].pos, stops[s].r, stops[s].g, stops[s].b);
+                  }
+                }
+              }
+            }
+          }
+
+          if (cust.effect_density !== undefined && Number.isFinite(cust.effect_density)) {
+            await this.protocol.setCustomValue(CHANNELS.CUSTOM, 36, cust.effect_density);
           }
 
           await this.protocol.saveCustomConfig(CHANNELS.CUSTOM);

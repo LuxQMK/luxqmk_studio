@@ -6,7 +6,7 @@
   window.GENERIC_VIA_DEVICES = [
     {
       id: 'generic-via',
-      name: 'Generic QMK/VIA Keyboard',
+      name: 'Generic QMK/VIA Keyboard (RGB Matrix)',
       family: 'Generic',
       formFactor: '100%',
       layout: 'ANSI',
@@ -15,7 +15,11 @@
       mcu: 'QMK Compatible Microcontroller',
       matrix: 'Dynamic Matrix Layout',
       ledTotal: 104,
+      lightingType: 'rgb_matrix',
       capabilities: {
+        hasLighting: true,
+        hasRgbMatrix: true,
+        hasMonochromeBacklight: false,
         hasRotaryEncoder: false,
         hasLogoBadgeLed: false,
         logoLedIndex: null,
@@ -30,8 +34,8 @@
       }
     },
     {
-      id: 'generic-tkl',
-      name: 'Standard TKL 80% (Keychron Q3 / TKL)',
+      id: 'generic-monochrome',
+      name: 'Generic TKL 80% (Monochrome Backlight)',
       family: 'Generic',
       formFactor: 'TKL',
       layout: 'ANSI',
@@ -40,7 +44,11 @@
       mcu: 'QMK / VIA Microcontroller',
       matrix: 'Dynamic TKL Matrix',
       ledTotal: 87,
+      lightingType: 'monochrome',
       capabilities: {
+        hasLighting: true,
+        hasRgbMatrix: false,
+        hasMonochromeBacklight: true,
         hasRotaryEncoder: false,
         hasLogoBadgeLed: false,
         logoLedIndex: null,
@@ -48,15 +56,15 @@
         sidelightCount: 0,
         hasWinLock: true,
         winLockLedIndex: null,
-        hasDualLayerReactive: true,
-        hasPerLayerLighting: true,
+        hasDualLayerReactive: false,
+        hasPerLayerLighting: false,
         hasDebounceControl: true,
         hasNkroToggle: true
       }
     },
     {
-      id: 'generic-60',
-      name: 'Standard 60% (Tofu60 / Universal 60%)',
+      id: 'generic-unlit',
+      name: 'Generic 60% (Unlit / No Backlight)',
       family: 'Generic',
       formFactor: '60%',
       layout: 'ANSI',
@@ -64,17 +72,21 @@
       productId: null,
       mcu: 'QMK / VIA Microcontroller',
       matrix: 'Dynamic 60% Matrix',
-      ledTotal: 61,
+      ledTotal: 0,
+      lightingType: 'none',
       capabilities: {
+        hasLighting: false,
+        hasRgbMatrix: false,
+        hasMonochromeBacklight: false,
         hasRotaryEncoder: false,
         hasLogoBadgeLed: false,
         logoLedIndex: null,
         hasSidelights: false,
         sidelightCount: 0,
-        hasWinLock: true,
+        hasWinLock: false,
         winLockLedIndex: null,
-        hasDualLayerReactive: true,
-        hasPerLayerLighting: true,
+        hasDualLayerReactive: false,
+        hasPerLayerLighting: false,
         hasDebounceControl: true,
         hasNkroToggle: true
       }

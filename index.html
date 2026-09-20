@@ -634,6 +634,75 @@
           </button>
         </div>
 
+        <!-- Dedicated Monochromatic Backlight Card (for Tier 2 Monochromatic Keyboards) -->
+        <div class="lighting-subview" id="card-monochrome-backlight" style="display: none;">
+          <div class="palette-card" style="max-width: 680px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <h3 style="font-size: 1.05rem; margin: 0;" data-i18n="monochromeBacklightTitle">Monochromatic Backlight</h3>
+              </div>
+              <span class="badge-pill" id="monochromeStatusBadge" style="font-size: 0.75rem;">Active • 100%</span>
+            </div>
+
+            <!-- Backlight Power Switch -->
+            <div class="switch-wrap" style="margin-bottom: 1.25rem;">
+              <div>
+                <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblBacklightPower">Backlight Power</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="hintBacklightPower">Toggle keyboard backlight illumination (BL_TOGG)</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="chkMonochromePower" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Backlight Brightness Slider -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                <label data-i18n="lblBrightness">Backlight Brightness</label>
+                <span id="monochromeBriVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">100% (255)</span>
+              </div>
+              <div class="range-slider-wrap">
+                <input type="range" id="monochromeBrightnessSlider" class="range-slider" min="0" max="255" value="255">
+              </div>
+            </div>
+
+            <!-- Backlight Breathing Mode -->
+            <div class="switch-wrap" style="margin-bottom: 1.25rem;">
+              <div>
+                <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblBacklightBreathing">Breathing Animation</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="hintBacklightBreathing">Enable soft rhythmic pulsing backlight (BL_BRTG)</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="chkMonochromeBreathing">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Backlight LED Color Tint for Virtual Preview -->
+            <div class="form-group" style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div>
+                  <label data-i18n="lblMonochromeTint">Hardware LED Color (Preview Tint)</label>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); display: block;" data-i18n="hintMonochromeTint">Match virtual keycap glow to your physical LED color</span>
+                </div>
+                <input type="color" id="monochromeTintPicker" class="color-picker-input" value="#ffffff">
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Sub-Tab 1: Backlight (RGB Matrix Main) -->
         <div class="lighting-subview active" id="lighting-tab-backlight">
           <div class="palette-card" style="max-width: 680px; margin: 0 auto;">
@@ -666,12 +735,55 @@
               </div>
             </div>
 
+            <div class="form-group" id="rgbDensityGroup">
+              <div style="display: flex; justify-content: space-between;">
+                <div>
+                  <label data-i18n="lblRgbDensity">Effect Density</label>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 1px;" data-i18n="hintRgbDensity">Adjusts wave density and spatial frequency (128 = 1.0x)</span>
+                </div>
+                <span id="rgbDensityVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">128</span>
+              </div>
+              <div class="range-slider-wrap">
+                <input type="range" id="rgbDensitySlider" class="range-slider" min="32" max="255" value="128">
+              </div>
+            </div>
+
             <div class="form-group" id="rgbColorGroup">
               <label data-i18n="lblRgbColor">Effect Color</label>
               <div class="color-input-wrap">
                 <input type="color" id="rgbColorPicker" class="color-picker-input" value="#00ffff">
                 <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="hintSingleColor">Set color for
                   single-color effects</span>
+              </div>
+            </div>
+
+            <!-- Hardware Multi-Stop Gradient Selector & Editor -->
+            <div class="form-group" id="hardwareGradientGroup" style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <label data-i18n="lblHardwareGradientPreset">Hardware Gradient Palette</label>
+                <span class="badge-pill" style="font-size: 0.72rem; color: var(--accent-cyan);" data-i18n="lblStandaloneHardware">EEPROM Standalone</span>
+              </div>
+              <select id="hardwareGradientPresetSelect" class="form-control">
+                <option value="0" data-i18n="optPresetRainbow">Rainbow (Classic Spectrum)</option>
+                <option value="1" data-i18n="optPresetCyberpunk">Cyberpunk (Cyan / Pink / Yellow)</option>
+                <option value="2" data-i18n="optPresetSynthwave">Synthwave (Indigo / Hot Pink / Orange / Gold)</option>
+                <option value="3" data-i18n="optPresetSunset">Sunset Horizon (Purple / Crimson / Amber)</option>
+                <option value="4" data-i18n="optPresetToxic">Toxic Lime (Acid Lime / Yellow / Neon Green)</option>
+                <option value="5" data-i18n="optPresetOcean">Ocean Breeze (Navy / Azure / Aqua / Sky Blue)</option>
+                <option value="6" data-i18n="optPresetFireIce">Fire & Ice (Ice Blue / White / Flame / Crimson)</option>
+                <option value="7" data-i18n="optPresetPastel">Pastel Dream (Lavender / Mint / Peach / Pink)</option>
+                <option value="8" data-i18n="optPresetCustom1">Custom Gradient Profile 1 (Hardware EEPROM)</option>
+                <option value="9" data-i18n="optPresetCustom2">Custom Gradient Profile 2 (Hardware EEPROM)</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="hardwareGradientEditorGroup" style="display: none; margin-top: 0.75rem;">
+              <div id="hardwareGradientEditorContainer"></div>
+              <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+                <button type="button" class="btn btn-primary btn-sm" id="btnSaveHardwareGradient" style="display: inline-flex; align-items: center; gap: 6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                  <span data-i18n="btnSaveToEeprom">Save Profile to Keyboard EEPROM</span>
+                </button>
               </div>
             </div>
 
@@ -1058,6 +1170,7 @@
                   <option value="ice_glacier" data-i18n="optPaletteIceGlacier">Ice Glacier & Frost (Arctic Blue / Ice / White)</option>
                   <option value="toxic_radiation" data-i18n="optPaletteToxic">Toxic Glow (Acid Lime / Radioactive Green)</option>
                   <option value="singleColor" data-i18n="optPaletteSingle">Custom Accent Color</option>
+                  <option value="customGradient" data-i18n="optPaletteCustomGradient">Custom Multi-Stop Gradient</option>
                 </select>
               </div>
 
@@ -1079,8 +1192,13 @@
               <label data-i18n="lblAudioSingleColor">Audio Accent Color</label>
               <div class="color-input-wrap">
                 <input type="color" id="audioColorPicker" class="color-picker-input" value="#00ffff">
-                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblAudioSingleColorHint">Custom color for single-color pulses and spectrum bars</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblAudioSingleColorHint">Accent color for solid visualization modes</span>
               </div>
+            </div>
+
+            <!-- Custom Multi-Stop Gradient Editor for Audio -->
+            <div class="form-group" id="audioGradientEditorGroup" style="display: none; margin-bottom: 1.25rem;">
+              <div id="audioGradientEditorContainer"></div>
             </div>
 
             <!-- Audio Sliders Grid -->
@@ -1601,7 +1719,7 @@
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblEepromSize">Custom EEPROM Buffer:</span>
-                <span id="hw-eeprom-size" class="hardware-info-value" data-i18n="valEepromSize">36 Bytes Dedicated
+                <span id="hw-eeprom-size" class="hardware-info-value" data-i18n="valEepromSize">104 Bytes Dedicated
                   Storage</span>
               </div>
               <div class="hardware-info-item">
@@ -1938,7 +2056,7 @@
               Runtime engine details and communications interface
             </p>
             <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.78rem;">
-              <span style="background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.25); color: var(--accent-cyan); padding: 0.25rem 0.6rem; border-radius: 4px;">LuxQMK Studio v1.1.0</span>
+              <span style="background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.25); color: var(--accent-cyan); padding: 0.25rem 0.6rem; border-radius: 4px;">LuxQMK Studio v1.2.0</span>
               <span style="background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(147, 51, 234, 0.25); color: #c084fc; padding: 0.25rem 0.6rem; border-radius: 4px;">WebHID v2.1</span>
               <span style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.25); color: #4ade80; padding: 0.25rem 0.6rem; border-radius: 4px;">60 FPS RGB Engine</span>
             </div>
@@ -1961,7 +2079,7 @@
           </div>
           <div>
             <h3 class="modal-title" data-i18n="modalAboutTitle">About LuxQMK Studio</h3>
-            <span style="font-size: 0.75rem; color: var(--text-dim);">Version 1.1.0 (Build 2026.09)</span>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">Version 1.2.0 (Build 2026.09)</span>
           </div>
         </div>
         <button class="modal-close-btn" id="btnCloseAboutModal">&times;</button>
@@ -1981,25 +2099,6 @@
             <strong style="font-size: 1.05rem; color: #ffffff;" data-i18n="lblAuthorName">Dorian Piwnik</strong>
             <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.2rem;" data-i18n="lblAuthorRole">Creator
               & Lead Developer of the LuxQMK Project</p>
-          </div>
-        </div>
-
-        <div class="modal-section">
-          <div class="modal-section-title">
-            <span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-              </svg>
-            </span>
-            <span data-i18n="lblLicenseTitle">License</span>
-          </div>
-          <div class="modal-section-content" style="font-size: 0.85rem;" data-i18n="lblLicenseDesc">
-            • <strong>LuxQMK Studio Application</strong>: GNU General Public License v3 (GPLv3)<br>
-            • <strong>LuxQMK Firmware</strong>: GNU General Public License v2 / v3 (GPL)
           </div>
         </div>
 
@@ -2042,14 +2141,15 @@
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
               </svg>
             </span>
-            <span data-i18n="lblLegalTitle">Legal Notices & Disclaimer</span>
+            <span data-i18n="lblLegalTitle">Legal Notices & License</span>
           </div>
           <div class="modal-section-content" style="font-size: 0.78rem; color: var(--text-dim); line-height: 1.55;"
             data-i18n="lblLegalDesc">
             LuxQMK Studio is an independent companion configuration suite developed for keyboards running LuxQMK custom
             firmware (fork of QMK Firmware) communicating via standard WebHID / VIA protocol channels.<br><br>
-            QMK Firmware is open-source software licensed under GPLv2+. VIA is an open configuration protocol
-            standard.<br><br>
+            • <strong>LuxQMK Studio Application</strong>: GNU General Public License v3 (GPLv3)<br>
+            • <strong>LuxQMK Firmware</strong>: GNU General Public License v2 / v3 (GPL)<br>
+            • <strong>QMK Firmware</strong>: Open-source software licensed under GPLv2+.<br><br>
             All product names, logos, trademarks, and registered trademarks (including Glorious, GMMK 3, GMMK 2, WB32)
             are property of their respective owners and are used solely for identification and compatibility purposes.
           </div>
@@ -2075,6 +2175,7 @@
   <script src="js/keycodes-db.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/hid-protocol.js"></script>
+  <script src="js/gradient-editor.js"></script>
   <script src="js/keymap-editor.js"></script>
   <script src="js/lighting-controller.js"></script>
   <script src="js/audio-visualizer.js"></script>

@@ -42,7 +42,62 @@
     { id: 31, name: "Digital Rain", isRainbow: false },
     { id: 32, name: "Riverflow", isRainbow: false },
     { id: 33, name: "Lux Wave", isRainbow: true },
-    { id: 34, name: "Cycle Dynamic", isRainbow: true }
+    { id: 34, name: "Cycle Dynamic", isRainbow: true },
+    { id: 35, name: "Gradient Cycle (Multi-Stop)", isRainbow: true },
+    { id: 36, name: "Gradient Wave (Multi-Stop)", isRainbow: true },
+    { id: 37, name: "Gradient Spiral (Multi-Stop)", isRainbow: true },
+    { id: 38, name: "Gradient Breathe (Multi-Stop)", isRainbow: true }
+  ];
+
+  const HARDWARE_GRADIENT_PRESETS = [
+    // 0: Rainbow (Classic full spectrum HSV)
+    null,
+    // 1: Cyberpunk: Cyan -> Hot Pink -> Neon Yellow (3-stop 33.3% equal interval)
+    [
+      { pos: 0, r: 0, g: 255, b: 255 },
+      { pos: 85, r: 255, g: 0, b: 128 },
+      { pos: 170, r: 255, g: 255, b: 0 }
+    ],
+    // 2: Synthwave: Deep Purple -> Magenta -> Orange -> Gold (4-stop 25% equal interval)
+    [
+      { pos: 0, r: 75, g: 0, b: 130 },
+      { pos: 64, r: 255, g: 0, b: 128 },
+      { pos: 128, r: 255, g: 100, b: 0 },
+      { pos: 192, r: 255, g: 215, b: 0 }
+    ],
+    // 3: Sunset: Violet -> Crimson -> Amber (3-stop 33.3% equal interval)
+    [
+      { pos: 0, r: 45, g: 10, b: 85 },
+      { pos: 85, r: 235, g: 45, b: 55 },
+      { pos: 170, r: 255, g: 190, b: 40 }
+    ],
+    // 4: Toxic Lime: Acid Lime -> Toxic Yellow -> Radioactive Green (3-stop 33.3% equal interval)
+    [
+      { pos: 0, r: 166, g: 255, b: 0 },
+      { pos: 85, r: 243, g: 255, b: 0 },
+      { pos: 170, r: 0, g: 229, b: 58 }
+    ],
+    // 5: Ocean: Deep Navy -> Azure -> Aqua -> Sky Blue (4-stop 25% equal interval)
+    [
+      { pos: 0, r: 0, g: 20, b: 80 },
+      { pos: 64, r: 0, g: 140, b: 255 },
+      { pos: 128, r: 0, g: 255, b: 200 },
+      { pos: 192, r: 135, g: 206, b: 250 }
+    ],
+    // 6: Fire & Ice: Ice Blue -> White -> Flame -> Crimson (4-stop 25% equal interval)
+    [
+      { pos: 0, r: 0, g: 200, b: 255 },
+      { pos: 64, r: 255, g: 255, b: 255 },
+      { pos: 128, r: 255, g: 80, b: 0 },
+      { pos: 192, r: 180, g: 0, b: 0 }
+    ],
+    // 7: Pastel: Lavender -> Mint -> Peach -> Pink (4-stop 25% equal interval)
+    [
+      { pos: 0, r: 218, g: 182, b: 252 },
+      { pos: 64, r: 168, g: 240, b: 219 },
+      { pos: 128, r: 255, g: 209, b: 178 },
+      { pos: 192, r: 255, g: 182, b: 193 }
+    ]
   ];
 
   const CODE_TO_KEY_ID = {
@@ -127,7 +182,29 @@
           reactiveMode: 1,          // Default 1: Reactive Fade
           reactiveColor: [0, 255],  // Default Red/Accent
           reactiveSpeed: 128,
-          reactiveBlend: 0          // 0: Additive Glow, 1: Solid Override
+          reactiveBlend: 0,         // 0: Additive Glow, 1: Solid Override
+          effectDensity: 128,       // 128 = 1.0x baseline spatial density
+          activeGradient: 0,
+          customProfiles: [
+            // Profile 1 (0): Default Cyan -> Hot Pink -> Yellow (33.3% equal intervals)
+            [
+              { pos: 0, r: 0, g: 255, b: 255 },
+              { pos: 85, r: 255, g: 0, b: 128 },
+              { pos: 170, r: 255, g: 255, b: 0 }
+            ],
+            // Profile 2 (1): Default Deep Purple -> Sunset Orange -> Golden Sun (33.3% equal intervals)
+            [
+              { pos: 0, r: 128, g: 0, b: 255 },
+              { pos: 85, r: 255, g: 60, b: 0 },
+              { pos: 170, r: 255, g: 215, b: 0 }
+            ]
+          ]
+        },
+        monochrome: {
+          enabled: true,
+          brightness: 255,
+          breathing: false,
+          tint: "#ffffff"
         },
         hostLeds: {
           caps: false,
@@ -136,11 +213,19 @@
         }
       };
 
+      this._gradientLut = null;
+      this._pendingStopsProf = 0;
+      this._pendingStops = null;
+      this._stopsThrottleTimer = null;
+      this._isSendingCustomStops = false;
+      this._stopsResendNeeded = false;
+
       this._throttleTimers = new Map();
       this._tickBound = this._tickVisualizer.bind(this);
     }
 
     init() {
+      this._rebuildGradientLut();
       this._populateEffectsDropdown();
       this._bindTabs();
       this._bindEvents();
@@ -195,12 +280,16 @@
 
       const keyP = layout.find(k => k.id === "P" || k.label === "P");
       if (keyP) {
+        const pKeyW = (keyP.w !== undefined) ? keyP.w : 1;
+        const pKeyH = (keyP.h !== undefined) ? keyP.h : 1;
+        const pCenterX = keyP.x + (pKeyW / 2);
+        const pCenterY = keyP.y + (pKeyH / 2);
         centerX = (keyP.qmkPoint && keyP.qmkPoint[0] !== undefined)
           ? keyP.qmkPoint[0]
-          : Math.round((keyP.x / bounds.width) * 224);
+          : Math.round((pCenterX / bounds.width) * 224);
         centerY = (keyP.qmkPoint && keyP.qmkPoint[1] !== undefined)
           ? keyP.qmkPoint[1]
-          : Math.round((keyP.y / bounds.height) * 64);
+          : Math.round((pCenterY / bounds.height) * 64);
       }
 
       // 1. Render all Keys + Logo Badge + Rotary Knob in each container
@@ -210,13 +299,13 @@
         const keyCenterX = key.x + (keyW / 2);
         const keyCenterY = key.y + (keyH / 2);
 
-        // QMK hardware coordinate grid uses key switch anchor positions
+        // QMK hardware coordinate grid uses key switch anchor positions (center of the key)
         const qmkX = (key.qmkPoint && key.qmkPoint[0] !== undefined)
           ? key.qmkPoint[0]
-          : Math.round((key.x / bounds.width) * 224);
+          : Math.round((keyCenterX / bounds.width) * 224);
         const qmkY = (key.qmkPoint && key.qmkPoint[1] !== undefined)
           ? key.qmkPoint[1]
-          : Math.round((key.y / bounds.height) * 64);
+          : Math.round((keyCenterY / bounds.height) * 64);
         const dx = qmkX - centerX;
         const dy = qmkY - centerY;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -241,7 +330,7 @@
             if (!this.logoBadgeEl) this.logoBadgeEl = keyEl;
           } else if (key.isKnob) {
             keyEl.classList.add("lighting-knob-preview");
-            keyEl.innerHTML = `<span class="l-legend">🎛️</span>`;
+            keyEl.innerHTML = `<span class="l-legend"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="3" x2="12" y2="7"></line></svg></span>`;
           } else {
             keyEl.innerHTML = `<span class="l-legend">${key.label}</span>`;
           }
@@ -516,6 +605,113 @@
       });
     }
 
+    _rebuildGradientLut() {
+      const presetId = this.state.custom.activeGradient;
+      if (presetId === 0 || !presetId) {
+        this._gradientLut = null;
+        return;
+      }
+
+      let stops = null;
+      if (presetId >= 1 && presetId <= 7) {
+        stops = HARDWARE_GRADIENT_PRESETS[presetId];
+      } else if (presetId === 8 || presetId === 9) {
+        const profIdx = (presetId === 9) ? 1 : 0;
+        stops = (this.state.custom.customProfiles && this.state.custom.customProfiles[profIdx]) || [
+          { pos: 0, r: 0, g: 255, b: 255 },
+          { pos: 85, r: 255, g: 0, b: 128 },
+          { pos: 170, r: 255, g: 255, b: 0 }
+        ];
+      }
+
+      if (!stops || stops.length === 0) {
+        this._gradientLut = null;
+        return;
+      }
+
+      const lut = new Array(256);
+      const s0 = stops[0];
+      const sLast = stops[stops.length - 1];
+      const wrapSpan = (255 - sLast.pos) + s0.pos;
+
+      for (let phase = 0; phase < 256; phase++) {
+        let r = 255, g = 255, b = 255;
+        if (phase <= s0.pos) {
+          if (wrapSpan === 0) {
+            r = s0.r; g = s0.g; b = s0.b;
+          } else {
+            const progress = (phase + (255 - sLast.pos)) / wrapSpan;
+            r = Math.round(sLast.r + (s0.r - sLast.r) * progress);
+            g = Math.round(sLast.g + (s0.g - sLast.g) * progress);
+            b = Math.round(sLast.b + (s0.b - sLast.b) * progress);
+          }
+        } else if (phase >= sLast.pos) {
+          if (wrapSpan === 0) {
+            r = sLast.r; g = sLast.g; b = sLast.b;
+          } else {
+            const progress = (phase - sLast.pos) / wrapSpan;
+            r = Math.round(sLast.r + (s0.r - sLast.r) * progress);
+            g = Math.round(sLast.g + (s0.g - sLast.g) * progress);
+            b = Math.round(sLast.b + (s0.b - sLast.b) * progress);
+          }
+        } else {
+          for (let i = 0; i < stops.length - 1; i++) {
+            const cur = stops[i];
+            const next = stops[i + 1];
+            if (phase >= cur.pos && phase <= next.pos) {
+              const span = next.pos - cur.pos;
+              const progress = span === 0 ? 0 : (phase - cur.pos) / span;
+              r = Math.round(cur.r + (next.r - cur.r) * progress);
+              g = Math.round(cur.g + (next.g - cur.g) * progress);
+              b = Math.round(cur.b + (next.b - cur.b) * progress);
+              break;
+            }
+          }
+        }
+        lut[phase] = {
+          r: Math.min(255, Math.max(0, r)),
+          g: Math.min(255, Math.max(0, g)),
+          b: Math.min(255, Math.max(0, b))
+        };
+      }
+      this._gradientLut = lut;
+    }
+
+    _sampleGradientRgb(presetId, phase, vScale = 1.0, sScale = 1.0) {
+      phase = ((phase % 256) + 256) % 256;
+      if (presetId === 0 || !presetId || !this._gradientLut) {
+        return this._hsvToRgb(phase, 255 * sScale, 255 * vScale);
+      }
+
+      const col = this._gradientLut[phase];
+      if (!col) {
+        return this._hsvToRgb(phase, 255 * sScale, 255 * vScale);
+      }
+
+      let r = col.r;
+      let g = col.g;
+      let b = col.b;
+
+      if (sScale < 0.999) {
+        const gray = (r * 0.299 + g * 0.587 + b * 0.114);
+        r = Math.round(gray + (r - gray) * sScale);
+        g = Math.round(gray + (g - gray) * sScale);
+        b = Math.round(gray + (b - gray) * sScale);
+      }
+
+      if (vScale < 0.999) {
+        r = Math.round(r * vScale);
+        g = Math.round(g * vScale);
+        b = Math.round(b * vScale);
+      }
+
+      return {
+        r: Math.min(255, Math.max(0, r)),
+        g: Math.min(255, Math.max(0, g)),
+        b: Math.min(255, Math.max(0, b))
+      };
+    }
+
     // --- 1:1 QMK ALGORITHM ENGINE ---
     _evalQmkEffect(effect, k, tByte, baseH, baseS, baseV, rev, now, speed) {
       let h = baseH;
@@ -523,6 +719,7 @@
       let v = baseV;
 
       const spdFactor = Math.max(0.1, speed / 128);
+      const density = (this.state.custom.effectDensity != null ? this.state.custom.effectDensity : 128) / 128;
 
       switch (effect) {
         case 0: // ALL_OFF
@@ -591,8 +788,8 @@
           {
             h = baseH; v = baseV;
             const angle = (Math.atan2(k.dy, k.dx) + Math.PI) / (2 * Math.PI) * 255;
-            const t = rev ? tByte : (255 - tByte);
-            const val = ((angle * 3 + t) % 256 + 256) % 256;
+            const t = rev ? (255 - tByte) : tByte;
+            const val = ((angle + t) % 256 + 256) % 256;
             s = Math.round((baseS * val) / 255);
           }
           break;
@@ -601,8 +798,8 @@
           {
             h = baseH; s = baseS;
             const angle = (Math.atan2(k.dy, k.dx) + Math.PI) / (2 * Math.PI) * 255;
-            const t = rev ? tByte : (255 - tByte);
-            const val = ((angle * 3 + t) % 256 + 256) % 256;
+            const t = rev ? (255 - tByte) : tByte;
+            const val = ((angle + t) % 256 + 256) % 256;
             v = Math.round((baseV * val) / 255);
           }
           break;
@@ -628,52 +825,88 @@
           break;
 
         case 12: // CYCLE_ALL (Rainbow spectrum)
-          h = (rev ? (255 - tByte) : tByte) & 0xFF;
-          s = 255; v = baseV;
+          {
+            const phase = ((rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
+          }
           break;
 
         case 13: // CYCLE_LEFT_RIGHT (Rainbow Wave Left->Right)
-          h = (k.qmkX + (rev ? tByte : (255 - tByte))) & 0xFF;
-          s = 255; v = baseV;
+          {
+            const spatialX = Math.round(k.qmkX * density);
+            const phase = (spatialX + (rev ? tByte : (255 - tByte)) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
+          }
           break;
 
         case 14: // CYCLE_UP_DOWN (Rainbow Wave Top->Bottom)
-          h = (k.qmkY * 4 + (rev ? tByte : (255 - tByte))) & 0xFF;
-          s = 255; v = baseV;
+          {
+            const spatialY = Math.round(k.qmkY * 4 * density);
+            const phase = (spatialY + (rev ? tByte : (255 - tByte)) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
+          }
           break;
 
         case 15: // RAINBOW_MOVING_CHEVRON
-          h = (Math.abs(k.dy) * 2 + k.qmkX + (rev ? tByte : (255 - tByte))) & 0xFF;
-          s = 255; v = baseV;
+          {
+            const phase = (Math.round((Math.abs(k.dy) * 2 + k.qmkX) * density) + (rev ? tByte : (255 - tByte)) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
+          }
           break;
 
         case 16: // CYCLE_OUT_IN (QMK: 3 * dist / 2 + (rev ? -time : time))
-          h = (Math.round(1.5 * k.dist) + (rev ? (255 - tByte) : tByte)) & 0xFF;
-          s = 255; v = baseV;
+          {
+            const phase = (Math.round(1.5 * k.dist * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
+          }
           break;
 
         case 17: // CYCLE_OUT_IN_DUAL (QMK: 3 * dist + (rev ? -time : time))
           {
             const dxDual = 56 - Math.abs(k.dx);
             const distDual = Math.sqrt(dxDual * dxDual + k.dy * k.dy);
-            h = (Math.round(3 * distDual) + (rev ? (255 - tByte) : tByte)) & 0xFF;
-            s = 255; v = baseV;
+            const phase = (Math.round(3 * distDual * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
           }
           break;
 
         case 18: // CYCLE_PINWHEEL
           {
             const angle = (Math.atan2(k.dy, k.dx) + Math.PI) / (2 * Math.PI) * 255;
-            h = (angle + (rev ? (255 - tByte) : tByte)) & 0xFF;
-            s = 255; v = baseV;
+            const phase = (Math.round(angle * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
           }
           break;
 
         case 19: // CYCLE_SPIRAL
           {
             const angle = (Math.atan2(k.dy, k.dx) + Math.PI) / (2 * Math.PI) * 255;
-            h = (k.dist + (rev ? tByte : (255 - tByte)) - angle) & 0xFF;
-            s = 255; v = baseV;
+            const phase = (Math.round((k.dist - angle) * density) + (rev ? tByte : (255 - tByte)) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
           }
           break;
 
@@ -681,24 +914,33 @@
           {
             const angle = Math.atan2(k.dy, k.dx);
             const sSin = rev ? -1 : 1;
-            h = (Math.round(((k.dy * Math.cos(now * 0.003 * spdFactor) + k.dx * Math.sin(now * 0.003 * spdFactor) * sSin) / 128) * 128 + 128)) & 0xFF;
-            s = 255; v = baseV;
+            h = (Math.round(((k.dy * Math.cos(now * 0.003 * spdFactor) + k.dx * Math.sin(now * 0.003 * spdFactor) * sSin) / 128) * 128 + 128) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, h, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            s = baseS; v = baseV;
           }
           break;
 
         case 21: // RAINBOW_BEACON
           {
             const angle = (Math.atan2(k.dy, k.dx) + Math.PI) / (2 * Math.PI) * 255;
-            h = (angle * 2 + (rev ? (255 - tByte) : tByte)) & 0xFF;
-            s = 255; v = baseV;
+            h = (angle * 2 + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, h, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            s = baseS; v = baseV;
           }
           break;
 
         case 22: // RAINBOW_PINWHEELS
           {
             const sSin = rev ? -1 : 1;
-            h = (Math.round(((k.dy * 3 * Math.cos(now * 0.003 * spdFactor) + (56 - Math.abs(k.dx)) * 3 * Math.sin(now * 0.003 * spdFactor) * sSin) / 128) * 128 + 128)) & 0xFF;
-            s = 255; v = baseV;
+            h = (Math.round(((k.dy * 3 * Math.cos(now * 0.003 * spdFactor) + (56 - Math.abs(k.dx)) * 3 * Math.sin(now * 0.003 * spdFactor) * sSin) / 128) * 128 + 128) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, h, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            s = baseS; v = baseV;
           }
           break;
 
@@ -713,8 +955,12 @@
         case 24: // JELLYBEAN_RAINDROPS (Multi-color Rainbow drops)
           {
             h = this._getJellybeanHue(k.id, now);
+            const rVal = this._getRaindropVal(k.id, now, spdFactor);
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, h, (baseV * rVal) / 255), h: 0, s: 0, v: baseV };
+            }
             s = 255;
-            v = Math.round(baseV * this._getRaindropVal(k.id, now, spdFactor));
+            v = Math.round(baseV * rVal);
           }
           break;
 
@@ -735,38 +981,34 @@
           {
             const t = rev ? (255 - tByte) : tByte;
             const diff = Math.abs(k.qmkX - t);
-            h = (baseH + Math.round((diff / 224) * 24)) & 0xFF;
+            const wave = Math.max(0, 255 - diff * 4);
+            h = (baseH + Math.round((wave / 255) * 32)) & 0xFF;
             s = baseS; v = baseV;
           }
           break;
 
         case 28: // PIXEL_RAIN
-          {
-            const drop = (k.qmkX * 3 + Math.floor(now * 0.012 * spdFactor + k.qmkY * 0.4)) % 256;
-            h = drop; s = 255;
-            const trail = Math.max(0, Math.sin((k.qmkY * 0.2 - now * 0.008 * spdFactor + k.qmkX * 0.1) % (Math.PI * 2)));
-            v = Math.round(baseV * (0.15 + 0.85 * trail));
+          h = (Math.round(k.qmkX * 3 * density) + (rev ? (255 - tByte) : tByte)) & 0xFF;
+          if (this.state.custom.activeGradient > 0) {
+            return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, h, baseV / 255), h: 0, s: 0, v: baseV };
           }
+          s = 255; v = baseV;
           break;
 
         case 29: // PIXEL_FLOW
-          h = (k.qmkX * 2 + k.qmkY * 3 + (rev ? tByte : (255 - tByte))) & 0xFF;
+          h = (Math.round((k.qmkX * 2 + k.qmkY * 3) * density) + (rev ? tByte : (255 - tByte))) & 0xFF;
+          if (this.state.custom.activeGradient > 0) {
+            return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, h, baseV / 255), h: 0, s: 0, v: baseV };
+          }
           s = 255; v = baseV;
           break;
 
         case 30: // PIXEL_FRACTAL
-          h = ((k.qmkX ^ k.qmkY) * 4 + (rev ? tByte : (255 - tByte))) & 0xFF;
-          s = 255; v = baseV;
-          break;
-
-        case 31: // TYPING_HEATMAP (Live physical heat from user typing)
-          {
-            const heat = this.keyHeat.get(k.id) || 0;
-            // Green (85) -> Yellow (45) -> Red (0) -> Violet (210)
-            h = Math.round(85 - (heat / 255) * 85);
-            s = 255;
-            v = Math.round(baseV * (0.08 + 0.92 * (heat / 255)));
+          h = (Math.round((k.qmkX ^ k.qmkY) * 4 * density) + (rev ? tByte : (255 - tByte))) & 0xFF;
+          if (this.state.custom.activeGradient > 0) {
+            return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, h, baseV / 255), h: 0, s: 0, v: baseV };
           }
+          s = 255; v = baseV;
           break;
 
         case 31: // DIGITAL_RAIN (Matrix Green stream)
@@ -790,7 +1032,53 @@
           break;
 
         case 33: // LUXQMK_WAVE
+          {
+            const phase = (Math.round((k.qmkX / 2) * density) + (rev ? -tByte : tByte) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase;
+            s = 255; v = baseV;
+          }
+          break;
+
         case 34: // CYCLE_DYNAMIC
+          {
+            const dist = Math.sqrt(k.dx * k.dx + k.dy * k.dy);
+            const phase = (rev ? (Math.round(1.5 * dist * density) - tByte) : (Math.round(1.5 * dist * density) + tByte)) + baseH;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase & 0xFF, baseV / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase & 0xFF;
+            s = 255; v = baseV;
+          }
+          break;
+
+        case 35: // CUSTOM_GRADIENT_CYCLE
+          {
+            const phase = (rev ? (Math.round(k.qmkX * density) - tByte) : (Math.round(k.qmkX * density) + tByte)) + baseH;
+            return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase & 0xFF, baseV / 255), h: 0, s: 0, v: baseV };
+          }
+
+        case 36: // CUSTOM_GRADIENT_WAVE
+          {
+            const phase = (Math.round((k.qmkX / 2) * density) + (rev ? -tByte : tByte) + baseH) & 0xFF;
+            return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255), h: 0, s: 0, v: baseV };
+          }
+
+        case 37: // CUSTOM_GRADIENT_SPIRAL
+          {
+            const dist = Math.sqrt(k.dx * k.dx + k.dy * k.dy);
+            const phase = (rev ? (Math.round(1.5 * dist * density) - tByte) : (Math.round(1.5 * dist * density) + tByte)) + baseH;
+            return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase & 0xFF, baseV / 255), h: 0, s: 0, v: baseV };
+          }
+
+        case 38: // CUSTOM_GRADIENT_BREATHE
+          {
+            const phase = tByte;
+            return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255), h: 0, s: 0, v: baseV };
+          }
+
         default:
           {
             const w1 = Math.sin(now * 0.003 * spdFactor + (k.qmkX / 224) * 6.28 * (rev ? 1 : -1));
@@ -882,8 +1170,84 @@
           }
         }
 
+        const lightingType = window.deviceManager ? window.deviceManager.getLightingType() : 'rgb_matrix';
+
+        // 1. TIER 1: NO LIGHTING (Unlit Mechanical Keycaps)
+        if (lightingType === 'none') {
+          for (let i = 0; i < this.visualizerKeys.length; i++) {
+            const k = this.visualizerKeys[i];
+            if (!k || k.isKnob) continue;
+            const keyTargets = k.els || [k.el];
+            for (let t = 0; t < keyTargets.length; t++) {
+              const el = keyTargets[t];
+              if (!el) continue;
+              el.style.backgroundColor = '';
+              el.style.color = '';
+              el.style.boxShadow = '';
+              el.style.borderColor = '';
+            }
+          }
+          for (let i = 0; i < this.sideDiffusers.length; i++) {
+            const s = this.sideDiffusers[i];
+            if (!s || !s.el) continue;
+            s.el.style.backgroundColor = 'transparent';
+            s.el.style.boxShadow = 'none';
+          }
+          this.animFrameId = requestAnimationFrame(this._tickBound);
+          return;
+        }
+
+        // 2. TIER 2: MONOCHROMATIC BACKLIGHT
+        if (lightingType === 'monochrome') {
+          const isMonoOn = this.state.monochrome ? this.state.monochrome.enabled : true;
+          let monoBri = this.state.monochrome ? (this.state.monochrome.brightness / 255) : 1.0;
+          if (!isMonoOn) monoBri = 0;
+          if (isMonoOn && this.state.monochrome && this.state.monochrome.breathing) {
+            const pulse = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(now * 0.003));
+            monoBri *= pulse;
+          }
+          const tintHex = (this.state.monochrome && this.state.monochrome.tint) || '#ffffff';
+          const tintRgb = this._hexToRgb(tintHex) || { r: 255, g: 255, b: 255 };
+          const monoR = Math.round(tintRgb.r * monoBri);
+          const monoG = Math.round(tintRgb.g * monoBri);
+          const monoB = Math.round(tintRgb.b * monoBri);
+          const glowAlpha = Math.min(0.8, monoBri * 0.65);
+          const textColor = (monoR * 0.299 + monoG * 0.587 + monoB * 0.114) > 140 ? '#111827' : '#ffffff';
+
+          for (let i = 0; i < this.visualizerKeys.length; i++) {
+            const k = this.visualizerKeys[i];
+            if (!k || k.isKnob) continue;
+            const keyTargets = k.els || [k.el];
+            for (let t = 0; t < keyTargets.length; t++) {
+              const el = keyTargets[t];
+              if (!el) continue;
+              if (monoBri > 0) {
+                el.style.backgroundColor = `rgb(${monoR}, ${monoG}, ${monoB})`;
+                el.style.color = textColor;
+                el.style.boxShadow = `0 0 10px rgba(${monoR}, ${monoG}, ${monoB}, ${glowAlpha}), inset 0 0 4px rgba(255, 255, 255, ${monoBri * 0.3})`;
+                el.style.borderColor = `rgba(${monoR}, ${monoG}, ${monoB}, 0.8)`;
+              } else {
+                el.style.backgroundColor = '';
+                el.style.color = '';
+                el.style.boxShadow = '';
+                el.style.borderColor = '';
+              }
+            }
+          }
+          for (let i = 0; i < this.sideDiffusers.length; i++) {
+            const s = this.sideDiffusers[i];
+            if (!s || !s.el) continue;
+            s.el.style.backgroundColor = monoBri > 0 ? `rgb(${monoR}, ${monoG}, ${monoB})` : 'transparent';
+            s.el.style.boxShadow = monoBri > 0 ? `0 0 10px rgba(${monoR}, ${monoG}, ${monoB}, ${glowAlpha})` : 'none';
+          }
+          this.animFrameId = requestAnimationFrame(this._tickBound);
+          return;
+        }
+
+        // 3. TIER 3: RGB MATRIX ENGINE
         const speed = Math.max(10, Number(this.state.rgb.speed) || 128);
-        const tByte = Math.round((now * 0.06 * (speed / 128))) & 0xFF;
+        // Exact 1:1 mathematical parity with QMK scale16by8(g_rgb_timer, rgb_matrix_config.speed / 2)
+        const tByte = Math.round(now * (speed / 512)) & 0xFF;
         
         const effect = Number.isFinite(this.state.rgb.effect) ? this.state.rgb.effect : 13;
         const brightness = Math.max(0, Math.min(255, Number(this.state.rgb.brightness) || 255)) / 255;
@@ -974,8 +1338,13 @@
             continue;
           }
 
+          // --- ROTARY KNOB ENCODER (Mechanical wheel without RGB matrix LED) ---
+          if (k.isKnob) {
+            continue;
+          }
+
           // Base Background Color
-          let curRgb = this._hsvToRgb(h, s, v);
+          let curRgb = res.rgb ? res.rgb : this._hsvToRgb(h, s, v);
 
           // --- DUAL-LAYER LIGHTING: REACTIVE OVERLAY (1:1 QMK luxqmk.c) ---
           if (isReactiveActive) {
@@ -1183,7 +1552,7 @@
           if (!sd) continue;
           const res = this._evalQmkEffect(effect, sd, tByte, baseH, baseS, baseV, rev, now, speed);
           let v = res.v * (isLayerActive ? layerDim : 1.0);
-          const rgb = this._hsvToRgb(res.h, res.s, v);
+          const rgb = res.rgb ? res.rgb : this._hsvToRgb(res.h, res.s, v);
 
           const sdTargets = (sd.els || [sd.el]).filter(el => !el.closest || !el.closest("#studioLightingKeyboardCanvas"));
           for (let t = 0; t < sdTargets.length; t++) {
@@ -1214,20 +1583,20 @@
 
       if (isLayerActive) {
         const dimVal = Math.round((this.state.custom.layerDimLevel / 255) * 100);
-        badge.innerHTML = window.i18n ? window.i18n.t("badgeLayerActive", { layer: activeLyr, dim: dimVal }) : `🎨 Layer ${activeLyr} Active • Dimming: ${dimVal}%`;
+        badge.innerHTML = window.i18n ? window.i18n.t("badgeLayerActive", { layer: activeLyr, dim: dimVal }) : `Layer ${activeLyr} Active • Dimming: ${dimVal}%`;
       } else if (this.activeTab === "reactive") {
         const rEffNames = ["Disabled", "Fade", "Splash Ripple", "Rainbow Splash", "Cross +", "Nexus X", "Wide Wave", "Typing Heatmap"];
         const curRMode = this.state.custom.reactiveMode || 0;
         const modeLabel = rEffNames[curRMode] || 'Active';
         badge.innerHTML = this.state.custom.reactiveEnable
-          ? (window.i18n ? window.i18n.t("badgeReactiveActive", { mode: modeLabel }) : `⚡ Reactive Layer: Enabled (${modeLabel})`)
-          : (window.i18n ? window.i18n.t("badgeReactiveDisabled") : `⚡ Reactive Layer: Disabled`);
+          ? (window.i18n ? window.i18n.t("badgeReactiveActive", { mode: modeLabel }) : `Reactive Layer: Enabled (${modeLabel})`)
+          : (window.i18n ? window.i18n.t("badgeReactiveDisabled") : `Reactive Layer: Disabled`);
       } else if (this.activeTab === "logo") {
-        badge.innerHTML = window.i18n ? window.i18n.t("badgeLogoPreview") : `💎 Logo & Knob Lock Indicator Preview`;
+        badge.innerHTML = window.i18n ? window.i18n.t("badgeLogoPreview") : `Logo & Knob Lock Indicator Preview`;
       } else if (this.activeTab === "winlock") {
-        badge.innerHTML = window.i18n ? window.i18n.t("badgeWinLockPreview") : `🔒 Windows Key Lock Preview (Win Lock)`;
+        badge.innerHTML = window.i18n ? window.i18n.t("badgeWinLockPreview") : `Windows Key Lock Preview (Win Lock)`;
       } else {
-        badge.innerHTML = `${eff.isRainbow ? '🌈' : '💡'} ` + (window.i18n ? window.i18n.t("badgeEffectBrightness", { name: eff.name, pct }) : `${eff.name} • ${pct}% Brightness`);
+        badge.innerHTML = window.i18n ? window.i18n.t("badgeEffectBrightness", { name: eff.name, pct }) : `${eff.name} • ${pct}% Brightness`;
       }
     }
 
@@ -1253,6 +1622,16 @@
         r: Math.max(0, Math.min(255, Math.round((r + m) * 255))),
         g: Math.max(0, Math.min(255, Math.round((g + m) * 255))),
         b: Math.max(0, Math.min(255, Math.round((b + m) * 255)))
+      };
+    }
+
+    _hexToRgb(hex) {
+      let c = (hex || "#ffffff").replace('#', '');
+      if (c.length === 3) c = c.split('').map(x => x + x).join('');
+      return {
+        r: parseInt(c.substring(0, 2), 16) || 255,
+        g: parseInt(c.substring(2, 4), 16) || 255,
+        b: parseInt(c.substring(4, 6), 16) || 255
       };
     }
 
@@ -1315,6 +1694,16 @@
       this.clearStaleHits();
       const C = window.GMMK3_CONSTANTS;
       try {
+        // Monochrome Backlight values (if supported / Tier 2)
+        try {
+          const monoBriRes = await this.protocol.getBacklightValue?.(1);
+          if (monoBriRes && monoBriRes[0] !== 0xFF && Number.isFinite(monoBriRes[3])) {
+            if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
+            this.state.monochrome.brightness = monoBriRes[3];
+            this.state.monochrome.enabled = monoBriRes[3] > 0;
+          }
+        } catch (err) {}
+
         // 1. RGB Matrix values
         const bRes = await this.protocol.getRGBMatrixValue(C.RGB_MATRIX_VAL.BRIGHTNESS);
         if (bRes && bRes[0] !== 0xFF && Number.isFinite(bRes[3])) this.state.rgb.brightness = bRes[3];
@@ -1428,6 +1817,58 @@
           this.state.custom.reactiveBlend = rBlendRes[3];
         }
 
+        const densityRes = await this.protocol.getCustomValue(C.CHANNELS.CUSTOM, 36);
+        if (densityRes && densityRes[0] !== 0xFF && Number.isFinite(densityRes[3])) {
+          this.state.custom.effectDensity = densityRes[3];
+        }
+
+        // Hardware Multi-Stop Gradient Query
+        const gradPresetRes = await this.protocol.getCustomValue(C.CHANNELS.CUSTOM, 33);
+        if (gradPresetRes && gradPresetRes[0] !== 0xFF && Number.isFinite(gradPresetRes[3])) {
+          this.state.custom.activeGradient = gradPresetRes[3];
+          const selHwGrad = document.getElementById("hardwareGradientPresetSelect");
+          if (selHwGrad) selHwGrad.value = String(gradPresetRes[3]);
+          const hwGradEditorGroup = document.getElementById("hardwareGradientEditorGroup");
+          if (hwGradEditorGroup) {
+            hwGradEditorGroup.style.display = (gradPresetRes[3] === 8 || gradPresetRes[3] === 9) ? "block" : "none";
+          }
+        }
+
+        // Query both Custom Gradient Profiles (0 and 1) from EEPROM
+        for (let p = 0; p < 2; p++) {
+          try {
+            const countRes = await this.protocol.getCustomValue(C.CHANNELS.CUSTOM, 34, p);
+            if (countRes && countRes[0] !== 0xFF && Number.isFinite(countRes[4]) && countRes[4] >= 2 && countRes[4] <= 8) {
+              const count = countRes[4];
+              const loadedStops = [];
+              for (let s = 0; s < count; s++) {
+                const stopRes = await this.protocol.getCustomValue(C.CHANNELS.CUSTOM, 35, p, s);
+                if (stopRes && stopRes[0] !== 0xFF && Number.isFinite(stopRes[5])) {
+                  loadedStops.push({
+                    pos: stopRes[5],
+                    r: stopRes[6],
+                    g: stopRes[7],
+                    b: stopRes[8]
+                  });
+                }
+              }
+              if (loadedStops.length >= 2) {
+                this.state.custom.customProfiles[p] = loadedStops;
+              }
+            }
+          } catch (err) {
+            console.warn(`Could not load custom gradient profile ${p}:`, err);
+          }
+        }
+
+        if (this.hardwareGradientEditor) {
+          const activeProfIdx = (this.state.custom.activeGradient === 9) ? 1 : 0;
+          if (this.state.custom.customProfiles && this.state.custom.customProfiles[activeProfIdx]) {
+            this.hardwareGradientEditor.setStops(this.state.custom.customProfiles[activeProfIdx], false);
+          }
+        }
+        this._rebuildGradientLut();
+
         this.updateUI();
       } catch (e) {
         console.warn("Could not load full lighting config from device:", e);
@@ -1449,6 +1890,11 @@
       const lblSpd = document.getElementById("rgbSpdVal");
       if (lblSpd) lblSpd.textContent = this.state.rgb.speed;
 
+      const sliderDensity = document.getElementById("rgbDensitySlider");
+      if (sliderDensity) sliderDensity.value = this.state.custom.effectDensity ?? 128;
+      const lblDensity = document.getElementById("rgbDensityVal");
+      if (lblDensity) lblDensity.textContent = this.state.custom.effectDensity ?? 128;
+
       const colorRgb = document.getElementById("rgbColorPicker");
       if (colorRgb) colorRgb.value = this._hsToHex(this.state.rgb.hs[0], this.state.rgb.hs[1]);
 
@@ -1461,9 +1907,15 @@
       if (colorGroup && curEff) {
         const descSpan = colorGroup.querySelector("span");
         if (descSpan) {
-          descSpan.textContent = curEff.isRainbow
-            ? (window.i18n ? window.i18n.t("hintRainbowColor") : "Rainbow effect (uses full color spectrum)")
-            : (window.i18n ? window.i18n.t("hintSingleColor") : "Set color for single-color effects");
+          if (curEff.isRainbow) {
+            if (this.state.custom.activeGradient > 0) {
+              descSpan.textContent = window.i18n ? window.i18n.t("hintGradientColor") : "Gradient palette active — color adjusts palette phase shift (starting hue) and saturation";
+            } else {
+              descSpan.textContent = window.i18n ? window.i18n.t("hintRainbowColor") : "Rainbow effect — color sets initial hue phase offset and saturation";
+            }
+          } else {
+            descSpan.textContent = window.i18n ? window.i18n.t("hintSingleColor") : "Set color for single-color effects";
+          }
         }
       }
 
@@ -1568,6 +2020,32 @@
 
       const colAll = document.getElementById("colorAll");
       if (colAll) colAll.value = this._hsToHex(this.state.custom.lockColors.all[0], this.state.custom.lockColors.all[1]);
+
+      // 4. Monochrome Backlight UI
+      const chkMonoPower = document.getElementById("chkMonochromePower");
+      if (chkMonoPower) chkMonoPower.checked = this.state.monochrome?.enabled ?? true;
+
+      const sliderMonoBri = document.getElementById("monochromeBrightnessSlider");
+      if (sliderMonoBri) sliderMonoBri.value = this.state.monochrome?.brightness ?? 255;
+      const lblMonoBri = document.getElementById("monochromeBriVal");
+      if (lblMonoBri) {
+        const val = this.state.monochrome?.brightness ?? 255;
+        lblMonoBri.textContent = `${Math.round(val / 2.55)}% (${val})`;
+      }
+
+      const chkMonoBrtg = document.getElementById("chkMonochromeBreathing");
+      if (chkMonoBrtg) chkMonoBrtg.checked = this.state.monochrome?.breathing ?? false;
+
+      const tintPicker = document.getElementById("monochromeTintPicker");
+      if (tintPicker) tintPicker.value = this.state.monochrome?.tint ?? "#ffffff";
+
+      const badgeMono = document.getElementById("monochromeStatusBadge");
+      if (badgeMono) {
+        const isEn = this.state.monochrome?.enabled ?? true;
+        const bri = this.state.monochrome?.brightness ?? 255;
+        badgeMono.textContent = isEn ? `Active • ${Math.round(bri / 2.55)}%` : "Disabled";
+        badgeMono.className = isEn ? "badge-pill badge-success" : "badge-pill";
+      }
     }
 
     _populateEffectsDropdown() {
@@ -1590,13 +2068,50 @@
       }, delay));
     }
 
+    _sendCustomGradientStopsThrottled(prof, stops) {
+      this._pendingStopsProf = prof;
+      this._pendingStops = stops;
+      if (this._stopsThrottleTimer) clearTimeout(this._stopsThrottleTimer);
+      this._stopsThrottleTimer = setTimeout(() => {
+        this._flushCustomGradientStops();
+      }, 120);
+    }
+
+    async _flushCustomGradientStops() {
+      if (this._isSendingCustomStops) {
+        this._stopsResendNeeded = true;
+        return;
+      }
+      if (!this.protocol || !this.protocol.isConnected || !this._pendingStops) return;
+      this._isSendingCustomStops = true;
+      this._stopsResendNeeded = false;
+      const prof = this._pendingStopsProf;
+      const stops = this._pendingStops;
+      const C = window.GMMK3_CONSTANTS;
+      try {
+        await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 34, prof, stops.length);
+        for (let s = 0; s < stops.length && s < 8; s++) {
+          await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 35, prof, s, stops[s].pos, stops[s].r, stops[s].g, stops[s].b);
+        }
+      } catch (err) {
+        console.warn("Failed to stream custom gradient stops:", err);
+      } finally {
+        this._isSendingCustomStops = false;
+        if (this._stopsResendNeeded) {
+          this._stopsResendNeeded = false;
+          this._flushCustomGradientStops();
+        }
+      }
+    }
+
     setControlsEnabled(enabled) {
       const controlIds = [
-        "rgbBrightnessSlider", "rgbEffectSelect", "rgbSpeedSlider", "rgbColorPicker", "chkRgbReverse",
+        "rgbBrightnessSlider", "rgbEffectSelect", "rgbSpeedSlider", "rgbDensitySlider", "rgbColorPicker", "chkRgbReverse",
         "chkReactiveEnable", "reactiveModeSelect", "reactiveColorPicker", "reactiveSpeedSlider", "reactiveBlendSelect",
         "winLockModeSelect", "winLockColorPicker", "chkWinLockToggle",
         "chkLayerLighting", "layerDimSlider", "layer1ColorPicker", "layer2ColorPicker", "layer3ColorPicker",
-        "logoModeSelect", "colorCaps", "colorNum", "colorScroll", "colorCapsNum", "colorCapsScroll", "colorNumScroll", "colorAll"
+        "logoModeSelect", "colorCaps", "colorNum", "colorScroll", "colorCapsNum", "colorCapsScroll", "colorNumScroll", "colorAll",
+        "chkMonochromePower", "monochromeBrightnessSlider", "chkMonochromeBreathing", "monochromeTintPicker"
       ];
       controlIds.forEach(id => {
         const el = document.getElementById(id);
@@ -1606,6 +2121,56 @@
 
     _bindEvents() {
       const C = window.GMMK3_CONSTANTS;
+
+      // 0. Monochrome Backlight Events
+      document.getElementById("chkMonochromePower")?.addEventListener("change", async (e) => {
+        const isEnabled = e.target.checked;
+        if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
+        this.state.monochrome.enabled = isEnabled;
+        const badge = document.getElementById("monochromeStatusBadge");
+        if (badge) {
+          badge.textContent = isEnabled ? `Active • ${Math.round(this.state.monochrome.brightness / 2.55)}%` : "Disabled";
+          badge.className = isEnabled ? "badge-pill badge-success" : "badge-pill";
+        }
+        if (this.protocol && this.protocol.device) {
+          try {
+            await this.protocol.setBacklightValue?.(1, isEnabled ? this.state.monochrome.brightness : 0);
+          } catch (err) {}
+        }
+      });
+
+      document.getElementById("monochromeBrightnessSlider")?.addEventListener("input", (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
+        this.state.monochrome.brightness = val;
+        const lbl = document.getElementById("monochromeBriVal");
+        if (lbl) lbl.textContent = `${Math.round(val / 2.55)}% (${val})`;
+        const badge = document.getElementById("monochromeStatusBadge");
+        if (badge && this.state.monochrome.enabled) {
+          badge.textContent = `Active • ${Math.round(val / 2.55)}%`;
+        }
+        if (this.protocol && this.protocol.device) {
+          this._throttleHid("mono_bri", async () => {
+            await this.protocol.setBacklightValue?.(1, val);
+          }, 80);
+        }
+      });
+
+      document.getElementById("chkMonochromeBreathing")?.addEventListener("change", async (e) => {
+        const isBreathing = e.target.checked;
+        if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
+        this.state.monochrome.breathing = isBreathing;
+        if (this.protocol && this.protocol.device) {
+          try {
+            await this.protocol.setBacklightValue?.(2, isBreathing ? 1 : 0);
+          } catch (err) {}
+        }
+      });
+
+      document.getElementById("monochromeTintPicker")?.addEventListener("change", (e) => {
+        if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
+        this.state.monochrome.tint = e.target.value;
+      });
 
       // 1. Backlight Events
       document.getElementById("rgbEffectSelect")?.addEventListener("change", async (e) => {
@@ -1653,6 +2218,25 @@
         if (this.protocol && this.protocol.device) {
           await this.protocol.setRGBMatrixValue(C.RGB_MATRIX_VAL.EFFECT_SPEED, this.state.rgb.speed);
           await this.protocol.saveCustomConfig(C.CHANNELS.RGB_MATRIX);
+        }
+      });
+
+      document.getElementById("rgbDensitySlider")?.addEventListener("input", (e) => {
+        const val = parseInt(e.target.value, 10);
+        this.state.custom.effectDensity = val;
+        const lbl = document.getElementById("rgbDensityVal");
+        if (lbl) lbl.textContent = val;
+        if (this.protocol && this.protocol.device) {
+          this._throttleHid("rgb_density", async () => {
+            await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 36, val);
+          }, 80);
+        }
+      });
+
+      document.getElementById("rgbDensitySlider")?.addEventListener("change", async () => {
+        if (this.protocol && this.protocol.device) {
+          await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 36, this.state.custom.effectDensity ?? 128);
+          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
@@ -1827,6 +2411,80 @@
       this._bindLockColorPicker("colorCapsScroll", C.CUSTOM_VAL.LOGO_COLOR_CAPS_SCROLL, "capsScroll");
       this._bindLockColorPicker("colorNumScroll", C.CUSTOM_VAL.LOGO_COLOR_NUM_SCROLL, "numScroll");
       this._bindLockColorPicker("colorAll", C.CUSTOM_VAL.LOGO_COLOR_ALL, "all");
+
+      // 4. Hardware Multi-Stop Gradient Events
+      const selHwGrad = document.getElementById("hardwareGradientPresetSelect");
+      const hwGradEditorGroup = document.getElementById("hardwareGradientEditorGroup");
+      if (selHwGrad) {
+        selHwGrad.addEventListener("change", async (e) => {
+          const val = parseInt(e.target.value, 10);
+          this.state.custom.activeGradient = val;
+          this._rebuildGradientLut();
+          this.updateUI();
+          if (hwGradEditorGroup) {
+            hwGradEditorGroup.style.display = (val === 8 || val === 9) ? "block" : "none";
+          }
+          if (val === 8 || val === 9) {
+            const profIdx = (val === 9) ? 1 : 0;
+            if (this.hardwareGradientEditor && this.state.custom.customProfiles && this.state.custom.customProfiles[profIdx]) {
+              this.hardwareGradientEditor.setStops(this.state.custom.customProfiles[profIdx], false);
+            }
+          }
+          // The gradient palette applies globally to ALL animations without switching the active effect
+          if (this.protocol && this.protocol.isConnected) {
+            this._throttleHid("hw_gradient", async () => {
+              try {
+                await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 33, val);
+                await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
+              } catch (err) {
+                console.warn("Could not set hardware gradient preset:", err);
+              }
+            }, 50);
+          }
+        });
+      }
+
+      if (document.getElementById("hardwareGradientEditorContainer") && window.GradientEditor) {
+        const initialProfIdx = (this.state.custom.activeGradient === 9) ? 1 : 0;
+        this.hardwareGradientEditor = new window.GradientEditor("hardwareGradientEditorContainer", {
+          stops: (this.state.custom.customProfiles && this.state.custom.customProfiles[initialProfIdx]) || [
+            { pos: 0, r: 0, g: 255, b: 255 },
+            { pos: 85, r: 255, g: 0, b: 128 },
+            { pos: 170, r: 255, g: 255, b: 0 }
+          ],
+          onChange: (stops) => {
+            const prof = (this.state.custom.activeGradient === 9) ? 1 : 0;
+            this.state.custom.customProfiles[prof] = stops;
+            this._rebuildGradientLut();
+            if (this.protocol && this.protocol.isConnected && (this.state.custom.activeGradient === 8 || this.state.custom.activeGradient === 9)) {
+              this._sendCustomGradientStopsThrottled(prof, stops);
+            }
+          }
+        });
+      }
+
+      const btnSaveHwGrad = document.getElementById("btnSaveHardwareGradient");
+      if (btnSaveHwGrad) {
+        btnSaveHwGrad.addEventListener("click", async () => {
+          if (!this.protocol || !this.protocol.isConnected) {
+            if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+            return;
+          }
+          const prof = (this.state.custom.activeGradient === 9) ? 1 : 0;
+          const stops = this.hardwareGradientEditor ? this.hardwareGradientEditor.getStops() : (this.state.custom.customProfiles[prof] || []);
+          this.state.custom.customProfiles[prof] = stops;
+          try {
+            await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 34, prof, stops.length);
+            for (let s = 0; s < stops.length && s < 8; s++) {
+              await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 35, prof, s, stops[s].pos, stops[s].r, stops[s].g, stops[s].b);
+            }
+            await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 37, prof, 1);
+            if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastGradientSavedToEeprom") : "Gradient profile saved to EEPROM", "success");
+          } catch (err) {
+            if (window.gUI) window.gUI.showToast(err.message, "error");
+          }
+        });
+      }
     }
 
     _bindColorPicker(id, valId, stateKey) {

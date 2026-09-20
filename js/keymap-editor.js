@@ -240,7 +240,7 @@
           keyEl.style.cursor = "default";
         } else if (key.isKnob) {
           keyEl.classList.add("keycap-knob");
-          keyEl.innerHTML = `<div class="knob-icon">🎛️</div>`;
+          keyEl.innerHTML = `<div class="knob-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="3" x2="12" y2="7"></line></svg></div>`;
         } else {
           keyEl.innerHTML = `
             <div class="key-secondary">${key.label}</div>
@@ -287,9 +287,9 @@
       const cwInfo = window.getKeycodeInfo(enc.CW);
       const pressInfo = window.getKeycodeInfo(enc.Press);
 
-      const ccwLabel = window.i18n ? window.i18n.t("rotCCW") : "↺ Rotate Left (CCW)";
-      const pressLabel = window.i18n ? window.i18n.t("knobPress") : "🔘 Knob Press (Click)";
-      const cwLabel = window.i18n ? window.i18n.t("rotCW") : "↻ Rotate Right (CW)";
+      const ccwLabel = window.i18n ? window.i18n.t("rotCCW") : "Rotate Left (CCW)";
+      const pressLabel = window.i18n ? window.i18n.t("knobPress") : "Knob Press (Click)";
+      const cwLabel = window.i18n ? window.i18n.t("rotCW") : "Rotate Right (CW)";
 
       panel.innerHTML = `
         <div class="encoder-slots-grid">
@@ -326,7 +326,18 @@
       const pickers = document.querySelectorAll("#keycodePickerPalette, #encoderKeycodePickerPalette");
       if (!pickers || pickers.length === 0) return;
 
-      const filtered = window.KEYCODES_DB.filter(k => k.category === this.selectedCategory);
+      const lightingType = window.deviceManager ? window.deviceManager.getLightingType() : 'rgb_matrix';
+      let filtered = window.KEYCODES_DB.filter(k => k.category === this.selectedCategory);
+
+      if (this.selectedCategory === 'lighting') {
+        if (lightingType === 'monochrome') {
+          filtered = filtered.filter(k => !k.lightingType || k.lightingType === 'monochrome');
+        } else if (lightingType === 'rgb_matrix') {
+          filtered = filtered.filter(k => !k.lightingType || k.lightingType === 'rgb_matrix' || k.lightingType === 'monochrome');
+        } else if (lightingType === 'none') {
+          filtered = [];
+        }
+      }
 
       pickers.forEach(picker => {
         picker.innerHTML = "";

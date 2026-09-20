@@ -78,7 +78,7 @@
         if (key.isLogo) {
           keyEl.innerHTML = "";
         } else if (key.isKnob) {
-          keyEl.innerHTML = `<span class="t-label">🎛️</span>`;
+          keyEl.innerHTML = `<span class="t-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="3" x2="12" y2="7"></line></svg></span>`;
         } else {
           keyEl.innerHTML = `<span class="t-label">${key.label}</span>`;
         }

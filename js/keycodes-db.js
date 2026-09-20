@@ -2215,95 +2215,298 @@
     "title": "Enter Custom Keycode / Hex / Macro Formula"
   },
   {
-    "code": 30720,
+    "code": 0x7800,
+    "label": "BL On",
+    "name": "BL_ON",
+    "category": "lighting",
+    "lightingType": "monochrome",
+    "title": "Turn Backlight On (BL_ON / 0x7800)"
+  },
+  {
+    "code": 0x7801,
+    "label": "BL Off",
+    "name": "BL_OFF",
+    "category": "lighting",
+    "lightingType": "monochrome",
+    "title": "Turn Backlight Off (BL_OFF / 0x7801)"
+  },
+  {
+    "code": 0x7802,
+    "label": "BL Toggle",
+    "name": "BL_TOGG",
+    "category": "lighting",
+    "lightingType": "monochrome",
+    "title": "Toggle Backlight On / Off (BL_TOGG / 0x7802)"
+  },
+  {
+    "code": 0x7803,
+    "label": "BL Down",
+    "name": "BL_DEC",
+    "category": "lighting",
+    "lightingType": "monochrome",
+    "title": "Decrease Backlight Brightness (BL_DEC / 0x7803)"
+  },
+  {
+    "code": 0x7804,
+    "label": "BL Up",
+    "name": "BL_INC",
+    "category": "lighting",
+    "lightingType": "monochrome",
+    "title": "Increase Backlight Brightness (BL_INC / 0x7804)"
+  },
+  {
+    "code": 0x7805,
+    "label": "BL Step",
+    "name": "BL_STEP",
+    "category": "lighting",
+    "lightingType": "monochrome",
+    "title": "Cycle Backlight Brightness (BL_STEP / 0x7805)"
+  },
+  {
+    "code": 0x7806,
+    "label": "BL Breathe",
+    "name": "BL_BRTG",
+    "category": "lighting",
+    "lightingType": "monochrome",
+    "title": "Toggle Backlight Breathing (BL_BRTG / 0x7806)"
+  },
+  {
+    "code": 0x7820,
     "label": "RGB Toggle",
     "name": "RGB_TOG",
     "category": "lighting",
-    "title": "Turn RGB On / Off"
+    "lightingType": "rgb_matrix",
+    "title": "Turn RGB On / Off (RGB_TOG / 0x7820)"
   },
   {
-    "code": 30721,
+    "code": 0x7821,
     "label": "RGB Mode +",
     "name": "RGB_MOD",
     "category": "lighting",
-    "title": "Next RGB Matrix Effect"
+    "lightingType": "rgb_matrix",
+    "title": "Next RGB Matrix Effect (RGB_MOD / 0x7821)"
   },
   {
-    "code": 30722,
+    "code": 0x7822,
     "label": "RGB Mode -",
     "name": "RGB_RMOD",
     "category": "lighting",
-    "title": "Previous RGB Matrix Effect"
+    "lightingType": "rgb_matrix",
+    "title": "Previous RGB Matrix Effect (RGB_RMOD / 0x7822)"
   },
   {
-    "code": 30723,
+    "code": 0x7823,
     "label": "Hue +",
     "name": "RGB_HUI",
     "category": "lighting",
-    "title": "Increase RGB Hue"
+    "lightingType": "rgb_matrix",
+    "title": "Increase RGB Hue (RGB_HUI / 0x7823)"
   },
   {
-    "code": 30724,
+    "code": 0x7824,
     "label": "Hue -",
     "name": "RGB_HUD",
     "category": "lighting",
-    "title": "Decrease RGB Hue"
+    "lightingType": "rgb_matrix",
+    "title": "Decrease RGB Hue (RGB_HUD / 0x7824)"
   },
   {
-    "code": 30725,
+    "code": 0x7825,
     "label": "Sat +",
     "name": "RGB_SAI",
     "category": "lighting",
-    "title": "Increase RGB Saturation"
+    "lightingType": "rgb_matrix",
+    "title": "Increase RGB Saturation (RGB_SAI / 0x7825)"
   },
   {
-    "code": 30726,
+    "code": 0x7826,
     "label": "Sat -",
     "name": "RGB_SAD",
     "category": "lighting",
-    "title": "Decrease RGB Saturation"
+    "lightingType": "rgb_matrix",
+    "title": "Decrease RGB Saturation (RGB_SAD / 0x7826)"
   },
   {
-    "code": 30727,
+    "code": 0x7827,
     "label": "Bright +",
     "name": "RGB_VAI",
     "category": "lighting",
-    "title": "Increase RGB Brightness"
+    "lightingType": "rgb_matrix",
+    "title": "Increase RGB Brightness (RGB_VAI / 0x7827)"
   },
   {
-    "code": 30728,
+    "code": 0x7828,
     "label": "Bright -",
     "name": "RGB_VAD",
     "category": "lighting",
-    "title": "Decrease RGB Brightness"
+    "lightingType": "rgb_matrix",
+    "title": "Decrease RGB Brightness (RGB_VAD / 0x7828)"
   },
   {
-    "code": 30729,
+    "code": 0x7829,
     "label": "Speed +",
     "name": "RGB_SPI",
     "category": "lighting",
-    "title": "Increase Effect Speed"
+    "lightingType": "rgb_matrix",
+    "title": "Increase Effect Speed (RGB_SPI / 0x7829)"
   },
   {
-    "code": 30730,
+    "code": 0x782A,
     "label": "Speed -",
     "name": "RGB_SPD",
     "category": "lighting",
-    "title": "Decrease Effect Speed"
+    "lightingType": "rgb_matrix",
+    "title": "Decrease Effect Speed (RGB_SPD / 0x782A)"
   },
   {
-    "code": 23984,
-    "label": "ORGB Mode",
-    "name": "ORGB",
-    "category": "custom",
-    "title": "Toggle OpenRGB / VIA Mode (QK_KB_0)"
+    "code": 0x782B,
+    "label": "Solid Color",
+    "name": "RGB_M_P",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Solid Color Mode (RGB_M_P / 0x782B)"
   },
   {
-    "code": 23985,
+    "code": 0x782C,
+    "label": "Breathe",
+    "name": "RGB_M_B",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Breathe Mode (RGB_M_B / 0x782C)"
+  },
+  {
+    "code": 0x782D,
+    "label": "Rainbow",
+    "name": "RGB_M_R",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Rainbow Mode (RGB_M_R / 0x782D)"
+  },
+  {
+    "code": 0x782E,
+    "label": "Swirl",
+    "name": "RGB_M_SW",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Swirl Mode (RGB_M_SW / 0x782E)"
+  },
+  {
+    "code": 0x782F,
+    "label": "Snake",
+    "name": "RGB_M_SN",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Snake Mode (RGB_M_SN / 0x782F)"
+  },
+  {
+    "code": 0x7830,
+    "label": "Knight",
+    "name": "RGB_M_K",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Knight Mode (RGB_M_K / 0x7830)"
+  },
+  {
+    "code": 0x7831,
+    "label": "Xmas",
+    "name": "RGB_M_X",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Christmas Mode (RGB_M_X / 0x7831)"
+  },
+  {
+    "code": 0x7832,
+    "label": "Gradient",
+    "name": "RGB_M_G",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Gradient Mode (RGB_M_G / 0x7832)"
+  },
+  {
+    "code": 0x7833,
+    "label": "RGB Test",
+    "name": "RGB_M_T",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "RGB Test Mode (RGB_M_T / 0x7833)"
+  },
+  {
+    "code": 0x7834,
+    "label": "Twinkle",
+    "name": "RGB_M_TW",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Twinkle Mode (RGB_M_TW / 0x7834)"
+  },
+  {
+    "code": 0x7E00,
     "label": "RGB Reverse",
     "name": "RGB_REV",
     "category": "custom",
-    "title": "Toggle Reverse RGB Direction (QK_KB_1)"
+    "title": "Toggle Reverse RGB Animation Direction (QK_KB_0 / 0x7E00)"
+  },
+  {
+    "code": 0x7E01,
+    "label": "Density +",
+    "name": "RGB_DEN_INC",
+    "category": "custom",
+    "title": "Increase Effect Spatial Density (QK_KB_1 / 0x7E01)"
+  },
+  {
+    "code": 0x7E02,
+    "label": "Density -",
+    "name": "RGB_DEN_DEC",
+    "category": "custom",
+    "title": "Decrease Effect Spatial Density (QK_KB_2 / 0x7E02)"
+  },
+  {
+    "code": 0x7E03,
+    "label": "Density Step",
+    "name": "RGB_DEN_STEP",
+    "category": "custom",
+    "title": "Cycle Density Step 0.5x-2.0x (QK_KB_3 / 0x7E03)"
+  },
+  {
+    "code": 0x7E04,
+    "label": "Density Reset",
+    "name": "RGB_DEN_RST",
+    "category": "custom",
+    "title": "Reset Density to Baseline 1.0x (QK_KB_4 / 0x7E04)"
+  },
+  {
+    "code": 0x7E05,
+    "label": "Gradient Step",
+    "name": "RGB_GRAD_STEP",
+    "category": "custom",
+    "title": "Cycle Active Gradient Preset (QK_KB_5 / 0x7E05)"
+  },
+  {
+    "code": 0x7E06,
+    "label": "Reactive Step",
+    "name": "RGB_REACT_STEP",
+    "category": "custom",
+    "title": "Cycle Reactive Overlay Mode / Off (QK_KB_6 / 0x7E06)"
+  },
+  {
+    "code": 0x7E07,
+    "label": "React Speed +",
+    "name": "RGB_RSPD_INC",
+    "category": "custom",
+    "title": "Increase Reactive Speed / Shorter Fade (QK_KB_7 / 0x7E07)"
+  },
+  {
+    "code": 0x7E08,
+    "label": "React Speed -",
+    "name": "RGB_RSPD_DEC",
+    "category": "custom",
+    "title": "Decrease Reactive Speed / Longer Fade (QK_KB_8 / 0x7E08)"
+  },
+  {
+    "code": 0x7E09,
+    "label": "React Spd Step",
+    "name": "RGB_RSPD_STEP",
+    "category": "custom",
+    "title": "Cycle Reactive Speed Step (QK_KB_9 / 0x7E09)"
   },
   { "code": 30464, "label": "M0", "name": "M0", "category": "macro", "title": "Execute Macro 0 (QK_MACRO_0)" },
   { "code": 30465, "label": "M1", "name": "M1", "category": "macro", "title": "Execute Macro 1 (QK_MACRO_1)" },
@@ -2335,6 +2538,22 @@
     // Check known dictionary
     if (CODE_MAP.has(code)) {
       return CODE_MAP.get(code);
+    }
+
+    // LuxQMK / VIA User Keycodes (QK_USER_0..31: 0x7E40..0x7E5F) -> Alias to QK_KB_0..31
+    if (code >= 0x7E40 && code <= 0x7E5F) {
+      const aliasCode = 0x7E00 + (code - 0x7E40);
+      if (CODE_MAP.has(aliasCode)) {
+        return CODE_MAP.get(aliasCode);
+      }
+      const userIdx = code - 0x7E40;
+      return { code, label: `USER(${userIdx})`, name: `USER_${userIdx}`, category: "custom" };
+    }
+
+    // Generic Custom Keycodes (QK_KB_0..31: 0x7E00..0x7E1F)
+    if (code >= 0x7E00 && code <= 0x7E1F) {
+      const customIdx = code - 0x7E00;
+      return { code, label: `CUSTOM(${customIdx})`, name: `CUSTOM_${customIdx}`, category: "custom" };
     }
 
     // Dynamic Layer Tap: LT(layer, kc) -> 0x4000 .. 0x4FFF (bits: 0100 llll kkkkkkkk)

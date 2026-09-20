@@ -9,49 +9,50 @@
  */
 
 (function () {
-  // Curated Color Palettes (RGB Stop Tables)
+  // Curated Color Palettes (RGB Stop Tables with Equal Angular Distribution for 360° Circular Looping)
   const PALETTES = {
     rainbow: null, // Dynamic HSV Rainbow
     cyberpunk: [
-      { pos: 0.0, rgb: [0, 240, 255] },    // Electric Cyan #00F0FF
-      { pos: 0.5, rgb: [255, 0, 85] },     // Neon Pink #FF0055
-      { pos: 1.0, rgb: [255, 208, 0] }     // Cyber Amber #FFD000
+      { pos: 0.0, rgb: [0, 240, 255] },      // Electric Cyan #00F0FF (0%)
+      { pos: 0.333, rgb: [255, 0, 85] },     // Neon Pink #FF0055 (33.3%)
+      { pos: 0.667, rgb: [255, 208, 0] }     // Cyber Amber #FFD000 (66.7%)
     ],
     vaporwave: [
-      { pos: 0.0, rgb: [155, 81, 224] },   // Pastel Violet #9B51E0
-      { pos: 0.5, rgb: [255, 117, 151] },  // Sunset Pink #FF7597
-      { pos: 1.0, rgb: [0, 229, 255] }     // Pastel Cyan #00E5FF
+      { pos: 0.0, rgb: [155, 81, 224] },     // Pastel Violet #9B51E0 (0%)
+      { pos: 0.333, rgb: [255, 117, 151] },  // Sunset Pink #FF7597 (33.3%)
+      { pos: 0.667, rgb: [0, 229, 255] }     // Pastel Cyan #00E5FF (66.7%)
     ],
     fire_ember: [
-      { pos: 0.0, rgb: [255, 30, 0] },     // Magma Crimson #FF1E00
-      { pos: 0.5, rgb: [255, 119, 0] },    // Ember Orange #FF7700
-      { pos: 1.0, rgb: [255, 221, 0] }     // Gold Flame #FFDD00
+      { pos: 0.0, rgb: [255, 30, 0] },       // Magma Crimson #FF1E00 (0%)
+      { pos: 0.333, rgb: [255, 119, 0] },    // Ember Orange #FF7700 (33.3%)
+      { pos: 0.667, rgb: [255, 221, 0] }     // Gold Flame #FFDD00 (66.7%)
     ],
     ocean_abyss: [
-      { pos: 0.0, rgb: [0, 34, 68] },      // Deep Navy #002244
-      { pos: 0.35, rgb: [0, 102, 255] },   // Azure #0066FF
-      { pos: 0.7, rgb: [0, 255, 255] },    // Electric Cyan #00FFFF
-      { pos: 1.0, rgb: [0, 255, 176] }     // Seafoam Aqua #00FFB0
+      { pos: 0.0, rgb: [0, 34, 68] },        // Deep Navy #002244 (0%)
+      { pos: 0.25, rgb: [0, 102, 255] },     // Azure #0066FF (25%)
+      { pos: 0.5, rgb: [0, 255, 255] },      // Electric Cyan #00FFFF (50%)
+      { pos: 0.75, rgb: [0, 255, 176] }      // Seafoam Aqua #00FFB0 (75%)
     ],
     matrix_code: [
-      { pos: 0.0, rgb: [0, 255, 102] },    // Phosphor Green #00FF66
-      { pos: 0.5, rgb: [57, 255, 20] },    // Cyber Lime #39FF14
-      { pos: 1.0, rgb: [0, 143, 17] }      // Deep Emerald #008F11
+      { pos: 0.0, rgb: [0, 255, 102] },      // Phosphor Green #00FF66 (0%)
+      { pos: 0.333, rgb: [57, 255, 20] },    // Cyber Lime #39FF14 (33.3%)
+      { pos: 0.667, rgb: [0, 143, 17] }      // Deep Emerald #008F11 (66.7%)
     ],
     synthwave: [
-      { pos: 0.0, rgb: [138, 43, 226] },   // Blue Violet #8A2BE2
-      { pos: 0.5, rgb: [255, 20, 147] },   // Hot Pink #FF1493
-      { pos: 1.0, rgb: [255, 204, 0] }     // Sunburst Gold #FFCC00
+      { pos: 0.0, rgb: [138, 43, 226] },     // Blue Violet #8A2BE2 (0%)
+      { pos: 0.25, rgb: [255, 20, 147] },    // Hot Pink #FF1493 (25%)
+      { pos: 0.5, rgb: [255, 100, 0] },      // Neon Orange (50%)
+      { pos: 0.75, rgb: [255, 204, 0] }      // Sunburst Gold #FFCC00 (75%)
     ],
     ice_glacier: [
-      { pos: 0.0, rgb: [0, 51, 102] },     // Arctic Deep Blue #003366
-      { pos: 0.5, rgb: [112, 214, 255] },  // Glacier Ice Blue #70D6FF
-      { pos: 1.0, rgb: [224, 247, 250] }   // Polar White Frost #E0F7FA
+      { pos: 0.0, rgb: [0, 51, 102] },       // Arctic Deep Blue #003366 (0%)
+      { pos: 0.333, rgb: [112, 214, 255] },  // Glacier Ice Blue #70D6FF (33.3%)
+      { pos: 0.667, rgb: [224, 247, 250] }   // Polar White Frost #E0F7FA (66.7%)
     ],
     toxic_radiation: [
-      { pos: 0.0, rgb: [166, 255, 0] },    // Acid Lime #A6FF00
-      { pos: 0.5, rgb: [243, 255, 0] },    // Toxic Yellow #F3FF00
-      { pos: 1.0, rgb: [0, 229, 58] }      // Radioactive Green #00E53A
+      { pos: 0.0, rgb: [166, 255, 0] },      // Acid Lime #A6FF00 (0%)
+      { pos: 0.333, rgb: [243, 255, 0] },    // Toxic Yellow #F3FF00 (33.3%)
+      { pos: 0.667, rgb: [0, 229, 58] }      // Radioactive Green #00E53A (66.7%)
     ],
     singleColor: null
   };
@@ -83,17 +84,97 @@
     ];
   }
 
-  function samplePaletteRgb(paletteName, factor, customRgb = [0, 255, 255]) {
+  let _lastCustomStopsRef = null;
+  let _lastCustomStopsLut = null;
+
+  function _buildCustomStopsLut(activeStops) {
+    const lut = new Array(256);
+    const sorted = [...activeStops].sort((a, b) => a.pos - b.pos);
+    const s0 = sorted[0];
+    const sLast = sorted[sorted.length - 1];
+    const wrapSpan = (255 - sLast.pos) + s0.pos;
+
+    for (let f255 = 0; f255 < 256; f255++) {
+      let r = s0.r, g = s0.g, b = s0.b;
+      if (f255 <= s0.pos) {
+        if (wrapSpan === 0) {
+          r = s0.r; g = s0.g; b = s0.b;
+        } else {
+          const progress = (f255 + (255 - sLast.pos)) / wrapSpan;
+          r = Math.round(sLast.r + (s0.r - sLast.r) * progress);
+          g = Math.round(sLast.g + (s0.g - sLast.g) * progress);
+          b = Math.round(sLast.b + (s0.b - sLast.b) * progress);
+        }
+      } else if (f255 >= sLast.pos) {
+        if (wrapSpan === 0) {
+          r = sLast.r; g = sLast.g; b = sLast.b;
+        } else {
+          const progress = (f255 - sLast.pos) / wrapSpan;
+          r = Math.round(sLast.r + (s0.r - sLast.r) * progress);
+          g = Math.round(sLast.g + (s0.g - sLast.g) * progress);
+          b = Math.round(sLast.b + (s0.b - sLast.b) * progress);
+        }
+      } else {
+        for (let i = 0; i < sorted.length - 1; i++) {
+          const cur = sorted[i];
+          const next = sorted[i + 1];
+          if (f255 >= cur.pos && f255 <= next.pos) {
+            const span = next.pos - cur.pos;
+            const t = span === 0 ? 0 : (f255 - cur.pos) / span;
+            r = Math.round(cur.r + (next.r - cur.r) * t);
+            g = Math.round(cur.g + (next.g - cur.g) * t);
+            b = Math.round(cur.b + (next.b - cur.b) * t);
+            break;
+          }
+        }
+      }
+      lut[f255] = [r, g, b];
+    }
+    return lut;
+  }
+
+  function samplePaletteRgb(paletteName, factor, customRgb = [0, 255, 255], customGradientStops = null) {
     if (paletteName === "singleColor") {
       return customRgb;
     }
+    const activeStops = customGradientStops || window.gStudioLighting?.config?.softwareGradientStops || window.PRESET_GRADIENTS?.cyberpunk?.stops;
+    if (paletteName === "customGradient" && Array.isArray(activeStops) && activeStops.length >= 2) {
+      if (_lastCustomStopsRef !== activeStops || !_lastCustomStopsLut) {
+        _lastCustomStopsRef = activeStops;
+        _lastCustomStopsLut = _buildCustomStopsLut(activeStops);
+      }
+      const f255 = Math.round((((factor % 1) + 1) % 1) * 255) & 0xFF;
+      return _lastCustomStopsLut[f255] || [s0?.r || 0, s0?.g || 255, s0?.b || 255];
+    }
+
     const f = ((factor % 1) + 1) % 1; // Normalize to 0..1
     if (paletteName === "rainbow" || !PALETTES[paletteName]) {
       return hsvToRgb(Math.round(f * 255), 255, 255);
     }
     const stops = PALETTES[paletteName];
-    if (f <= stops[0].pos) return stops[0].rgb;
-    if (f >= stops[stops.length - 1].pos) return stops[stops.length - 1].rgb;
+    const s0 = stops[0];
+    const sLast = stops[stops.length - 1];
+
+    if (f <= s0.pos) {
+      const wrapSpan = (1.0 - sLast.pos) + s0.pos;
+      if (wrapSpan === 0) return s0.rgb;
+      const progress = (f + (1.0 - sLast.pos)) / wrapSpan;
+      return [
+        Math.round(sLast.rgb[0] + (s0.rgb[0] - sLast.rgb[0]) * progress),
+        Math.round(sLast.rgb[1] + (s0.rgb[1] - sLast.rgb[1]) * progress),
+        Math.round(sLast.rgb[2] + (s0.rgb[2] - sLast.rgb[2]) * progress)
+      ];
+    }
+    if (f >= sLast.pos) {
+      const wrapSpan = (1.0 - sLast.pos) + s0.pos;
+      if (wrapSpan === 0) return sLast.rgb;
+      const progress = (f - sLast.pos) / wrapSpan;
+      return [
+        Math.round(sLast.rgb[0] + (s0.rgb[0] - sLast.rgb[0]) * progress),
+        Math.round(sLast.rgb[1] + (s0.rgb[1] - sLast.rgb[1]) * progress),
+        Math.round(sLast.rgb[2] + (s0.rgb[2] - sLast.rgb[2]) * progress)
+      ];
+    }
 
     for (let i = 0; i < stops.length - 1; i++) {
       const s1 = stops[i];
@@ -1118,6 +1199,7 @@
       const intensity = this.config.effectIntensity || 1.0;
       const floor = (this.config.softwareFloor <= 0.01) ? 0 : (this.config.softwareFloor || 0.10);
       const customRgb = this._hexToRgbList(this.config.softwareCustomHex || "#00ffff");
+      const customGradientStops = this.config.softwareGradientStops || (window.PRESET_GRADIENTS?.cyberpunk?.stops);
 
       // Update particle physics & procedural generators
       if (preset === "particleStorm") {
@@ -1204,7 +1286,7 @@
 
         const { rgb, brightFactor } = this._sampleSoftwareFxPixel({
           normX, normY, qmkX, qmkY, dx, dy, dist, angle, angleNorm, dirCoord, isAlpha, i, isDiffuser: false,
-          now, preset, palette, direction, speed, intensity, floor, customRgb
+          now, preset, palette, direction, speed, intensity, floor, customRgb, customGradientStops
         });
 
         this._applyKeyRgb(k, rgb[0], rgb[1], rgb[2], brightFactor);
@@ -1229,7 +1311,7 @@
 
         const { rgb, brightFactor } = this._sampleSoftwareFxPixel({
           normX, normY, qmkX, qmkY, dx, dy, dist, angle, angleNorm, dirCoord, isAlpha: false, i: undefined, isDiffuser: true,
-          now, preset, palette, direction, speed, intensity, floor, customRgb
+          now, preset, palette, direction, speed, intensity, floor, customRgb, customGradientStops
         });
 
         this._applyDiffuserRgb(sd, rgb[0], rgb[1], rgb[2], brightFactor);
@@ -1238,7 +1320,7 @@
       // Render Logo Badge LED
       if (this.lighting.logoBadgeEl) {
         const logoBright = Math.max(floor * intensity, 0.9 * intensity);
-        const sampled = samplePaletteRgb(palette, now * 0.0008 * speed, customRgb);
+        const sampled = samplePaletteRgb(palette, now * 0.0008 * speed, customRgb, customGradientStops);
         const rgb = sampled ? sampled : this._hsvToRgbList(Math.round((now * 0.05 * speed) % 256), 255, 255);
         this._applyLogoRgb(this.lighting.logoBadgeEl, rgb[0], rgb[1], rgb[2], logoBright);
       }
@@ -1247,7 +1329,7 @@
     _sampleSoftwareFxPixel(params) {
       const {
         normX, normY, qmkX, qmkY, dx, dy, dist, angle, angleNorm, dirCoord, isAlpha, i, isDiffuser,
-        now, preset, palette, direction, speed, intensity, floor, customRgb
+        now, preset, palette, direction, speed, intensity, floor, customRgb, customGradientStops
       } = params;
 
       const dx_qmk = (typeof qmkX === "number") ? (qmkX - 112) : Math.round(dx * 112);
@@ -2035,6 +2117,7 @@
       }
 
       const selColorMode = document.getElementById("audioColorModeSelect");
+      const audioGradWrap = document.getElementById("audioGradientEditorGroup");
       if (selColorMode) {
         selColorMode.addEventListener("change", (e) => {
           this.config.audioColorMode = e.target.value;
@@ -2042,15 +2125,24 @@
           if (colorWrap) {
             colorWrap.style.display = e.target.value === "singleColor" ? "block" : "none";
           }
+          if (audioGradWrap) {
+            audioGradWrap.style.display = e.target.value === "customGradient" ? "block" : "none";
+          }
           this._saveConfig();
         });
       }
 
-      const selAudioDir = document.getElementById("audioDirectionSelect");
-      if (selAudioDir) {
-        selAudioDir.addEventListener("change", (e) => {
-          this.config.audioDirection = e.target.value;
-          this._saveConfig();
+      if (document.getElementById("audioGradientEditorContainer") && window.GradientEditor) {
+        this.audioGradientEditor = new window.GradientEditor("audioGradientEditorContainer", {
+          stops: this.config.audioGradientStops || [
+            { pos: 0, r: 0, g: 255, b: 255 },
+            { pos: 128, r: 255, g: 0, b: 128 },
+            { pos: 255, r: 255, g: 255, b: 0 }
+          ],
+          onChange: (stops) => {
+            this.config.audioGradientStops = stops;
+            this._saveConfig();
+          }
         });
       }
 
@@ -2062,6 +2154,14 @@
         };
         pickerAudioColor.addEventListener("input", onAudioColor);
         pickerAudioColor.addEventListener("change", onAudioColor);
+      }
+
+      const selAudioDir = document.getElementById("audioDirectionSelect");
+      if (selAudioDir) {
+        selAudioDir.addEventListener("change", (e) => {
+          this.config.audioDirection = e.target.value;
+          this._saveConfig();
+        });
       }
 
       const sliderAudioSens = document.getElementById("audioSensitivitySlider");
@@ -2128,6 +2228,7 @@
       }
 
       const selSoftPalette = document.getElementById("softwarePaletteSelect");
+      const softGradWrap = document.getElementById("softwareGradientEditorGroup");
       if (selSoftPalette) {
         selSoftPalette.addEventListener("change", (e) => {
           this.config.softwarePalette = e.target.value;
@@ -2135,7 +2236,24 @@
           if (colorWrap) {
             colorWrap.style.display = e.target.value === "singleColor" ? "block" : "none";
           }
+          if (softGradWrap) {
+            softGradWrap.style.display = e.target.value === "customGradient" ? "block" : "none";
+          }
           this._saveConfig();
+        });
+      }
+
+      if (document.getElementById("softwareGradientEditorContainer") && window.GradientEditor) {
+        this.softGradientEditor = new window.GradientEditor("softwareGradientEditorContainer", {
+          stops: this.config.softwareGradientStops || [
+            { pos: 0, r: 0, g: 255, b: 255 },
+            { pos: 128, r: 255, g: 0, b: 128 },
+            { pos: 255, r: 255, g: 255, b: 0 }
+          ],
+          onChange: (stops) => {
+            this.config.softwareGradientStops = stops;
+            this._saveConfig();
+          }
         });
       }
 

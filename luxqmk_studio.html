@@ -657,9 +657,24 @@ body {
 
 .lighting-knob-preview {
   border-radius: 50% !important;
-  background: radial-gradient(circle at 35% 35%, #2a3b5c, #0c1220) !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
-  box-shadow: 0 0 15px currentColor !important;
+  background: radial-gradient(circle at 35% 35%, #2a3342, #10151d) !important;
+  border: 2px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+  color: #94a3b8 !important;
+  cursor: pointer;
+}
+
+.lighting-knob-preview .l-legend {
+  text-shadow: none !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lighting-knob-preview:hover {
+  border-color: var(--accent-cyan, #00f0ff) !important;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
 }
 
 /* Glorious Logo LED Indicator Jewel on Chassis */
@@ -2989,6 +3004,212 @@ input:checked + .switch-slider:before {
   color: #f87171;
 }
 
+/* ==========================================================================
+   Multi-Stop Gradient Ramp Editor Component
+   ========================================================================== */
+.gradient-editor-widget {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-top: 0.75rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.gradient-track-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gradient-track-label-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.gradient-track-title {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.gradient-track-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.gradient-track-area {
+  position: relative;
+  height: 38px;
+  border-radius: var(--radius-md);
+  cursor: crosshair;
+  user-select: none;
+  touch-action: none;
+  margin: 14px 0 8px 0;
+}
+
+.gradient-track-bar {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: background 0.1s ease;
+}
+
+.gradient-pins-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.gradient-pin {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 34px;
+  cursor: grab;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  transition: transform 0.08s ease;
+}
+
+.gradient-pin:active,
+.gradient-pin.dragging {
+  cursor: grabbing;
+}
+
+.gradient-pin.active {
+  z-index: 10;
+}
+
+.pin-marker {
+  width: 18px;
+  height: 26px;
+  border-radius: 4px 4px 10px 10px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.8), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.gradient-pin:hover .pin-marker {
+  transform: scale(1.1);
+  border-color: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+}
+
+.gradient-pin.active .pin-marker {
+  transform: scale(1.2);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 14px var(--accent-cyan-glow), inset 0 0 4px rgba(0, 240, 255, 0.5);
+}
+
+.pin-tooltip {
+  position: absolute;
+  top: -24px;
+  background: rgba(10, 14, 26, 0.9);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.gradient-pin:hover .pin-tooltip,
+.gradient-pin.dragging .pin-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.gradient-stop-controls-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.gradient-stop-controls-bar input:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.gradient-stop-control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.gradient-stop-control-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.gradient-presets-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.presets-bar-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.gradient-preset-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.preset-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preset-pill:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--accent-cyan);
+  transform: translateY(-1px);
+  color: #ffffff;
+}
+
+.preset-pill:active {
+  transform: translateY(0);
+}
+
+
 
 
 
@@ -3614,6 +3835,75 @@ input:checked + .switch-slider:before {
           </button>
         </div>
 
+        <!-- Dedicated Monochromatic Backlight Card (for Tier 2 Monochromatic Keyboards) -->
+        <div class="lighting-subview" id="card-monochrome-backlight" style="display: none;">
+          <div class="palette-card" style="max-width: 680px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <h3 style="font-size: 1.05rem; margin: 0;" data-i18n="monochromeBacklightTitle">Monochromatic Backlight</h3>
+              </div>
+              <span class="badge-pill" id="monochromeStatusBadge" style="font-size: 0.75rem;">Active • 100%</span>
+            </div>
+
+            <!-- Backlight Power Switch -->
+            <div class="switch-wrap" style="margin-bottom: 1.25rem;">
+              <div>
+                <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblBacklightPower">Backlight Power</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="hintBacklightPower">Toggle keyboard backlight illumination (BL_TOGG)</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="chkMonochromePower" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Backlight Brightness Slider -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                <label data-i18n="lblBrightness">Backlight Brightness</label>
+                <span id="monochromeBriVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">100% (255)</span>
+              </div>
+              <div class="range-slider-wrap">
+                <input type="range" id="monochromeBrightnessSlider" class="range-slider" min="0" max="255" value="255">
+              </div>
+            </div>
+
+            <!-- Backlight Breathing Mode -->
+            <div class="switch-wrap" style="margin-bottom: 1.25rem;">
+              <div>
+                <span style="display: block; font-weight: 600; font-size: 0.9rem;" data-i18n="lblBacklightBreathing">Breathing Animation</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="hintBacklightBreathing">Enable soft rhythmic pulsing backlight (BL_BRTG)</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="chkMonochromeBreathing">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Backlight LED Color Tint for Virtual Preview -->
+            <div class="form-group" style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div>
+                  <label data-i18n="lblMonochromeTint">Hardware LED Color (Preview Tint)</label>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); display: block;" data-i18n="hintMonochromeTint">Match virtual keycap glow to your physical LED color</span>
+                </div>
+                <input type="color" id="monochromeTintPicker" class="color-picker-input" value="#ffffff">
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Sub-Tab 1: Backlight (RGB Matrix Main) -->
         <div class="lighting-subview active" id="lighting-tab-backlight">
           <div class="palette-card" style="max-width: 680px; margin: 0 auto;">
@@ -3646,12 +3936,55 @@ input:checked + .switch-slider:before {
               </div>
             </div>
 
+            <div class="form-group" id="rgbDensityGroup">
+              <div style="display: flex; justify-content: space-between;">
+                <div>
+                  <label data-i18n="lblRgbDensity">Effect Density</label>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 1px;" data-i18n="hintRgbDensity">Adjusts wave density and spatial frequency (128 = 1.0x)</span>
+                </div>
+                <span id="rgbDensityVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">128</span>
+              </div>
+              <div class="range-slider-wrap">
+                <input type="range" id="rgbDensitySlider" class="range-slider" min="32" max="255" value="128">
+              </div>
+            </div>
+
             <div class="form-group" id="rgbColorGroup">
               <label data-i18n="lblRgbColor">Effect Color</label>
               <div class="color-input-wrap">
                 <input type="color" id="rgbColorPicker" class="color-picker-input" value="#00ffff">
                 <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="hintSingleColor">Set color for
                   single-color effects</span>
+              </div>
+            </div>
+
+            <!-- Hardware Multi-Stop Gradient Selector & Editor -->
+            <div class="form-group" id="hardwareGradientGroup" style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <label data-i18n="lblHardwareGradientPreset">Hardware Gradient Palette</label>
+                <span class="badge-pill" style="font-size: 0.72rem; color: var(--accent-cyan);" data-i18n="lblStandaloneHardware">EEPROM Standalone</span>
+              </div>
+              <select id="hardwareGradientPresetSelect" class="form-control">
+                <option value="0" data-i18n="optPresetRainbow">Rainbow (Classic Spectrum)</option>
+                <option value="1" data-i18n="optPresetCyberpunk">Cyberpunk (Cyan / Pink / Yellow)</option>
+                <option value="2" data-i18n="optPresetSynthwave">Synthwave (Indigo / Hot Pink / Orange / Gold)</option>
+                <option value="3" data-i18n="optPresetSunset">Sunset Horizon (Purple / Crimson / Amber)</option>
+                <option value="4" data-i18n="optPresetToxic">Toxic Lime (Acid Lime / Yellow / Neon Green)</option>
+                <option value="5" data-i18n="optPresetOcean">Ocean Breeze (Navy / Azure / Aqua / Sky Blue)</option>
+                <option value="6" data-i18n="optPresetFireIce">Fire & Ice (Ice Blue / White / Flame / Crimson)</option>
+                <option value="7" data-i18n="optPresetPastel">Pastel Dream (Lavender / Mint / Peach / Pink)</option>
+                <option value="8" data-i18n="optPresetCustom1">Custom Gradient Profile 1 (Hardware EEPROM)</option>
+                <option value="9" data-i18n="optPresetCustom2">Custom Gradient Profile 2 (Hardware EEPROM)</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="hardwareGradientEditorGroup" style="display: none; margin-top: 0.75rem;">
+              <div id="hardwareGradientEditorContainer"></div>
+              <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+                <button type="button" class="btn btn-primary btn-sm" id="btnSaveHardwareGradient" style="display: inline-flex; align-items: center; gap: 6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                  <span data-i18n="btnSaveToEeprom">Save Profile to Keyboard EEPROM</span>
+                </button>
               </div>
             </div>
 
@@ -4038,6 +4371,7 @@ input:checked + .switch-slider:before {
                   <option value="ice_glacier" data-i18n="optPaletteIceGlacier">Ice Glacier & Frost (Arctic Blue / Ice / White)</option>
                   <option value="toxic_radiation" data-i18n="optPaletteToxic">Toxic Glow (Acid Lime / Radioactive Green)</option>
                   <option value="singleColor" data-i18n="optPaletteSingle">Custom Accent Color</option>
+                  <option value="customGradient" data-i18n="optPaletteCustomGradient">Custom Multi-Stop Gradient</option>
                 </select>
               </div>
 
@@ -4059,8 +4393,13 @@ input:checked + .switch-slider:before {
               <label data-i18n="lblAudioSingleColor">Audio Accent Color</label>
               <div class="color-input-wrap">
                 <input type="color" id="audioColorPicker" class="color-picker-input" value="#00ffff">
-                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblAudioSingleColorHint">Custom color for single-color pulses and spectrum bars</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblAudioSingleColorHint">Accent color for solid visualization modes</span>
               </div>
+            </div>
+
+            <!-- Custom Multi-Stop Gradient Editor for Audio -->
+            <div class="form-group" id="audioGradientEditorGroup" style="display: none; margin-bottom: 1.25rem;">
+              <div id="audioGradientEditorContainer"></div>
             </div>
 
             <!-- Audio Sliders Grid -->
@@ -4581,7 +4920,7 @@ input:checked + .switch-slider:before {
               </div>
               <div class="hardware-info-item">
                 <span class="hardware-info-label" data-i18n="lblEepromSize">Custom EEPROM Buffer:</span>
-                <span id="hw-eeprom-size" class="hardware-info-value" data-i18n="valEepromSize">36 Bytes Dedicated
+                <span id="hw-eeprom-size" class="hardware-info-value" data-i18n="valEepromSize">104 Bytes Dedicated
                   Storage</span>
               </div>
               <div class="hardware-info-item">
@@ -4918,7 +5257,7 @@ input:checked + .switch-slider:before {
               Runtime engine details and communications interface
             </p>
             <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.78rem;">
-              <span style="background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.25); color: var(--accent-cyan); padding: 0.25rem 0.6rem; border-radius: 4px;">LuxQMK Studio v1.1.0</span>
+              <span style="background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.25); color: var(--accent-cyan); padding: 0.25rem 0.6rem; border-radius: 4px;">LuxQMK Studio v1.2.0</span>
               <span style="background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(147, 51, 234, 0.25); color: #c084fc; padding: 0.25rem 0.6rem; border-radius: 4px;">WebHID v2.1</span>
               <span style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.25); color: #4ade80; padding: 0.25rem 0.6rem; border-radius: 4px;">60 FPS RGB Engine</span>
             </div>
@@ -4941,7 +5280,7 @@ input:checked + .switch-slider:before {
           </div>
           <div>
             <h3 class="modal-title" data-i18n="modalAboutTitle">About LuxQMK Studio</h3>
-            <span style="font-size: 0.75rem; color: var(--text-dim);">Version 1.1.0 (Build 2026.09)</span>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">Version 1.2.0 (Build 2026.09)</span>
           </div>
         </div>
         <button class="modal-close-btn" id="btnCloseAboutModal">&times;</button>
@@ -4961,25 +5300,6 @@ input:checked + .switch-slider:before {
             <strong style="font-size: 1.05rem; color: #ffffff;" data-i18n="lblAuthorName">Dorian Piwnik</strong>
             <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.2rem;" data-i18n="lblAuthorRole">Creator
               & Lead Developer of the LuxQMK Project</p>
-          </div>
-        </div>
-
-        <div class="modal-section">
-          <div class="modal-section-title">
-            <span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-              </svg>
-            </span>
-            <span data-i18n="lblLicenseTitle">License</span>
-          </div>
-          <div class="modal-section-content" style="font-size: 0.85rem;" data-i18n="lblLicenseDesc">
-            • <strong>LuxQMK Studio Application</strong>: GNU General Public License v3 (GPLv3)<br>
-            • <strong>LuxQMK Firmware</strong>: GNU General Public License v2 / v3 (GPL)
           </div>
         </div>
 
@@ -5022,14 +5342,15 @@ input:checked + .switch-slider:before {
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
               </svg>
             </span>
-            <span data-i18n="lblLegalTitle">Legal Notices & Disclaimer</span>
+            <span data-i18n="lblLegalTitle">Legal Notices & License</span>
           </div>
           <div class="modal-section-content" style="font-size: 0.78rem; color: var(--text-dim); line-height: 1.55;"
             data-i18n="lblLegalDesc">
             LuxQMK Studio is an independent companion configuration suite developed for keyboards running LuxQMK custom
             firmware (fork of QMK Firmware) communicating via standard WebHID / VIA protocol channels.<br><br>
-            QMK Firmware is open-source software licensed under GPLv2+. VIA is an open configuration protocol
-            standard.<br><br>
+            • <strong>LuxQMK Studio Application</strong>: GNU General Public License v3 (GPLv3)<br>
+            • <strong>LuxQMK Firmware</strong>: GNU General Public License v2 / v3 (GPL)<br>
+            • <strong>QMK Firmware</strong>: Open-source software licensed under GPLv2+.<br><br>
             All product names, logos, trademarks, and registered trademarks (including Glorious, GMMK 3, GMMK 2, WB32)
             are property of their respective owners and are used solely for identification and compatibility purposes.
           </div>
@@ -5055,6 +5376,7 @@ input:checked + .switch-slider:before {
   
   
   
+  <script src="js/gradient-editor.js"></script>
   
   
   
@@ -5198,7 +5520,7 @@ input:checked + .switch-slider:before {
     { id: "LCTL", label: "Ctrl", matrix: [0, 6], x: 0, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E0 },
     { id: "LWIN", label: "Win", matrix: [9, 0], x: 1.25, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E3 },
     { id: "LALT", label: "Alt", matrix: [9, 3], x: 2.5, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E2 },
-    { id: "SPC", label: "Space", matrix: [9, 4], x: 3.75, y: 5.25, w: 6.25, h: 1, group: "alpha", defaultKeycode: 0x002C },
+    { id: "SPC", label: "Space", matrix: [9, 4], x: 3.75, y: 5.25, w: 6.25, h: 1, group: "alpha", defaultKeycode: 0x002C, qmkPoint: [66, 64] },
     { id: "RALT", label: "Alt", matrix: [9, 5], x: 10, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E6 },
     { id: "FN", label: "Fn", matrix: [9, 2], x: 11.25, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x5201 },
     { id: "APP", label: "Menu", matrix: [8, 4], x: 12.5, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x0065 },
@@ -5301,7 +5623,7 @@ input:checked + .switch-slider:before {
     { id: "LCTL", label: "Ctrl", matrix: [0, 6], x: 0, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E0 },
     { id: "LWIN", label: "Win", matrix: [9, 0], x: 1.25, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E3 },
     { id: "LALT", label: "Alt", matrix: [9, 3], x: 2.5, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E2 },
-    { id: "SPC", label: "Space", matrix: [9, 4], x: 3.75, y: 5.25, w: 6.25, h: 1, group: "alpha", defaultKeycode: 0x002C },
+    { id: "SPC", label: "Space", matrix: [9, 4], x: 3.75, y: 5.25, w: 6.25, h: 1, group: "alpha", defaultKeycode: 0x002C, qmkPoint: [92, 64] },
     { id: "RALT", label: "Alt", matrix: [9, 5], x: 10, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E6 },
     { id: "FN", label: "Fn", matrix: [9, 2], x: 11.25, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x5201 },
     { id: "LEFT", label: "◀", matrix: [0, 3], x: 13, y: 5.25, w: 1, h: 1, group: "nav", defaultKeycode: 0x0050 },
@@ -5384,7 +5706,7 @@ input:checked + .switch-slider:before {
     { id: "LCTL", label: "Ctrl", matrix: [0, 6], x: 0, y: 4, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E0 },
     { id: "LWIN", label: "Win", matrix: [9, 0], x: 1.25, y: 4, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E3 },
     { id: "LALT", label: "Alt", matrix: [9, 3], x: 2.5, y: 4, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E2 },
-    { id: "SPC", label: "Space", matrix: [9, 4], x: 3.75, y: 4, w: 6.25, h: 1, group: "alpha", defaultKeycode: 0x002C },
+    { id: "SPC", label: "Space", matrix: [9, 4], x: 3.75, y: 4, w: 6.25, h: 1, group: "alpha", defaultKeycode: 0x002C, qmkPoint: [97, 64] },
     { id: "RALT", label: "Alt", matrix: [9, 5], x: 10, y: 4, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E6 },
     { id: "FN", label: "Fn", matrix: [9, 2], x: 11.25, y: 4, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x5201 },
     { id: "LEFT", label: "◀", matrix: [0, 3], x: 13, y: 4, w: 1, h: 1, group: "nav", defaultKeycode: 0x0050 },
@@ -5495,7 +5817,7 @@ input:checked + .switch-slider:before {
     { id: "LCTL", label: "Ctrl", matrix: [0, 5], x: 0, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E0 },
     { id: "LWIN", label: "Win", matrix: [1, 5], x: 1.25, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E3 },
     { id: "LALT", label: "Alt", matrix: [2, 5], x: 2.5, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E2 },
-    { id: "SPC", label: "Space", matrix: [6, 5], x: 3.75, y: 5.25, w: 6.25, h: 1, group: "alpha", defaultKeycode: 0x002C },
+    { id: "SPC", label: "Space", matrix: [6, 5], x: 3.75, y: 5.25, w: 6.25, h: 1, group: "alpha", defaultKeycode: 0x002C, qmkPoint: [80, 64] },
     { id: "RALT", label: "Alt", matrix: [9, 5], x: 10, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E6 },
     { id: "FN", label: "Fn", matrix: [10, 5], x: 11.25, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x5201 },
     { id: "LEFT", label: "◀", matrix: [11, 5], x: 13.125, y: 5.25, w: 1, h: 1, group: "nav", defaultKeycode: 0x0050 },
@@ -5597,7 +5919,7 @@ input:checked + .switch-slider:before {
     { id: "LCTL", label: "Ctrl", matrix: [5, 0], x: 0, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E0 },
     { id: "LWIN", label: "Win", matrix: [5, 1], x: 1.25, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E3 },
     { id: "LALT", label: "Alt", matrix: [5, 2], x: 2.5, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E2 },
-    { id: "SPC", label: "Space", matrix: [5, 3], x: 3.75, y: 5.25, w: 6.25, h: 1, group: "alpha", defaultKeycode: 0x002C },
+    { id: "SPC", label: "Space", matrix: [5, 3], x: 3.75, y: 5.25, w: 6.25, h: 1, group: "alpha", defaultKeycode: 0x002C, qmkPoint: [66, 64] },
     { id: "RALT", label: "Alt", matrix: [5, 4], x: 10, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E6 },
     { id: "FN", label: "Fn", matrix: [5, 5], x: 11.25, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x5201 },
     { id: "APP", label: "Menu", matrix: [5, 6], x: 12.5, y: 5.25, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x0065 },
@@ -5676,7 +5998,7 @@ input:checked + .switch-slider:before {
     { id: "LCTL", label: "Ctrl", matrix: [4, 0], x: 0, y: 4, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E0 },
     { id: "LWIN", label: "Win", matrix: [4, 1], x: 1.25, y: 4, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E3 },
     { id: "LALT", label: "Alt", matrix: [4, 2], x: 2.5, y: 4, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E2 },
-    { id: "SPC", label: "Space", matrix: [4, 3], x: 3.75, y: 4, w: 6.25, h: 1, group: "alpha", defaultKeycode: 0x002C },
+    { id: "SPC", label: "Space", matrix: [4, 3], x: 3.75, y: 4, w: 6.25, h: 1, group: "alpha", defaultKeycode: 0x002C, qmkPoint: [97, 64] },
     { id: "RALT", label: "Alt", matrix: [4, 4], x: 10, y: 4, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E6 },
     { id: "RWIN", label: "Win", matrix: [4, 5], x: 11.25, y: 4, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x00E7 },
     { id: "FN", label: "Fn", matrix: [4, 6], x: 12.5, y: 4, w: 1.25, h: 1, group: "mod", defaultKeycode: 0x5201 },
@@ -5911,7 +6233,11 @@ input:checked + .switch-slider:before {
       mcu: 'WB32FQ95 (ARM Cortex-M4)',
       matrix: '14 Rows × 8 Cols (112 Key Positions)',
       ledTotal: 125,
+      lightingType: 'rgb_matrix',
       capabilities: {
+        hasLighting: true,
+        hasRgbMatrix: true,
+        hasMonochromeBacklight: false,
         hasRotaryEncoder: true,
         hasLogoBadgeLed: true,
         logoLedIndex: 124,
@@ -5936,7 +6262,11 @@ input:checked + .switch-slider:before {
       mcu: 'WB32FQ95 (ARM Cortex-M4)',
       matrix: '11 Rows × 8 Cols (88 Key Positions)',
       ledTotal: 99,
+      lightingType: 'rgb_matrix',
       capabilities: {
+        hasLighting: true,
+        hasRgbMatrix: true,
+        hasMonochromeBacklight: false,
         hasRotaryEncoder: true,
         hasLogoBadgeLed: true,
         logoLedIndex: 98,
@@ -5961,7 +6291,11 @@ input:checked + .switch-slider:before {
       mcu: 'WB32FQ95 (ARM Cortex-M4)',
       matrix: '9 Rows × 8 Cols (72 Key Positions)',
       ledTotal: 83,
+      lightingType: 'rgb_matrix',
       capabilities: {
+        hasLighting: true,
+        hasRgbMatrix: true,
+        hasMonochromeBacklight: false,
         hasRotaryEncoder: false,
         hasLogoBadgeLed: true,
         logoLedIndex: 82,
@@ -5995,7 +6329,11 @@ input:checked + .switch-slider:before {
       mcu: 'WB32FQ95 (ARM Cortex-M4)',
       matrix: '13 Rows × 8 Cols (104 Key Positions)',
       ledTotal: 118,
+      lightingType: 'rgb_matrix',
       capabilities: {
+        hasLighting: true,
+        hasRgbMatrix: true,
+        hasMonochromeBacklight: false,
         hasRotaryEncoder: false,
         hasLogoBadgeLed: false,
         logoLedIndex: null,
@@ -6020,7 +6358,11 @@ input:checked + .switch-slider:before {
       mcu: 'WB32FQ95 (ARM Cortex-M4)',
       matrix: '9 Rows × 8 Cols (72 Key Positions)',
       ledTotal: 84,
+      lightingType: 'rgb_matrix',
       capabilities: {
+        hasLighting: true,
+        hasRgbMatrix: true,
+        hasMonochromeBacklight: false,
         hasRotaryEncoder: false,
         hasLogoBadgeLed: false,
         logoLedIndex: null,
@@ -6046,7 +6388,7 @@ input:checked + .switch-slider:before {
   window.GENERIC_VIA_DEVICES = [
     {
       id: 'generic-via',
-      name: 'Generic QMK/VIA Keyboard',
+      name: 'Generic QMK/VIA Keyboard (RGB Matrix)',
       family: 'Generic',
       formFactor: '100%',
       layout: 'ANSI',
@@ -6055,7 +6397,11 @@ input:checked + .switch-slider:before {
       mcu: 'QMK Compatible Microcontroller',
       matrix: 'Dynamic Matrix Layout',
       ledTotal: 104,
+      lightingType: 'rgb_matrix',
       capabilities: {
+        hasLighting: true,
+        hasRgbMatrix: true,
+        hasMonochromeBacklight: false,
         hasRotaryEncoder: false,
         hasLogoBadgeLed: false,
         logoLedIndex: null,
@@ -6070,8 +6416,8 @@ input:checked + .switch-slider:before {
       }
     },
     {
-      id: 'generic-tkl',
-      name: 'Standard TKL 80% (Keychron Q3 / TKL)',
+      id: 'generic-monochrome',
+      name: 'Generic TKL 80% (Monochrome Backlight)',
       family: 'Generic',
       formFactor: 'TKL',
       layout: 'ANSI',
@@ -6080,7 +6426,11 @@ input:checked + .switch-slider:before {
       mcu: 'QMK / VIA Microcontroller',
       matrix: 'Dynamic TKL Matrix',
       ledTotal: 87,
+      lightingType: 'monochrome',
       capabilities: {
+        hasLighting: true,
+        hasRgbMatrix: false,
+        hasMonochromeBacklight: true,
         hasRotaryEncoder: false,
         hasLogoBadgeLed: false,
         logoLedIndex: null,
@@ -6088,15 +6438,15 @@ input:checked + .switch-slider:before {
         sidelightCount: 0,
         hasWinLock: true,
         winLockLedIndex: null,
-        hasDualLayerReactive: true,
-        hasPerLayerLighting: true,
+        hasDualLayerReactive: false,
+        hasPerLayerLighting: false,
         hasDebounceControl: true,
         hasNkroToggle: true
       }
     },
     {
-      id: 'generic-60',
-      name: 'Standard 60% (Tofu60 / Universal 60%)',
+      id: 'generic-unlit',
+      name: 'Generic 60% (Unlit / No Backlight)',
       family: 'Generic',
       formFactor: '60%',
       layout: 'ANSI',
@@ -6104,17 +6454,21 @@ input:checked + .switch-slider:before {
       productId: null,
       mcu: 'QMK / VIA Microcontroller',
       matrix: 'Dynamic 60% Matrix',
-      ledTotal: 61,
+      ledTotal: 0,
+      lightingType: 'none',
       capabilities: {
+        hasLighting: false,
+        hasRgbMatrix: false,
+        hasMonochromeBacklight: false,
         hasRotaryEncoder: false,
         hasLogoBadgeLed: false,
         logoLedIndex: null,
         hasSidelights: false,
         sidelightCount: 0,
-        hasWinLock: true,
+        hasWinLock: false,
         winLockLedIndex: null,
-        hasDualLayerReactive: true,
-        hasPerLayerLighting: true,
+        hasDualLayerReactive: false,
+        hasPerLayerLighting: false,
         hasDebounceControl: true,
         hasNkroToggle: true
       }
@@ -6127,8 +6481,8 @@ input:checked + .switch-slider:before {
  * LuxQMK Studio - Device Manager & Adaptive Capability Engine
  */
 (function () {
-  const STUDIO_VERSION = "1.1.0";
-  const REQUIRED_FW_VERSION = { major: 0, minor: 1, patch: 2 };
+  const STUDIO_VERSION = "1.2.0";
+  const REQUIRED_FW_VERSION = { major: 0, minor: 2, patch: 0 };
 
   class DeviceManager {
     constructor() {
@@ -6230,9 +6584,28 @@ input:checked + .switch-slider:before {
       this.applyProfileUI();
     }
 
+    getLightingType() {
+      if (this.firmwareInfo && this.firmwareInfo.capabilities) {
+        if (this.firmwareInfo.capabilities.hasRgbMatrix) return 'rgb_matrix';
+        if (this.firmwareInfo.capabilities.hasMonochromeBacklight) return 'monochrome';
+        if (this.firmwareInfo.capabilities.hasLighting === false) return 'none';
+      }
+      if (this.activeProfile) {
+        if (this.activeProfile.lightingType) return this.activeProfile.lightingType;
+        if (this.activeProfile.capabilities) {
+          if (this.activeProfile.capabilities.hasRgbMatrix) return 'rgb_matrix';
+          if (this.activeProfile.capabilities.hasMonochromeBacklight) return 'monochrome';
+          if (this.activeProfile.capabilities.hasLighting === false) return 'none';
+        }
+      }
+      return 'rgb_matrix';
+    }
+
     applyProfileUI() {
       const profile = this.activeProfile;
       if (!profile) return;
+      const lightingType = this.getLightingType();
+      const i18n = window.i18n;
 
       // 1. Update Hardware Info Card in Settings Tab
       const hwModel = document.getElementById('hw-keyboard-model');
@@ -6254,6 +6627,17 @@ input:checked + .switch-slider:before {
       const hwMatrix = document.getElementById('hw-matrix-layout');
       if (hwMatrix) hwMatrix.textContent = profile.matrix;
 
+      const hwEeprom = document.getElementById('hw-eeprom-size');
+      if (hwEeprom) {
+        if (this.firmwareInfo && (this.firmwareInfo.major > 0 || this.firmwareInfo.minor >= 2)) {
+          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSize104') : '104 Bytes Dedicated Storage';
+        } else if (this.firmwareInfo) {
+          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSize36') : '36 Bytes Dedicated Storage';
+        } else {
+          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSizeDefault') : '104 Bytes Dedicated Storage';
+        }
+      }
+
       // Update Firmware & Engine information
       const hwProto = document.getElementById('hw-protocol-version');
       const hwCompat = document.getElementById('hw-compat-status');
@@ -6261,7 +6645,8 @@ input:checked + .switch-slider:before {
       if (hwProto) {
         if (this.firmwareInfo && this.firmwareInfo.versionString && this.firmwareInfo.major !== undefined && (this.firmwareInfo.major > 0 || this.firmwareInfo.minor > 0 || this.firmwareInfo.patch > 0)) {
           const qmkStr = this.firmwareInfo.qmkVersion || 'QMK';
-          hwProto.textContent = `LuxQMK ${this.firmwareInfo.versionString} (${qmkStr} / VIA v12)`;
+          const cleanVer = this.firmwareInfo.versionString.replace(/^v+/i, '');
+          hwProto.textContent = `LuxQMK v${cleanVer} (${qmkStr} / VIA v12)`;
         } else if (this.firmwareInfo) {
           hwProto.textContent = window.i18n ? window.i18n.t('statusFwLegacy') : 'Legacy VIA / QMK (Unknown LuxQMK version)';
         } else {
@@ -6270,23 +6655,27 @@ input:checked + .switch-slider:before {
       }
 
       if (hwCompat) {
-        const i18n = window.i18n;
         if (!this.firmwareInfo) {
           hwCompat.textContent = i18n ? i18n.t('statusFwNotConnected') : '— (Waiting for device)';
           hwCompat.style.color = 'var(--text-muted, #888888)';
         } else if (this.firmwareInfo.major === 0 && this.firmwareInfo.minor === 0 && this.firmwareInfo.patch === 0) {
-          hwCompat.textContent = i18n ? i18n.t('statusFwLegacy') : '⚠️ Legacy Firmware / Unknown Version';
+          hwCompat.textContent = i18n ? i18n.t('statusFwLegacy') : 'Legacy Firmware / Unknown Version';
           hwCompat.style.color = 'var(--accent-amber, #ffaa00)';
         } else {
           const fw = this.firmwareInfo;
-          if (fw.major < REQUIRED_FW_VERSION.major || (fw.major === REQUIRED_FW_VERSION.major && (fw.minor < REQUIRED_FW_VERSION.minor || (fw.minor === REQUIRED_FW_VERSION.minor && fw.patch < REQUIRED_FW_VERSION.patch)))) {
-            hwCompat.textContent = i18n ? i18n.t('statusFwUpdateRequired') : '⚠️ Firmware Update Required (LuxQMK v0.1.2+)';
-            hwCompat.style.color = 'var(--accent-red, #ff4466)';
+          const isOlderThanRequired = fw.major < REQUIRED_FW_VERSION.major ||
+            (fw.major === REQUIRED_FW_VERSION.major && (fw.minor < REQUIRED_FW_VERSION.minor ||
+            (fw.minor === REQUIRED_FW_VERSION.minor && fw.patch < REQUIRED_FW_VERSION.patch)));
+
+          if (isOlderThanRequired) {
+            const detectedStr = `(v${fw.major}.${fw.minor}.${fw.patch})`;
+            hwCompat.textContent = i18n ? `${i18n.t('statusFwUpdateRequired')} ${detectedStr}` : `Firmware Update Recommended (LuxQMK v0.2.0+) ${detectedStr}`;
+            hwCompat.style.color = 'var(--accent-amber, #ffaa00)';
           } else if (fw.major > REQUIRED_FW_VERSION.major || (fw.major === REQUIRED_FW_VERSION.major && fw.minor > REQUIRED_FW_VERSION.minor)) {
-            hwCompat.textContent = i18n ? i18n.t('statusFwNewer') : 'ℹ️ Newer Firmware Detected (Update Studio)';
+            hwCompat.textContent = i18n ? i18n.t('statusFwNewer') : 'Newer Firmware Detected (Update Studio)';
             hwCompat.style.color = 'var(--accent-cyan, #00e5ff)';
           } else {
-            hwCompat.textContent = i18n ? i18n.t('statusFwCompatible') : `✓ Fully Compatible (LuxQMK Studio v${STUDIO_VERSION})`;
+            hwCompat.textContent = i18n ? i18n.t('statusFwCompatible') : `Fully Compatible (LuxQMK Studio v${STUDIO_VERSION})`;
             hwCompat.style.color = 'var(--accent-green, #00ff88)';
           }
         }
@@ -6307,18 +6696,110 @@ input:checked + .switch-slider:before {
         knobElement.style.display = hasEncoder ? 'flex' : 'none';
       }
 
-      // 3. Adapt Logo Badge LED UI visibility (Lighting Sub-Tab & Cards)
+      // 3. Adapt Lighting Navigation & Views according to Hardware Lighting Tier
+      const lightingNavBtn = document.querySelector('.nav-item-btn[data-view="lighting"]');
+      const studioLightingNavBtn = document.querySelector('.nav-item-btn[data-view="studio_lighting"]');
+
+      if (lightingNavBtn) {
+        if (lightingType === 'none') {
+          lightingNavBtn.style.display = 'none';
+        } else {
+          lightingNavBtn.style.display = 'flex';
+          const navLabel = lightingNavBtn.querySelector('span[data-i18n]') || lightingNavBtn.querySelector('span:not(.nav-icon)');
+          if (navLabel) {
+            if (lightingType === 'monochrome') {
+              navLabel.textContent = i18n ? i18n.t('navBacklight') : 'Backlight';
+              navLabel.setAttribute('data-i18n', 'navBacklight');
+            } else {
+              navLabel.textContent = i18n ? i18n.t('navLighting') : 'QMK Lighting';
+              navLabel.setAttribute('data-i18n', 'navLighting');
+            }
+          }
+        }
+      }
+
+      if (studioLightingNavBtn) {
+        studioLightingNavBtn.style.display = (lightingType === 'rgb_matrix') ? 'flex' : 'none';
+      }
+
+      // View fallback if current view became hidden
+      if (window.gUI && typeof window.gUI.switchView === 'function') {
+        const cur = window.gUI.currentView;
+        if (lightingType === 'none' && (cur === 'lighting' || cur === 'studio_lighting')) {
+          window.gUI.switchView('keymap');
+        } else if (lightingType === 'monochrome' && cur === 'studio_lighting') {
+          window.gUI.switchView('lighting');
+        }
+      }
+
+      // Adapt Keymap Editor category tabs
+      const lightingCatBtn = document.querySelector('.cat-tab-btn[data-category="lighting"]');
+      const customCatBtn = document.querySelector('.cat-tab-btn[data-category="custom"]');
+
+      if (lightingCatBtn) {
+        if (lightingType === 'none') {
+          lightingCatBtn.style.display = 'none';
+        } else {
+          lightingCatBtn.style.display = 'inline-flex';
+          if (lightingType === 'monochrome') {
+            lightingCatBtn.textContent = i18n ? i18n.t('catBacklight') : 'Backlight';
+            lightingCatBtn.setAttribute('data-i18n', 'catBacklight');
+          } else {
+            lightingCatBtn.textContent = i18n ? i18n.t('catLighting') : 'Lighting';
+            lightingCatBtn.setAttribute('data-i18n', 'catLighting');
+          }
+        }
+      }
+
+      if (customCatBtn) {
+        customCatBtn.style.display = (lightingType === 'none') ? 'none' : 'inline-flex';
+      }
+
+      // If active category was hidden, reset to basic
+      if (window.gKeymapEditor && (lightingType === 'none' && (window.gKeymapEditor.selectedCategory === 'lighting' || window.gKeymapEditor.selectedCategory === 'custom'))) {
+        window.gKeymapEditor.selectedCategory = 'basic';
+        document.querySelectorAll('.cat-tab-btn').forEach(b => {
+          b.classList.toggle('active', b.dataset.category === 'basic');
+        });
+        window.gKeymapEditor.renderKeycodePicker();
+      } else if (window.gKeymapEditor) {
+        window.gKeymapEditor.renderKeycodePicker();
+      }
+
+      // Adapt Lighting Sub-Tabs & Cards in view-lighting
+      const lightingTabsHeader = document.querySelector('.lighting-tabs-header');
+      const rgbSubviews = document.querySelectorAll('.lighting-subview:not(#card-monochrome-backlight)');
+      const monochromeCard = document.getElementById('card-monochrome-backlight');
+
+      if (lightingType === 'monochrome') {
+        if (lightingTabsHeader) lightingTabsHeader.style.display = 'none';
+        rgbSubviews.forEach(sv => sv.style.display = 'none');
+        if (monochromeCard) monochromeCard.style.display = 'block';
+      } else if (lightingType === 'rgb_matrix') {
+        if (lightingTabsHeader) lightingTabsHeader.style.display = 'flex';
+        if (monochromeCard) monochromeCard.style.display = 'none';
+        // restore active subview
+        const activeTab = (window.gLighting && window.gLighting.activeTab) ? window.gLighting.activeTab : 'backlight';
+        const activeSubView = document.getElementById(`lighting-tab-${activeTab}`);
+        if (activeSubView) activeSubView.style.display = 'block';
+      } else {
+        if (lightingTabsHeader) lightingTabsHeader.style.display = 'none';
+        rgbSubviews.forEach(sv => sv.style.display = 'none');
+        if (monochromeCard) monochromeCard.style.display = 'none';
+      }
+
+      // 4. Adapt Logo Badge LED UI visibility (Lighting Sub-Tab & Cards)
       const logoTabBtn = document.querySelector('.lighting-tab-btn[data-tab="logo"]');
       const logoCard = document.getElementById('card-logo-led');
       const hasLogo = this.hasCapability('hasLogoBadgeLed') || !!(profile.capabilities && profile.capabilities.hasLogoBadgeLed);
       if (logoTabBtn) {
-        logoTabBtn.style.display = hasLogo ? 'inline-flex' : 'none';
+        logoTabBtn.style.display = (lightingType === 'rgb_matrix' && hasLogo) ? 'inline-flex' : 'none';
       }
       if (logoCard) {
-        logoCard.style.display = hasLogo ? 'block' : 'none';
+        logoCard.style.display = (lightingType === 'rgb_matrix' && hasLogo) ? 'block' : 'none';
       }
 
-      // 4. Update Header Device Label & Layout Preset Selector
+      // 5. Update Header Device Label & Layout Preset Selector
       const deviceTitle = document.getElementById('device-title');
       if (deviceTitle) {
         deviceTitle.textContent = profile.name;
@@ -6329,7 +6810,7 @@ input:checked + .switch-slider:before {
         layoutPresetSelect.value = profile.id;
       }
 
-      // 5. Update Connected Device Badge in Keymap Toolbar
+      // 6. Update Connected Device Badge in Keymap Toolbar
       const badgeName = document.getElementById('connectedDeviceBadgeName');
       const badgeVidPid = document.getElementById('connectedDeviceBadgeVidPid');
       const badgeProto = document.getElementById('connectedDeviceBadgeProto');
@@ -6344,7 +6825,8 @@ input:checked + .switch-slider:before {
       }
       if (badgeProto) {
         if (this.firmwareInfo && this.firmwareInfo.versionString && (this.firmwareInfo.major > 0 || this.firmwareInfo.minor > 0 || this.firmwareInfo.patch > 0)) {
-          badgeProto.textContent = `LuxQMK v${this.firmwareInfo.versionString}`;
+          const cleanVer = this.firmwareInfo.versionString.replace(/^v+/i, '');
+          badgeProto.textContent = `LuxQMK v${cleanVer}`;
         } else {
           badgeProto.textContent = 'LuxQMK / VIA';
         }
@@ -8573,95 +9055,298 @@ input:checked + .switch-slider:before {
     "title": "Enter Custom Keycode / Hex / Macro Formula"
   },
   {
-    "code": 30720,
+    "code": 0x7800,
+    "label": "BL On",
+    "name": "BL_ON",
+    "category": "lighting",
+    "lightingType": "monochrome",
+    "title": "Turn Backlight On (BL_ON / 0x7800)"
+  },
+  {
+    "code": 0x7801,
+    "label": "BL Off",
+    "name": "BL_OFF",
+    "category": "lighting",
+    "lightingType": "monochrome",
+    "title": "Turn Backlight Off (BL_OFF / 0x7801)"
+  },
+  {
+    "code": 0x7802,
+    "label": "BL Toggle",
+    "name": "BL_TOGG",
+    "category": "lighting",
+    "lightingType": "monochrome",
+    "title": "Toggle Backlight On / Off (BL_TOGG / 0x7802)"
+  },
+  {
+    "code": 0x7803,
+    "label": "BL Down",
+    "name": "BL_DEC",
+    "category": "lighting",
+    "lightingType": "monochrome",
+    "title": "Decrease Backlight Brightness (BL_DEC / 0x7803)"
+  },
+  {
+    "code": 0x7804,
+    "label": "BL Up",
+    "name": "BL_INC",
+    "category": "lighting",
+    "lightingType": "monochrome",
+    "title": "Increase Backlight Brightness (BL_INC / 0x7804)"
+  },
+  {
+    "code": 0x7805,
+    "label": "BL Step",
+    "name": "BL_STEP",
+    "category": "lighting",
+    "lightingType": "monochrome",
+    "title": "Cycle Backlight Brightness (BL_STEP / 0x7805)"
+  },
+  {
+    "code": 0x7806,
+    "label": "BL Breathe",
+    "name": "BL_BRTG",
+    "category": "lighting",
+    "lightingType": "monochrome",
+    "title": "Toggle Backlight Breathing (BL_BRTG / 0x7806)"
+  },
+  {
+    "code": 0x7820,
     "label": "RGB Toggle",
     "name": "RGB_TOG",
     "category": "lighting",
-    "title": "Turn RGB On / Off"
+    "lightingType": "rgb_matrix",
+    "title": "Turn RGB On / Off (RGB_TOG / 0x7820)"
   },
   {
-    "code": 30721,
+    "code": 0x7821,
     "label": "RGB Mode +",
     "name": "RGB_MOD",
     "category": "lighting",
-    "title": "Next RGB Matrix Effect"
+    "lightingType": "rgb_matrix",
+    "title": "Next RGB Matrix Effect (RGB_MOD / 0x7821)"
   },
   {
-    "code": 30722,
+    "code": 0x7822,
     "label": "RGB Mode -",
     "name": "RGB_RMOD",
     "category": "lighting",
-    "title": "Previous RGB Matrix Effect"
+    "lightingType": "rgb_matrix",
+    "title": "Previous RGB Matrix Effect (RGB_RMOD / 0x7822)"
   },
   {
-    "code": 30723,
+    "code": 0x7823,
     "label": "Hue +",
     "name": "RGB_HUI",
     "category": "lighting",
-    "title": "Increase RGB Hue"
+    "lightingType": "rgb_matrix",
+    "title": "Increase RGB Hue (RGB_HUI / 0x7823)"
   },
   {
-    "code": 30724,
+    "code": 0x7824,
     "label": "Hue -",
     "name": "RGB_HUD",
     "category": "lighting",
-    "title": "Decrease RGB Hue"
+    "lightingType": "rgb_matrix",
+    "title": "Decrease RGB Hue (RGB_HUD / 0x7824)"
   },
   {
-    "code": 30725,
+    "code": 0x7825,
     "label": "Sat +",
     "name": "RGB_SAI",
     "category": "lighting",
-    "title": "Increase RGB Saturation"
+    "lightingType": "rgb_matrix",
+    "title": "Increase RGB Saturation (RGB_SAI / 0x7825)"
   },
   {
-    "code": 30726,
+    "code": 0x7826,
     "label": "Sat -",
     "name": "RGB_SAD",
     "category": "lighting",
-    "title": "Decrease RGB Saturation"
+    "lightingType": "rgb_matrix",
+    "title": "Decrease RGB Saturation (RGB_SAD / 0x7826)"
   },
   {
-    "code": 30727,
+    "code": 0x7827,
     "label": "Bright +",
     "name": "RGB_VAI",
     "category": "lighting",
-    "title": "Increase RGB Brightness"
+    "lightingType": "rgb_matrix",
+    "title": "Increase RGB Brightness (RGB_VAI / 0x7827)"
   },
   {
-    "code": 30728,
+    "code": 0x7828,
     "label": "Bright -",
     "name": "RGB_VAD",
     "category": "lighting",
-    "title": "Decrease RGB Brightness"
+    "lightingType": "rgb_matrix",
+    "title": "Decrease RGB Brightness (RGB_VAD / 0x7828)"
   },
   {
-    "code": 30729,
+    "code": 0x7829,
     "label": "Speed +",
     "name": "RGB_SPI",
     "category": "lighting",
-    "title": "Increase Effect Speed"
+    "lightingType": "rgb_matrix",
+    "title": "Increase Effect Speed (RGB_SPI / 0x7829)"
   },
   {
-    "code": 30730,
+    "code": 0x782A,
     "label": "Speed -",
     "name": "RGB_SPD",
     "category": "lighting",
-    "title": "Decrease Effect Speed"
+    "lightingType": "rgb_matrix",
+    "title": "Decrease Effect Speed (RGB_SPD / 0x782A)"
   },
   {
-    "code": 23984,
-    "label": "ORGB Mode",
-    "name": "ORGB",
-    "category": "custom",
-    "title": "Toggle OpenRGB / VIA Mode (QK_KB_0)"
+    "code": 0x782B,
+    "label": "Solid Color",
+    "name": "RGB_M_P",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Solid Color Mode (RGB_M_P / 0x782B)"
   },
   {
-    "code": 23985,
+    "code": 0x782C,
+    "label": "Breathe",
+    "name": "RGB_M_B",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Breathe Mode (RGB_M_B / 0x782C)"
+  },
+  {
+    "code": 0x782D,
+    "label": "Rainbow",
+    "name": "RGB_M_R",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Rainbow Mode (RGB_M_R / 0x782D)"
+  },
+  {
+    "code": 0x782E,
+    "label": "Swirl",
+    "name": "RGB_M_SW",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Swirl Mode (RGB_M_SW / 0x782E)"
+  },
+  {
+    "code": 0x782F,
+    "label": "Snake",
+    "name": "RGB_M_SN",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Snake Mode (RGB_M_SN / 0x782F)"
+  },
+  {
+    "code": 0x7830,
+    "label": "Knight",
+    "name": "RGB_M_K",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Knight Mode (RGB_M_K / 0x7830)"
+  },
+  {
+    "code": 0x7831,
+    "label": "Xmas",
+    "name": "RGB_M_X",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Christmas Mode (RGB_M_X / 0x7831)"
+  },
+  {
+    "code": 0x7832,
+    "label": "Gradient",
+    "name": "RGB_M_G",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Gradient Mode (RGB_M_G / 0x7832)"
+  },
+  {
+    "code": 0x7833,
+    "label": "RGB Test",
+    "name": "RGB_M_T",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "RGB Test Mode (RGB_M_T / 0x7833)"
+  },
+  {
+    "code": 0x7834,
+    "label": "Twinkle",
+    "name": "RGB_M_TW",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Twinkle Mode (RGB_M_TW / 0x7834)"
+  },
+  {
+    "code": 0x7E00,
     "label": "RGB Reverse",
     "name": "RGB_REV",
     "category": "custom",
-    "title": "Toggle Reverse RGB Direction (QK_KB_1)"
+    "title": "Toggle Reverse RGB Animation Direction (QK_KB_0 / 0x7E00)"
+  },
+  {
+    "code": 0x7E01,
+    "label": "Density +",
+    "name": "RGB_DEN_INC",
+    "category": "custom",
+    "title": "Increase Effect Spatial Density (QK_KB_1 / 0x7E01)"
+  },
+  {
+    "code": 0x7E02,
+    "label": "Density -",
+    "name": "RGB_DEN_DEC",
+    "category": "custom",
+    "title": "Decrease Effect Spatial Density (QK_KB_2 / 0x7E02)"
+  },
+  {
+    "code": 0x7E03,
+    "label": "Density Step",
+    "name": "RGB_DEN_STEP",
+    "category": "custom",
+    "title": "Cycle Density Step 0.5x-2.0x (QK_KB_3 / 0x7E03)"
+  },
+  {
+    "code": 0x7E04,
+    "label": "Density Reset",
+    "name": "RGB_DEN_RST",
+    "category": "custom",
+    "title": "Reset Density to Baseline 1.0x (QK_KB_4 / 0x7E04)"
+  },
+  {
+    "code": 0x7E05,
+    "label": "Gradient Step",
+    "name": "RGB_GRAD_STEP",
+    "category": "custom",
+    "title": "Cycle Active Gradient Preset (QK_KB_5 / 0x7E05)"
+  },
+  {
+    "code": 0x7E06,
+    "label": "Reactive Step",
+    "name": "RGB_REACT_STEP",
+    "category": "custom",
+    "title": "Cycle Reactive Overlay Mode / Off (QK_KB_6 / 0x7E06)"
+  },
+  {
+    "code": 0x7E07,
+    "label": "React Speed +",
+    "name": "RGB_RSPD_INC",
+    "category": "custom",
+    "title": "Increase Reactive Speed / Shorter Fade (QK_KB_7 / 0x7E07)"
+  },
+  {
+    "code": 0x7E08,
+    "label": "React Speed -",
+    "name": "RGB_RSPD_DEC",
+    "category": "custom",
+    "title": "Decrease Reactive Speed / Longer Fade (QK_KB_8 / 0x7E08)"
+  },
+  {
+    "code": 0x7E09,
+    "label": "React Spd Step",
+    "name": "RGB_RSPD_STEP",
+    "category": "custom",
+    "title": "Cycle Reactive Speed Step (QK_KB_9 / 0x7E09)"
   },
   { "code": 30464, "label": "M0", "name": "M0", "category": "macro", "title": "Execute Macro 0 (QK_MACRO_0)" },
   { "code": 30465, "label": "M1", "name": "M1", "category": "macro", "title": "Execute Macro 1 (QK_MACRO_1)" },
@@ -8693,6 +9378,22 @@ input:checked + .switch-slider:before {
     // Check known dictionary
     if (CODE_MAP.has(code)) {
       return CODE_MAP.get(code);
+    }
+
+    // LuxQMK / VIA User Keycodes (QK_USER_0..31: 0x7E40..0x7E5F) -> Alias to QK_KB_0..31
+    if (code >= 0x7E40 && code <= 0x7E5F) {
+      const aliasCode = 0x7E00 + (code - 0x7E40);
+      if (CODE_MAP.has(aliasCode)) {
+        return CODE_MAP.get(aliasCode);
+      }
+      const userIdx = code - 0x7E40;
+      return { code, label: `USER(${userIdx})`, name: `USER_${userIdx}`, category: "custom" };
+    }
+
+    // Generic Custom Keycodes (QK_KB_0..31: 0x7E00..0x7E1F)
+    if (code >= 0x7E00 && code <= 0x7E1F) {
+      const customIdx = code - 0x7E00;
+      return { code, label: `CUSTOM(${customIdx})`, name: `CUSTOM_${customIdx}`, category: "custom" };
     }
 
     // Dynamic Layer Tap: LT(layer, kc) -> 0x4000 .. 0x4FFF (bits: 0100 llll kkkkkkkk)
@@ -8799,15 +9500,13 @@ input:checked + .switch-slider:before {
       lblAuthorTitle: "Project Author",
       lblAuthorName: "Dorian Piwnik",
       lblAuthorRole: "Creator & Lead Developer of the LuxQMK Project",
-      lblLicenseTitle: "License",
-      lblLicenseDesc: "• <strong>LuxQMK Studio Application</strong>: GNU General Public License v3 (GPLv3)<br>• <strong>LuxQMK Firmware</strong>: GNU General Public License v2 / v3 (GPL)",
       lblWebsiteTitle: "Project Website",
       lblGithubTitle: "GitHub",
       lblWebsiteStatus: "(Official documentation and website coming soon)",
-      lblLegalTitle: "Legal Notices & Disclaimer",
-      lblLegalDesc: "LuxQMK Studio is an independent companion configuration suite developed for keyboards running LuxQMK custom firmware (fork of QMK Firmware) communicating via standard WebHID / VIA protocol channels.<br><br>QMK Firmware is open-source software licensed under GPLv2+. VIA is an open configuration protocol standard.<br><br>All product names, logos, trademarks, and registered trademarks (including Glorious, GMMK 3, GMMK 2, WB32) are property of their respective owners and are used solely for identification and compatibility purposes.",
+      lblLegalTitle: "Legal Notices & License",
+      lblLegalDesc: "LuxQMK Studio is an independent companion configuration suite developed for keyboards running LuxQMK custom firmware (fork of QMK Firmware) communicating via standard WebHID / VIA protocol channels.<br><br>• <strong>LuxQMK Studio Application</strong>: GNU General Public License v3 (GPLv3)<br>• <strong>LuxQMK Firmware</strong>: GNU General Public License v2 / v3 (GPL)<br>• <strong>QMK Firmware</strong>: Open-source software licensed under GPLv2+. VIA is an open configuration protocol standard.<br><br>All product names, logos, trademarks, and registered trademarks (including Glorious, GMMK 3, GMMK 2, WB32) are property of their respective owners and are used solely for identification and compatibility purposes.",
       msgUpdateCheckTitle: "LuxQMK Studio Updates",
-      msgUpdateCheckLatest: "You are running the latest version of LuxQMK Studio (v1.1.0). Automatic update downloads will be available soon!",
+      msgUpdateCheckLatest: "You are running the latest version of LuxQMK Studio (v1.2.0). Automatic update downloads will be available soon!",
       tooltipAddDevice: "Add / Pair New Device (+)",
       optSearchingDevices: "Searching for devices...",
       optNoDevices: "No devices found (Click + to connect)",
@@ -8821,6 +9520,7 @@ input:checked + .switch-slider:before {
       navEncoder: "Rotary Knob",
       navTester: "Key Tester",
       navLighting: "QMK Lighting",
+      navBacklight: "Backlight",
       navStudioLighting: "LuxQMK Studio Lighting",
       navBackup: "Profiles & Backup",
       navSettings: "Device Settings",
@@ -8864,7 +9564,17 @@ input:checked + .switch-slider:before {
       catLayers: "Layers",
       catSpecial: "Special",
       catLighting: "Lighting",
+      catBacklight: "Backlight",
       catCustom: "Custom (LuxQMK)",
+
+      // Monochrome Backlight
+      monochromeBacklightTitle: "Monochromatic Backlight",
+      lblBacklightPower: "Backlight Power",
+      hintBacklightPower: "Toggle keyboard backlight illumination (BL_TOGG)",
+      lblBacklightBreathing: "Breathing Animation",
+      hintBacklightBreathing: "Enable soft rhythmic pulsing backlight (BL_BRTG)",
+      lblMonochromeTint: "Hardware LED Color (Preview Tint)",
+      hintMonochromeTint: "Match virtual keycap glow to your physical LED color",
 
       // Knob
       rotCCW: "Rotate Left (CCW)",
@@ -8884,6 +9594,8 @@ input:checked + .switch-slider:before {
       lblBrightness: "Master Brightness",
       lblEffect: "Lighting Effect",
       lblSpeed: "Animation Speed",
+      lblRgbDensity: "Effect Density",
+      hintRgbDensity: "Adjusts wave density and spatial frequency (128 = 1.0x)",
       lblRgbColor: "Effect Color",
       lblReverse: "Reverse Animation Direction",
       lblLayerLightingEnable: "Dim Inactive & Highlight Active Keys",
@@ -8896,7 +9608,8 @@ input:checked + .switch-slider:before {
       layer2ColorDesc: "Custom key mappings and macros",
       layer3ColorDesc: "Additional layer 3 assignments",
       hintSingleColor: "Set color for single-color effects",
-      hintRainbowColor: "Rainbow effect (uses full color spectrum)",
+      hintRainbowColor: "Rainbow effect — color sets initial hue phase offset and saturation",
+      hintGradientColor: "Gradient palette active — color adjusts palette phase shift (starting hue) and saturation",
       lblLogoMode: "Logo Mode",
 
       // Reactive Layer Overlay
@@ -8954,11 +9667,11 @@ input:checked + .switch-slider:before {
       lblSoftwareEffectPreset: "Animation Engine & Preset",
       lblSoftwareEffectSpeed: "Animation Speed",
       lblSoftwareEffectIntensity: "Effect Intensity & Brightness",
-      optGroupSignature: "🌟 Signature PC Effects",
-      optGroupQmkCycling: "🌈 QMK Cycling & Radial",
-      optGroupQmkWaves: "🌊 QMK Waves & Atmosphere",
-      optGroupQmkParticles: "✨ QMK Drops & Particles",
-      optGroupQmkGradients: "🎨 QMK Bands & Gradients",
+      optGroupSignature: "Signature PC Effects",
+      optGroupQmkCycling: "QMK Cycling & Radial",
+      optGroupQmkWaves: "QMK Waves & Atmosphere",
+      optGroupQmkParticles: "QMK Drops & Particles",
+      optGroupQmkGradients: "QMK Bands & Gradients",
       optEffectNeonWave: "Cyber Neon Wave (60 FPS)",
       optEffectMatrixRain: "Matrix Digital Rain",
       optEffectParticleStorm: "Cosmic Particle Flow",
@@ -9037,6 +9750,7 @@ input:checked + .switch-slider:before {
       optPaletteIceGlacier: "Ice Glacier & Frost (Arctic Blue / Ice / White)",
       optPaletteToxic: "Toxic Glow (Acid Lime / Radioactive Green)",
       optPaletteSingle: "Custom Accent Color",
+      optPaletteCustomGradient: "Custom Multi-Stop Gradient",
       optColorRainbow: "Dynamic Rainbow Spectrum",
       optColorSingle: "Custom Accent Color",
       lblAudioDirection: "Effect Direction",
@@ -9051,17 +9765,40 @@ input:checked + .switch-slider:before {
       optDirNotApplicable: "Not Applicable (Omnidirectional)",
       optDirPerimeterIn: "Perimeter Inward (Diffusers -> Center)",
       lblAudioSingleColor: "Audio Accent Color",
-      lblAudioSingleColorHint: "Color of frequency bars and pulses",
-      audioSensitivity: "Audio Sensitivity Multiplier",
+      lblAudioSingleColorHint: "Color for single-color pulses and spectrum bars",
+      audioSensitivity: "Audio Sensitivity & Gain",
       lblAudioSpeed: "Animation & Wave Speed",
-      lblAudioIntensity: "Effect Intensity & Brightness",
-      lblAudioSmoothing: "Spectrum Decay & Smoothing",
+      lblAudioIntensity: "Effect Brightness & Intensity",
+      lblAudioSmoothing: "Equalizer Falloff Smoothing",
       lblAudioFloor: "Ambient Floor Glow (Idle Background Brightness)",
-      lblAutostart: "Launch LuxQMK Studio on Windows Startup",
-      lblAutostartHint: "Runs quietly in the System Tray and operates audio visualizers in the background",
+      lblAutostart: "Launch application on Windows startup",
+      lblAutostartHint: "App starts minimized to tray and immediately processes audio effects",
       lblDesktopAutostart: "Launch LuxQMK Studio on Windows Startup",
       toastStudioLightingStarted: "LuxQMK Studio Lighting activated",
       toastStudioLightingStopped: "LuxQMK Studio Lighting stopped",
+
+      // Multi-Stop Gradient System
+      lblGradientEditor: "Multi-Stop Gradient Ramp",
+      lblGradientEditorHint: "Click track to add stop | Drag pin to reposition",
+      lblActiveStopColor: "Stop Color",
+      lblActiveStopPosition: "Stop Position",
+      btnAddStop: "Add Stop",
+      btnDeleteStop: "Remove",
+      lblGradientPresets: "Presets:",
+      lblHardwareGradientPreset: "Hardware Gradient Palette",
+      lblStandaloneHardware: "EEPROM Standalone",
+      btnSaveToEeprom: "Save Profile to Keyboard EEPROM",
+      toastGradientSavedToEeprom: "Multi-stop gradient profile saved to keyboard EEPROM!",
+      optPresetRainbow: "Rainbow (Classic Spectrum)",
+      optPresetCyberpunk: "Cyberpunk (Cyan / Pink / Yellow)",
+      optPresetSynthwave: "Synthwave (Indigo / Hot Pink / Orange / Gold)",
+      optPresetSunset: "Sunset Horizon (Purple / Crimson / Amber)",
+      optPresetToxic: "Toxic Lime (Acid Lime / Yellow / Neon Green)",
+      optPresetOcean: "Ocean Breeze (Navy / Azure / Aqua / Sky Blue)",
+      optPresetFireIce: "Fire & Ice (Ice Blue / White / Flame / Crimson)",
+      optPresetPastel: "Pastel Dream (Lavender / Mint / Peach / Pink)",
+      optPresetCustom1: "Custom Gradient Profile 1 (Hardware EEPROM)",
+      optPresetCustom2: "Custom Gradient Profile 2 (Hardware EEPROM)",
 
       // Key Tester
       testedKeys: "Tested Keys:",
@@ -9208,12 +9945,15 @@ input:checked + .switch-slider:before {
       lblMatrixLayout: "Physical Matrix:",
       valMatrixLayout: "14 Rows × 8 Cols (112 Key Positions)",
       lblEepromSize: "Custom EEPROM Buffer:",
-      valEepromSize: "36 Bytes Dedicated Storage",
+      valEepromSize: "104 Bytes Dedicated Storage",
+      valEepromSize104: "104 Bytes Dedicated Storage",
+      valEepromSize36: "36 Bytes Dedicated Storage (Legacy)",
+      valEepromSizeDefault: "104 Bytes Dedicated Storage",
       lblCompatibilityStatus: "Compatibility Status:",
       valCompatibilityStatus: "— (Connect keyboard to inspect)",
       statusFwNotConnected: "— (Connect keyboard to inspect)",
-      statusFwCompatible: "Fully Compatible (LuxQMK Studio v1.1.0)",
-      statusFwUpdateRequired: "Firmware Update Required (LuxQMK v0.1.2+ recommended)",
+      statusFwCompatible: "Fully Compatible (LuxQMK Studio v1.2.0)",
+      statusFwUpdateRequired: "Firmware Update Recommended (LuxQMK v0.2.0+)",
       // Settings View - Smart Firmware Flasher
       cardFlasherTitle: "Smart Firmware Upgrade (Zero Data Loss)",
       cardFlasherSubtitle: "Safely flash new LuxQMK & QMK firmware with automatic pre-flash backup and post-flash memory restoration.",
@@ -9323,15 +10063,13 @@ input:checked + .switch-slider:before {
       lblAuthorTitle: "Autor projektu",
       lblAuthorName: "Dorian Piwnik",
       lblAuthorRole: "Główny twórca i programista projektu LuxQMK",
-      lblLicenseTitle: "Licencja",
-      lblLicenseDesc: "• <strong>Aplikacja LuxQMK Studio</strong>: GNU General Public License v3 (GPLv3)<br>• <strong>Firmware LuxQMK</strong>: GNU General Public License v2 / v3 (GPL)",
       lblWebsiteTitle: "Strona projektu",
       lblGithubTitle: "GitHub",
       lblWebsiteStatus: "(Oficjalna strona i repozytorium w przygotowaniu — wkrótce)",
       lblLegalTitle: "Informacje prawne i nota licencyjna",
-      lblLegalDesc: "LuxQMK Studio jest niezależnym oprogramowaniem towarzyszącym do konfiguracji klawiatur bazującym na protokole WebHID oraz VIA. Komponenty firmware stanowią zmodyfikowany fork QMK Firmware na licencji GNU GPL v2/v3.<br><br>QMK Firmware jest oprogramowaniem open-source na licencji GPLv2+. VIA jest otwartym standardem protokołu konfiguracji.<br><br>Wszelkie nazwy produktów, logotypy, znaki towarowe i zarejestrowane znaki handlowe (w tym Glorious, GMMK 3, GMMK 2, WB32) należą do ich prawnych właścicieli i zostały użyte wyłącznie w celach informacyjnych oraz identyfikacji kompatybilności sprzętowej.",
+      lblLegalDesc: "LuxQMK Studio jest niezależnym oprogramowaniem towarzyszącym do konfiguracji klawiatur bazującym na protokole WebHID oraz VIA.<br><br>• <strong>Aplikacja LuxQMK Studio</strong>: GNU General Public License v3 (GPLv3)<br>• <strong>Firmware LuxQMK</strong>: GNU General Public License v2 / v3 (GPL)<br>• <strong>QMK Firmware</strong>: Oprogramowanie open-source na licencji GPLv2+. VIA jest otwartym standardem protokołu konfiguracji.<br><br>Wszelkie nazwy produktów, logotypy, znaki towarowe i zarejestrowane znaki handlowe (w tym Glorious, GMMK 3, GMMK 2, WB32) należą do ich prawnych właścicieli i zostały użyte wyłącznie w celach informacyjnych oraz identyfikacji kompatybilności sprzętowej.",
       msgUpdateCheckTitle: "Aktualizacje LuxQMK Studio",
-      msgUpdateCheckLatest: "Posiadasz najnowszą wersję LuxQMK Studio (v1.1.0). Automatyczne pobieranie aktualizacji z poziomu programu będzie dostępne wkrótce!",
+      msgUpdateCheckLatest: "Posiadasz najnowszą wersję LuxQMK Studio (v1.2.0). Automatyczne pobieranie aktualizacji z poziomu programu będzie dostępne wkrótce!",
       tooltipAddDevice: "Dodaj / Połącz nowe urządzenie (+)",
       optSearchingDevices: "Wyszukiwanie urządzeń...",
       optNoDevices: "Brak urządzeń (Kliknij + aby połączyć)",
@@ -9345,6 +10083,7 @@ input:checked + .switch-slider:before {
       navEncoder: "Pokrętło (enkoder)",
       navTester: "Tester klawiszy",
       navLighting: "Oświetlenie QMK",
+      navBacklight: "Podświetlenie",
       navStudioLighting: "Oświetlenie LuxQMK Studio",
       navBackup: "Profile i kopie",
       navSettings: "Ustawienia urządzenia",
@@ -9387,8 +10126,18 @@ input:checked + .switch-slider:before {
       catMacro: "Makra",
       catLayers: "Warstwy",
       catSpecial: "Specjalne",
-      catLighting: "Podświetlenie",
-      catCustom: "Własne (LuxQMK)",
+      catLighting: "Oświetlenie QMK",
+      catBacklight: "Podświetlenie",
+      catCustom: "Dedykowane LuxQMK",
+
+      // Monochrome Backlight
+      monochromeBacklightTitle: "Podświetlenie jednokolorowe",
+      lblBacklightPower: "Zasilanie podświetlenia",
+      hintBacklightPower: "Włącz lub wyłącz podświetlenie klawiatury (BL_TOGG)",
+      lblBacklightBreathing: "Efekt oddychania (pulsowanie)",
+      hintBacklightBreathing: "Włącz subtelne, rytmiczne pulsowanie diod LED (BL_BRTG)",
+      lblMonochromeTint: "Kolor diod LED (podgląd)",
+      hintMonochromeTint: "Dopasuj poświatę wirtualnych klawiszy do fizycznego koloru LED w klawiaturze",
 
       // Knob
       rotCCW: "Obrót w lewo (CCW)",
@@ -9408,6 +10157,8 @@ input:checked + .switch-slider:before {
       lblBrightness: "Jasność główna",
       lblEffect: "Efekt podświetlenia",
       lblSpeed: "Szybkość animacji",
+      lblRgbDensity: "Gęstość efektu",
+      hintRgbDensity: "Reguluje gęstość i powtarzalność fali (128 = 1.0x)",
       lblRgbColor: "Kolor efektu",
       lblReverse: "Odwróć kierunek animacji",
       lblLayerLightingEnable: "Ściemnianie nieaktywnych i podświetlanie aktywnych",
@@ -9420,7 +10171,8 @@ input:checked + .switch-slider:before {
       layer2ColorDesc: "Klawisze niestandardowe i makra",
       layer3ColorDesc: "Dodatkowe przypisania warstwy 3",
       hintSingleColor: "Ustaw barwę dla efektów jednokolorowych",
-      hintRainbowColor: "Efekt tęczowy (używa pełnego spektrum kolorów)",
+      hintRainbowColor: "Efekt tęczowy — kolor ustala przesunięcie fazy (odcień startowy) i nasycenie",
+      hintGradientColor: "Paleta gradientowa aktywna — kolor ustala przesunięcie kąta palety (początkowy odcień) oraz nasycenie",
       lblLogoMode: "Tryb diody logo",
 
       // Reactive Layer Overlay
@@ -9469,20 +10221,20 @@ input:checked + .switch-slider:before {
       logoAllDesc: "Wszystkie 3 blokady aktywne (#FFFFFF)",
 
       // LuxQMK Studio Lighting (Software FX & Audio)
-      studioLightingCardTitle: "Oświetlenie LuxQMK Studio & efekty PC",
+      studioLightingCardTitle: "Oświetlenie LuxQMK Studio i efekty PC",
       studioLightingLivePreviewTitle: "Podgląd oświetlenia na żywo (silnik PC 60 FPS)",
       studioLightingDesc: "Dynamiczne animacje 60 FPS oraz wizualizery audio sterowane na żywo z poziomu aplikacji na komputerze.",
-      tabAudioVisualizer: "Wizualizer audio & muzyki",
+      tabAudioVisualizer: "Wizualizer audio i muzyki",
       tabSoftwareEffects: "Zaawansowane animacje PC",
       lblSoftwareEffect: "Preset / silnik animacji PC",
       lblSoftwareEffectPreset: "Preset i silnik animacji PC",
       lblSoftwareEffectSpeed: "Prędkość animacji",
       lblSoftwareEffectIntensity: "Jasność i intensywność efektu",
-      optGroupSignature: "🌟 Sygnaturowe efekty PC",
-      optGroupQmkCycling: "🌈 Pętle i Obroty QMK",
-      optGroupQmkWaves: "🌊 Fale i Natura QMK",
-      optGroupQmkParticles: "✨ Cząsteczki i Gwiazdy QMK",
-      optGroupQmkGradients: "🎨 Pasy i Gradienty QMK",
+      optGroupSignature: "Sygnaturowe efekty PC",
+      optGroupQmkCycling: "Pętle i Obroty QMK",
+      optGroupQmkWaves: "Fale i Natura QMK",
+      optGroupQmkParticles: "Cząsteczki i Gwiazdy QMK",
+      optGroupQmkGradients: "Pasy i Gradienty QMK",
       optEffectNeonWave: "Cyber Neon Wave (60 FPS)",
       optEffectMatrixRain: "Cyfrowy Deszcz Matrix",
       optEffectParticleStorm: "Kosmiczny Przepływ Cząsteczek",
@@ -9561,6 +10313,7 @@ input:checked + .switch-slider:before {
       optPaletteIceGlacier: "Lodowiec i szron (Arktyczny błękit / Lód / Biel)",
       optPaletteToxic: "Toksyczna poświata (Radioaktywna zieleń / Kwas)",
       optPaletteSingle: "Własny kolor akcentowy",
+      optPaletteCustomGradient: "Własny gradient wielopunktowy",
       optColorRainbow: "Dynamiczne spektrum tęczy (Rainbow)",
       optColorSingle: "Własny kolor akcentowy",
       lblAudioDirection: "Kierunek efektu",
@@ -9585,6 +10338,29 @@ input:checked + .switch-slider:before {
       lblDesktopAutostart: "Uruchamiaj LuxQMK Studio przy starcie systemu",
       toastStudioLightingStarted: "Uruchomiono oświetlenie LuxQMK Studio",
       toastStudioLightingStopped: "Zatrzymano oświetlenie LuxQMK Studio",
+
+      // Multi-Stop Gradient System
+      lblGradientEditor: "Wielopunktowy suwak gradientu",
+      lblGradientEditorHint: "Kliknij oś aby dodać punkt | Przeciągnij znacznik aby zmienić pozycję",
+      lblActiveStopColor: "Kolor aktywnego punktu",
+      lblActiveStopPosition: "Pozycja punktu",
+      btnAddStop: "Dodaj punkt",
+      btnDeleteStop: "Usuń",
+      lblGradientPresets: "Presety:",
+      lblHardwareGradientPreset: "Paleta gradientu sprzętowego",
+      lblStandaloneHardware: "Autonomiczny w EEPROM",
+      btnSaveToEeprom: "Zapisz profil w pamięci EEPROM klawiatury",
+      toastGradientSavedToEeprom: "Wielopunktowy profil gradientu zapisany w pamięci EEPROM klawiatury!",
+      optPresetRainbow: "Tęcza (Pełne klasyczne spektrum)",
+      optPresetCyberpunk: "Cyberpunk (Cyjan / Róż / Żółty)",
+      optPresetSynthwave: "Synthwave (Indygo / Ostry róż / Pomarańcz / Złoto)",
+      optPresetSunset: "Zachód słońca (Fiolet / Karmazyn / Bursztyn)",
+      optPresetToxic: "Toksyczna limonka (Kwas / Żółty / Neonowa zieleń)",
+      optPresetOcean: "Morski powiew (Granat / Lazurowy / Aqua / Błękit nieba)",
+      optPresetFireIce: "Ogień i lód (Arktyczny błękit / Biel / Płomień / Karmazyn)",
+      optPresetPastel: "Pastelowy sen (Lawenda / Mięta / Brzoskwinia / Róż)",
+      optPresetCustom1: "Własny profil gradientu 1 (Pamięć EEPROM)",
+      optPresetCustom2: "Własny profil gradientu 2 (Pamięć EEPROM)",
 
       // Key Tester
       testedKeys: "Przetestowane klawisze:",
@@ -9640,7 +10416,7 @@ input:checked + .switch-slider:before {
       badgeLayerActive: "Warstwa {layer} aktywna • Ściemnienie: {dim}%",
       badgeReactiveActive: "Warstwa reaktywna: Włączona ({mode})",
       badgeReactiveDisabled: "Warstwa reaktywna: Wyłączona",
-      badgeLogoPreview: "Podgląd wskaźników logo & pokrętła",
+      badgeLogoPreview: "Podgląd wskaźników logo i pokrętła",
       badgeWinLockPreview: "Podgląd blokady klawisza Windows (Win Lock)",
       badgeEffectBrightness: "{name} • {pct}% jasności",
 
@@ -9717,7 +10493,7 @@ input:checked + .switch-slider:before {
       polling125: "125 Hz (8.0 ms)",
 
       // Settings View - Hardware Info
-      cardHardwareTitle: "Informacje sprzętowe & diagnostyka",
+      cardHardwareTitle: "Informacje sprzętowe i diagnostyka",
       cardHardwareSubtitle: "Specyfikacja mikrokontrolera, stan pamięci i protokoły komunikacji",
       lblKeyboardModel: "Model klawiatury:",
       valKeyboardModel: "Glorious GMMK 3 100% ANSI",
@@ -9725,18 +10501,21 @@ input:checked + .switch-slider:before {
       valMcuChip: "WB32FQ95 (ARM Cortex-M4)",
       lblUsbVidPid: "Identyfikatory USB:",
       valUsbVidPid: "VID: 0x504B | PID: 0x320F",
-      lblProtocolVersion: "Wersja firmware & silnika:",
+      lblProtocolVersion: "Wersja firmware i silnika:",
       valProtocolVersion: "— (Odczyt z urządzenia...)",
       valProtocolVersionNone: "— (Wymagane połączenie z klawiaturą)",
       lblMatrixLayout: "Matryca fizyczna:",
       valMatrixLayout: "14 wierszy × 8 kolumn (112 pozycji)",
       lblEepromSize: "Pamięć niestandardowa EEPROM:",
-      valEepromSize: "36 bajtów pamięci trwałej",
+      valEepromSize: "104 bajty pamięci trwałej",
+      valEepromSize104: "104 bajty pamięci trwałej",
+      valEepromSize36: "36 bajtów pamięci trwałej (Starszy firmware)",
+      valEepromSizeDefault: "104 bajty pamięci trwałej",
       lblCompatibilityStatus: "Status zgodności:",
       valCompatibilityStatus: "— (Podłącz klawiaturę, aby sprawdzić)",
       statusFwNotConnected: "— (Podłącz klawiaturę, aby sprawdzić)",
-      statusFwCompatible: "W pełni zgodny (LuxQMK Studio v1.1.0)",
-      statusFwUpdateRequired: "Wymagana aktualizacja firmware (zalecany LuxQMK v0.1.2+)",
+      statusFwCompatible: "W pełni zgodny (LuxQMK Studio v1.2.0)",
+      statusFwUpdateRequired: "Zalecana aktualizacja firmware (LuxQMK v0.2.0+)",
       // Settings View - Smart Firmware Flasher
       cardFlasherTitle: "Inteligentna aktualizacja firmware (bezstratna)",
       cardFlasherSubtitle: "Bezpiecznie wgrywaj nowy firmware z automatyczną kopią zapasową i przywracaniem mapowania, makr oraz RGB.",
@@ -9768,7 +10547,7 @@ input:checked + .switch-slider:before {
       flasherErrNotConnected: "Podłącz klawiaturę przed rozpoczęciem aktualizacji firmware.",
 
       // Settings View - Maintenance Tools
-      cardMaintenanceTitle: "Narzędzia serwisowe & pamięć EEPROM",
+      cardMaintenanceTitle: "Narzędzia serwisowe i pamięć EEPROM",
       cardMaintenanceSubtitle: "Zaawansowane operacje na pamięci kontrolera i tryb programowania",
       lblBootloaderTitle: "Uruchomienie bootloadera (DFU Mode)",
       btnBootloaderDesc: "Wprowadza klawiaturę w tryb DFU Bootloadera umożliwiający wgranie nowego pliku firmware (.bin/.hex).",
@@ -9920,6 +10699,7 @@ input:checked + .switch-slider:before {
 
   const CHANNELS = {
     CUSTOM: 0x01,
+    BACKLIGHT: 0x02,
     RGB_MATRIX: 0x03
   };
 
@@ -9953,6 +10733,11 @@ input:checked + .switch-slider:before {
     DEBOUNCE_TIME: 27,
     DIRECT_LIGHTING_ENABLE: 28,
     DIRECT_LIGHTING_BLOCK: 29,
+    GRADIENT_PRESET: 33,
+    GRADIENT_CUSTOM_COUNT: 34,
+    GRADIENT_CUSTOM_STOP: 35,
+    EFFECT_DENSITY: 36,
+    GRADIENT_SAVE_EEPROM: 37,
     BOOTLOADER_JUMP: 0xFE
   };
 
@@ -10321,6 +11106,15 @@ input:checked + .switch-slider:before {
       return await this.sendCommand([VIA_CMD.MACRO_RESET]);
     }
 
+    // --- Monochromatic Backlight Standard Channel (Channel 2) ---
+    async getBacklightValue(valueId) {
+      return await this.sendCommand([VIA_CMD.CUSTOM_GET_VALUE, CHANNELS.BACKLIGHT, valueId]);
+    }
+
+    async setBacklightValue(valueId, ...args) {
+      return await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.BACKLIGHT, valueId, ...args]);
+    }
+
     // --- RGB Matrix Standard Channel (Channel 3) ---
     async getRGBMatrixValue(valueId) {
       return await this.sendCommand([VIA_CMD.CUSTOM_GET_VALUE, CHANNELS.RGB_MATRIX, valueId]);
@@ -10331,19 +11125,23 @@ input:checked + .switch-slider:before {
     }
 
     // --- Custom Channel (Channel 1) ---
-    async getCustomValue(channel, valueId) {
+    async getCustomValue(channel, valueId, ...args) {
       const predicate = (data) => {
         return (data[0] === VIA_CMD.CUSTOM_GET_VALUE && data[1] === channel && data[2] === valueId) || data[0] === 0xFF;
       };
-      const res = await this.sendCommand([VIA_CMD.CUSTOM_GET_VALUE, channel, valueId], 2000, 2, predicate);
-      if (!res || res[0] === 0xFF || res[1] !== channel || res[2] !== valueId) {
+      try {
+        const res = await this.sendCommand([VIA_CMD.CUSTOM_GET_VALUE, channel, valueId, ...args], 600, 1, predicate);
+        if (!res || res[0] === 0xFF || res[1] !== channel || res[2] !== valueId) {
+          return null;
+        }
+        return res;
+      } catch (e) {
         return null;
       }
-      return res;
     }
 
     async setCustomValue(channel, valueId, ...args) {
-      return await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, channel, valueId, ...args]);
+      return await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, channel, valueId, ...args], 600, 1);
     }
 
     async saveCustomConfig(channel = CHANNELS.CUSTOM) {
@@ -10392,7 +11190,8 @@ input:checked + .switch-slider:before {
             winLock: (capFlags & 0x08) !== 0,
             layerLighting: (capFlags & 0x10) !== 0,
             heatmap: (capFlags & 0x20) !== 0,
-            directLighting: (capFlags & 0x40) !== 0
+            directLighting: (capFlags & 0x40) !== 0,
+            multiGradients: (capFlags & 0x80) !== 0
           }
         };
       } catch (e) {
@@ -10739,7 +11538,7 @@ input:checked + .switch-slider:before {
           keyEl.style.cursor = "default";
         } else if (key.isKnob) {
           keyEl.classList.add("keycap-knob");
-          keyEl.innerHTML = `<div class="knob-icon">🎛️</div>`;
+          keyEl.innerHTML = `<div class="knob-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="3" x2="12" y2="7"></line></svg></div>`;
         } else {
           keyEl.innerHTML = `
             <div class="key-secondary">${key.label}</div>
@@ -10786,9 +11585,9 @@ input:checked + .switch-slider:before {
       const cwInfo = window.getKeycodeInfo(enc.CW);
       const pressInfo = window.getKeycodeInfo(enc.Press);
 
-      const ccwLabel = window.i18n ? window.i18n.t("rotCCW") : "↺ Rotate Left (CCW)";
-      const pressLabel = window.i18n ? window.i18n.t("knobPress") : "🔘 Knob Press (Click)";
-      const cwLabel = window.i18n ? window.i18n.t("rotCW") : "↻ Rotate Right (CW)";
+      const ccwLabel = window.i18n ? window.i18n.t("rotCCW") : "Rotate Left (CCW)";
+      const pressLabel = window.i18n ? window.i18n.t("knobPress") : "Knob Press (Click)";
+      const cwLabel = window.i18n ? window.i18n.t("rotCW") : "Rotate Right (CW)";
 
       panel.innerHTML = `
         <div class="encoder-slots-grid">
@@ -10825,7 +11624,18 @@ input:checked + .switch-slider:before {
       const pickers = document.querySelectorAll("#keycodePickerPalette, #encoderKeycodePickerPalette");
       if (!pickers || pickers.length === 0) return;
 
-      const filtered = window.KEYCODES_DB.filter(k => k.category === this.selectedCategory);
+      const lightingType = window.deviceManager ? window.deviceManager.getLightingType() : 'rgb_matrix';
+      let filtered = window.KEYCODES_DB.filter(k => k.category === this.selectedCategory);
+
+      if (this.selectedCategory === 'lighting') {
+        if (lightingType === 'monochrome') {
+          filtered = filtered.filter(k => !k.lightingType || k.lightingType === 'monochrome');
+        } else if (lightingType === 'rgb_matrix') {
+          filtered = filtered.filter(k => !k.lightingType || k.lightingType === 'rgb_matrix' || k.lightingType === 'monochrome');
+        } else if (lightingType === 'none') {
+          filtered = [];
+        }
+      }
 
       pickers.forEach(picker => {
         picker.innerHTML = "";
@@ -10958,7 +11768,62 @@ input:checked + .switch-slider:before {
     { id: 31, name: "Digital Rain", isRainbow: false },
     { id: 32, name: "Riverflow", isRainbow: false },
     { id: 33, name: "Lux Wave", isRainbow: true },
-    { id: 34, name: "Cycle Dynamic", isRainbow: true }
+    { id: 34, name: "Cycle Dynamic", isRainbow: true },
+    { id: 35, name: "Gradient Cycle (Multi-Stop)", isRainbow: true },
+    { id: 36, name: "Gradient Wave (Multi-Stop)", isRainbow: true },
+    { id: 37, name: "Gradient Spiral (Multi-Stop)", isRainbow: true },
+    { id: 38, name: "Gradient Breathe (Multi-Stop)", isRainbow: true }
+  ];
+
+  const HARDWARE_GRADIENT_PRESETS = [
+    // 0: Rainbow (Classic full spectrum HSV)
+    null,
+    // 1: Cyberpunk: Cyan -> Hot Pink -> Neon Yellow (3-stop 33.3% equal interval)
+    [
+      { pos: 0, r: 0, g: 255, b: 255 },
+      { pos: 85, r: 255, g: 0, b: 128 },
+      { pos: 170, r: 255, g: 255, b: 0 }
+    ],
+    // 2: Synthwave: Deep Purple -> Magenta -> Orange -> Gold (4-stop 25% equal interval)
+    [
+      { pos: 0, r: 75, g: 0, b: 130 },
+      { pos: 64, r: 255, g: 0, b: 128 },
+      { pos: 128, r: 255, g: 100, b: 0 },
+      { pos: 192, r: 255, g: 215, b: 0 }
+    ],
+    // 3: Sunset: Violet -> Crimson -> Amber (3-stop 33.3% equal interval)
+    [
+      { pos: 0, r: 45, g: 10, b: 85 },
+      { pos: 85, r: 235, g: 45, b: 55 },
+      { pos: 170, r: 255, g: 190, b: 40 }
+    ],
+    // 4: Toxic Lime: Acid Lime -> Toxic Yellow -> Radioactive Green (3-stop 33.3% equal interval)
+    [
+      { pos: 0, r: 166, g: 255, b: 0 },
+      { pos: 85, r: 243, g: 255, b: 0 },
+      { pos: 170, r: 0, g: 229, b: 58 }
+    ],
+    // 5: Ocean: Deep Navy -> Azure -> Aqua -> Sky Blue (4-stop 25% equal interval)
+    [
+      { pos: 0, r: 0, g: 20, b: 80 },
+      { pos: 64, r: 0, g: 140, b: 255 },
+      { pos: 128, r: 0, g: 255, b: 200 },
+      { pos: 192, r: 135, g: 206, b: 250 }
+    ],
+    // 6: Fire & Ice: Ice Blue -> White -> Flame -> Crimson (4-stop 25% equal interval)
+    [
+      { pos: 0, r: 0, g: 200, b: 255 },
+      { pos: 64, r: 255, g: 255, b: 255 },
+      { pos: 128, r: 255, g: 80, b: 0 },
+      { pos: 192, r: 180, g: 0, b: 0 }
+    ],
+    // 7: Pastel: Lavender -> Mint -> Peach -> Pink (4-stop 25% equal interval)
+    [
+      { pos: 0, r: 218, g: 182, b: 252 },
+      { pos: 64, r: 168, g: 240, b: 219 },
+      { pos: 128, r: 255, g: 209, b: 178 },
+      { pos: 192, r: 255, g: 182, b: 193 }
+    ]
   ];
 
   const CODE_TO_KEY_ID = {
@@ -11043,7 +11908,29 @@ input:checked + .switch-slider:before {
           reactiveMode: 1,          // Default 1: Reactive Fade
           reactiveColor: [0, 255],  // Default Red/Accent
           reactiveSpeed: 128,
-          reactiveBlend: 0          // 0: Additive Glow, 1: Solid Override
+          reactiveBlend: 0,         // 0: Additive Glow, 1: Solid Override
+          effectDensity: 128,       // 128 = 1.0x baseline spatial density
+          activeGradient: 0,
+          customProfiles: [
+            // Profile 1 (0): Default Cyan -> Hot Pink -> Yellow (33.3% equal intervals)
+            [
+              { pos: 0, r: 0, g: 255, b: 255 },
+              { pos: 85, r: 255, g: 0, b: 128 },
+              { pos: 170, r: 255, g: 255, b: 0 }
+            ],
+            // Profile 2 (1): Default Deep Purple -> Sunset Orange -> Golden Sun (33.3% equal intervals)
+            [
+              { pos: 0, r: 128, g: 0, b: 255 },
+              { pos: 85, r: 255, g: 60, b: 0 },
+              { pos: 170, r: 255, g: 215, b: 0 }
+            ]
+          ]
+        },
+        monochrome: {
+          enabled: true,
+          brightness: 255,
+          breathing: false,
+          tint: "#ffffff"
         },
         hostLeds: {
           caps: false,
@@ -11052,11 +11939,19 @@ input:checked + .switch-slider:before {
         }
       };
 
+      this._gradientLut = null;
+      this._pendingStopsProf = 0;
+      this._pendingStops = null;
+      this._stopsThrottleTimer = null;
+      this._isSendingCustomStops = false;
+      this._stopsResendNeeded = false;
+
       this._throttleTimers = new Map();
       this._tickBound = this._tickVisualizer.bind(this);
     }
 
     init() {
+      this._rebuildGradientLut();
       this._populateEffectsDropdown();
       this._bindTabs();
       this._bindEvents();
@@ -11111,12 +12006,16 @@ input:checked + .switch-slider:before {
 
       const keyP = layout.find(k => k.id === "P" || k.label === "P");
       if (keyP) {
+        const pKeyW = (keyP.w !== undefined) ? keyP.w : 1;
+        const pKeyH = (keyP.h !== undefined) ? keyP.h : 1;
+        const pCenterX = keyP.x + (pKeyW / 2);
+        const pCenterY = keyP.y + (pKeyH / 2);
         centerX = (keyP.qmkPoint && keyP.qmkPoint[0] !== undefined)
           ? keyP.qmkPoint[0]
-          : Math.round((keyP.x / bounds.width) * 224);
+          : Math.round((pCenterX / bounds.width) * 224);
         centerY = (keyP.qmkPoint && keyP.qmkPoint[1] !== undefined)
           ? keyP.qmkPoint[1]
-          : Math.round((keyP.y / bounds.height) * 64);
+          : Math.round((pCenterY / bounds.height) * 64);
       }
 
       // 1. Render all Keys + Logo Badge + Rotary Knob in each container
@@ -11126,13 +12025,13 @@ input:checked + .switch-slider:before {
         const keyCenterX = key.x + (keyW / 2);
         const keyCenterY = key.y + (keyH / 2);
 
-        // QMK hardware coordinate grid uses key switch anchor positions
+        // QMK hardware coordinate grid uses key switch anchor positions (center of the key)
         const qmkX = (key.qmkPoint && key.qmkPoint[0] !== undefined)
           ? key.qmkPoint[0]
-          : Math.round((key.x / bounds.width) * 224);
+          : Math.round((keyCenterX / bounds.width) * 224);
         const qmkY = (key.qmkPoint && key.qmkPoint[1] !== undefined)
           ? key.qmkPoint[1]
-          : Math.round((key.y / bounds.height) * 64);
+          : Math.round((keyCenterY / bounds.height) * 64);
         const dx = qmkX - centerX;
         const dy = qmkY - centerY;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -11157,7 +12056,7 @@ input:checked + .switch-slider:before {
             if (!this.logoBadgeEl) this.logoBadgeEl = keyEl;
           } else if (key.isKnob) {
             keyEl.classList.add("lighting-knob-preview");
-            keyEl.innerHTML = `<span class="l-legend">🎛️</span>`;
+            keyEl.innerHTML = `<span class="l-legend"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="3" x2="12" y2="7"></line></svg></span>`;
           } else {
             keyEl.innerHTML = `<span class="l-legend">${key.label}</span>`;
           }
@@ -11432,6 +12331,113 @@ input:checked + .switch-slider:before {
       });
     }
 
+    _rebuildGradientLut() {
+      const presetId = this.state.custom.activeGradient;
+      if (presetId === 0 || !presetId) {
+        this._gradientLut = null;
+        return;
+      }
+
+      let stops = null;
+      if (presetId >= 1 && presetId <= 7) {
+        stops = HARDWARE_GRADIENT_PRESETS[presetId];
+      } else if (presetId === 8 || presetId === 9) {
+        const profIdx = (presetId === 9) ? 1 : 0;
+        stops = (this.state.custom.customProfiles && this.state.custom.customProfiles[profIdx]) || [
+          { pos: 0, r: 0, g: 255, b: 255 },
+          { pos: 85, r: 255, g: 0, b: 128 },
+          { pos: 170, r: 255, g: 255, b: 0 }
+        ];
+      }
+
+      if (!stops || stops.length === 0) {
+        this._gradientLut = null;
+        return;
+      }
+
+      const lut = new Array(256);
+      const s0 = stops[0];
+      const sLast = stops[stops.length - 1];
+      const wrapSpan = (255 - sLast.pos) + s0.pos;
+
+      for (let phase = 0; phase < 256; phase++) {
+        let r = 255, g = 255, b = 255;
+        if (phase <= s0.pos) {
+          if (wrapSpan === 0) {
+            r = s0.r; g = s0.g; b = s0.b;
+          } else {
+            const progress = (phase + (255 - sLast.pos)) / wrapSpan;
+            r = Math.round(sLast.r + (s0.r - sLast.r) * progress);
+            g = Math.round(sLast.g + (s0.g - sLast.g) * progress);
+            b = Math.round(sLast.b + (s0.b - sLast.b) * progress);
+          }
+        } else if (phase >= sLast.pos) {
+          if (wrapSpan === 0) {
+            r = sLast.r; g = sLast.g; b = sLast.b;
+          } else {
+            const progress = (phase - sLast.pos) / wrapSpan;
+            r = Math.round(sLast.r + (s0.r - sLast.r) * progress);
+            g = Math.round(sLast.g + (s0.g - sLast.g) * progress);
+            b = Math.round(sLast.b + (s0.b - sLast.b) * progress);
+          }
+        } else {
+          for (let i = 0; i < stops.length - 1; i++) {
+            const cur = stops[i];
+            const next = stops[i + 1];
+            if (phase >= cur.pos && phase <= next.pos) {
+              const span = next.pos - cur.pos;
+              const progress = span === 0 ? 0 : (phase - cur.pos) / span;
+              r = Math.round(cur.r + (next.r - cur.r) * progress);
+              g = Math.round(cur.g + (next.g - cur.g) * progress);
+              b = Math.round(cur.b + (next.b - cur.b) * progress);
+              break;
+            }
+          }
+        }
+        lut[phase] = {
+          r: Math.min(255, Math.max(0, r)),
+          g: Math.min(255, Math.max(0, g)),
+          b: Math.min(255, Math.max(0, b))
+        };
+      }
+      this._gradientLut = lut;
+    }
+
+    _sampleGradientRgb(presetId, phase, vScale = 1.0, sScale = 1.0) {
+      phase = ((phase % 256) + 256) % 256;
+      if (presetId === 0 || !presetId || !this._gradientLut) {
+        return this._hsvToRgb(phase, 255 * sScale, 255 * vScale);
+      }
+
+      const col = this._gradientLut[phase];
+      if (!col) {
+        return this._hsvToRgb(phase, 255 * sScale, 255 * vScale);
+      }
+
+      let r = col.r;
+      let g = col.g;
+      let b = col.b;
+
+      if (sScale < 0.999) {
+        const gray = (r * 0.299 + g * 0.587 + b * 0.114);
+        r = Math.round(gray + (r - gray) * sScale);
+        g = Math.round(gray + (g - gray) * sScale);
+        b = Math.round(gray + (b - gray) * sScale);
+      }
+
+      if (vScale < 0.999) {
+        r = Math.round(r * vScale);
+        g = Math.round(g * vScale);
+        b = Math.round(b * vScale);
+      }
+
+      return {
+        r: Math.min(255, Math.max(0, r)),
+        g: Math.min(255, Math.max(0, g)),
+        b: Math.min(255, Math.max(0, b))
+      };
+    }
+
     // --- 1:1 QMK ALGORITHM ENGINE ---
     _evalQmkEffect(effect, k, tByte, baseH, baseS, baseV, rev, now, speed) {
       let h = baseH;
@@ -11439,6 +12445,7 @@ input:checked + .switch-slider:before {
       let v = baseV;
 
       const spdFactor = Math.max(0.1, speed / 128);
+      const density = (this.state.custom.effectDensity != null ? this.state.custom.effectDensity : 128) / 128;
 
       switch (effect) {
         case 0: // ALL_OFF
@@ -11507,8 +12514,8 @@ input:checked + .switch-slider:before {
           {
             h = baseH; v = baseV;
             const angle = (Math.atan2(k.dy, k.dx) + Math.PI) / (2 * Math.PI) * 255;
-            const t = rev ? tByte : (255 - tByte);
-            const val = ((angle * 3 + t) % 256 + 256) % 256;
+            const t = rev ? (255 - tByte) : tByte;
+            const val = ((angle + t) % 256 + 256) % 256;
             s = Math.round((baseS * val) / 255);
           }
           break;
@@ -11517,8 +12524,8 @@ input:checked + .switch-slider:before {
           {
             h = baseH; s = baseS;
             const angle = (Math.atan2(k.dy, k.dx) + Math.PI) / (2 * Math.PI) * 255;
-            const t = rev ? tByte : (255 - tByte);
-            const val = ((angle * 3 + t) % 256 + 256) % 256;
+            const t = rev ? (255 - tByte) : tByte;
+            const val = ((angle + t) % 256 + 256) % 256;
             v = Math.round((baseV * val) / 255);
           }
           break;
@@ -11544,52 +12551,88 @@ input:checked + .switch-slider:before {
           break;
 
         case 12: // CYCLE_ALL (Rainbow spectrum)
-          h = (rev ? (255 - tByte) : tByte) & 0xFF;
-          s = 255; v = baseV;
+          {
+            const phase = ((rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
+          }
           break;
 
         case 13: // CYCLE_LEFT_RIGHT (Rainbow Wave Left->Right)
-          h = (k.qmkX + (rev ? tByte : (255 - tByte))) & 0xFF;
-          s = 255; v = baseV;
+          {
+            const spatialX = Math.round(k.qmkX * density);
+            const phase = (spatialX + (rev ? tByte : (255 - tByte)) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
+          }
           break;
 
         case 14: // CYCLE_UP_DOWN (Rainbow Wave Top->Bottom)
-          h = (k.qmkY * 4 + (rev ? tByte : (255 - tByte))) & 0xFF;
-          s = 255; v = baseV;
+          {
+            const spatialY = Math.round(k.qmkY * 4 * density);
+            const phase = (spatialY + (rev ? tByte : (255 - tByte)) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
+          }
           break;
 
         case 15: // RAINBOW_MOVING_CHEVRON
-          h = (Math.abs(k.dy) * 2 + k.qmkX + (rev ? tByte : (255 - tByte))) & 0xFF;
-          s = 255; v = baseV;
+          {
+            const phase = (Math.round((Math.abs(k.dy) * 2 + k.qmkX) * density) + (rev ? tByte : (255 - tByte)) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
+          }
           break;
 
         case 16: // CYCLE_OUT_IN (QMK: 3 * dist / 2 + (rev ? -time : time))
-          h = (Math.round(1.5 * k.dist) + (rev ? (255 - tByte) : tByte)) & 0xFF;
-          s = 255; v = baseV;
+          {
+            const phase = (Math.round(1.5 * k.dist * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
+          }
           break;
 
         case 17: // CYCLE_OUT_IN_DUAL (QMK: 3 * dist + (rev ? -time : time))
           {
             const dxDual = 56 - Math.abs(k.dx);
             const distDual = Math.sqrt(dxDual * dxDual + k.dy * k.dy);
-            h = (Math.round(3 * distDual) + (rev ? (255 - tByte) : tByte)) & 0xFF;
-            s = 255; v = baseV;
+            const phase = (Math.round(3 * distDual * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
           }
           break;
 
         case 18: // CYCLE_PINWHEEL
           {
             const angle = (Math.atan2(k.dy, k.dx) + Math.PI) / (2 * Math.PI) * 255;
-            h = (angle + (rev ? (255 - tByte) : tByte)) & 0xFF;
-            s = 255; v = baseV;
+            const phase = (Math.round(angle * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
           }
           break;
 
         case 19: // CYCLE_SPIRAL
           {
             const angle = (Math.atan2(k.dy, k.dx) + Math.PI) / (2 * Math.PI) * 255;
-            h = (k.dist + (rev ? tByte : (255 - tByte)) - angle) & 0xFF;
-            s = 255; v = baseV;
+            const phase = (Math.round((k.dist - angle) * density) + (rev ? tByte : (255 - tByte)) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase; s = baseS; v = baseV;
           }
           break;
 
@@ -11597,24 +12640,33 @@ input:checked + .switch-slider:before {
           {
             const angle = Math.atan2(k.dy, k.dx);
             const sSin = rev ? -1 : 1;
-            h = (Math.round(((k.dy * Math.cos(now * 0.003 * spdFactor) + k.dx * Math.sin(now * 0.003 * spdFactor) * sSin) / 128) * 128 + 128)) & 0xFF;
-            s = 255; v = baseV;
+            h = (Math.round(((k.dy * Math.cos(now * 0.003 * spdFactor) + k.dx * Math.sin(now * 0.003 * spdFactor) * sSin) / 128) * 128 + 128) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, h, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            s = baseS; v = baseV;
           }
           break;
 
         case 21: // RAINBOW_BEACON
           {
             const angle = (Math.atan2(k.dy, k.dx) + Math.PI) / (2 * Math.PI) * 255;
-            h = (angle * 2 + (rev ? (255 - tByte) : tByte)) & 0xFF;
-            s = 255; v = baseV;
+            h = (angle * 2 + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, h, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            s = baseS; v = baseV;
           }
           break;
 
         case 22: // RAINBOW_PINWHEELS
           {
             const sSin = rev ? -1 : 1;
-            h = (Math.round(((k.dy * 3 * Math.cos(now * 0.003 * spdFactor) + (56 - Math.abs(k.dx)) * 3 * Math.sin(now * 0.003 * spdFactor) * sSin) / 128) * 128 + 128)) & 0xFF;
-            s = 255; v = baseV;
+            h = (Math.round(((k.dy * 3 * Math.cos(now * 0.003 * spdFactor) + (56 - Math.abs(k.dx)) * 3 * Math.sin(now * 0.003 * spdFactor) * sSin) / 128) * 128 + 128) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, h, baseV / 255, baseS / 255), h: 0, s: 0, v: baseV };
+            }
+            s = baseS; v = baseV;
           }
           break;
 
@@ -11629,8 +12681,12 @@ input:checked + .switch-slider:before {
         case 24: // JELLYBEAN_RAINDROPS (Multi-color Rainbow drops)
           {
             h = this._getJellybeanHue(k.id, now);
+            const rVal = this._getRaindropVal(k.id, now, spdFactor);
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, h, (baseV * rVal) / 255), h: 0, s: 0, v: baseV };
+            }
             s = 255;
-            v = Math.round(baseV * this._getRaindropVal(k.id, now, spdFactor));
+            v = Math.round(baseV * rVal);
           }
           break;
 
@@ -11651,38 +12707,34 @@ input:checked + .switch-slider:before {
           {
             const t = rev ? (255 - tByte) : tByte;
             const diff = Math.abs(k.qmkX - t);
-            h = (baseH + Math.round((diff / 224) * 24)) & 0xFF;
+            const wave = Math.max(0, 255 - diff * 4);
+            h = (baseH + Math.round((wave / 255) * 32)) & 0xFF;
             s = baseS; v = baseV;
           }
           break;
 
         case 28: // PIXEL_RAIN
-          {
-            const drop = (k.qmkX * 3 + Math.floor(now * 0.012 * spdFactor + k.qmkY * 0.4)) % 256;
-            h = drop; s = 255;
-            const trail = Math.max(0, Math.sin((k.qmkY * 0.2 - now * 0.008 * spdFactor + k.qmkX * 0.1) % (Math.PI * 2)));
-            v = Math.round(baseV * (0.15 + 0.85 * trail));
+          h = (Math.round(k.qmkX * 3 * density) + (rev ? (255 - tByte) : tByte)) & 0xFF;
+          if (this.state.custom.activeGradient > 0) {
+            return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, h, baseV / 255), h: 0, s: 0, v: baseV };
           }
+          s = 255; v = baseV;
           break;
 
         case 29: // PIXEL_FLOW
-          h = (k.qmkX * 2 + k.qmkY * 3 + (rev ? tByte : (255 - tByte))) & 0xFF;
+          h = (Math.round((k.qmkX * 2 + k.qmkY * 3) * density) + (rev ? tByte : (255 - tByte))) & 0xFF;
+          if (this.state.custom.activeGradient > 0) {
+            return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, h, baseV / 255), h: 0, s: 0, v: baseV };
+          }
           s = 255; v = baseV;
           break;
 
         case 30: // PIXEL_FRACTAL
-          h = ((k.qmkX ^ k.qmkY) * 4 + (rev ? tByte : (255 - tByte))) & 0xFF;
-          s = 255; v = baseV;
-          break;
-
-        case 31: // TYPING_HEATMAP (Live physical heat from user typing)
-          {
-            const heat = this.keyHeat.get(k.id) || 0;
-            // Green (85) -> Yellow (45) -> Red (0) -> Violet (210)
-            h = Math.round(85 - (heat / 255) * 85);
-            s = 255;
-            v = Math.round(baseV * (0.08 + 0.92 * (heat / 255)));
+          h = (Math.round((k.qmkX ^ k.qmkY) * 4 * density) + (rev ? tByte : (255 - tByte))) & 0xFF;
+          if (this.state.custom.activeGradient > 0) {
+            return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, h, baseV / 255), h: 0, s: 0, v: baseV };
           }
+          s = 255; v = baseV;
           break;
 
         case 31: // DIGITAL_RAIN (Matrix Green stream)
@@ -11706,7 +12758,53 @@ input:checked + .switch-slider:before {
           break;
 
         case 33: // LUXQMK_WAVE
+          {
+            const phase = (Math.round((k.qmkX / 2) * density) + (rev ? -tByte : tByte) + baseH) & 0xFF;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase;
+            s = 255; v = baseV;
+          }
+          break;
+
         case 34: // CYCLE_DYNAMIC
+          {
+            const dist = Math.sqrt(k.dx * k.dx + k.dy * k.dy);
+            const phase = (rev ? (Math.round(1.5 * dist * density) - tByte) : (Math.round(1.5 * dist * density) + tByte)) + baseH;
+            if (this.state.custom.activeGradient > 0) {
+              return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase & 0xFF, baseV / 255), h: 0, s: 0, v: baseV };
+            }
+            h = phase & 0xFF;
+            s = 255; v = baseV;
+          }
+          break;
+
+        case 35: // CUSTOM_GRADIENT_CYCLE
+          {
+            const phase = (rev ? (Math.round(k.qmkX * density) - tByte) : (Math.round(k.qmkX * density) + tByte)) + baseH;
+            return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase & 0xFF, baseV / 255), h: 0, s: 0, v: baseV };
+          }
+
+        case 36: // CUSTOM_GRADIENT_WAVE
+          {
+            const phase = (Math.round((k.qmkX / 2) * density) + (rev ? -tByte : tByte) + baseH) & 0xFF;
+            return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255), h: 0, s: 0, v: baseV };
+          }
+
+        case 37: // CUSTOM_GRADIENT_SPIRAL
+          {
+            const dist = Math.sqrt(k.dx * k.dx + k.dy * k.dy);
+            const phase = (rev ? (Math.round(1.5 * dist * density) - tByte) : (Math.round(1.5 * dist * density) + tByte)) + baseH;
+            return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase & 0xFF, baseV / 255), h: 0, s: 0, v: baseV };
+          }
+
+        case 38: // CUSTOM_GRADIENT_BREATHE
+          {
+            const phase = tByte;
+            return { rgb: this._sampleGradientRgb(this.state.custom.activeGradient, phase, baseV / 255), h: 0, s: 0, v: baseV };
+          }
+
         default:
           {
             const w1 = Math.sin(now * 0.003 * spdFactor + (k.qmkX / 224) * 6.28 * (rev ? 1 : -1));
@@ -11798,8 +12896,84 @@ input:checked + .switch-slider:before {
           }
         }
 
+        const lightingType = window.deviceManager ? window.deviceManager.getLightingType() : 'rgb_matrix';
+
+        // 1. TIER 1: NO LIGHTING (Unlit Mechanical Keycaps)
+        if (lightingType === 'none') {
+          for (let i = 0; i < this.visualizerKeys.length; i++) {
+            const k = this.visualizerKeys[i];
+            if (!k || k.isKnob) continue;
+            const keyTargets = k.els || [k.el];
+            for (let t = 0; t < keyTargets.length; t++) {
+              const el = keyTargets[t];
+              if (!el) continue;
+              el.style.backgroundColor = '';
+              el.style.color = '';
+              el.style.boxShadow = '';
+              el.style.borderColor = '';
+            }
+          }
+          for (let i = 0; i < this.sideDiffusers.length; i++) {
+            const s = this.sideDiffusers[i];
+            if (!s || !s.el) continue;
+            s.el.style.backgroundColor = 'transparent';
+            s.el.style.boxShadow = 'none';
+          }
+          this.animFrameId = requestAnimationFrame(this._tickBound);
+          return;
+        }
+
+        // 2. TIER 2: MONOCHROMATIC BACKLIGHT
+        if (lightingType === 'monochrome') {
+          const isMonoOn = this.state.monochrome ? this.state.monochrome.enabled : true;
+          let monoBri = this.state.monochrome ? (this.state.monochrome.brightness / 255) : 1.0;
+          if (!isMonoOn) monoBri = 0;
+          if (isMonoOn && this.state.monochrome && this.state.monochrome.breathing) {
+            const pulse = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(now * 0.003));
+            monoBri *= pulse;
+          }
+          const tintHex = (this.state.monochrome && this.state.monochrome.tint) || '#ffffff';
+          const tintRgb = this._hexToRgb(tintHex) || { r: 255, g: 255, b: 255 };
+          const monoR = Math.round(tintRgb.r * monoBri);
+          const monoG = Math.round(tintRgb.g * monoBri);
+          const monoB = Math.round(tintRgb.b * monoBri);
+          const glowAlpha = Math.min(0.8, monoBri * 0.65);
+          const textColor = (monoR * 0.299 + monoG * 0.587 + monoB * 0.114) > 140 ? '#111827' : '#ffffff';
+
+          for (let i = 0; i < this.visualizerKeys.length; i++) {
+            const k = this.visualizerKeys[i];
+            if (!k || k.isKnob) continue;
+            const keyTargets = k.els || [k.el];
+            for (let t = 0; t < keyTargets.length; t++) {
+              const el = keyTargets[t];
+              if (!el) continue;
+              if (monoBri > 0) {
+                el.style.backgroundColor = `rgb(${monoR}, ${monoG}, ${monoB})`;
+                el.style.color = textColor;
+                el.style.boxShadow = `0 0 10px rgba(${monoR}, ${monoG}, ${monoB}, ${glowAlpha}), inset 0 0 4px rgba(255, 255, 255, ${monoBri * 0.3})`;
+                el.style.borderColor = `rgba(${monoR}, ${monoG}, ${monoB}, 0.8)`;
+              } else {
+                el.style.backgroundColor = '';
+                el.style.color = '';
+                el.style.boxShadow = '';
+                el.style.borderColor = '';
+              }
+            }
+          }
+          for (let i = 0; i < this.sideDiffusers.length; i++) {
+            const s = this.sideDiffusers[i];
+            if (!s || !s.el) continue;
+            s.el.style.backgroundColor = monoBri > 0 ? `rgb(${monoR}, ${monoG}, ${monoB})` : 'transparent';
+            s.el.style.boxShadow = monoBri > 0 ? `0 0 10px rgba(${monoR}, ${monoG}, ${monoB}, ${glowAlpha})` : 'none';
+          }
+          this.animFrameId = requestAnimationFrame(this._tickBound);
+          return;
+        }
+
+        // 3. TIER 3: RGB MATRIX ENGINE
         const speed = Math.max(10, Number(this.state.rgb.speed) || 128);
-        const tByte = Math.round((now * 0.06 * (speed / 128))) & 0xFF;
+        // Exact 1:1 mathematical parity with QMK scale16by8(g_rgb_timer, rgb_matrix_config.speed / 2)
+        const tByte = Math.round(now * (speed / 512)) & 0xFF;
         
         const effect = Number.isFinite(this.state.rgb.effect) ? this.state.rgb.effect : 13;
         const brightness = Math.max(0, Math.min(255, Number(this.state.rgb.brightness) || 255)) / 255;
@@ -11890,8 +13064,13 @@ input:checked + .switch-slider:before {
             continue;
           }
 
+          // --- ROTARY KNOB ENCODER (Mechanical wheel without RGB matrix LED) ---
+          if (k.isKnob) {
+            continue;
+          }
+
           // Base Background Color
-          let curRgb = this._hsvToRgb(h, s, v);
+          let curRgb = res.rgb ? res.rgb : this._hsvToRgb(h, s, v);
 
           // --- DUAL-LAYER LIGHTING: REACTIVE OVERLAY (1:1 QMK luxqmk.c) ---
           if (isReactiveActive) {
@@ -12099,7 +13278,7 @@ input:checked + .switch-slider:before {
           if (!sd) continue;
           const res = this._evalQmkEffect(effect, sd, tByte, baseH, baseS, baseV, rev, now, speed);
           let v = res.v * (isLayerActive ? layerDim : 1.0);
-          const rgb = this._hsvToRgb(res.h, res.s, v);
+          const rgb = res.rgb ? res.rgb : this._hsvToRgb(res.h, res.s, v);
 
           const sdTargets = (sd.els || [sd.el]).filter(el => !el.closest || !el.closest("#studioLightingKeyboardCanvas"));
           for (let t = 0; t < sdTargets.length; t++) {
@@ -12130,20 +13309,20 @@ input:checked + .switch-slider:before {
 
       if (isLayerActive) {
         const dimVal = Math.round((this.state.custom.layerDimLevel / 255) * 100);
-        badge.innerHTML = window.i18n ? window.i18n.t("badgeLayerActive", { layer: activeLyr, dim: dimVal }) : `🎨 Layer ${activeLyr} Active • Dimming: ${dimVal}%`;
+        badge.innerHTML = window.i18n ? window.i18n.t("badgeLayerActive", { layer: activeLyr, dim: dimVal }) : `Layer ${activeLyr} Active • Dimming: ${dimVal}%`;
       } else if (this.activeTab === "reactive") {
         const rEffNames = ["Disabled", "Fade", "Splash Ripple", "Rainbow Splash", "Cross +", "Nexus X", "Wide Wave", "Typing Heatmap"];
         const curRMode = this.state.custom.reactiveMode || 0;
         const modeLabel = rEffNames[curRMode] || 'Active';
         badge.innerHTML = this.state.custom.reactiveEnable
-          ? (window.i18n ? window.i18n.t("badgeReactiveActive", { mode: modeLabel }) : `⚡ Reactive Layer: Enabled (${modeLabel})`)
-          : (window.i18n ? window.i18n.t("badgeReactiveDisabled") : `⚡ Reactive Layer: Disabled`);
+          ? (window.i18n ? window.i18n.t("badgeReactiveActive", { mode: modeLabel }) : `Reactive Layer: Enabled (${modeLabel})`)
+          : (window.i18n ? window.i18n.t("badgeReactiveDisabled") : `Reactive Layer: Disabled`);
       } else if (this.activeTab === "logo") {
-        badge.innerHTML = window.i18n ? window.i18n.t("badgeLogoPreview") : `💎 Logo & Knob Lock Indicator Preview`;
+        badge.innerHTML = window.i18n ? window.i18n.t("badgeLogoPreview") : `Logo & Knob Lock Indicator Preview`;
       } else if (this.activeTab === "winlock") {
-        badge.innerHTML = window.i18n ? window.i18n.t("badgeWinLockPreview") : `🔒 Windows Key Lock Preview (Win Lock)`;
+        badge.innerHTML = window.i18n ? window.i18n.t("badgeWinLockPreview") : `Windows Key Lock Preview (Win Lock)`;
       } else {
-        badge.innerHTML = `${eff.isRainbow ? '🌈' : '💡'} ` + (window.i18n ? window.i18n.t("badgeEffectBrightness", { name: eff.name, pct }) : `${eff.name} • ${pct}% Brightness`);
+        badge.innerHTML = window.i18n ? window.i18n.t("badgeEffectBrightness", { name: eff.name, pct }) : `${eff.name} • ${pct}% Brightness`;
       }
     }
 
@@ -12169,6 +13348,16 @@ input:checked + .switch-slider:before {
         r: Math.max(0, Math.min(255, Math.round((r + m) * 255))),
         g: Math.max(0, Math.min(255, Math.round((g + m) * 255))),
         b: Math.max(0, Math.min(255, Math.round((b + m) * 255)))
+      };
+    }
+
+    _hexToRgb(hex) {
+      let c = (hex || "#ffffff").replace('#', '');
+      if (c.length === 3) c = c.split('').map(x => x + x).join('');
+      return {
+        r: parseInt(c.substring(0, 2), 16) || 255,
+        g: parseInt(c.substring(2, 4), 16) || 255,
+        b: parseInt(c.substring(4, 6), 16) || 255
       };
     }
 
@@ -12231,6 +13420,16 @@ input:checked + .switch-slider:before {
       this.clearStaleHits();
       const C = window.GMMK3_CONSTANTS;
       try {
+        // Monochrome Backlight values (if supported / Tier 2)
+        try {
+          const monoBriRes = await this.protocol.getBacklightValue?.(1);
+          if (monoBriRes && monoBriRes[0] !== 0xFF && Number.isFinite(monoBriRes[3])) {
+            if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
+            this.state.monochrome.brightness = monoBriRes[3];
+            this.state.monochrome.enabled = monoBriRes[3] > 0;
+          }
+        } catch (err) {}
+
         // 1. RGB Matrix values
         const bRes = await this.protocol.getRGBMatrixValue(C.RGB_MATRIX_VAL.BRIGHTNESS);
         if (bRes && bRes[0] !== 0xFF && Number.isFinite(bRes[3])) this.state.rgb.brightness = bRes[3];
@@ -12344,6 +13543,58 @@ input:checked + .switch-slider:before {
           this.state.custom.reactiveBlend = rBlendRes[3];
         }
 
+        const densityRes = await this.protocol.getCustomValue(C.CHANNELS.CUSTOM, 36);
+        if (densityRes && densityRes[0] !== 0xFF && Number.isFinite(densityRes[3])) {
+          this.state.custom.effectDensity = densityRes[3];
+        }
+
+        // Hardware Multi-Stop Gradient Query
+        const gradPresetRes = await this.protocol.getCustomValue(C.CHANNELS.CUSTOM, 33);
+        if (gradPresetRes && gradPresetRes[0] !== 0xFF && Number.isFinite(gradPresetRes[3])) {
+          this.state.custom.activeGradient = gradPresetRes[3];
+          const selHwGrad = document.getElementById("hardwareGradientPresetSelect");
+          if (selHwGrad) selHwGrad.value = String(gradPresetRes[3]);
+          const hwGradEditorGroup = document.getElementById("hardwareGradientEditorGroup");
+          if (hwGradEditorGroup) {
+            hwGradEditorGroup.style.display = (gradPresetRes[3] === 8 || gradPresetRes[3] === 9) ? "block" : "none";
+          }
+        }
+
+        // Query both Custom Gradient Profiles (0 and 1) from EEPROM
+        for (let p = 0; p < 2; p++) {
+          try {
+            const countRes = await this.protocol.getCustomValue(C.CHANNELS.CUSTOM, 34, p);
+            if (countRes && countRes[0] !== 0xFF && Number.isFinite(countRes[4]) && countRes[4] >= 2 && countRes[4] <= 8) {
+              const count = countRes[4];
+              const loadedStops = [];
+              for (let s = 0; s < count; s++) {
+                const stopRes = await this.protocol.getCustomValue(C.CHANNELS.CUSTOM, 35, p, s);
+                if (stopRes && stopRes[0] !== 0xFF && Number.isFinite(stopRes[5])) {
+                  loadedStops.push({
+                    pos: stopRes[5],
+                    r: stopRes[6],
+                    g: stopRes[7],
+                    b: stopRes[8]
+                  });
+                }
+              }
+              if (loadedStops.length >= 2) {
+                this.state.custom.customProfiles[p] = loadedStops;
+              }
+            }
+          } catch (err) {
+            console.warn(`Could not load custom gradient profile ${p}:`, err);
+          }
+        }
+
+        if (this.hardwareGradientEditor) {
+          const activeProfIdx = (this.state.custom.activeGradient === 9) ? 1 : 0;
+          if (this.state.custom.customProfiles && this.state.custom.customProfiles[activeProfIdx]) {
+            this.hardwareGradientEditor.setStops(this.state.custom.customProfiles[activeProfIdx], false);
+          }
+        }
+        this._rebuildGradientLut();
+
         this.updateUI();
       } catch (e) {
         console.warn("Could not load full lighting config from device:", e);
@@ -12365,6 +13616,11 @@ input:checked + .switch-slider:before {
       const lblSpd = document.getElementById("rgbSpdVal");
       if (lblSpd) lblSpd.textContent = this.state.rgb.speed;
 
+      const sliderDensity = document.getElementById("rgbDensitySlider");
+      if (sliderDensity) sliderDensity.value = this.state.custom.effectDensity ?? 128;
+      const lblDensity = document.getElementById("rgbDensityVal");
+      if (lblDensity) lblDensity.textContent = this.state.custom.effectDensity ?? 128;
+
       const colorRgb = document.getElementById("rgbColorPicker");
       if (colorRgb) colorRgb.value = this._hsToHex(this.state.rgb.hs[0], this.state.rgb.hs[1]);
 
@@ -12377,9 +13633,15 @@ input:checked + .switch-slider:before {
       if (colorGroup && curEff) {
         const descSpan = colorGroup.querySelector("span");
         if (descSpan) {
-          descSpan.textContent = curEff.isRainbow
-            ? (window.i18n ? window.i18n.t("hintRainbowColor") : "Rainbow effect (uses full color spectrum)")
-            : (window.i18n ? window.i18n.t("hintSingleColor") : "Set color for single-color effects");
+          if (curEff.isRainbow) {
+            if (this.state.custom.activeGradient > 0) {
+              descSpan.textContent = window.i18n ? window.i18n.t("hintGradientColor") : "Gradient palette active — color adjusts palette phase shift (starting hue) and saturation";
+            } else {
+              descSpan.textContent = window.i18n ? window.i18n.t("hintRainbowColor") : "Rainbow effect — color sets initial hue phase offset and saturation";
+            }
+          } else {
+            descSpan.textContent = window.i18n ? window.i18n.t("hintSingleColor") : "Set color for single-color effects";
+          }
         }
       }
 
@@ -12484,6 +13746,32 @@ input:checked + .switch-slider:before {
 
       const colAll = document.getElementById("colorAll");
       if (colAll) colAll.value = this._hsToHex(this.state.custom.lockColors.all[0], this.state.custom.lockColors.all[1]);
+
+      // 4. Monochrome Backlight UI
+      const chkMonoPower = document.getElementById("chkMonochromePower");
+      if (chkMonoPower) chkMonoPower.checked = this.state.monochrome?.enabled ?? true;
+
+      const sliderMonoBri = document.getElementById("monochromeBrightnessSlider");
+      if (sliderMonoBri) sliderMonoBri.value = this.state.monochrome?.brightness ?? 255;
+      const lblMonoBri = document.getElementById("monochromeBriVal");
+      if (lblMonoBri) {
+        const val = this.state.monochrome?.brightness ?? 255;
+        lblMonoBri.textContent = `${Math.round(val / 2.55)}% (${val})`;
+      }
+
+      const chkMonoBrtg = document.getElementById("chkMonochromeBreathing");
+      if (chkMonoBrtg) chkMonoBrtg.checked = this.state.monochrome?.breathing ?? false;
+
+      const tintPicker = document.getElementById("monochromeTintPicker");
+      if (tintPicker) tintPicker.value = this.state.monochrome?.tint ?? "#ffffff";
+
+      const badgeMono = document.getElementById("monochromeStatusBadge");
+      if (badgeMono) {
+        const isEn = this.state.monochrome?.enabled ?? true;
+        const bri = this.state.monochrome?.brightness ?? 255;
+        badgeMono.textContent = isEn ? `Active • ${Math.round(bri / 2.55)}%` : "Disabled";
+        badgeMono.className = isEn ? "badge-pill badge-success" : "badge-pill";
+      }
     }
 
     _populateEffectsDropdown() {
@@ -12506,13 +13794,50 @@ input:checked + .switch-slider:before {
       }, delay));
     }
 
+    _sendCustomGradientStopsThrottled(prof, stops) {
+      this._pendingStopsProf = prof;
+      this._pendingStops = stops;
+      if (this._stopsThrottleTimer) clearTimeout(this._stopsThrottleTimer);
+      this._stopsThrottleTimer = setTimeout(() => {
+        this._flushCustomGradientStops();
+      }, 120);
+    }
+
+    async _flushCustomGradientStops() {
+      if (this._isSendingCustomStops) {
+        this._stopsResendNeeded = true;
+        return;
+      }
+      if (!this.protocol || !this.protocol.isConnected || !this._pendingStops) return;
+      this._isSendingCustomStops = true;
+      this._stopsResendNeeded = false;
+      const prof = this._pendingStopsProf;
+      const stops = this._pendingStops;
+      const C = window.GMMK3_CONSTANTS;
+      try {
+        await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 34, prof, stops.length);
+        for (let s = 0; s < stops.length && s < 8; s++) {
+          await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 35, prof, s, stops[s].pos, stops[s].r, stops[s].g, stops[s].b);
+        }
+      } catch (err) {
+        console.warn("Failed to stream custom gradient stops:", err);
+      } finally {
+        this._isSendingCustomStops = false;
+        if (this._stopsResendNeeded) {
+          this._stopsResendNeeded = false;
+          this._flushCustomGradientStops();
+        }
+      }
+    }
+
     setControlsEnabled(enabled) {
       const controlIds = [
-        "rgbBrightnessSlider", "rgbEffectSelect", "rgbSpeedSlider", "rgbColorPicker", "chkRgbReverse",
+        "rgbBrightnessSlider", "rgbEffectSelect", "rgbSpeedSlider", "rgbDensitySlider", "rgbColorPicker", "chkRgbReverse",
         "chkReactiveEnable", "reactiveModeSelect", "reactiveColorPicker", "reactiveSpeedSlider", "reactiveBlendSelect",
         "winLockModeSelect", "winLockColorPicker", "chkWinLockToggle",
         "chkLayerLighting", "layerDimSlider", "layer1ColorPicker", "layer2ColorPicker", "layer3ColorPicker",
-        "logoModeSelect", "colorCaps", "colorNum", "colorScroll", "colorCapsNum", "colorCapsScroll", "colorNumScroll", "colorAll"
+        "logoModeSelect", "colorCaps", "colorNum", "colorScroll", "colorCapsNum", "colorCapsScroll", "colorNumScroll", "colorAll",
+        "chkMonochromePower", "monochromeBrightnessSlider", "chkMonochromeBreathing", "monochromeTintPicker"
       ];
       controlIds.forEach(id => {
         const el = document.getElementById(id);
@@ -12522,6 +13847,56 @@ input:checked + .switch-slider:before {
 
     _bindEvents() {
       const C = window.GMMK3_CONSTANTS;
+
+      // 0. Monochrome Backlight Events
+      document.getElementById("chkMonochromePower")?.addEventListener("change", async (e) => {
+        const isEnabled = e.target.checked;
+        if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
+        this.state.monochrome.enabled = isEnabled;
+        const badge = document.getElementById("monochromeStatusBadge");
+        if (badge) {
+          badge.textContent = isEnabled ? `Active • ${Math.round(this.state.monochrome.brightness / 2.55)}%` : "Disabled";
+          badge.className = isEnabled ? "badge-pill badge-success" : "badge-pill";
+        }
+        if (this.protocol && this.protocol.device) {
+          try {
+            await this.protocol.setBacklightValue?.(1, isEnabled ? this.state.monochrome.brightness : 0);
+          } catch (err) {}
+        }
+      });
+
+      document.getElementById("monochromeBrightnessSlider")?.addEventListener("input", (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
+        this.state.monochrome.brightness = val;
+        const lbl = document.getElementById("monochromeBriVal");
+        if (lbl) lbl.textContent = `${Math.round(val / 2.55)}% (${val})`;
+        const badge = document.getElementById("monochromeStatusBadge");
+        if (badge && this.state.monochrome.enabled) {
+          badge.textContent = `Active • ${Math.round(val / 2.55)}%`;
+        }
+        if (this.protocol && this.protocol.device) {
+          this._throttleHid("mono_bri", async () => {
+            await this.protocol.setBacklightValue?.(1, val);
+          }, 80);
+        }
+      });
+
+      document.getElementById("chkMonochromeBreathing")?.addEventListener("change", async (e) => {
+        const isBreathing = e.target.checked;
+        if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
+        this.state.monochrome.breathing = isBreathing;
+        if (this.protocol && this.protocol.device) {
+          try {
+            await this.protocol.setBacklightValue?.(2, isBreathing ? 1 : 0);
+          } catch (err) {}
+        }
+      });
+
+      document.getElementById("monochromeTintPicker")?.addEventListener("change", (e) => {
+        if (!this.state.monochrome) this.state.monochrome = { enabled: true, brightness: 255, breathing: false, tint: '#ffffff' };
+        this.state.monochrome.tint = e.target.value;
+      });
 
       // 1. Backlight Events
       document.getElementById("rgbEffectSelect")?.addEventListener("change", async (e) => {
@@ -12569,6 +13944,25 @@ input:checked + .switch-slider:before {
         if (this.protocol && this.protocol.device) {
           await this.protocol.setRGBMatrixValue(C.RGB_MATRIX_VAL.EFFECT_SPEED, this.state.rgb.speed);
           await this.protocol.saveCustomConfig(C.CHANNELS.RGB_MATRIX);
+        }
+      });
+
+      document.getElementById("rgbDensitySlider")?.addEventListener("input", (e) => {
+        const val = parseInt(e.target.value, 10);
+        this.state.custom.effectDensity = val;
+        const lbl = document.getElementById("rgbDensityVal");
+        if (lbl) lbl.textContent = val;
+        if (this.protocol && this.protocol.device) {
+          this._throttleHid("rgb_density", async () => {
+            await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 36, val);
+          }, 80);
+        }
+      });
+
+      document.getElementById("rgbDensitySlider")?.addEventListener("change", async () => {
+        if (this.protocol && this.protocol.device) {
+          await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 36, this.state.custom.effectDensity ?? 128);
+          await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
         }
       });
 
@@ -12743,6 +14137,80 @@ input:checked + .switch-slider:before {
       this._bindLockColorPicker("colorCapsScroll", C.CUSTOM_VAL.LOGO_COLOR_CAPS_SCROLL, "capsScroll");
       this._bindLockColorPicker("colorNumScroll", C.CUSTOM_VAL.LOGO_COLOR_NUM_SCROLL, "numScroll");
       this._bindLockColorPicker("colorAll", C.CUSTOM_VAL.LOGO_COLOR_ALL, "all");
+
+      // 4. Hardware Multi-Stop Gradient Events
+      const selHwGrad = document.getElementById("hardwareGradientPresetSelect");
+      const hwGradEditorGroup = document.getElementById("hardwareGradientEditorGroup");
+      if (selHwGrad) {
+        selHwGrad.addEventListener("change", async (e) => {
+          const val = parseInt(e.target.value, 10);
+          this.state.custom.activeGradient = val;
+          this._rebuildGradientLut();
+          this.updateUI();
+          if (hwGradEditorGroup) {
+            hwGradEditorGroup.style.display = (val === 8 || val === 9) ? "block" : "none";
+          }
+          if (val === 8 || val === 9) {
+            const profIdx = (val === 9) ? 1 : 0;
+            if (this.hardwareGradientEditor && this.state.custom.customProfiles && this.state.custom.customProfiles[profIdx]) {
+              this.hardwareGradientEditor.setStops(this.state.custom.customProfiles[profIdx], false);
+            }
+          }
+          // The gradient palette applies globally to ALL animations without switching the active effect
+          if (this.protocol && this.protocol.isConnected) {
+            this._throttleHid("hw_gradient", async () => {
+              try {
+                await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 33, val);
+                await this.protocol.saveCustomConfig(C.CHANNELS.CUSTOM);
+              } catch (err) {
+                console.warn("Could not set hardware gradient preset:", err);
+              }
+            }, 50);
+          }
+        });
+      }
+
+      if (document.getElementById("hardwareGradientEditorContainer") && window.GradientEditor) {
+        const initialProfIdx = (this.state.custom.activeGradient === 9) ? 1 : 0;
+        this.hardwareGradientEditor = new window.GradientEditor("hardwareGradientEditorContainer", {
+          stops: (this.state.custom.customProfiles && this.state.custom.customProfiles[initialProfIdx]) || [
+            { pos: 0, r: 0, g: 255, b: 255 },
+            { pos: 85, r: 255, g: 0, b: 128 },
+            { pos: 170, r: 255, g: 255, b: 0 }
+          ],
+          onChange: (stops) => {
+            const prof = (this.state.custom.activeGradient === 9) ? 1 : 0;
+            this.state.custom.customProfiles[prof] = stops;
+            this._rebuildGradientLut();
+            if (this.protocol && this.protocol.isConnected && (this.state.custom.activeGradient === 8 || this.state.custom.activeGradient === 9)) {
+              this._sendCustomGradientStopsThrottled(prof, stops);
+            }
+          }
+        });
+      }
+
+      const btnSaveHwGrad = document.getElementById("btnSaveHardwareGradient");
+      if (btnSaveHwGrad) {
+        btnSaveHwGrad.addEventListener("click", async () => {
+          if (!this.protocol || !this.protocol.isConnected) {
+            if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastConnectKeyboardFirst") : "Connect keyboard first", "warning");
+            return;
+          }
+          const prof = (this.state.custom.activeGradient === 9) ? 1 : 0;
+          const stops = this.hardwareGradientEditor ? this.hardwareGradientEditor.getStops() : (this.state.custom.customProfiles[prof] || []);
+          this.state.custom.customProfiles[prof] = stops;
+          try {
+            await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 34, prof, stops.length);
+            for (let s = 0; s < stops.length && s < 8; s++) {
+              await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 35, prof, s, stops[s].pos, stops[s].r, stops[s].g, stops[s].b);
+            }
+            await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, 37, prof, 1);
+            if (window.gUI) window.gUI.showToast(window.i18n ? window.i18n.t("toastGradientSavedToEeprom") : "Gradient profile saved to EEPROM", "success");
+          } catch (err) {
+            if (window.gUI) window.gUI.showToast(err.message, "error");
+          }
+        });
+      }
     }
 
     _bindColorPicker(id, valId, stateKey) {
@@ -13330,49 +14798,50 @@ input:checked + .switch-slider:before {
  */
 
 (function () {
-  // Curated Color Palettes (RGB Stop Tables)
+  // Curated Color Palettes (RGB Stop Tables with Equal Angular Distribution for 360° Circular Looping)
   const PALETTES = {
     rainbow: null, // Dynamic HSV Rainbow
     cyberpunk: [
-      { pos: 0.0, rgb: [0, 240, 255] },    // Electric Cyan #00F0FF
-      { pos: 0.5, rgb: [255, 0, 85] },     // Neon Pink #FF0055
-      { pos: 1.0, rgb: [255, 208, 0] }     // Cyber Amber #FFD000
+      { pos: 0.0, rgb: [0, 240, 255] },      // Electric Cyan #00F0FF (0%)
+      { pos: 0.333, rgb: [255, 0, 85] },     // Neon Pink #FF0055 (33.3%)
+      { pos: 0.667, rgb: [255, 208, 0] }     // Cyber Amber #FFD000 (66.7%)
     ],
     vaporwave: [
-      { pos: 0.0, rgb: [155, 81, 224] },   // Pastel Violet #9B51E0
-      { pos: 0.5, rgb: [255, 117, 151] },  // Sunset Pink #FF7597
-      { pos: 1.0, rgb: [0, 229, 255] }     // Pastel Cyan #00E5FF
+      { pos: 0.0, rgb: [155, 81, 224] },     // Pastel Violet #9B51E0 (0%)
+      { pos: 0.333, rgb: [255, 117, 151] },  // Sunset Pink #FF7597 (33.3%)
+      { pos: 0.667, rgb: [0, 229, 255] }     // Pastel Cyan #00E5FF (66.7%)
     ],
     fire_ember: [
-      { pos: 0.0, rgb: [255, 30, 0] },     // Magma Crimson #FF1E00
-      { pos: 0.5, rgb: [255, 119, 0] },    // Ember Orange #FF7700
-      { pos: 1.0, rgb: [255, 221, 0] }     // Gold Flame #FFDD00
+      { pos: 0.0, rgb: [255, 30, 0] },       // Magma Crimson #FF1E00 (0%)
+      { pos: 0.333, rgb: [255, 119, 0] },    // Ember Orange #FF7700 (33.3%)
+      { pos: 0.667, rgb: [255, 221, 0] }     // Gold Flame #FFDD00 (66.7%)
     ],
     ocean_abyss: [
-      { pos: 0.0, rgb: [0, 34, 68] },      // Deep Navy #002244
-      { pos: 0.35, rgb: [0, 102, 255] },   // Azure #0066FF
-      { pos: 0.7, rgb: [0, 255, 255] },    // Electric Cyan #00FFFF
-      { pos: 1.0, rgb: [0, 255, 176] }     // Seafoam Aqua #00FFB0
+      { pos: 0.0, rgb: [0, 34, 68] },        // Deep Navy #002244 (0%)
+      { pos: 0.25, rgb: [0, 102, 255] },     // Azure #0066FF (25%)
+      { pos: 0.5, rgb: [0, 255, 255] },      // Electric Cyan #00FFFF (50%)
+      { pos: 0.75, rgb: [0, 255, 176] }      // Seafoam Aqua #00FFB0 (75%)
     ],
     matrix_code: [
-      { pos: 0.0, rgb: [0, 255, 102] },    // Phosphor Green #00FF66
-      { pos: 0.5, rgb: [57, 255, 20] },    // Cyber Lime #39FF14
-      { pos: 1.0, rgb: [0, 143, 17] }      // Deep Emerald #008F11
+      { pos: 0.0, rgb: [0, 255, 102] },      // Phosphor Green #00FF66 (0%)
+      { pos: 0.333, rgb: [57, 255, 20] },    // Cyber Lime #39FF14 (33.3%)
+      { pos: 0.667, rgb: [0, 143, 17] }      // Deep Emerald #008F11 (66.7%)
     ],
     synthwave: [
-      { pos: 0.0, rgb: [138, 43, 226] },   // Blue Violet #8A2BE2
-      { pos: 0.5, rgb: [255, 20, 147] },   // Hot Pink #FF1493
-      { pos: 1.0, rgb: [255, 204, 0] }     // Sunburst Gold #FFCC00
+      { pos: 0.0, rgb: [138, 43, 226] },     // Blue Violet #8A2BE2 (0%)
+      { pos: 0.25, rgb: [255, 20, 147] },    // Hot Pink #FF1493 (25%)
+      { pos: 0.5, rgb: [255, 100, 0] },      // Neon Orange (50%)
+      { pos: 0.75, rgb: [255, 204, 0] }      // Sunburst Gold #FFCC00 (75%)
     ],
     ice_glacier: [
-      { pos: 0.0, rgb: [0, 51, 102] },     // Arctic Deep Blue #003366
-      { pos: 0.5, rgb: [112, 214, 255] },  // Glacier Ice Blue #70D6FF
-      { pos: 1.0, rgb: [224, 247, 250] }   // Polar White Frost #E0F7FA
+      { pos: 0.0, rgb: [0, 51, 102] },       // Arctic Deep Blue #003366 (0%)
+      { pos: 0.333, rgb: [112, 214, 255] },  // Glacier Ice Blue #70D6FF (33.3%)
+      { pos: 0.667, rgb: [224, 247, 250] }   // Polar White Frost #E0F7FA (66.7%)
     ],
     toxic_radiation: [
-      { pos: 0.0, rgb: [166, 255, 0] },    // Acid Lime #A6FF00
-      { pos: 0.5, rgb: [243, 255, 0] },    // Toxic Yellow #F3FF00
-      { pos: 1.0, rgb: [0, 229, 58] }      // Radioactive Green #00E53A
+      { pos: 0.0, rgb: [166, 255, 0] },      // Acid Lime #A6FF00 (0%)
+      { pos: 0.333, rgb: [243, 255, 0] },    // Toxic Yellow #F3FF00 (33.3%)
+      { pos: 0.667, rgb: [0, 229, 58] }      // Radioactive Green #00E53A (66.7%)
     ],
     singleColor: null
   };
@@ -13404,17 +14873,97 @@ input:checked + .switch-slider:before {
     ];
   }
 
-  function samplePaletteRgb(paletteName, factor, customRgb = [0, 255, 255]) {
+  let _lastCustomStopsRef = null;
+  let _lastCustomStopsLut = null;
+
+  function _buildCustomStopsLut(activeStops) {
+    const lut = new Array(256);
+    const sorted = [...activeStops].sort((a, b) => a.pos - b.pos);
+    const s0 = sorted[0];
+    const sLast = sorted[sorted.length - 1];
+    const wrapSpan = (255 - sLast.pos) + s0.pos;
+
+    for (let f255 = 0; f255 < 256; f255++) {
+      let r = s0.r, g = s0.g, b = s0.b;
+      if (f255 <= s0.pos) {
+        if (wrapSpan === 0) {
+          r = s0.r; g = s0.g; b = s0.b;
+        } else {
+          const progress = (f255 + (255 - sLast.pos)) / wrapSpan;
+          r = Math.round(sLast.r + (s0.r - sLast.r) * progress);
+          g = Math.round(sLast.g + (s0.g - sLast.g) * progress);
+          b = Math.round(sLast.b + (s0.b - sLast.b) * progress);
+        }
+      } else if (f255 >= sLast.pos) {
+        if (wrapSpan === 0) {
+          r = sLast.r; g = sLast.g; b = sLast.b;
+        } else {
+          const progress = (f255 - sLast.pos) / wrapSpan;
+          r = Math.round(sLast.r + (s0.r - sLast.r) * progress);
+          g = Math.round(sLast.g + (s0.g - sLast.g) * progress);
+          b = Math.round(sLast.b + (s0.b - sLast.b) * progress);
+        }
+      } else {
+        for (let i = 0; i < sorted.length - 1; i++) {
+          const cur = sorted[i];
+          const next = sorted[i + 1];
+          if (f255 >= cur.pos && f255 <= next.pos) {
+            const span = next.pos - cur.pos;
+            const t = span === 0 ? 0 : (f255 - cur.pos) / span;
+            r = Math.round(cur.r + (next.r - cur.r) * t);
+            g = Math.round(cur.g + (next.g - cur.g) * t);
+            b = Math.round(cur.b + (next.b - cur.b) * t);
+            break;
+          }
+        }
+      }
+      lut[f255] = [r, g, b];
+    }
+    return lut;
+  }
+
+  function samplePaletteRgb(paletteName, factor, customRgb = [0, 255, 255], customGradientStops = null) {
     if (paletteName === "singleColor") {
       return customRgb;
     }
+    const activeStops = customGradientStops || window.gStudioLighting?.config?.softwareGradientStops || window.PRESET_GRADIENTS?.cyberpunk?.stops;
+    if (paletteName === "customGradient" && Array.isArray(activeStops) && activeStops.length >= 2) {
+      if (_lastCustomStopsRef !== activeStops || !_lastCustomStopsLut) {
+        _lastCustomStopsRef = activeStops;
+        _lastCustomStopsLut = _buildCustomStopsLut(activeStops);
+      }
+      const f255 = Math.round((((factor % 1) + 1) % 1) * 255) & 0xFF;
+      return _lastCustomStopsLut[f255] || [s0?.r || 0, s0?.g || 255, s0?.b || 255];
+    }
+
     const f = ((factor % 1) + 1) % 1; // Normalize to 0..1
     if (paletteName === "rainbow" || !PALETTES[paletteName]) {
       return hsvToRgb(Math.round(f * 255), 255, 255);
     }
     const stops = PALETTES[paletteName];
-    if (f <= stops[0].pos) return stops[0].rgb;
-    if (f >= stops[stops.length - 1].pos) return stops[stops.length - 1].rgb;
+    const s0 = stops[0];
+    const sLast = stops[stops.length - 1];
+
+    if (f <= s0.pos) {
+      const wrapSpan = (1.0 - sLast.pos) + s0.pos;
+      if (wrapSpan === 0) return s0.rgb;
+      const progress = (f + (1.0 - sLast.pos)) / wrapSpan;
+      return [
+        Math.round(sLast.rgb[0] + (s0.rgb[0] - sLast.rgb[0]) * progress),
+        Math.round(sLast.rgb[1] + (s0.rgb[1] - sLast.rgb[1]) * progress),
+        Math.round(sLast.rgb[2] + (s0.rgb[2] - sLast.rgb[2]) * progress)
+      ];
+    }
+    if (f >= sLast.pos) {
+      const wrapSpan = (1.0 - sLast.pos) + s0.pos;
+      if (wrapSpan === 0) return sLast.rgb;
+      const progress = (f - sLast.pos) / wrapSpan;
+      return [
+        Math.round(sLast.rgb[0] + (s0.rgb[0] - sLast.rgb[0]) * progress),
+        Math.round(sLast.rgb[1] + (s0.rgb[1] - sLast.rgb[1]) * progress),
+        Math.round(sLast.rgb[2] + (s0.rgb[2] - sLast.rgb[2]) * progress)
+      ];
+    }
 
     for (let i = 0; i < stops.length - 1; i++) {
       const s1 = stops[i];
@@ -14439,6 +15988,7 @@ input:checked + .switch-slider:before {
       const intensity = this.config.effectIntensity || 1.0;
       const floor = (this.config.softwareFloor <= 0.01) ? 0 : (this.config.softwareFloor || 0.10);
       const customRgb = this._hexToRgbList(this.config.softwareCustomHex || "#00ffff");
+      const customGradientStops = this.config.softwareGradientStops || (window.PRESET_GRADIENTS?.cyberpunk?.stops);
 
       // Update particle physics & procedural generators
       if (preset === "particleStorm") {
@@ -14525,7 +16075,7 @@ input:checked + .switch-slider:before {
 
         const { rgb, brightFactor } = this._sampleSoftwareFxPixel({
           normX, normY, qmkX, qmkY, dx, dy, dist, angle, angleNorm, dirCoord, isAlpha, i, isDiffuser: false,
-          now, preset, palette, direction, speed, intensity, floor, customRgb
+          now, preset, palette, direction, speed, intensity, floor, customRgb, customGradientStops
         });
 
         this._applyKeyRgb(k, rgb[0], rgb[1], rgb[2], brightFactor);
@@ -14550,7 +16100,7 @@ input:checked + .switch-slider:before {
 
         const { rgb, brightFactor } = this._sampleSoftwareFxPixel({
           normX, normY, qmkX, qmkY, dx, dy, dist, angle, angleNorm, dirCoord, isAlpha: false, i: undefined, isDiffuser: true,
-          now, preset, palette, direction, speed, intensity, floor, customRgb
+          now, preset, palette, direction, speed, intensity, floor, customRgb, customGradientStops
         });
 
         this._applyDiffuserRgb(sd, rgb[0], rgb[1], rgb[2], brightFactor);
@@ -14559,7 +16109,7 @@ input:checked + .switch-slider:before {
       // Render Logo Badge LED
       if (this.lighting.logoBadgeEl) {
         const logoBright = Math.max(floor * intensity, 0.9 * intensity);
-        const sampled = samplePaletteRgb(palette, now * 0.0008 * speed, customRgb);
+        const sampled = samplePaletteRgb(palette, now * 0.0008 * speed, customRgb, customGradientStops);
         const rgb = sampled ? sampled : this._hsvToRgbList(Math.round((now * 0.05 * speed) % 256), 255, 255);
         this._applyLogoRgb(this.lighting.logoBadgeEl, rgb[0], rgb[1], rgb[2], logoBright);
       }
@@ -14568,7 +16118,7 @@ input:checked + .switch-slider:before {
     _sampleSoftwareFxPixel(params) {
       const {
         normX, normY, qmkX, qmkY, dx, dy, dist, angle, angleNorm, dirCoord, isAlpha, i, isDiffuser,
-        now, preset, palette, direction, speed, intensity, floor, customRgb
+        now, preset, palette, direction, speed, intensity, floor, customRgb, customGradientStops
       } = params;
 
       const dx_qmk = (typeof qmkX === "number") ? (qmkX - 112) : Math.round(dx * 112);
@@ -15356,6 +16906,7 @@ input:checked + .switch-slider:before {
       }
 
       const selColorMode = document.getElementById("audioColorModeSelect");
+      const audioGradWrap = document.getElementById("audioGradientEditorGroup");
       if (selColorMode) {
         selColorMode.addEventListener("change", (e) => {
           this.config.audioColorMode = e.target.value;
@@ -15363,15 +16914,24 @@ input:checked + .switch-slider:before {
           if (colorWrap) {
             colorWrap.style.display = e.target.value === "singleColor" ? "block" : "none";
           }
+          if (audioGradWrap) {
+            audioGradWrap.style.display = e.target.value === "customGradient" ? "block" : "none";
+          }
           this._saveConfig();
         });
       }
 
-      const selAudioDir = document.getElementById("audioDirectionSelect");
-      if (selAudioDir) {
-        selAudioDir.addEventListener("change", (e) => {
-          this.config.audioDirection = e.target.value;
-          this._saveConfig();
+      if (document.getElementById("audioGradientEditorContainer") && window.GradientEditor) {
+        this.audioGradientEditor = new window.GradientEditor("audioGradientEditorContainer", {
+          stops: this.config.audioGradientStops || [
+            { pos: 0, r: 0, g: 255, b: 255 },
+            { pos: 128, r: 255, g: 0, b: 128 },
+            { pos: 255, r: 255, g: 255, b: 0 }
+          ],
+          onChange: (stops) => {
+            this.config.audioGradientStops = stops;
+            this._saveConfig();
+          }
         });
       }
 
@@ -15383,6 +16943,14 @@ input:checked + .switch-slider:before {
         };
         pickerAudioColor.addEventListener("input", onAudioColor);
         pickerAudioColor.addEventListener("change", onAudioColor);
+      }
+
+      const selAudioDir = document.getElementById("audioDirectionSelect");
+      if (selAudioDir) {
+        selAudioDir.addEventListener("change", (e) => {
+          this.config.audioDirection = e.target.value;
+          this._saveConfig();
+        });
       }
 
       const sliderAudioSens = document.getElementById("audioSensitivitySlider");
@@ -15449,6 +17017,7 @@ input:checked + .switch-slider:before {
       }
 
       const selSoftPalette = document.getElementById("softwarePaletteSelect");
+      const softGradWrap = document.getElementById("softwareGradientEditorGroup");
       if (selSoftPalette) {
         selSoftPalette.addEventListener("change", (e) => {
           this.config.softwarePalette = e.target.value;
@@ -15456,7 +17025,24 @@ input:checked + .switch-slider:before {
           if (colorWrap) {
             colorWrap.style.display = e.target.value === "singleColor" ? "block" : "none";
           }
+          if (softGradWrap) {
+            softGradWrap.style.display = e.target.value === "customGradient" ? "block" : "none";
+          }
           this._saveConfig();
+        });
+      }
+
+      if (document.getElementById("softwareGradientEditorContainer") && window.GradientEditor) {
+        this.softGradientEditor = new window.GradientEditor("softwareGradientEditorContainer", {
+          stops: this.config.softwareGradientStops || [
+            { pos: 0, r: 0, g: 255, b: 255 },
+            { pos: 128, r: 255, g: 0, b: 128 },
+            { pos: 255, r: 255, g: 255, b: 0 }
+          ],
+          onChange: (stops) => {
+            this.config.softwareGradientStops = stops;
+            this._saveConfig();
+          }
         });
       }
 
@@ -15704,7 +17290,7 @@ input:checked + .switch-slider:before {
         if (key.isLogo) {
           keyEl.innerHTML = "";
         } else if (key.isKnob) {
-          keyEl.innerHTML = `<span class="t-label">🎛️</span>`;
+          keyEl.innerHTML = `<span class="t-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="3" x2="12" y2="7"></line></svg></span>`;
         } else {
           keyEl.innerHTML = `<span class="t-label">${key.label}</span>`;
         }
@@ -15953,9 +17539,13 @@ input:checked + .switch-slider:before {
         const numScroll = await this.protocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_NUM_SCROLL);
         const all = await this.protocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_ALL);
 
+        const densityRes = await this.protocol.getCustomValue(CHANNELS.CUSTOM, 36);
+        const effectDensity = (densityRes && densityRes[0] !== 0xFF && Number.isFinite(densityRes[3])) ? densityRes[3] : 128;
+
         backup.custom_settings = {
           debounce_time: dbTime !== undefined ? dbTime : 5,
           rgb_reverse: rev ? rev[3] === 1 : false,
+          effect_density: effectDensity,
           layer_lighting_enable: lEn ? lEn[3] === 1 : true,
           layer_dim_level: lDim ? lDim[3] : 128,
           layer_colors: {
@@ -15985,7 +17575,45 @@ input:checked + .switch-slider:before {
             all: all ? { h: all[3], s: all[4] } : { h: 0, s: 0 }
           }
         };
-        this._log("Successfully read debounce time, layer colors, reactive layer, Win Lock, and 7 Logo Lock indicators.", "success");
+
+        // Hardware Multi-Stop Gradient Settings
+        try {
+          let activeGrad = 0;
+          const gradRes = await this.protocol.getCustomValue(CHANNELS.CUSTOM, 33);
+          if (gradRes && gradRes[0] !== 0xFF && Number.isFinite(gradRes[3])) {
+            activeGrad = gradRes[3];
+          }
+
+          const customGradProfiles = [];
+          for (let p = 0; p < 2; p++) {
+            const countRes = await this.protocol.getCustomValue(CHANNELS.CUSTOM, 34, p);
+            if (countRes && countRes[0] !== 0xFF && Number.isFinite(countRes[4]) && countRes[4] >= 2 && countRes[4] <= 8) {
+              const count = countRes[4];
+              const stops = [];
+              for (let s = 0; s < count; s++) {
+                const stopRes = await this.protocol.getCustomValue(CHANNELS.CUSTOM, 35, p, s);
+                if (stopRes && stopRes[0] !== 0xFF && Number.isFinite(stopRes[5])) {
+                  stops.push({
+                    pos: stopRes[5],
+                    r: stopRes[6],
+                    g: stopRes[7],
+                    b: stopRes[8]
+                  });
+                }
+              }
+              if (stops.length >= 2) {
+                customGradProfiles.push(stops);
+              }
+            }
+          }
+
+          backup.custom_settings.hardware_gradient = {
+            active_gradient: activeGrad,
+            profiles: customGradProfiles
+          };
+        } catch (e) {}
+
+        this._log("Successfully read debounce time, layer colors, reactive layer, Win Lock, 7 Logo Lock indicators, and gradient profiles.", "success");
       } catch (err) {
         this._log("Custom settings read warning: " + err.message, "warning");
       }
@@ -16148,6 +17776,28 @@ input:checked + .switch-slider:before {
             if (ll.caps_scroll) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_CAPS_SCROLL, ll.caps_scroll.h, ll.caps_scroll.s);
             if (ll.num_scroll) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_NUM_SCROLL, ll.num_scroll.h, ll.num_scroll.s);
             if (ll.all) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_ALL, ll.all.h, ll.all.s);
+          }
+
+          if (cust.hardware_gradient) {
+            const hg = cust.hardware_gradient;
+            if (Number.isFinite(hg.active_gradient)) {
+              await this.protocol.setCustomValue(CHANNELS.CUSTOM, 33, hg.active_gradient);
+            }
+            if (Array.isArray(hg.profiles)) {
+              for (let p = 0; p < hg.profiles.length && p < 2; p++) {
+                const stops = hg.profiles[p];
+                if (Array.isArray(stops) && stops.length >= 2) {
+                  await this.protocol.setCustomValue(CHANNELS.CUSTOM, 34, p, stops.length);
+                  for (let s = 0; s < stops.length && s < 8; s++) {
+                    await this.protocol.setCustomValue(CHANNELS.CUSTOM, 35, p, s, stops[s].pos, stops[s].r, stops[s].g, stops[s].b);
+                  }
+                }
+              }
+            }
+          }
+
+          if (cust.effect_density !== undefined && Number.isFinite(cust.effect_density)) {
+            await this.protocol.setCustomValue(CHANNELS.CUSTOM, 36, cust.effect_density);
           }
 
           await this.protocol.saveCustomConfig(CHANNELS.CUSTOM);
@@ -18162,14 +19812,14 @@ input:checked + .switch-slider:before {
       }
 
       const icons = {
-        info: "ℹ️",
-        success: "✅",
-        warning: "⚠️",
-        error: "❌"
+        info: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+        success: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+        warning: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+        error: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>'
       };
 
-      const icon = icons[type] || "ℹ️";
-      toast.innerHTML = `<span style="font-size:1.1rem; flex-shrink:0;">${icon}</span><span style="flex:1;">${message}</span>`;
+      const icon = icons[type] || icons.info;
+      toast.innerHTML = `<span class="toast-icon-wrap" style="display:inline-flex; align-items:center; flex-shrink:0;">${icon}</span><span style="flex:1;">${message}</span>`;
       toast.className = `app-toast toast-${type} show`;
       toast.onclick = () => {
         toast.classList.remove("show");

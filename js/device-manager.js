@@ -2,8 +2,8 @@
  * LuxQMK Studio - Device Manager & Adaptive Capability Engine
  */
 (function () {
-  const STUDIO_VERSION = "1.1.0";
-  const REQUIRED_FW_VERSION = { major: 0, minor: 1, patch: 2 };
+  const STUDIO_VERSION = "1.2.0";
+  const REQUIRED_FW_VERSION = { major: 0, minor: 2, patch: 0 };
 
   class DeviceManager {
     constructor() {
@@ -105,9 +105,28 @@
       this.applyProfileUI();
     }
 
+    getLightingType() {
+      if (this.firmwareInfo && this.firmwareInfo.capabilities) {
+        if (this.firmwareInfo.capabilities.hasRgbMatrix) return 'rgb_matrix';
+        if (this.firmwareInfo.capabilities.hasMonochromeBacklight) return 'monochrome';
+        if (this.firmwareInfo.capabilities.hasLighting === false) return 'none';
+      }
+      if (this.activeProfile) {
+        if (this.activeProfile.lightingType) return this.activeProfile.lightingType;
+        if (this.activeProfile.capabilities) {
+          if (this.activeProfile.capabilities.hasRgbMatrix) return 'rgb_matrix';
+          if (this.activeProfile.capabilities.hasMonochromeBacklight) return 'monochrome';
+          if (this.activeProfile.capabilities.hasLighting === false) return 'none';
+        }
+      }
+      return 'rgb_matrix';
+    }
+
     applyProfileUI() {
       const profile = this.activeProfile;
       if (!profile) return;
+      const lightingType = this.getLightingType();
+      const i18n = window.i18n;
 
       // 1. Update Hardware Info Card in Settings Tab
       const hwModel = document.getElementById('hw-keyboard-model');
@@ -129,6 +148,17 @@
       const hwMatrix = document.getElementById('hw-matrix-layout');
       if (hwMatrix) hwMatrix.textContent = profile.matrix;
 
+      const hwEeprom = document.getElementById('hw-eeprom-size');
+      if (hwEeprom) {
+        if (this.firmwareInfo && (this.firmwareInfo.major > 0 || this.firmwareInfo.minor >= 2)) {
+          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSize104') : '104 Bytes Dedicated Storage';
+        } else if (this.firmwareInfo) {
+          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSize36') : '36 Bytes Dedicated Storage';
+        } else {
+          hwEeprom.textContent = window.i18n ? window.i18n.t('valEepromSizeDefault') : '104 Bytes Dedicated Storage';
+        }
+      }
+
       // Update Firmware & Engine information
       const hwProto = document.getElementById('hw-protocol-version');
       const hwCompat = document.getElementById('hw-compat-status');
@@ -136,7 +166,8 @@
       if (hwProto) {
         if (this.firmwareInfo && this.firmwareInfo.versionString && this.firmwareInfo.major !== undefined && (this.firmwareInfo.major > 0 || this.firmwareInfo.minor > 0 || this.firmwareInfo.patch > 0)) {
           const qmkStr = this.firmwareInfo.qmkVersion || 'QMK';
-          hwProto.textContent = `LuxQMK ${this.firmwareInfo.versionString} (${qmkStr} / VIA v12)`;
+          const cleanVer = this.firmwareInfo.versionString.replace(/^v+/i, '');
+          hwProto.textContent = `LuxQMK v${cleanVer} (${qmkStr} / VIA v12)`;
         } else if (this.firmwareInfo) {
           hwProto.textContent = window.i18n ? window.i18n.t('statusFwLegacy') : 'Legacy VIA / QMK (Unknown LuxQMK version)';
         } else {
@@ -145,23 +176,27 @@
       }
 
       if (hwCompat) {
-        const i18n = window.i18n;
         if (!this.firmwareInfo) {
           hwCompat.textContent = i18n ? i18n.t('statusFwNotConnected') : '— (Waiting for device)';
           hwCompat.style.color = 'var(--text-muted, #888888)';
         } else if (this.firmwareInfo.major === 0 && this.firmwareInfo.minor === 0 && this.firmwareInfo.patch === 0) {
-          hwCompat.textContent = i18n ? i18n.t('statusFwLegacy') : '⚠️ Legacy Firmware / Unknown Version';
+          hwCompat.textContent = i18n ? i18n.t('statusFwLegacy') : 'Legacy Firmware / Unknown Version';
           hwCompat.style.color = 'var(--accent-amber, #ffaa00)';
         } else {
           const fw = this.firmwareInfo;
-          if (fw.major < REQUIRED_FW_VERSION.major || (fw.major === REQUIRED_FW_VERSION.major && (fw.minor < REQUIRED_FW_VERSION.minor || (fw.minor === REQUIRED_FW_VERSION.minor && fw.patch < REQUIRED_FW_VERSION.patch)))) {
-            hwCompat.textContent = i18n ? i18n.t('statusFwUpdateRequired') : '⚠️ Firmware Update Required (LuxQMK v0.1.2+)';
-            hwCompat.style.color = 'var(--accent-red, #ff4466)';
+          const isOlderThanRequired = fw.major < REQUIRED_FW_VERSION.major ||
+            (fw.major === REQUIRED_FW_VERSION.major && (fw.minor < REQUIRED_FW_VERSION.minor ||
+            (fw.minor === REQUIRED_FW_VERSION.minor && fw.patch < REQUIRED_FW_VERSION.patch)));
+
+          if (isOlderThanRequired) {
+            const detectedStr = `(v${fw.major}.${fw.minor}.${fw.patch})`;
+            hwCompat.textContent = i18n ? `${i18n.t('statusFwUpdateRequired')} ${detectedStr}` : `Firmware Update Recommended (LuxQMK v0.2.0+) ${detectedStr}`;
+            hwCompat.style.color = 'var(--accent-amber, #ffaa00)';
           } else if (fw.major > REQUIRED_FW_VERSION.major || (fw.major === REQUIRED_FW_VERSION.major && fw.minor > REQUIRED_FW_VERSION.minor)) {
-            hwCompat.textContent = i18n ? i18n.t('statusFwNewer') : 'ℹ️ Newer Firmware Detected (Update Studio)';
+            hwCompat.textContent = i18n ? i18n.t('statusFwNewer') : 'Newer Firmware Detected (Update Studio)';
             hwCompat.style.color = 'var(--accent-cyan, #00e5ff)';
           } else {
-            hwCompat.textContent = i18n ? i18n.t('statusFwCompatible') : `✓ Fully Compatible (LuxQMK Studio v${STUDIO_VERSION})`;
+            hwCompat.textContent = i18n ? i18n.t('statusFwCompatible') : `Fully Compatible (LuxQMK Studio v${STUDIO_VERSION})`;
             hwCompat.style.color = 'var(--accent-green, #00ff88)';
           }
         }
@@ -182,18 +217,110 @@
         knobElement.style.display = hasEncoder ? 'flex' : 'none';
       }
 
-      // 3. Adapt Logo Badge LED UI visibility (Lighting Sub-Tab & Cards)
+      // 3. Adapt Lighting Navigation & Views according to Hardware Lighting Tier
+      const lightingNavBtn = document.querySelector('.nav-item-btn[data-view="lighting"]');
+      const studioLightingNavBtn = document.querySelector('.nav-item-btn[data-view="studio_lighting"]');
+
+      if (lightingNavBtn) {
+        if (lightingType === 'none') {
+          lightingNavBtn.style.display = 'none';
+        } else {
+          lightingNavBtn.style.display = 'flex';
+          const navLabel = lightingNavBtn.querySelector('span[data-i18n]') || lightingNavBtn.querySelector('span:not(.nav-icon)');
+          if (navLabel) {
+            if (lightingType === 'monochrome') {
+              navLabel.textContent = i18n ? i18n.t('navBacklight') : 'Backlight';
+              navLabel.setAttribute('data-i18n', 'navBacklight');
+            } else {
+              navLabel.textContent = i18n ? i18n.t('navLighting') : 'QMK Lighting';
+              navLabel.setAttribute('data-i18n', 'navLighting');
+            }
+          }
+        }
+      }
+
+      if (studioLightingNavBtn) {
+        studioLightingNavBtn.style.display = (lightingType === 'rgb_matrix') ? 'flex' : 'none';
+      }
+
+      // View fallback if current view became hidden
+      if (window.gUI && typeof window.gUI.switchView === 'function') {
+        const cur = window.gUI.currentView;
+        if (lightingType === 'none' && (cur === 'lighting' || cur === 'studio_lighting')) {
+          window.gUI.switchView('keymap');
+        } else if (lightingType === 'monochrome' && cur === 'studio_lighting') {
+          window.gUI.switchView('lighting');
+        }
+      }
+
+      // Adapt Keymap Editor category tabs
+      const lightingCatBtn = document.querySelector('.cat-tab-btn[data-category="lighting"]');
+      const customCatBtn = document.querySelector('.cat-tab-btn[data-category="custom"]');
+
+      if (lightingCatBtn) {
+        if (lightingType === 'none') {
+          lightingCatBtn.style.display = 'none';
+        } else {
+          lightingCatBtn.style.display = 'inline-flex';
+          if (lightingType === 'monochrome') {
+            lightingCatBtn.textContent = i18n ? i18n.t('catBacklight') : 'Backlight';
+            lightingCatBtn.setAttribute('data-i18n', 'catBacklight');
+          } else {
+            lightingCatBtn.textContent = i18n ? i18n.t('catLighting') : 'Lighting';
+            lightingCatBtn.setAttribute('data-i18n', 'catLighting');
+          }
+        }
+      }
+
+      if (customCatBtn) {
+        customCatBtn.style.display = (lightingType === 'none') ? 'none' : 'inline-flex';
+      }
+
+      // If active category was hidden, reset to basic
+      if (window.gKeymapEditor && (lightingType === 'none' && (window.gKeymapEditor.selectedCategory === 'lighting' || window.gKeymapEditor.selectedCategory === 'custom'))) {
+        window.gKeymapEditor.selectedCategory = 'basic';
+        document.querySelectorAll('.cat-tab-btn').forEach(b => {
+          b.classList.toggle('active', b.dataset.category === 'basic');
+        });
+        window.gKeymapEditor.renderKeycodePicker();
+      } else if (window.gKeymapEditor) {
+        window.gKeymapEditor.renderKeycodePicker();
+      }
+
+      // Adapt Lighting Sub-Tabs & Cards in view-lighting
+      const lightingTabsHeader = document.querySelector('.lighting-tabs-header');
+      const rgbSubviews = document.querySelectorAll('.lighting-subview:not(#card-monochrome-backlight)');
+      const monochromeCard = document.getElementById('card-monochrome-backlight');
+
+      if (lightingType === 'monochrome') {
+        if (lightingTabsHeader) lightingTabsHeader.style.display = 'none';
+        rgbSubviews.forEach(sv => sv.style.display = 'none');
+        if (monochromeCard) monochromeCard.style.display = 'block';
+      } else if (lightingType === 'rgb_matrix') {
+        if (lightingTabsHeader) lightingTabsHeader.style.display = 'flex';
+        if (monochromeCard) monochromeCard.style.display = 'none';
+        // restore active subview
+        const activeTab = (window.gLighting && window.gLighting.activeTab) ? window.gLighting.activeTab : 'backlight';
+        const activeSubView = document.getElementById(`lighting-tab-${activeTab}`);
+        if (activeSubView) activeSubView.style.display = 'block';
+      } else {
+        if (lightingTabsHeader) lightingTabsHeader.style.display = 'none';
+        rgbSubviews.forEach(sv => sv.style.display = 'none');
+        if (monochromeCard) monochromeCard.style.display = 'none';
+      }
+
+      // 4. Adapt Logo Badge LED UI visibility (Lighting Sub-Tab & Cards)
       const logoTabBtn = document.querySelector('.lighting-tab-btn[data-tab="logo"]');
       const logoCard = document.getElementById('card-logo-led');
       const hasLogo = this.hasCapability('hasLogoBadgeLed') || !!(profile.capabilities && profile.capabilities.hasLogoBadgeLed);
       if (logoTabBtn) {
-        logoTabBtn.style.display = hasLogo ? 'inline-flex' : 'none';
+        logoTabBtn.style.display = (lightingType === 'rgb_matrix' && hasLogo) ? 'inline-flex' : 'none';
       }
       if (logoCard) {
-        logoCard.style.display = hasLogo ? 'block' : 'none';
+        logoCard.style.display = (lightingType === 'rgb_matrix' && hasLogo) ? 'block' : 'none';
       }
 
-      // 4. Update Header Device Label & Layout Preset Selector
+      // 5. Update Header Device Label & Layout Preset Selector
       const deviceTitle = document.getElementById('device-title');
       if (deviceTitle) {
         deviceTitle.textContent = profile.name;
@@ -204,7 +331,7 @@
         layoutPresetSelect.value = profile.id;
       }
 
-      // 5. Update Connected Device Badge in Keymap Toolbar
+      // 6. Update Connected Device Badge in Keymap Toolbar
       const badgeName = document.getElementById('connectedDeviceBadgeName');
       const badgeVidPid = document.getElementById('connectedDeviceBadgeVidPid');
       const badgeProto = document.getElementById('connectedDeviceBadgeProto');
@@ -219,7 +346,8 @@
       }
       if (badgeProto) {
         if (this.firmwareInfo && this.firmwareInfo.versionString && (this.firmwareInfo.major > 0 || this.firmwareInfo.minor > 0 || this.firmwareInfo.patch > 0)) {
-          badgeProto.textContent = `LuxQMK v${this.firmwareInfo.versionString}`;
+          const cleanVer = this.firmwareInfo.versionString.replace(/^v+/i, '');
+          badgeProto.textContent = `LuxQMK v${cleanVer}`;
         } else {
           badgeProto.textContent = 'LuxQMK / VIA';
         }

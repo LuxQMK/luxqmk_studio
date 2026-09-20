@@ -26,6 +26,7 @@
 
   const CHANNELS = {
     CUSTOM: 0x01,
+    BACKLIGHT: 0x02,
     RGB_MATRIX: 0x03
   };
 
@@ -59,6 +60,11 @@
     DEBOUNCE_TIME: 27,
     DIRECT_LIGHTING_ENABLE: 28,
     DIRECT_LIGHTING_BLOCK: 29,
+    GRADIENT_PRESET: 33,
+    GRADIENT_CUSTOM_COUNT: 34,
+    GRADIENT_CUSTOM_STOP: 35,
+    EFFECT_DENSITY: 36,
+    GRADIENT_SAVE_EEPROM: 37,
     BOOTLOADER_JUMP: 0xFE
   };
 
@@ -427,6 +433,15 @@
       return await this.sendCommand([VIA_CMD.MACRO_RESET]);
     }
 
+    // --- Monochromatic Backlight Standard Channel (Channel 2) ---
+    async getBacklightValue(valueId) {
+      return await this.sendCommand([VIA_CMD.CUSTOM_GET_VALUE, CHANNELS.BACKLIGHT, valueId]);
+    }
+
+    async setBacklightValue(valueId, ...args) {
+      return await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.BACKLIGHT, valueId, ...args]);
+    }
+
     // --- RGB Matrix Standard Channel (Channel 3) ---
     async getRGBMatrixValue(valueId) {
       return await this.sendCommand([VIA_CMD.CUSTOM_GET_VALUE, CHANNELS.RGB_MATRIX, valueId]);
@@ -437,19 +452,23 @@
     }
 
     // --- Custom Channel (Channel 1) ---
-    async getCustomValue(channel, valueId) {
+    async getCustomValue(channel, valueId, ...args) {
       const predicate = (data) => {
         return (data[0] === VIA_CMD.CUSTOM_GET_VALUE && data[1] === channel && data[2] === valueId) || data[0] === 0xFF;
       };
-      const res = await this.sendCommand([VIA_CMD.CUSTOM_GET_VALUE, channel, valueId], 2000, 2, predicate);
-      if (!res || res[0] === 0xFF || res[1] !== channel || res[2] !== valueId) {
+      try {
+        const res = await this.sendCommand([VIA_CMD.CUSTOM_GET_VALUE, channel, valueId, ...args], 600, 1, predicate);
+        if (!res || res[0] === 0xFF || res[1] !== channel || res[2] !== valueId) {
+          return null;
+        }
+        return res;
+      } catch (e) {
         return null;
       }
-      return res;
     }
 
     async setCustomValue(channel, valueId, ...args) {
-      return await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, channel, valueId, ...args]);
+      return await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, channel, valueId, ...args], 600, 1);
     }
 
     async saveCustomConfig(channel = CHANNELS.CUSTOM) {
@@ -498,7 +517,8 @@
             winLock: (capFlags & 0x08) !== 0,
             layerLighting: (capFlags & 0x10) !== 0,
             heatmap: (capFlags & 0x20) !== 0,
-            directLighting: (capFlags & 0x40) !== 0
+            directLighting: (capFlags & 0x40) !== 0,
+            multiGradients: (capFlags & 0x80) !== 0
           }
         };
       } catch (e) {
