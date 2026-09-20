@@ -2304,7 +2304,23 @@
     "name": "RGB_REV",
     "category": "custom",
     "title": "Toggle Reverse RGB Direction (QK_KB_1)"
-  }
+  },
+  { "code": 30464, "label": "M0", "name": "M0", "category": "macro", "title": "Execute Macro 0 (QK_MACRO_0)" },
+  { "code": 30465, "label": "M1", "name": "M1", "category": "macro", "title": "Execute Macro 1 (QK_MACRO_1)" },
+  { "code": 30466, "label": "M2", "name": "M2", "category": "macro", "title": "Execute Macro 2 (QK_MACRO_2)" },
+  { "code": 30467, "label": "M3", "name": "M3", "category": "macro", "title": "Execute Macro 3 (QK_MACRO_3)" },
+  { "code": 30468, "label": "M4", "name": "M4", "category": "macro", "title": "Execute Macro 4 (QK_MACRO_4)" },
+  { "code": 30469, "label": "M5", "name": "M5", "category": "macro", "title": "Execute Macro 5 (QK_MACRO_5)" },
+  { "code": 30470, "label": "M6", "name": "M6", "category": "macro", "title": "Execute Macro 6 (QK_MACRO_6)" },
+  { "code": 30471, "label": "M7", "name": "M7", "category": "macro", "title": "Execute Macro 7 (QK_MACRO_7)" },
+  { "code": 30472, "label": "M8", "name": "M8", "category": "macro", "title": "Execute Macro 8 (QK_MACRO_8)" },
+  { "code": 30473, "label": "M9", "name": "M9", "category": "macro", "title": "Execute Macro 9 (QK_MACRO_9)" },
+  { "code": 30474, "label": "M10", "name": "M10", "category": "macro", "title": "Execute Macro 10 (QK_MACRO_10)" },
+  { "code": 30475, "label": "M11", "name": "M11", "category": "macro", "title": "Execute Macro 11 (QK_MACRO_11)" },
+  { "code": 30476, "label": "M12", "name": "M12", "category": "macro", "title": "Execute Macro 12 (QK_MACRO_12)" },
+  { "code": 30477, "label": "M13", "name": "M13", "category": "macro", "title": "Execute Macro 13 (QK_MACRO_13)" },
+  { "code": 30478, "label": "M14", "name": "M14", "category": "macro", "title": "Execute Macro 14 (QK_MACRO_14)" },
+  { "code": 30479, "label": "M15", "name": "M15", "category": "macro", "title": "Execute Macro 15 (QK_MACRO_15)" }
 ];
 
   // Quick lookup dictionary by 16-bit keycode

@@ -8,24 +8,34 @@ document.addEventListener("DOMContentLoaded", async () => {
   const ui = new window.UIController();
   const keymapEditor = new window.KeymapEditor(protocol);
   const lightingController = new window.LightingController(protocol);
-  const audioVisualizer = new window.AudioVisualizer(protocol, lightingController);
+  const studioLighting = (window.StudioLightingController)
+    ? new window.StudioLightingController(protocol, lightingController)
+    : new window.AudioVisualizer(protocol, lightingController);
   const keyTester = new window.KeyTester();
   const backupManager = new window.BackupManager(protocol);
+  const macroManager = new window.MacroManager(protocol);
+  const firmwareFlasher = (window.FirmwareFlasher) ? new window.FirmwareFlasher() : null;
 
   window.gProtocol = protocol;
+  window.gmmkProtocol = protocol;
   window.gUI = ui;
   window.gKeymapEditor = keymapEditor;
   window.gLightingController = lightingController;
-  window.gAudioVisualizer = audioVisualizer;
+  window.gStudioLighting = studioLighting;
+  window.gAudioVisualizer = studioLighting;
   window.gKeyTester = keyTester;
   window.gBackupManager = backupManager;
+  window.gMacroManager = macroManager;
+  window.gFirmwareFlasher = firmwareFlasher;
 
   // Initialize modules
   ui.init();
   keymapEditor.init();
+  macroManager.init();
   lightingController.init();
-  audioVisualizer.init();
+  await studioLighting.init();
   backupManager.init();
+  if (firmwareFlasher) await firmwareFlasher.init();
   window.i18n.translatePage();
 
   // Log listener connected to on-screen console
@@ -198,6 +208,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       await keymapEditor.loadKeymapFromDevice();
       await lightingController.loadFromDevice();
+      await macroManager.loadFromDevice();
       const debounceVal = await protocol.getDebounceTime();
       if (ui.updateDebounceFromDevice) {
         ui.updateDebounceFromDevice(debounceVal);

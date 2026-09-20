@@ -121,9 +121,10 @@
       }
       if (onProgress) onProgress(85);
 
-      // 5. Read LuxQMK custom settings (Layer lighting, Reactive, Dim, Win Lock, Logo Lock states)
-      this._log("Reading LuxQMK custom settings (Layers, Reactive, Dimming, Logo Lock Indicators)...", "info");
+      // 5. Read LuxQMK custom settings (Debounce time, Layer lighting, Reactive, Dim, Win Lock, Logo Lock states)
+      this._log("Reading LuxQMK custom settings (Debounce time, Layers, Reactive, Dimming, Logo Lock Indicators)...", "info");
       try {
+        const dbTime = await this.protocol.getDebounceTime();
         const rev = await this.protocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.RGB_REVERSE);
         const lEn = await this.protocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE);
         const lDim = await this.protocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL);
@@ -153,6 +154,7 @@
         const all = await this.protocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_ALL);
 
         backup.custom_settings = {
+          debounce_time: dbTime !== undefined ? dbTime : 5,
           rgb_reverse: rev ? rev[3] === 1 : false,
           layer_lighting_enable: lEn ? lEn[3] === 1 : true,
           layer_dim_level: lDim ? lDim[3] : 128,
@@ -183,7 +185,7 @@
             all: all ? { h: all[3], s: all[4] } : { h: 0, s: 0 }
           }
         };
-        this._log("Successfully read layer colors, reactive layer, Win Lock, and 7 Logo Lock indicators.", "success");
+        this._log("Successfully read debounce time, layer colors, reactive layer, Win Lock, and 7 Logo Lock indicators.", "success");
       } catch (err) {
         this._log("Custom settings read warning: " + err.message, "warning");
       }
@@ -191,6 +193,14 @@
 
       this._log("✔ Complete backup successfully created!", "success");
       return backup;
+    }
+
+    async getSnapshotData(onProgress) {
+      return await this.createBackup(onProgress);
+    }
+
+    async restoreFromSnapshotObject(snapshotData, onProgress) {
+      return await this.restoreBackup(snapshotData, onProgress);
     }
 
     async restoreBackup(backupData, onProgress) {
@@ -294,11 +304,14 @@
       }
       if (onProgress) onProgress(85);
 
-      // 5. Restore custom settings (Layer lighting, Reactive, Dim, Win Lock, 7 Logo Lock states)
+      // 5. Restore custom settings (Debounce, Layer lighting, Reactive, Dim, Win Lock, 7 Logo Lock states)
       const cust = backupData.custom_settings;
       if (cust) {
-        this._log("Restoring layer colors, reactive settings, Win Lock, and 7 Logo Lock states...", "info");
+        this._log("Restoring debounce latency, layer colors, reactive settings, Win Lock, and 7 Logo Lock states...", "info");
         try {
+          if (cust.debounce_time !== undefined) {
+            await this.protocol.setDebounceTime(cust.debounce_time);
+          }
           if (cust.rgb_reverse !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.RGB_REVERSE, cust.rgb_reverse ? 1 : 0);
           if (cust.layer_lighting_enable !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, cust.layer_lighting_enable ? 1 : 0);
           if (cust.layer_dim_level !== undefined) await this.protocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL, cust.layer_dim_level);

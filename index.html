@@ -32,50 +32,118 @@
 
       <nav class="sidebar-nav">
         <button class="nav-item-btn active" data-view="keymap">
-          <span class="nav-icon">🎮</span>
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+              <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"></path>
+            </svg>
+          </span>
           <span data-i18n="navKeymap">Keymap Editor</span>
         </button>
 
+        <button class="nav-item-btn" data-view="macro">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </span>
+          <span data-i18n="navMacro">Macro Editor</span>
+        </button>
+
         <button class="nav-item-btn" data-view="encoder">
-          <span class="nav-icon">🎛️</span>
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <circle cx="12" cy="12" r="3"></circle>
+              <line x1="12" y1="3" x2="12" y2="7"></line>
+            </svg>
+          </span>
           <span data-i18n="navEncoder">Rotary Knob</span>
         </button>
 
         <button class="nav-item-btn" data-view="tester">
-          <span class="nav-icon">⌨️</span>
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </span>
           <span data-i18n="navTester">Key Tester</span>
         </button>
 
         <button class="nav-item-btn" data-view="lighting">
-          <span class="nav-icon">💡</span>
-          <span data-i18n="navLighting">Lighting Studio</span>
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18h6"></path>
+              <path d="M10 22h4"></path>
+              <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"></path>
+            </svg>
+          </span>
+          <span data-i18n="navLighting">QMK Lighting</span>
         </button>
 
-        <button class="nav-item-btn" data-view="audio">
-          <span class="nav-icon">🎵</span>
-          <span data-i18n="navAudio">Audio Visualizer</span>
+        <button class="nav-item-btn" data-view="studio_lighting">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+              <path d="M5 3v4"></path>
+              <path d="M19 17v4"></path>
+            </svg>
+          </span>
+          <span data-i18n="navStudioLighting">LuxQMK Studio Lighting</span>
         </button>
 
         <button class="nav-item-btn" data-view="backup">
-          <span class="nav-icon">💾</span>
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+          </span>
           <span data-i18n="navBackup">Profiles & Backup</span>
         </button>
 
         <button class="nav-item-btn" data-view="settings">
-          <span class="nav-icon">⚙️</span>
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </span>
           <span data-i18n="navSettings">Device Settings</span>
         </button>
       </nav>
 
       <div class="sidebar-footer">
-        <button class="sidebar-footer-btn" id="btnCheckUpdates">
-          <span class="footer-btn-icon">🔄</span>
-          <span data-i18n="btnCheckUpdates">Check for Updates</span>
-        </button>
-        <button class="sidebar-footer-btn" id="btnAboutApp">
-          <span class="footer-btn-icon">ℹ️</span>
-          <span data-i18n="btnAboutApp">About & Author</span>
-        </button>
+        <div class="sidebar-footer-grid">
+          <button class="sidebar-icon-btn" id="btnAppSettings" data-i18n-title="btnAppSettingsTitle" title="Application Settings">
+            <span class="footer-btn-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </span>
+          </button>
+          <button class="sidebar-icon-btn" id="btnCheckUpdates" data-i18n-title="btnCheckUpdatesTitle" title="Check for Updates">
+            <span class="footer-btn-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+            </span>
+          </button>
+          <button class="sidebar-icon-btn" id="btnAboutApp" data-i18n-title="btnAboutAppTitle" title="About & Author">
+            <span class="footer-btn-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+            </span>
+          </button>
+        </div>
       </div>
     </aside>
 
@@ -97,7 +165,12 @@
             <button class="device-selector-btn" id="deviceSelectorBtn" type="button" aria-haspopup="listbox"
               aria-expanded="false">
               <span class="device-status-dot" id="deviceSelectorDot"></span>
-              <span class="device-icon">⌨️</span>
+              <span class="device-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                  <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"></path>
+                </svg>
+              </span>
               <span class="device-name-display" id="deviceNameDisplay">Searching for devices...</span>
               <span class="device-badge" id="deviceStatusBadge">Disconnected</span>
               <span class="device-chevron">
@@ -137,14 +210,13 @@
 
         <div class="top-bar-actions">
           <button class="btn btn-secondary" id="btnRefreshDevice" disabled>
-            <span>🔄 <span data-i18n="btnRefresh">Refresh</span></span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            <span data-i18n="btnRefresh">Refresh</span>
           </button>
-
-          <!-- Language Selector -->
-          <select id="langSelect" class="form-control" style="width: auto; padding: 0.5rem 0.75rem;">
-            <option value="en">🇺🇸 English</option>
-            <option value="pl">🇵🇱 Polski</option>
-          </select>
 
           <!-- Connect Button -->
           <button class="btn btn-primary" id="btnConnect">
@@ -207,7 +279,10 @@
               <input type="file" id="viaJsonFileInput" accept=".json" style="display: none;">
               <button class="btn btn-secondary btn-sm" id="btnLoadViaJson"
                 style="font-size: 0.78rem; padding: 0.25rem 0.55rem;">
-                <span>📂 <span data-i18n="btnLoadViaLayout">Load VIA (.json)</span></span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span data-i18n="btnLoadViaLayout">Load VIA (.json)</span>
               </button>
             </div>
           </div>
@@ -238,7 +313,176 @@
         </div>
       </section>
 
-      <!-- 2. VIEW: ROTARY KNOB CONFIGURATION -->
+      <!-- 2. VIEW: MACRO EDITOR -->
+      <section class="view-container" id="view-macro">
+        <div class="macro-editor-layout">
+          <!-- Left Column: Macro Slot List -->
+          <div class="macro-sidebar-card">
+            <div class="macro-sidebar-header">
+              <div class="macro-sidebar-title-wrap">
+                <span style="display: flex; align-items: center; color: var(--accent-cyan);">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                  </svg>
+                </span>
+                <div>
+                  <h3 style="font-size: 0.95rem; font-weight: 700;" data-i18n="lblMacroSlotsTitle">Macro Slots</h3>
+                  <span style="font-size: 0.72rem; color: var(--text-dim);" data-i18n="lblMacroSlotsSubtitle">Select macro to edit</span>
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-icon-sm" id="btnReloadMacros" data-i18n-title="tooltipReloadMacros" title="Reload from Keyboard">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+              </button>
+            </div>
+            <div class="macro-slots-list" id="macroSlotsList">
+              <!-- Dynamically populated M0 to M15 slot buttons -->
+            </div>
+          </div>
+
+          <!-- Right Column: Active Macro Workspace -->
+          <div class="macro-workspace-card">
+            <!-- Workspace Top Bar -->
+            <div class="macro-workspace-header">
+              <div class="macro-active-info">
+                <span class="badge-macro-id" id="macroActiveTitleBadge">M0</span>
+                <input type="text" id="macroNameInput" class="macro-name-input" placeholder="Macro Name" maxlength="32">
+                <span class="macro-record-badge" id="macroRecordStatus" style="display: none;">
+                  <span class="pulse-recording-dot"></span>
+                  <span data-i18n="statusRecording">Recording Keystrokes...</span>
+                </span>
+              </div>
+              
+              <div class="macro-workspace-actions">
+                <button class="btn btn-record" id="btnRecordMacro">
+                  <span class="record-dot"></span>
+                  <span data-i18n="btnStartRecord">Record Keystrokes</span>
+                </button>
+                <button class="btn btn-secondary" id="btnClearCurrentMacro">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                  <span data-i18n="btnClearMacro">Clear</span>
+                </button>
+                <button class="btn btn-primary" id="btnSaveMacros">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                  <span data-i18n="btnSaveMacros">Save to Keyboard</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Memory Gauge Bar -->
+            <div class="macro-memory-bar-wrap">
+              <div class="macro-memory-labels">
+                <span data-i18n="lblMacroMemory">Keyboard EEPROM Buffer Usage:</span>
+                <strong id="macroMemoryGaugeText">0 / 1024 B (0%)</strong>
+              </div>
+              <div class="macro-memory-track">
+                <div class="macro-memory-fill" id="macroMemoryGaugeFill" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <!-- Quick Syntax / Action Insert Toolbar -->
+            <div class="macro-toolbar-section">
+              <div class="macro-toolbar-group">
+                <span class="macro-toolbar-label" data-i18n="macroGroupModifiers">Modifiers:</span>
+                <div class="macro-toolbar-buttons">
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{+KC_LCTRL}">+Ctrl</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{-KC_LCTRL}">-Ctrl</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{+KC_LSHIFT}">+Shift</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{-KC_LSHIFT}">-Shift</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{+KC_LALT}">+Alt</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{-KC_LALT}">-Alt</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{+KC_LGUI}">+Win</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{-KC_LGUI}">-Win</button>
+                </div>
+              </div>
+
+              <div class="macro-toolbar-group">
+                <span class="macro-toolbar-label" data-i18n="macroGroupKeys">Special Keys:</span>
+                <div class="macro-toolbar-buttons">
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{KC_ENTER}">Enter</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{KC_TAB}">Tab</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{KC_ESC}">Esc</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{KC_SPACE}">Space</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{KC_BSPC}">Backspace</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{KC_DEL}">Delete</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{KC_UP}">↑</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{KC_DOWN}">↓</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{KC_LEFT}">←</button>
+                  <button class="macro-syntax-btn" type="button" data-macro-insert="{KC_RIGHT}">→</button>
+                </div>
+              </div>
+
+              <div class="macro-toolbar-group">
+                <span class="macro-toolbar-label" data-i18n="macroGroupCombos">Shortcuts:</span>
+                <div class="macro-toolbar-buttons">
+                  <button class="macro-syntax-btn highlight" type="button" data-macro-insert="{+KC_LCTRL}c{-KC_LCTRL}">Ctrl+C</button>
+                  <button class="macro-syntax-btn highlight" type="button" data-macro-insert="{+KC_LCTRL}v{-KC_LCTRL}">Ctrl+V</button>
+                  <button class="macro-syntax-btn highlight" type="button" data-macro-insert="{+KC_LCTRL}a{-KC_LCTRL}">Ctrl+A</button>
+                  <button class="macro-syntax-btn highlight" type="button" data-macro-insert="{+KC_LCTRL}z{-KC_LCTRL}">Ctrl+Z</button>
+                  <button class="macro-syntax-btn highlight" type="button" data-macro-insert="{+KC_LALT}{KC_TAB}{-KC_LALT}">Alt+Tab</button>
+                  <button class="macro-syntax-btn highlight" type="button" data-macro-insert="{+KC_LGUI}d{-KC_LGUI}">Win+D</button>
+                </div>
+              </div>
+
+              <div class="macro-toolbar-group">
+                <span class="macro-toolbar-label" data-i18n="macroGroupDelays">Delays:</span>
+                <div class="macro-toolbar-buttons">
+                  <button class="macro-syntax-btn delay" type="button" data-macro-insert="{25ms}">25ms</button>
+                  <button class="macro-syntax-btn delay" type="button" data-macro-insert="{50ms}">50ms</button>
+                  <button class="macro-syntax-btn delay" type="button" data-macro-insert="{100ms}">100ms</button>
+                  <button class="macro-syntax-btn delay" type="button" data-macro-insert="{250ms}">250ms</button>
+                  <button class="macro-syntax-btn delay" type="button" data-macro-insert="{500ms}">500ms</button>
+                  <button class="macro-syntax-btn delay" type="button" data-macro-insert="{1000ms}">1000ms</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Macro Textarea Editor -->
+            <div class="macro-editor-input-wrap">
+              <textarea id="macroContentEditor" class="macro-textarea" placeholder="Type plain text or insert keystroke actions... (e.g. Hello World!{KC_ENTER})" spellcheck="false"></textarea>
+            </div>
+
+            <!-- Bottom helper tip & reset -->
+            <div class="macro-workspace-footer">
+              <div class="macro-syntax-hint">
+                <span style="color: var(--accent-cyan); display: flex; align-items: center;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                </span>
+                <span data-i18n="macroSyntaxHint">Format: Plain text is sent as keystrokes. Use {KC_ENTER} for taps, {+KC_LCTRL} / {-KC_LCTRL} for holding modifiers, and {100ms} for delay intervals.</span>
+              </div>
+              <button class="btn btn-danger-subtle btn-sm" id="btnResetAllMacros">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: middle;">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span data-i18n="btnResetAllMacros">Reset All Macros</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. VIEW: ROTARY KNOB CONFIGURATION -->
       <section class="view-container" id="view-encoder">
         <div class="keyboard-canvas-card" style="margin-bottom: 1.5rem;">
           <h3 style="margin-bottom: 0.5rem;" data-i18n="viewEncoderTitle">Rotary Knob Configuration</h3>
@@ -286,7 +530,14 @@
               <div class="badge-target"><span data-i18n="testedKeys">Tested Keys:</span> <strong id="testedKeysCount">0
                   / 105</strong></div>
             </div>
-            <button class="btn btn-secondary" id="btnResetKeyTest" data-i18n="btnResetTest">🔄 Reset Test</button>
+            <button class="btn btn-secondary" id="btnResetKeyTest">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              <span data-i18n="btnResetTest">Reset Test</span>
+            </button>
           </div>
 
           <div class="keyboard-scroll-wrapper">
@@ -320,12 +571,16 @@
                 <button class="layer-btn" id="btnVisLayer1" data-vlayer="1" data-i18n="layer1">Layer 1 (Fn)</button>
                 <button class="layer-btn" id="btnVisLayer2" data-vlayer="2" data-i18n="layer2">Layer 2 (Custom)</button>
               </div>
-              <button class="btn btn-secondary" id="btnHoldFnSim" data-i18n="btnHoldFn"
+              <button class="btn btn-secondary" id="btnHoldFnSim"
                 style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-color: rgba(99, 102, 241, 0.4);">
-                🔘 Hold Fn
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <span data-i18n="btnHoldFn">Hold Fn</span>
               </button>
               <div class="lighting-preview-status">
-                <span class="badge-pill" id="lightingStatusBadge">🌈 Rainbow Wave • 100% Brightness</span>
+                <span class="badge-pill" id="lightingStatusBadge">Rainbow Wave • 100% Brightness</span>
               </div>
             </div>
           </div>
@@ -340,19 +595,42 @@
         <!-- Sub-Tabs Navigation -->
         <div class="lighting-tabs-header">
           <button class="lighting-tab-btn active" data-tab="backlight">
-            <span>💡</span> <span data-i18n="tabBacklight">Main Backlight</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18h6"></path>
+              <path d="M10 22h4"></path>
+              <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"></path>
+            </svg>
+            <span data-i18n="tabBacklight">Main Backlight</span>
           </button>
           <button class="lighting-tab-btn" data-tab="reactive">
-            <span>⚡</span> <span data-i18n="tabReactive">Reactive Layer</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span data-i18n="tabReactive">Reactive Layer</span>
           </button>
           <button class="lighting-tab-btn" data-tab="winlock">
-            <span>🔒</span> <span data-i18n="tabWinLock">Win Lock</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span data-i18n="tabWinLock">Win Lock</span>
           </button>
           <button class="lighting-tab-btn" data-tab="layers">
-            <span>🎨</span> <span data-i18n="tabLayers">Layer Lighting</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m12 2 10 6.5v7L12 22 2 15.5v-7L12 2z"></path>
+              <path d="M12 22v-6.5"></path>
+              <path d="m22 8.5-10 7-10-7"></path>
+              <path d="m2 15.5 10-7 10 7"></path>
+            </svg>
+            <span data-i18n="tabLayers">Layer Lighting</span>
           </button>
           <button class="lighting-tab-btn" data-tab="logo">
-            <span>💎</span> <span data-i18n="tabLogo">Logo & Locks</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 3h12l4 6-10 13L2 9z"></path>
+              <path d="M11 3 8 9l4 13 4-13-3-6"></path>
+              <path d="M2 9h20"></path>
+            </svg>
+            <span data-i18n="tabLogo">Logo & Locks</span>
           </button>
         </div>
 
@@ -415,8 +693,7 @@
         <div class="lighting-subview" id="lighting-tab-reactive">
           <div class="palette-card" style="max-width: 680px; margin: 0 auto;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
-              <h3 style="font-size: 1.05rem;" data-i18n="reactiveSectionTitle">⚡ Reactive Layer (Dual-Layer Overlay)
-              </h3>
+              <h3 style="font-size: 1.05rem;" data-i18n="reactiveSectionTitle">Reactive Layer (Dual-Layer Overlay)</h3>
               <span class="badge-pill" id="reactiveStatusBadge" style="font-size: 0.75rem;"
                 data-i18n="badgeDisabled">Disabled</span>
             </div>
@@ -483,7 +760,7 @@
         <div class="lighting-subview" id="lighting-tab-winlock">
           <div class="palette-card" style="max-width: 680px; margin: 0 auto;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
-              <h3 style="font-size: 1.05rem;" data-i18n="winLockSectionTitle">🔒 Windows Key Lock (Win Lock)</h3>
+              <h3 style="font-size: 1.05rem;" data-i18n="winLockSectionTitle">Windows Key Lock (Win Lock)</h3>
               <span class="badge-pill" id="winLockStatusBadge" style="font-size: 0.75rem;"
                 data-i18n="badgeUnlocked">Unlocked</span>
             </div>
@@ -669,64 +946,162 @@
         </div>
       </section>
 
-      <!-- 5. VIEW: AUDIO VISUALIZER (Real-time Spectrum & Beat Reactions) -->
-      <section class="view-container" id="view-audio">
+      <!-- 5. VIEW: LUXQMK STUDIO LIGHTING (60 FPS Real-time FX & Audio Visualizer) -->
+      <section class="view-container" id="view-studio_lighting">
+        <!-- Live Software RGB Visualizer Virtual Keyboard -->
+        <div class="keyboard-canvas-card" style="margin-bottom: 1.5rem;">
+          <div class="keyboard-canvas-header">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span class="live-dot-pulse"></span>
+              <h3 style="font-size: 1.05rem; font-weight: 600;" data-i18n="studioLightingLivePreviewTitle">Live Studio Lighting Preview (60 FPS PC Suite)</h3>
+            </div>
+            <div class="lighting-preview-status">
+              <span class="badge-pill" id="studioLightingStatusBadge" data-i18n="lblSoftwareStoppedBadge">Stopped</span>
+            </div>
+          </div>
+
+          <div class="keyboard-scroll-wrapper">
+            <div class="keyboard-canvas lighting-keyboard-canvas" id="studioLightingKeyboardCanvas">
+              <!-- Dynamically populated 105 animated RGB keycaps -->
+            </div>
+          </div>
+        </div>
+
         <div class="palette-card" style="max-width: 820px; margin: 0 auto 1.5rem auto;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
             <div>
-              <h3 style="font-size: 1.15rem; margin-bottom: 0.25rem;" data-i18n="audioCardTitle">🎵 Real-Time Audio
-                Visualizer & Spectrum</h3>
-              <p style="color: var(--text-muted); font-size: 0.85rem;" data-i18n="audioDesc">
-                Synchronize your keyboard LEDs to music, YouTube, Spotify, and gaming sounds in real time.
+              <h3 style="font-size: 1.15rem; margin-bottom: 0.25rem;" data-i18n="viewStudioLightingTitle">LuxQMK Studio Lighting Suite</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem;" data-i18n="viewStudioLightingSubtitle">
+                Real-time PC-driven lighting effects, audio reactive visualizers & custom animations running at 60 FPS
               </p>
             </div>
-            <span class="badge-pill" id="audioStatusBadge" data-i18n="audioStatusStopped">Stopped</span>
           </div>
 
-          <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
-            <button class="btn btn-primary" id="btnAudioToggle" style="padding: 0.75rem 1.5rem; font-weight: 600;"
-              data-i18n="btnAudioStart">
-              ▶️ Start Audio Visualizer
+          <!-- Sub-Tabs Navigation -->
+          <div class="studio-lighting-tabs-header">
+            <button class="studio-lighting-tab-btn active" data-tab="audio">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
+              </svg>
+              <span data-i18n="tabAudioVisualizer">Audio & Music</span>
+            </button>
+            <button class="studio-lighting-tab-btn" data-tab="effects">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              <span data-i18n="tabSoftwareEffects">PC Animations</span>
             </button>
           </div>
 
-          <div class="grid-2" style="gap: 1.25rem;">
-            <div class="form-group">
-              <label data-i18n="audioMode">Visualization Mode</label>
-              <select id="audioModeSelect" class="form-control">
-                <option value="equalizer" data-i18n="optEqualizer">Graphic Equalizer (Spectrum Column Bars)</option>
-                <option value="bassPulse" data-i18n="optBassPulse">Bass Pulse (Beat Drop Reaction)</option>
-                <option value="audioWave" data-i18n="optAudioWave">Audio Wave (Energy Ripples)</option>
-                <option value="vuMeter" data-i18n="optVuMeter">Stereo VU Meter (Left/Right Channel Level)</option>
+          <!-- Master Action Bar -->
+          <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
+            <button class="btn btn-primary" id="btnStudioLightingToggle" style="padding: 0.75rem 1.5rem; font-weight: 600;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span id="btnStudioLightingToggleText" data-i18n="btnStartSoftwareFx">Start Studio Lighting</span>
+            </button>
+          </div>
+
+          <!-- PANE 1: Audio Visualizer -->
+          <div id="pane-studio-audio" class="studio-lighting-subview active">
+            <!-- Audio Input Source Selector -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                <label data-i18n="lblAudioSource" style="margin-bottom: 0;">Audio Input / Sound Source</label>
+                <button type="button" id="btnRefreshAudioSources" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                  </svg>
+                  <span data-i18n="btnRefreshAudioSources">Refresh Sources</span>
+                </button>
+              </div>
+              <select id="audioSourceSelect" class="form-control">
+                <option value="system_loopback" data-i18n="optSystemLoopback">System Audio Output (WASAPI / Loopback)</option>
               </select>
+              <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.3rem;" data-i18n="descAudioSource">
+                Choose system audio loopback (Spotify, YouTube, Games) or a specific microphone / audio input.
+              </span>
             </div>
 
-            <div class="form-group">
-              <label data-i18n="audioColorMode">Color Palette</label>
-              <select id="audioColorModeSelect" class="form-control">
-                <option value="rainbow" data-i18n="optColorRainbow">Dynamic Rainbow Spectrum</option>
-                <option value="singleColor" data-i18n="optColorSingle">Custom Accent Color</option>
-              </select>
+            <div class="grid-2" style="gap: 1.25rem;">
+              <div class="form-group">
+                <label data-i18n="audioMode">Visualization Mode</label>
+                <select id="audioModeSelect" class="form-control">
+                  <option value="equalizer" data-i18n="optEqualizer">Graphic Equalizer (Spectrum Column Bars)</option>
+                  <option value="bassPulse" data-i18n="optBassPulse">Bass Pulse (Beat Drop Reaction)</option>
+                  <option value="audioWave" data-i18n="optAudioWave">Audio Wave (Energy Ripples)</option>
+                  <option value="vuMeter" data-i18n="optVuMeter">Stereo VU Meter (Left/Right Channel Level)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label data-i18n="audioColorMode">Color Palette</label>
+                <select id="audioColorModeSelect" class="form-control">
+                  <option value="rainbow" data-i18n="optColorRainbow">Dynamic Rainbow Spectrum</option>
+                  <option value="singleColor" data-i18n="optColorSingle">Custom Accent Color</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" id="audioSingleColorGroup" style="display: none; margin-top: 1rem;">
+              <label data-i18n="lblAudioSingleColor">Audio Accent Color</label>
+              <div class="color-input-wrap">
+                <input type="color" id="audioColorPicker" class="color-picker-input" value="#00ffff">
+                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblAudioSingleColorHint">Color of frequency bars and pulses</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 1.25rem;">
+              <div style="display: flex; justify-content: space-between;">
+                <label data-i18n="audioSensitivity">Audio Sensitivity Multiplier</label>
+                <span id="audioSensVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">1.2x</span>
+              </div>
+              <div class="range-slider-wrap">
+                <input type="range" id="audioSensitivitySlider" class="range-slider" min="0.5" max="3.0" step="0.1" value="1.2">
+              </div>
             </div>
           </div>
 
-          <div class="form-group" id="audioSingleColorGroup" style="display: none; margin-top: 1rem;">
-            <label data-i18n="lblAudioSingleColor">Audio Accent Color</label>
-            <div class="color-input-wrap">
-              <input type="color" id="audioColorPicker" class="color-picker-input" value="#00ffff">
-              <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblAudioSingleColorHint">Color of
-                frequency bars and pulses</span>
+          <!-- PANE 2: PC Software Animation Engines -->
+          <div id="pane-studio-effects" class="studio-lighting-subview">
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label data-i18n="lblSoftwareEffectPreset">Animation Engine & Preset</label>
+              <select id="softwareEffectSelect" class="form-control">
+                <option value="neonWave" data-i18n="optEffectNeonWave">Cyber Neon Wave (Dynamic Plasma Gradient)</option>
+                <option value="matrixRain" data-i18n="optEffectMatrixRain">Matrix Digital Rain (Phosphor Cascades)</option>
+                <option value="particleStorm" data-i18n="optEffectParticleStorm">Particle Flow (Organic Floating Orbs)</option>
+                <option value="aurora" data-i18n="optEffectAurora">Nordic Aurora (Polar Shimmer)</option>
+                <option value="pulseBloom" data-i18n="optEffectPulseBloom">Radial Pulse Bloom (Center Shockwave)</option>
+              </select>
             </div>
-          </div>
 
-          <div class="form-group" style="margin-top: 1.25rem;">
-            <div style="display: flex; justify-content: space-between;">
-              <label data-i18n="audioSensitivity">Audio Sensitivity Multiplier</label>
-              <span id="audioSensVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">1.2x</span>
-            </div>
-            <div class="range-slider-wrap">
-              <input type="range" id="audioSensitivitySlider" class="range-slider" min="0.5" max="3.0" step="0.1"
-                value="1.2">
+            <div class="grid-2" style="gap: 1.25rem;">
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between;">
+                  <label data-i18n="lblSoftwareEffectSpeed">Animation Speed</label>
+                  <span id="softwareEffectSpeedVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">1.0x</span>
+                </div>
+                <div class="range-slider-wrap">
+                  <input type="range" id="softwareEffectSpeedSlider" class="range-slider" min="0.2" max="3.0" step="0.1" value="1.0">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between;">
+                  <label data-i18n="lblSoftwareEffectIntensity">Effect Intensity / Brightness</label>
+                  <span id="softwareEffectIntensityVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">100%</span>
+                </div>
+                <div class="range-slider-wrap">
+                  <input type="range" id="softwareEffectIntensitySlider" class="range-slider" min="0.1" max="1.0" step="0.05" value="1.0">
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -735,10 +1110,9 @@
         <div class="palette-card" id="desktopAutostartCard" style="display: none; max-width: 820px; margin: 0 auto;">
           <div class="switch-wrap">
             <div>
-              <span style="display: block; font-weight: 600; font-size: 0.95rem;" data-i18n="lblAutostart">Launch LuxQMK
-                Studio on Windows Startup</span>
+              <span style="display: block; font-weight: 600; font-size: 0.95rem;" data-i18n="lblAutostart">Launch LuxQMK Studio on Windows Startup</span>
               <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblAutostartHint">
-                Runs quietly in the System Tray and operates audio visualizers in the background.
+                Runs quietly in the System Tray and operates software lighting in the background.
               </span>
             </div>
             <label class="switch">
@@ -755,8 +1129,13 @@
           <!-- Backup Card -->
           <div class="palette-card" style="display: flex; flex-direction: column;">
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-              <span
-                style="font-size: 1.5rem; background: rgba(0, 240, 255, 0.1); padding: 0.5rem; border-radius: var(--radius-md); color: var(--accent-cyan);">💾</span>
+              <span class="settings-card-icon" style="background: rgba(0, 240, 255, 0.1); color: var(--accent-cyan);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+              </span>
               <div>
                 <h3 data-i18n="backupTitle">Create Complete Backup</h3>
                 <p style="color: var(--text-muted); font-size: 0.8rem;" data-i18n="backupDesc">
@@ -786,9 +1165,13 @@
             </div>
 
             <div style="margin-top: auto; padding-top: 1rem;">
-              <button class="btn btn-primary" id="btnCreateBackup" style="width: 100%;" disabled
-                data-i18n="btnDownloadBackup">
-                💾 Download JSON Backup File
+              <button class="btn btn-primary" id="btnCreateBackup" style="width: 100%;" disabled>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span data-i18n="btnDownloadBackup">Download JSON Backup File</span>
               </button>
             </div>
           </div>
@@ -796,8 +1179,11 @@
           <!-- Restore Card -->
           <div class="palette-card" style="display: flex; flex-direction: column;">
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-              <span
-                style="font-size: 1.5rem; background: rgba(139, 92, 246, 0.1); padding: 0.5rem; border-radius: var(--radius-md); color: var(--secondary);">⚡</span>
+              <span class="settings-card-icon" style="background: rgba(139, 92, 246, 0.1); color: var(--secondary);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </span>
               <div>
                 <h3 data-i18n="restoreTitle">Restore from Backup</h3>
                 <p style="color: var(--text-muted); font-size: 0.8rem;" data-i18n="restoreDesc">
@@ -808,7 +1194,13 @@
 
             <div class="dropzone" id="dropzone" style="margin-bottom: 1rem;">
               <input type="file" id="fileInput" accept=".json" style="display: none;">
-              <div style="font-size: 1.8rem; margin-bottom: 0.35rem;">📂</div>
+              <div class="dropzone-icon">
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
               <strong data-i18n="dropzoneTextTitle">Click or drag & drop backup file here</strong>
               <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;" data-i18n="dropzoneText">
                 Accepts JSON configuration snapshots exported from LuxQMK Studio</p>
@@ -844,9 +1236,11 @@
             </div>
 
             <div style="margin-top: auto; padding-top: 1rem;">
-              <button class="btn btn-primary" id="btnRestoreBackup" style="width: 100%;" disabled
-                data-i18n="btnFlashBackup">
-                ⚡ Restore & Flash to Keyboard Memory
+              <button class="btn btn-primary" id="btnRestoreBackup" style="width: 100%;" disabled>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                <span data-i18n="btnFlashBackup">Restore & Flash to Keyboard Memory</span>
               </button>
             </div>
           </div>
@@ -856,12 +1250,21 @@
         <div class="palette-card console-card" style="margin-top: 1.5rem;">
           <div class="console-header">
             <div style="display: flex; align-items: center; gap: 0.6rem;">
-              <span style="font-size: 1.1rem;">📟</span>
+              <span class="console-header-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="4 17 10 11 4 5"></polyline>
+                  <line x1="12" y1="19" x2="20" y2="19"></line>
+                </svg>
+              </span>
               <h4 style="font-size: 0.92rem; font-weight: 600;" data-i18n="consoleTitle">Hardware HID Communication
                 Console</h4>
             </div>
             <button class="btn btn-secondary" id="btnClearLog" style="padding: 0.3rem 0.75rem; font-size: 0.75rem;">
-              🗑️ <span data-i18n="btnClearLog">Clear Console</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span data-i18n="btnClearLog">Clear Console</span>
             </button>
           </div>
           <div class="console-log" id="consoleLog">
@@ -882,7 +1285,11 @@
           <div class="palette-card settings-card">
             <div class="settings-card-header">
               <span class="settings-card-icon"
-                style="background: rgba(0, 240, 255, 0.1); color: var(--accent-cyan);">⚡</span>
+                style="background: rgba(0, 240, 255, 0.1); color: var(--accent-cyan);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </span>
               <div>
                 <h3 data-i18n="cardPerformanceTitle">Performance & Input Latency</h3>
                 <p class="settings-card-subtitle" data-i18n="cardPerformanceSubtitle">Configure switch debounce
@@ -900,9 +1307,18 @@
                 Choose the matrix switch scanning algorithm. Asymmetric Eager activates immediately upon press (0 ms actuation lag) while filtering release chatter; Symmetric Defer ensures maximum contact stability for typing.
               </p>
               <div class="debounce-pills" id="debounceTypePillsContainer">
-                <button type="button" class="debounce-pill debounce-type-pill active" data-val="0" data-i18n="debounceTypeDefer">🛡️ Symmetric Defer (QMK Default / Safe)</button>
-                <button type="button" class="debounce-pill debounce-type-pill" data-val="1" data-i18n="debounceTypeAsymEager">⚡ Asymmetric Eager (0ms Press / Esports)</button>
-                <button type="button" class="debounce-pill debounce-type-pill" data-val="2" data-i18n="debounceTypeSymEager">🚀 Symmetric Eager (Ultra Fast)</button>
+                <button type="button" class="debounce-pill debounce-type-pill active" data-val="0">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  <span data-i18n="debounceTypeDefer">Symmetric Defer (QMK Default / Safe)</span>
+                </button>
+                <button type="button" class="debounce-pill debounce-type-pill" data-val="1">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span data-i18n="debounceTypeAsymEager">Asymmetric Eager (0ms Press / Esports)</span>
+                </button>
+                <button type="button" class="debounce-pill debounce-type-pill" data-val="2">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                  <span data-i18n="debounceTypeSymEager">Symmetric Eager (Ultra Fast)</span>
+                </button>
               </div>
             </div>
 
@@ -964,7 +1380,20 @@
           <div class="palette-card settings-card">
             <div class="settings-card-header">
               <span class="settings-card-icon"
-                style="background: rgba(189, 0, 255, 0.1); color: var(--accent-magenta);">ℹ️</span>
+                style="background: rgba(189, 0, 255, 0.1); color: var(--accent-magenta);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                  <rect x="9" y="9" width="6" height="6"></rect>
+                  <line x1="9" y1="1" x2="9" y2="4"></line>
+                  <line x1="15" y1="1" x2="15" y2="4"></line>
+                  <line x1="9" y1="20" x2="9" y2="23"></line>
+                  <line x1="15" y1="20" x2="15" y2="23"></line>
+                  <line x1="20" y1="9" x2="23" y2="9"></line>
+                  <line x1="20" y1="14" x2="23" y2="14"></line>
+                  <line x1="1" y1="9" x2="4" y2="9"></line>
+                  <line x1="1" y1="14" x2="4" y2="14"></line>
+                </svg>
+              </span>
               <div>
                 <h3 data-i18n="cardHardwareTitle">Hardware Information & Diagnostics</h3>
                 <p class="settings-card-subtitle" data-i18n="cardHardwareSubtitle">Controller specifications, memory
@@ -1027,7 +1456,11 @@
           <div class="palette-card settings-card">
             <div class="settings-card-header">
               <span class="settings-card-icon"
-                style="background: rgba(255, 170, 0, 0.1); color: var(--accent-amber);">🛠️</span>
+                style="background: rgba(255, 170, 0, 0.1); color: var(--accent-amber);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                </svg>
+              </span>
               <div>
                 <h3 data-i18n="cardMaintenanceTitle">Maintenance & EEPROM Tools</h3>
                 <p class="settings-card-subtitle" data-i18n="cardMaintenanceSubtitle">Advanced operations on controller
@@ -1042,8 +1475,14 @@
                   <p data-i18n="btnBootloaderDesc">Puts the keyboard into DFU Bootloader mode for flashing new firmware
                     (.bin/.hex).</p>
                 </div>
-                <button class="btn btn-secondary" id="btnJumpBootloader" disabled data-i18n="btnBootloader">
-                  🚀 Reboot to Bootloader (DFU Mode)
+                <button class="btn btn-secondary" id="btnJumpBootloader" disabled>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+                    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+                    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
+                    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
+                  </svg>
+                  <span data-i18n="btnBootloader">Reboot to Bootloader (DFU Mode)</span>
                 </button>
               </div>
 
@@ -1053,8 +1492,13 @@
                   <p data-i18n="btnResetEepromDesc">Clears keyboard EEPROM memory and restores factory default keymaps,
                     lighting, and macros.</p>
                 </div>
-                <button class="btn btn-danger" id="btnResetEEPROM" disabled data-i18n="btnResetEeprom">
-                  ⚠️ Factory Reset EEPROM
+                <button class="btn btn-danger" id="btnResetEEPROM" disabled>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                  <span data-i18n="btnResetEeprom">Factory Reset EEPROM</span>
                 </button>
               </div>
 
@@ -1064,15 +1508,274 @@
                   <p data-i18n="btnQuickBackupDesc">Quickly export a full snapshot of your current layers and lighting
                     configuration.</p>
                 </div>
-                <button class="btn btn-secondary" id="btnQuickBackup" disabled data-i18n="btnQuickBackup">
-                  💾 Export Profile Backup
+                <button class="btn btn-secondary" id="btnQuickBackup" disabled>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                  <span data-i18n="btnQuickBackup">Export Profile Backup</span>
                 </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 4: SMART FIRMWARE FLASHER & UPGRADE (ZERO DATA LOSS) -->
+          <div class="palette-card settings-card flasher-card">
+            <div class="settings-card-header">
+              <span class="settings-card-icon"
+                style="background: rgba(0, 240, 255, 0.1); color: var(--accent-cyan);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </span>
+              <div>
+                <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+                  <h3 data-i18n="cardFlasherTitle">Smart Firmware Upgrade (Zero Data Loss)</h3>
+                  <span class="badge-pill badge-success" id="flasherToolBadge">DFU Flasher Ready (WB32 / STM32)</span>
+                </div>
+                <p class="settings-card-subtitle" data-i18n="cardFlasherSubtitle">
+                  Safely flash new QMK firmware (.bin) with automatic pre-flash backup and post-flash memory restoration.
+                </p>
+              </div>
+            </div>
+
+            <!-- Flasher Dropzone / File Picker -->
+            <div class="flasher-dropzone" id="flasherDropzone">
+              <input type="file" id="flasherFileInput" accept=".bin,.hex,.uf2" style="display: none;">
+              
+              <div class="flasher-dropzone-content" id="flasherDropzoneContent">
+                <div class="flasher-dropzone-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                    <polyline points="9 15 12 12 15 15"></polyline>
+                  </svg>
+                </div>
+                <div class="flasher-dropzone-title" data-i18n="flasherDropzoneTitle">Click or drag & drop firmware file here (.bin, .hex, .uf2)</div>
+                <div class="flasher-dropzone-desc" data-i18n="flasherDropzoneDesc">Supports compiled LuxQMK & QMK firmware binaries (.bin, .hex, .uf2) for all compatible keyboards</div>
+              </div>
+
+              <!-- Selected File Preview Card -->
+              <div class="flasher-file-card" id="flasherFileCard" style="display: none;">
+                <div class="flasher-file-details">
+                  <div class="flasher-file-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                      <polyline points="13 2 13 9 20 9"></polyline>
+                    </svg>
+                  </div>
+                  <div class="flasher-file-meta">
+                    <h4 id="flasherFileName">luxqmk_firmware.bin</h4>
+                    <span id="flasherFileSize">128.5 KB</span>
+                  </div>
+                </div>
+                <button class="btn btn-sm btn-secondary" id="btnClearSelectedFirmware" data-i18n-title="btnClear">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                  <span data-i18n="btnClear">Clear</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 4-Step Progress Tracker Grid -->
+            <div class="flasher-steps-grid">
+              <div class="flasher-step-item pending" id="flasherStep1">
+                <span class="flasher-step-badge">1</span>
+                <span class="flasher-step-title" data-i18n="flasherStep1">1. Auto-Backup</span>
+              </div>
+              <div class="flasher-step-item pending" id="flasherStep2">
+                <span class="flasher-step-badge">2</span>
+                <span class="flasher-step-title" data-i18n="flasherStep2">2. DFU Bootloader</span>
+              </div>
+              <div class="flasher-step-item pending" id="flasherStep3">
+                <span class="flasher-step-badge">3</span>
+                <span class="flasher-step-title" data-i18n="flasherStep3">3. Flash Write</span>
+              </div>
+              <div class="flasher-step-item pending" id="flasherStep4">
+                <span class="flasher-step-badge">4</span>
+                <span class="flasher-step-title" data-i18n="flasherStep4">4. Auto-Restore</span>
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="flasher-progress-wrap" id="flasherProgressContainer">
+              <div class="flasher-progress-header">
+                <span id="flasherProgressLabel">Preparing Smart Firmware Upgrade...</span>
+                <span id="flasherProgressPercent">0%</span>
+              </div>
+              <div class="flasher-progress-track">
+                <div class="flasher-progress-fill" id="flasherProgressBar"></div>
+              </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+              <button class="btn btn-secondary" id="btnSelectFirmware">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span data-i18n="btnSelectFirmware">Browse File (.bin)...</span>
+              </button>
+
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <button class="btn btn-secondary" id="btnCancelSmartFlash" style="display: none;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                  <span data-i18n="btnCancelFlash">Cancel</span>
+                </button>
+
+                <button class="btn btn-primary btn-smart-flash" id="btnStartSmartFlash" disabled>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                  </svg>
+                  <span data-i18n="btnStartSmartFlash">Start Smart Upgrade (Zero Data Loss)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Live Console Output (Hidden by default, shows when running) -->
+            <div class="flasher-console-wrapper" id="flasherConsoleWrapper">
+              <div class="flasher-console-header">
+                <span data-i18n="flasherConsoleTitle">Firmware Upgrade Live Output</span>
+              </div>
+              <div class="flasher-console" id="flasherConsoleLog">
+                <div class="log-line"><span class="log-time">[Ready]</span> <span class="log-info">Select firmware .bin file and click Start Smart Upgrade.</span></div>
               </div>
             </div>
           </div>
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- Application Settings Modal -->
+  <div class="modal-overlay" id="appSettingsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-header-icon-badge">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title" data-i18n="modalAppSettingsTitle">Application Settings</h3>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">LuxQMK Studio Preferences & Environment</span>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btnCloseAppSettingsModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- 1. Interface Language -->
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+            </span>
+            <span data-i18n="lblAppLang">Interface Language</span>
+          </div>
+          <div class="modal-section-content">
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.6rem;" data-i18n="lblAppLangDesc">
+              Select your preferred display language for LuxQMK Studio.
+            </p>
+            <div style="max-width: 220px;">
+              <select class="settings-select" id="appLanguageSelectModal" style="width: 100%; padding: 0.5rem 0.75rem; background: var(--bg-darker); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-main); font-size: 0.88rem; outline: none;">
+                <option value="en">English (US)</option>
+                <option value="pl">Polski (PL)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Windows Startup Launch -->
+        <div class="modal-section" id="appAutostartModalSection">
+          <div class="modal-section-title">
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+                <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+                <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
+                <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
+              </svg>
+            </span>
+            <span data-i18n="lblAppAutostart">Launch on Windows Startup</span>
+          </div>
+          <div class="modal-section-content">
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.6rem;" data-i18n="lblAppAutostartDesc">
+              Start LuxQMK Studio minimized in tray when Windows boots to run background lighting.
+            </p>
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+              <label class="switch" style="margin: 0;">
+                <input type="checkbox" id="chkAppAutostartModal">
+                <span class="slider"></span>
+              </label>
+              <span id="lblAppAutostartStatus" style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);" data-i18n="lblAutostartStatusDisabled">Disabled</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. AppData Folder -->
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path>
+              </svg>
+            </span>
+            <span data-i18n="lblAppDataFolder">Application Data & Profiles</span>
+          </div>
+          <div class="modal-section-content">
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.6rem;" data-i18n="lblAppDataFolderDesc">
+              Folder containing user configurations, logs, and custom profiles.
+            </p>
+            <button class="btn btn-secondary" id="btnOpenAppDataModal" style="display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.5rem 0.9rem; font-size: 0.84rem;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span data-i18n="btnOpenAppData">Open Data Folder</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. Environment & Diagnostics -->
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+            </span>
+            <span data-i18n="lblAppDiagnostics">Environment & Diagnostics</span>
+          </div>
+          <div class="modal-section-content">
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.6rem;" data-i18n="lblAppDiagnosticsDesc">
+              Runtime engine details and communications interface
+            </p>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.78rem;">
+              <span style="background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.25); color: var(--accent-cyan); padding: 0.25rem 0.6rem; border-radius: 4px;">LuxQMK Studio v1.1.0</span>
+              <span style="background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(147, 51, 234, 0.25); color: #c084fc; padding: 0.25rem 0.6rem; border-radius: 4px;">WebHID v2.1</span>
+              <span style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.25); color: #4ade80; padding: 0.25rem 0.6rem; border-radius: 4px;">60 FPS RGB Engine</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnOkAppSettingsModal" style="min-width: 90px;" data-i18n="btnOk">OK</button>
+      </div>
+    </div>
   </div>
 
   <!-- About & Legal Modal -->
@@ -1093,7 +1796,13 @@
       <div class="modal-body">
         <div class="modal-section">
           <div class="modal-section-title">
-            <span>👤</span> <span data-i18n="lblAuthorTitle">Project Author</span>
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </span>
+            <span data-i18n="lblAuthorTitle">Project Author</span>
           </div>
           <div class="modal-section-content">
             <strong style="font-size: 1.05rem; color: #ffffff;" data-i18n="lblAuthorName">Dorian Piwnik</strong>
@@ -1104,7 +1813,16 @@
 
         <div class="modal-section">
           <div class="modal-section-title">
-            <span>📜</span> <span data-i18n="lblLicenseTitle">License</span>
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </span>
+            <span data-i18n="lblLicenseTitle">License</span>
           </div>
           <div class="modal-section-content" style="font-size: 0.85rem;" data-i18n="lblLicenseDesc">
             • <strong>LuxQMK Studio Application</strong>: GNU General Public License v3 (GPLv3)<br>
@@ -1114,25 +1832,44 @@
 
         <div class="modal-section">
           <div class="modal-section-title">
-            <span>🌐</span> <span data-i18n="lblWebsiteTitle">Project Website</span>
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+            </span>
+            <span data-i18n="lblWebsiteTitle">Project Website</span>
           </div>
           <div class="modal-section-content">
-            <a href="https://luxqmk.click" target="_blank" style="color: var(--secondary); text-decoration: underline; font-weight: 600;">luxqmk.click</a>
+            <a href="https://luxqmk.click" target="_blank" rel="noopener noreferrer"
+              style="color: var(--secondary); text-decoration: underline; font-weight: 600;">luxqmk.click</a>
           </div>
         </div>
 
         <div class="modal-section">
           <div class="modal-section-title">
-            <span>🐙</span> <span data-i18n="lblGithubTitle">GitHub</span>
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+              </svg>
+            </span>
+            <span data-i18n="lblGithubTitle">GitHub</span>
           </div>
           <div class="modal-section-content">
-            <a href="https://github.com/LuxQMK" target="_blank" style="color: var(--secondary); text-decoration: underline; font-weight: 600;">github.com/LuxQMK</a>
+            <a href="https://github.com/LuxQMK" target="_blank" rel="noopener noreferrer"
+              style="color: var(--secondary); text-decoration: underline; font-weight: 600;">github.com/LuxQMK</a>
           </div>
         </div>
 
         <div class="modal-section">
           <div class="modal-section-title">
-            <span>⚖️</span> <span data-i18n="lblLegalTitle">Legal Notices & Disclaimer</span>
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </span>
+            <span data-i18n="lblLegalTitle">Legal Notices & Disclaimer</span>
           </div>
           <div class="modal-section-content" style="font-size: 0.78rem; color: var(--text-dim); line-height: 1.55;"
             data-i18n="lblLegalDesc">
@@ -1168,8 +1905,11 @@
   <script src="js/keymap-editor.js"></script>
   <script src="js/lighting-controller.js"></script>
   <script src="js/audio-visualizer.js"></script>
+  <script src="js/studio-lighting.js"></script>
   <script src="js/key-tester.js"></script>
   <script src="js/backup-manager.js"></script>
+  <script src="js/macro-manager.js"></script>
+  <script src="js/firmware-flasher.js"></script>
   <script src="js/ui-controller.js"></script>
   <script src="js/app.js"></script>
 </body>

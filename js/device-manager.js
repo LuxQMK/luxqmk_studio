@@ -3,7 +3,7 @@
  */
 (function () {
   const STUDIO_VERSION = "1.1.0";
-  const REQUIRED_FW_VERSION = { major: 0, minor: 1, patch: 1 };
+  const REQUIRED_FW_VERSION = { major: 0, minor: 1, patch: 2 };
 
   class DeviceManager {
     constructor() {
@@ -155,7 +155,7 @@
         } else {
           const fw = this.firmwareInfo;
           if (fw.major < REQUIRED_FW_VERSION.major || (fw.major === REQUIRED_FW_VERSION.major && (fw.minor < REQUIRED_FW_VERSION.minor || (fw.minor === REQUIRED_FW_VERSION.minor && fw.patch < REQUIRED_FW_VERSION.patch)))) {
-            hwCompat.textContent = i18n ? i18n.t('statusFwUpdateRequired') : '⚠️ Firmware Update Required (LuxQMK v0.1.1+)';
+            hwCompat.textContent = i18n ? i18n.t('statusFwUpdateRequired') : '⚠️ Firmware Update Required (LuxQMK v0.1.2+)';
             hwCompat.style.color = 'var(--accent-red, #ff4466)';
           } else if (fw.major > REQUIRED_FW_VERSION.major || (fw.major === REQUIRED_FW_VERSION.major && fw.minor > REQUIRED_FW_VERSION.minor)) {
             hwCompat.textContent = i18n ? i18n.t('statusFwNewer') : 'ℹ️ Newer Firmware Detected (Update Studio)';

@@ -8,8 +8,6 @@ import re
 import shutil
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-WORKSPACE_DIR = os.path.dirname(ROOT_DIR)
-FIRMWARE_DIR = os.path.join(WORKSPACE_DIR, "qmk_firmware")
 SRC_DIR = ROOT_DIR
 OUTPUT_FILE_PRIMARY = os.path.join(ROOT_DIR, "luxqmk_studio.html")
 OUTPUT_FILE_ALIAS = os.path.join(ROOT_DIR, "gmmk_studio.html")
@@ -49,8 +47,11 @@ def bundle():
         ("js/keymap-editor.js", os.path.join(SRC_DIR, "js", "keymap-editor.js")),
         ("js/lighting-controller.js", os.path.join(SRC_DIR, "js", "lighting-controller.js")),
         ("js/audio-visualizer.js", os.path.join(SRC_DIR, "js", "audio-visualizer.js")),
+        ("js/studio-lighting.js", os.path.join(SRC_DIR, "js", "studio-lighting.js")),
         ("js/key-tester.js", os.path.join(SRC_DIR, "js", "key-tester.js")),
         ("js/backup-manager.js", os.path.join(SRC_DIR, "js", "backup-manager.js")),
+        ("js/macro-manager.js", os.path.join(SRC_DIR, "js", "macro-manager.js")),
+        ("js/firmware-flasher.js", os.path.join(SRC_DIR, "js", "firmware-flasher.js")),
         ("js/ui-controller.js", os.path.join(SRC_DIR, "js", "ui-controller.js")),
         ("js/app.js", os.path.join(SRC_DIR, "js", "app.js")),
     ]
@@ -90,15 +91,8 @@ def bundle():
         f.write(html)
     print(f"[OK] Alias Bundle   -> {OUTPUT_FILE_ALIAS} ({os.path.getsize(OUTPUT_FILE_ALIAS):,} bytes)")
 
-    # Mirror to qmk_firmware
-    if os.path.exists(FIRMWARE_DIR):
-        fw_bundle = os.path.join(FIRMWARE_DIR, "luxqmk_studio.html")
-        shutil.copy2(OUTPUT_FILE_PRIMARY, fw_bundle)
-        print(f"[OK] Firmware Mirror -> {fw_bundle}")
-
     # Finished bundling
-    print(f"[OK] Bundling complete.")
+    print("[OK] Bundling complete.")
 
 if __name__ == "__main__":
     bundle()
-

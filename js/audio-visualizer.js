@@ -1,7 +1,7 @@
 /**
  * GMMK Studio - Real-time Audio Reactive Visualizer Engine
- * Universal support for both Native Electron Desktop (WASAPI Loopback)
- * and Web Browsers (Web Audio API / DisplayMedia Audio).
+ * Universal support for both Native Electron Desktop (WASAPI Loopback & Device Inputs)
+ * and Web Browsers (Web Audio API / DisplayMedia / MediaDevices).
  */
 
 (function () {
@@ -27,6 +27,7 @@
 
       this.config = {
         enabled: false,
+        sourceId: "system_loopback", // "system_loopback" or specific MediaDeviceInfo.deviceId
         mode: "equalizer", // equalizer, bassPulse, audioWave, vuMeter
         colorMode: "rainbow", // rainbow, reactive, singleColor
         color: [0, 255], // HSV [H, S]
@@ -38,11 +39,83 @@
       this._boundTick = this._tick.bind(this);
     }
 
-    init() {
+    async init() {
+      await this._loadConfig();
       this._bindUI();
+      await this.enumerateAudioSources();
+      this._syncFormControls();
       this._updateUI();
+
       if (window.i18n) {
-        window.i18n.onChange(() => this._updateUI());
+        window.i18n.onChange(() => {
+          this.enumerateAudioSources();
+          this._updateUI();
+        });
+      }
+    }
+
+    async enumerateAudioSources() {
+      const sel = document.getElementById("audioSourceSelect");
+      if (!sel) return;
+
+      const currentVal = this.config.sourceId || "system_loopback";
+      const isPl = window.i18n && window.i18n.currentLang === "pl";
+
+      sel.innerHTML = "";
+
+      // Default Option 1: System Audio Output Loopback
+      const optLoopback = document.createElement("option");
+      optLoopback.value = "system_loopback";
+      optLoopback.textContent = isPl
+        ? "Dźwięk systemowy (Głośniki / Loopback)"
+        : "System Audio Output (WASAPI / Loopback)";
+      sel.appendChild(optLoopback);
+
+      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const audioInputs = devices.filter((d) => d.kind === "audioinput");
+
+          audioInputs.forEach((dev, idx) => {
+            const opt = document.createElement("option");
+            opt.value = dev.deviceId;
+            opt.textContent = `${dev.label || (isPl ? `Wejście Audio / Mikrofon ${idx + 1}` : `Audio Input / Microphone ${idx + 1}`)}`;
+            sel.appendChild(opt);
+          });
+        } catch (e) {
+          console.warn("Could not enumerate audio devices:", e);
+        }
+      }
+
+      sel.value = currentVal;
+      if (sel.value !== currentVal) {
+        sel.value = "system_loopback";
+        this.config.sourceId = "system_loopback";
+        this._saveConfig();
+      }
+    }
+
+    _syncFormControls() {
+      const selSource = document.getElementById("audioSourceSelect");
+      if (selSource) selSource.value = this.config.sourceId || "system_loopback";
+
+      const selMode = document.getElementById("audioModeSelect");
+      if (selMode) selMode.value = this.config.mode || "equalizer";
+
+      const selColorMode = document.getElementById("audioColorModeSelect");
+      if (selColorMode) {
+        selColorMode.value = this.config.colorMode || "rainbow";
+        const colorWrap = document.getElementById("audioSingleColorGroup");
+        if (colorWrap) {
+          colorWrap.style.display = this.config.colorMode === "singleColor" ? "block" : "none";
+        }
+      }
+
+      const sliderSens = document.getElementById("audioSensitivitySlider");
+      const lblSens = document.getElementById("audioSensVal");
+      if (sliderSens) {
+        sliderSens.value = String(this.config.sensitivity || 1.2);
+        if (lblSens) lblSens.textContent = `${this.config.sensitivity}x`;
       }
     }
 
@@ -56,9 +129,9 @@
           await this.audioCtx.resume();
         }
 
-        // Capture system audio loopback / tab audio / mic
-        if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-          try {
+        if (this.config.sourceId === "system_loopback") {
+          // Capture system audio loopback (WASAPI in Electron / DisplayMedia in Browser)
+          if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
             this.mediaStream = await navigator.mediaDevices.getDisplayMedia({
               video: true,
               audio: {
@@ -67,14 +140,22 @@
                 autoGainControl: false
               }
             });
-          } catch (displayErr) {
-            // Fallback to audio user media
-            this.mediaStream = await navigator.mediaDevices.getUserMedia({
-              audio: { echoCancellation: false, noiseSuppression: false }
-            });
+            // Stop unused video tracks immediately so only pure audio loopback is processed
+            this.mediaStream.getVideoTracks().forEach((t) => t.stop());
+          } else {
+            throw new Error("System audio loopback is not supported in this environment");
           }
-        } else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } else {
+          // Specific audio input device (Microphone, Stereo Mix, Line-in)
+          this.mediaStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              deviceId: { exact: this.config.sourceId },
+              echoCancellation: false,
+              noiseSuppression: false,
+              autoGainControl: false
+            },
+            video: false
+          });
         }
 
         if (!this.mediaStream || this.mediaStream.getAudioTracks().length === 0) {
@@ -269,10 +350,37 @@
         });
       }
 
+      const selSource = document.getElementById("audioSourceSelect");
+      if (selSource) {
+        selSource.addEventListener("change", async (e) => {
+          this.config.sourceId = e.target.value;
+          this._saveConfig();
+          if (this.isRunning) {
+            this.stop();
+            await this.start();
+          }
+        });
+      }
+
+      const btnRefresh = document.getElementById("btnRefreshAudioSources");
+      if (btnRefresh) {
+        btnRefresh.addEventListener("click", async () => {
+          try {
+            const tmp = await navigator.mediaDevices.getUserMedia({ audio: true });
+            tmp.getTracks().forEach((t) => t.stop());
+          } catch (e) {}
+          await this.enumerateAudioSources();
+          if (window.gUI) {
+            window.gUI.showToast(window.i18n ? window.i18n.t("toastAudioSourcesRefreshed") : "Audio sources refreshed", "info");
+          }
+        });
+      }
+
       const selMode = document.getElementById("audioModeSelect");
       if (selMode) {
         selMode.addEventListener("change", (e) => {
           this.config.mode = e.target.value;
+          this._saveConfig();
         });
       }
 
@@ -284,6 +392,7 @@
           if (colorWrap) {
             colorWrap.style.display = e.target.value === "singleColor" ? "block" : "none";
           }
+          this._saveConfig();
         });
       }
 
@@ -291,6 +400,7 @@
       if (pickerColor && this.lighting) {
         pickerColor.addEventListener("change", (e) => {
           this.config.color = this.lighting._hexToHs(e.target.value);
+          this._saveConfig();
         });
       }
 
@@ -300,7 +410,53 @@
           this.config.sensitivity = parseFloat(e.target.value);
           const lbl = document.getElementById("audioSensVal");
           if (lbl) lbl.textContent = e.target.value + "x";
+          this._saveConfig();
         });
+      }
+    }
+
+    _saveConfig() {
+      const cfg = {
+        sourceId: this.config.sourceId,
+        mode: this.config.mode,
+        colorMode: this.config.colorMode,
+        color: this.config.color,
+        sensitivity: this.config.sensitivity,
+        smoothing: this.config.smoothing
+      };
+      localStorage.setItem("luxqmk_audio_config", JSON.stringify(cfg));
+      localStorage.setItem("luxqmk_audio_source", this.config.sourceId);
+
+      if (window.electronAPI && window.electronAPI.saveUserConfig) {
+        window.electronAPI.saveUserConfig({ audio: cfg });
+      }
+    }
+
+    async _loadConfig() {
+      let cfg = null;
+      if (window.electronAPI && window.electronAPI.loadUserConfig) {
+        try {
+          const userCfg = await window.electronAPI.loadUserConfig();
+          if (userCfg && userCfg.audio) {
+            cfg = userCfg.audio;
+          }
+        } catch (e) {}
+      }
+
+      if (!cfg) {
+        try {
+          const raw = localStorage.getItem("luxqmk_audio_config");
+          if (raw) cfg = JSON.parse(raw);
+        } catch (e) {}
+      }
+
+      if (cfg) {
+        if (cfg.sourceId) this.config.sourceId = cfg.sourceId;
+        if (cfg.mode) this.config.mode = cfg.mode;
+        if (cfg.colorMode) this.config.colorMode = cfg.colorMode;
+        if (cfg.color) this.config.color = cfg.color;
+        if (typeof cfg.sensitivity === "number") this.config.sensitivity = cfg.sensitivity;
+        if (typeof cfg.smoothing === "number") this.config.smoothing = cfg.smoothing;
       }
     }
 
@@ -309,18 +465,25 @@
       const badge = document.getElementById("audioStatusBadge");
 
       if (btnToggle) {
-        const startText = window.i18n ? window.i18n.t("btnAudioStart") : "▶️ Start Audio Visualizer";
-        const stopText = window.i18n ? window.i18n.t("btnAudioStop") : "⏹️ Stop Audio Visualizer";
-        btnToggle.textContent = this.isRunning ? stopText : startText;
+        const playSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+        const stopSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>';
+        const textKey = this.isRunning ? "btnAudioStop" : "btnAudioStart";
+        const labelText = window.i18n ? window.i18n.t(textKey) : (this.isRunning ? "Stop Audio Visualizer" : "Start Audio Visualizer");
+        btnToggle.innerHTML = `${this.isRunning ? stopSvg : playSvg} <span data-i18n="${textKey}">${labelText}</span>`;
         btnToggle.className = this.isRunning ? "btn btn-danger" : "btn btn-primary";
       }
 
       if (badge) {
+        badge.dataset.i18n = this.isRunning ? "audioStatusActive" : "audioStatusStopped";
         const activeText = window.i18n ? window.i18n.t("audioStatusActive") : "Active (Live 60 FPS)";
         const stoppedText = window.i18n ? window.i18n.t("audioStatusStopped") : "Stopped";
         badge.textContent = this.isRunning ? activeText : stoppedText;
         badge.className = this.isRunning ? "badge-pill badge-success" : "badge-pill";
       }
+    }
+
+    updateUI() {
+      this._updateUI();
     }
   }
 

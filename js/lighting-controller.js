@@ -162,26 +162,32 @@
     }
 
     renderVisualizerCanvas() {
-      const container = document.getElementById("lightingKeyboardCanvas");
-      if (!container) return;
+      const containers = [
+        document.getElementById("lightingKeyboardCanvas"),
+        document.getElementById("studioLightingKeyboardCanvas")
+      ].filter(Boolean);
+      if (containers.length === 0) return;
 
       const profile = window.deviceManager ? window.deviceManager.getActiveProfile() : null;
       const layout = this.getActiveLayout();
       if (!layout || layout.length === 0) return;
 
       const bounds = window.LayoutEngine ? window.LayoutEngine.getLayoutBounds(layout) : { width: 22.5, height: 6.25 };
-      container.style.setProperty("--keyboard-width-units", bounds.width);
-      container.style.setProperty("--keyboard-height-units", bounds.height);
-      container.style.width = `calc(${bounds.width} * var(--key-unit) + 36px)`;
-      container.style.height = `calc(${bounds.height} * var(--key-unit) + 36px)`;
-
-      // Toggle side diffusers visibility on chassis based on device profile capabilities
       const hasSidelights = !!(profile && profile.capabilities && profile.capabilities.hasSidelights);
-      container.classList.toggle("has-sidelights", hasSidelights);
 
-      container.innerHTML = "";
+      containers.forEach((container) => {
+        container.style.setProperty("--keyboard-width-units", bounds.width);
+        container.style.setProperty("--keyboard-height-units", bounds.height);
+        container.style.width = `calc(${bounds.width} * var(--key-unit) + 36px)`;
+        container.style.height = `calc(${bounds.height} * var(--key-unit) + 36px)`;
+        container.classList.toggle("has-sidelights", hasSidelights);
+        container.innerHTML = "";
+      });
+
       this.visualizerKeys = [];
       this.sideDiffusers = [];
+      this.logoBadgeEls = [];
+      this.logoBadgeEl = null;
 
       // Determine radial animation center / origin (Exact 1:1 match with physical keyboard firmware: Key P)
       let centerX = 109;
@@ -197,36 +203,66 @@
           : Math.round((keyP.y / bounds.height) * 64);
       }
 
-      // 1. Render all Keys + Logo Badge + Rotary Knob
-      layout.forEach((key, idx) => {
-        const keyEl = document.createElement("div");
-        keyEl.className = `lighting-keycap key-group-${key.group}`;
-        keyEl.id = `vis-key-${key.id}`;
-
-        keyEl.style.left = `calc(${key.x} * var(--key-unit) + 18px)`;
-        keyEl.style.top = `calc(${key.y} * var(--key-unit) + 18px)`;
-        keyEl.style.width = `calc(${key.w} * var(--key-unit) - 4px)`;
-        keyEl.style.height = `calc(${key.h} * var(--key-unit) - 4px)`;
-
-        if (key.isLogo) {
-          keyEl.classList.add("lighting-logo-badge");
-          keyEl.innerHTML = "";
-          this.logoBadgeEl = keyEl;
-        } else if (key.isKnob) {
-          keyEl.classList.add("lighting-knob-preview");
-          keyEl.innerHTML = `<span class="l-legend">🎛️</span>`;
-        } else {
-          keyEl.innerHTML = `<span class="l-legend">${key.label}</span>`;
-        }
-
-        // Use exact QMK hardware point coordinates from layout or proportional mapping
+      // 1. Render all Keys + Logo Badge + Rotary Knob in each container
+      layout.forEach((key) => {
         const qmkX = (key.qmkPoint && key.qmkPoint[0] !== undefined) ? key.qmkPoint[0] : Math.round((key.x / bounds.width) * 224);
         const qmkY = (key.qmkPoint && key.qmkPoint[1] !== undefined) ? key.qmkPoint[1] : Math.round((key.y / bounds.height) * 64);
-        
-        // Exact distance from natural typing center (between G and H)
         const dx = qmkX - centerX;
         const dy = qmkY - centerY;
         const dist = Math.sqrt(dx * dx + dy * dy);
+
+        const keyEls = [];
+
+        containers.forEach((container) => {
+          const keyEl = document.createElement("div");
+          keyEl.className = `lighting-keycap key-group-${key.group}`;
+          keyEl.id = `vis-key-${key.id}-${container.id}`;
+
+          keyEl.style.left = `calc(${key.x} * var(--key-unit) + 18px)`;
+          keyEl.style.top = `calc(${key.y} * var(--key-unit) + 18px)`;
+          keyEl.style.width = `calc(${key.w} * var(--key-unit) - 4px)`;
+          keyEl.style.height = `calc(${key.h} * var(--key-unit) - 4px)`;
+
+          if (key.isLogo) {
+            keyEl.classList.add("lighting-logo-badge");
+            keyEl.innerHTML = "";
+            this.logoBadgeEls.push(keyEl);
+            if (!this.logoBadgeEl) this.logoBadgeEl = keyEl;
+          } else if (key.isKnob) {
+            keyEl.classList.add("lighting-knob-preview");
+            keyEl.innerHTML = `<span class="l-legend">🎛️</span>`;
+          } else {
+            keyEl.innerHTML = `<span class="l-legend">${key.label}</span>`;
+          }
+
+          // Pointer click/touch triggers live reactive hit or tab switch
+          keyEl.addEventListener("pointerdown", (e) => {
+            e.preventDefault();
+            if (key.isLogo) {
+              this._switchTab("logo");
+              return;
+            }
+            if (key.isKnob) {
+              if (window.gUI) {
+                window.gUI.switchView("encoder");
+              }
+              if (window.gKeymapEditor) {
+                window.gKeymapEditor.selectKey({
+                  type: "encoder",
+                  id: "ENCODER_PRESS",
+                  matrix: (key.matrix && key.matrix[0] >= 0) ? key.matrix : [11, 6],
+                  direction: "Press",
+                  defaultLabel: "Knob Press"
+                });
+              }
+              return;
+            }
+            this.registerKeyHit(key.id, qmkX, qmkY);
+          });
+
+          container.appendChild(keyEl);
+          keyEls.push(keyEl);
+        });
 
         const keyObj = {
           id: key.id,
@@ -241,73 +277,64 @@
           group: key.group,
           isKnob: !!key.isKnob,
           isLogo: !!key.isLogo,
-          el: keyEl
+          els: keyEls,
+          el: keyEls[0]
         };
 
-        // Pointer click/touch triggers live reactive hit or tab switch
-        keyEl.addEventListener("pointerdown", (e) => {
-          e.preventDefault();
-          if (key.isLogo) {
-            this._switchTab("logo");
-            return;
-          }
-          if (key.isKnob) {
-            if (window.gUI) {
-              window.gUI.switchView("encoder");
-            }
-            if (window.gKeymapEditor) {
-              window.gKeymapEditor.selectKey({
-                type: "encoder",
-                id: "ENCODER_PRESS",
-                matrix: (key.matrix && key.matrix[0] >= 0) ? key.matrix : [11, 6],
-                direction: "Press",
-                defaultLabel: "Knob Press"
-              });
-            }
-            return;
-          }
-          this.registerKeyHit(key.id, qmkX, qmkY);
-        });
-
-        container.appendChild(keyEl);
         this.visualizerKeys.push(keyObj);
       });
 
-      // 2. Render Left & Right Side Diffuser Lightbars (only if supported)
+      // 2. Render Left & Right Side Diffuser Lightbars (only if supported) in each container
       if (hasSidelights && window.GMMK3_SIDE_LEDS) {
-        const diffContainer = document.createElement("div");
-        diffContainer.className = "side-diffusers-container";
+        containers.forEach((container) => {
+          const diffContainer = document.createElement("div");
+          diffContainer.className = "side-diffusers-container";
 
-        // Left side (SLED1 - SLED10, spans from Esc bottom to Left Ctrl top)
-        window.GMMK3_SIDE_LEDS.left.forEach((sled) => {
-          const sEl = document.createElement("div");
-          sEl.className = "side-diffuser-segment side-diffuser-left";
-          sEl.style.top = `calc(${sled.y} * var(--key-unit) + 18px)`;
-          diffContainer.appendChild(sEl);
+          // Left side (SLED1 - SLED10)
+          window.GMMK3_SIDE_LEDS.left.forEach((sled) => {
+            const sEl = document.createElement("div");
+            sEl.className = "side-diffuser-segment side-diffuser-left";
+            sEl.style.top = `calc(${sled.y} * var(--key-unit) + 18px)`;
+            diffContainer.appendChild(sEl);
 
-          const qmkX = sled.qmkPoint ? sled.qmkPoint[0] : 0;
-          const qmkY = sled.qmkPoint ? sled.qmkPoint[1] : Math.round((sled.y / bounds.height) * 64);
-          const dx = qmkX - centerX;
-          const dy = qmkY - centerY;
-          this.sideDiffusers.push({ id: sled.id, qmkX, qmkY, dx, dy, dist: Math.sqrt(dx * dx + dy * dy), el: sEl, isLeft: true });
+            const qmkX = sled.qmkPoint ? sled.qmkPoint[0] : 0;
+            const qmkY = sled.qmkPoint ? sled.qmkPoint[1] : Math.round((sled.y / bounds.height) * 64);
+            const dx = qmkX - centerX;
+            const dy = qmkY - centerY;
+            
+            let existing = this.sideDiffusers.find(sd => sd.id === sled.id);
+            if (!existing) {
+              existing = { id: sled.id, qmkX, qmkY, dx, dy, dist: Math.sqrt(dx * dx + dy * dy), els: [sEl], el: sEl, isLeft: true };
+              this.sideDiffusers.push(existing);
+            } else {
+              existing.els.push(sEl);
+            }
+          });
+
+          // Right side (SLED11 - SLED20)
+          window.GMMK3_SIDE_LEDS.right.forEach((sled) => {
+            const sEl = document.createElement("div");
+            sEl.className = "side-diffuser-segment side-diffuser-right";
+            sEl.style.top = `calc(${sled.y} * var(--key-unit) + 18px)`;
+            sEl.style.left = `calc(${bounds.width} * var(--key-unit) + 26px)`;
+            diffContainer.appendChild(sEl);
+
+            const qmkX = sled.qmkPoint ? sled.qmkPoint[0] : 224;
+            const qmkY = sled.qmkPoint ? sled.qmkPoint[1] : Math.round((sled.y / bounds.height) * 64);
+            const dx = qmkX - centerX;
+            const dy = qmkY - centerY;
+
+            let existing = this.sideDiffusers.find(sd => sd.id === sled.id);
+            if (!existing) {
+              existing = { id: sled.id, qmkX, qmkY, dx, dy, dist: Math.sqrt(dx * dx + dy * dy), els: [sEl], el: sEl, isLeft: false };
+              this.sideDiffusers.push(existing);
+            } else {
+              existing.els.push(sEl);
+            }
+          });
+
+          container.appendChild(diffContainer);
         });
-
-        // Right side (SLED11 - SLED20)
-        window.GMMK3_SIDE_LEDS.right.forEach((sled) => {
-          const sEl = document.createElement("div");
-          sEl.className = "side-diffuser-segment side-diffuser-right";
-          sEl.style.top = `calc(${sled.y} * var(--key-unit) + 18px)`;
-          sEl.style.left = `calc(${bounds.width} * var(--key-unit) + 26px)`;
-          diffContainer.appendChild(sEl);
-
-          const qmkX = sled.qmkPoint ? sled.qmkPoint[0] : 224;
-          const qmkY = sled.qmkPoint ? sled.qmkPoint[1] : Math.round((sled.y / bounds.height) * 64);
-          const dx = qmkX - centerX;
-          const dy = qmkY - centerY;
-          this.sideDiffusers.push({ id: sled.id, qmkX, qmkY, dx, dy, dist: Math.sqrt(dx * dx + dy * dy), el: sEl, isLeft: false });
-        });
-
-        container.appendChild(diffContainer);
       }
 
       window.gUI?.fitKeyboardPreviews();
@@ -913,11 +940,16 @@
             }
 
             const rgb = this._hsvToRgb(h, s, v);
-            k.el.style.backgroundColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-            k.el.style.borderColor = `rgba(255, 255, 255, ${v > 0 ? 0.7 : 0.2})`;
-            k.el.style.boxShadow = v > 0
-              ? `0 0 14px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.95), 0 0 4px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.8), inset 0 0 3px rgba(255, 255, 255, 0.6)`
-              : `inset 0 0 3px rgba(0, 0, 0, 0.8)`;
+            const logoTargets = k.els || [k.el];
+            for (let t = 0; t < logoTargets.length; t++) {
+              const el = logoTargets[t];
+              if (!el) continue;
+              el.style.backgroundColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+              el.style.borderColor = `rgba(255, 255, 255, ${v > 0 ? 0.7 : 0.2})`;
+              el.style.boxShadow = v > 0
+                ? `0 0 14px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.95), 0 0 4px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.8), inset 0 0 3px rgba(255, 255, 255, 0.6)`
+                : `inset 0 0 3px rgba(0, 0, 0, 0.8)`;
+            }
             continue;
           }
 
@@ -1092,23 +1124,34 @@
           const rgb = curRgb;
           const avgBri = (rgb.r + rgb.g + rgb.b) / 3;
           const glowAlpha = Math.min(0.85, (avgBri / 255) * 0.75);
+          const textColor = (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114) > 140 ? '#111827' : '#ffffff';
 
-          k.el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.85)`;
-          k.el.style.borderColor = `rgba(${Math.min(255, rgb.r + 40)}, ${Math.min(255, rgb.g + 40)}, ${Math.min(255, rgb.b + 40)}, 0.5)`;
-          k.el.style.boxShadow = `0 0 10px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${glowAlpha}), inset 0 1px 0 rgba(255, 255, 255, 0.2)`;
-          k.el.style.color = (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114) > 140 ? '#111827' : '#ffffff';
+          const targets = k.els || [k.el];
+          for (let t = 0; t < targets.length; t++) {
+            const el = targets[t];
+            if (!el) continue;
+            el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.85)`;
+            el.style.borderColor = `rgba(${Math.min(255, rgb.r + 40)}, ${Math.min(255, rgb.g + 40)}, ${Math.min(255, rgb.b + 40)}, 0.5)`;
+            el.style.boxShadow = `0 0 10px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${glowAlpha}), inset 0 1px 0 rgba(255, 255, 255, 0.2)`;
+            el.style.color = textColor;
+          }
         }
 
         // 2. Render Left & Right Side Diffuser Segments (20 LEDs)
         for (let sIdx = 0; sIdx < this.sideDiffusers.length; sIdx++) {
           const sd = this.sideDiffusers[sIdx];
-          if (!sd || !sd.el) continue;
+          if (!sd) continue;
           const res = this._evalQmkEffect(effect, sd, tByte, baseH, baseS, baseV, rev, now, speed);
           let v = res.v * (isLayerActive ? layerDim : 1.0);
           const rgb = this._hsvToRgb(res.h, res.s, v);
 
-          sd.el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.9)`;
-          sd.el.style.boxShadow = `0 0 12px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.8)`;
+          const sdTargets = sd.els || [sd.el];
+          for (let t = 0; t < sdTargets.length; t++) {
+            const el = sdTargets[t];
+            if (!el) continue;
+            el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.9)`;
+            el.style.boxShadow = `0 0 12px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.8)`;
+          }
         }
 
         // 3. Update Status Badge

@@ -56,7 +56,10 @@
     REACTIVE_BLEND: 24,
     LUXQMK_VERSION: 25,
     QMK_VERSION: 26,
-    DEBOUNCE_TIME: 27
+    DEBOUNCE_TIME: 27,
+    DIRECT_LIGHTING_ENABLE: 28,
+    DIRECT_LIGHTING_BLOCK: 29,
+    BOOTLOADER_JUMP: 0xFE
   };
 
   const RGB_MATRIX_VAL = {
@@ -494,7 +497,8 @@
             logoBadgeLed: (capFlags & 0x04) !== 0,
             winLock: (capFlags & 0x08) !== 0,
             layerLighting: (capFlags & 0x10) !== 0,
-            heatmap: (capFlags & 0x20) !== 0
+            heatmap: (capFlags & 0x20) !== 0,
+            directLighting: (capFlags & 0x40) !== 0
           }
         };
       } catch (e) {
@@ -532,7 +536,9 @@
     }
 
     async setDebounceTime(ms) {
-      await this.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DEBOUNCE_TIME, parseInt(ms, 10) || 5);
+      const num = parseInt(ms, 10);
+      const val = (!isNaN(num) && num >= 0 && num <= 30) ? num : 5;
+      await this.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DEBOUNCE_TIME, val);
       await this.saveCustomConfig();
     }
 
@@ -549,9 +555,31 @@
     }
 
     async jumpToBootloader() {
-      // QMK VIA standard bootloader jump command
+      // 1. VIA Standard Bootloader Jump command (0x0B = id_bootloader_jump)
       try {
-        await this.sendCommand([0x05, 0xFF]);
+        await this.sendCommand([0x0B]);
+      } catch (e) { }
+
+      // 2. LuxQMK Custom Bootloader Jump command (Channel 0x01, Val 0xFE)
+      try {
+        await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.CUSTOM, CUSTOM_VAL.BOOTLOADER_JUMP, 0x01]);
+      } catch (e) { }
+    }
+
+    // --- Direct Software Live Lighting Streaming ---
+    async setDirectLightingEnable(enable) {
+      if (!this.isConnected) return;
+      try {
+        await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.CUSTOM, CUSTOM_VAL.DIRECT_LIGHTING_ENABLE, enable ? 1 : 0]);
+      } catch (e) { }
+    }
+
+    async sendDirectLightingBlock(startIdx, rgbTriplets) {
+      if (!this.isConnected || !rgbTriplets || rgbTriplets.length === 0) return;
+      const count = Math.floor(rgbTriplets.length / 3);
+      const payload = [VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.CUSTOM, CUSTOM_VAL.DIRECT_LIGHTING_BLOCK, startIdx, count, ...rgbTriplets];
+      try {
+        await this.sendCommand(payload);
       } catch (e) { }
     }
   }

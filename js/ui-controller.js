@@ -73,7 +73,97 @@
     }
 
     _initFooterAndModals() {
-      // 1. About & Legal Modal
+      // 1. Application Settings Modal
+      const btnAppSettings = document.getElementById("btnAppSettings");
+      const appSettingsModal = document.getElementById("appSettingsModal");
+      const btnCloseAppSettings = document.getElementById("btnCloseAppSettingsModal");
+      const btnOkAppSettings = document.getElementById("btnOkAppSettingsModal");
+      const chkAppAutostartModal = document.getElementById("chkAppAutostartModal");
+      const lblAppAutostartStatus = document.getElementById("lblAppAutostartStatus");
+      const btnOpenAppDataModal = document.getElementById("btnOpenAppDataModal");
+
+      if (btnAppSettings && appSettingsModal) {
+        btnAppSettings.addEventListener("click", async () => {
+          appSettingsModal.classList.add("active");
+          // Sync current states
+          const modalSelect = document.getElementById("appLanguageSelectModal");
+          if (modalSelect && window.i18n) {
+            modalSelect.value = window.i18n.currentLang;
+          }
+          if (window.electronAPI && window.electronAPI.isDesktop) {
+            try {
+              const isEnabled = await window.electronAPI.getAutostart();
+              if (chkAppAutostartModal) chkAppAutostartModal.checked = isEnabled;
+              if (lblAppAutostartStatus && window.i18n) {
+                lblAppAutostartStatus.textContent = isEnabled
+                  ? window.i18n.t("lblAutostartStatusEnabled")
+                  : window.i18n.t("lblAutostartStatusDisabled");
+                lblAppAutostartStatus.style.color = isEnabled ? "var(--accent-cyan)" : "var(--text-muted)";
+              }
+            } catch (err) {
+              console.warn("Could not query autostart status:", err);
+            }
+          } else {
+            if (chkAppAutostartModal) chkAppAutostartModal.disabled = true;
+            if (lblAppAutostartStatus && window.i18n) {
+              lblAppAutostartStatus.textContent = window.i18n.t("lblAutostartNotAvailable");
+            }
+          }
+        });
+
+        const closeAppSettings = () => appSettingsModal.classList.remove("active");
+        btnCloseAppSettings?.addEventListener("click", closeAppSettings);
+        btnOkAppSettings?.addEventListener("click", closeAppSettings);
+        appSettingsModal.addEventListener("click", (e) => {
+          if (e.target === appSettingsModal) closeAppSettings();
+        });
+      }
+
+      // Autostart switch in App Settings Modal
+      if (chkAppAutostartModal && window.electronAPI && window.electronAPI.isDesktop) {
+        chkAppAutostartModal.addEventListener("change", async (e) => {
+          try {
+            const newState = await window.electronAPI.setAutostart(e.target.checked);
+            chkAppAutostartModal.checked = newState;
+            const chkDesktop = document.getElementById("chkDesktopAutostart");
+            if (chkDesktop) chkDesktop.checked = newState;
+
+            if (lblAppAutostartStatus && window.i18n) {
+              lblAppAutostartStatus.textContent = newState
+                ? window.i18n.t("lblAutostartStatusEnabled")
+                : window.i18n.t("lblAutostartStatusDisabled");
+              lblAppAutostartStatus.style.color = newState ? "var(--accent-cyan)" : "var(--text-muted)";
+            }
+
+            const msg = newState
+              ? (window.i18n ? window.i18n.t("toastAutostartEnabled") : "Windows startup launch enabled")
+              : (window.i18n ? window.i18n.t("toastAutostartDisabled") : "Windows startup launch disabled");
+            this.showToast(msg, "info");
+          } catch (err) {
+            console.error("Failed to toggle autostart:", err);
+          }
+        });
+      }
+
+      // Open Data Folder
+      if (btnOpenAppDataModal) {
+        btnOpenAppDataModal.addEventListener("click", async () => {
+          if (window.electronAPI && typeof window.electronAPI.openAppDataFolder === "function") {
+            try {
+              await window.electronAPI.openAppDataFolder();
+              const msg = window.i18n ? window.i18n.t("toastAppDataOpened") : "Opened data directory in file manager";
+              this.showToast(msg, "success");
+            } catch (err) {
+              console.error("Failed to open data folder:", err);
+              this.showToast("Failed to open data folder", "error");
+            }
+          } else {
+            this.showToast("Data folder is available in the desktop application", "warning");
+          }
+        });
+      }
+
+      // 2. About & Legal Modal
       const btnAbout = document.getElementById("btnAboutApp");
       const aboutModal = document.getElementById("aboutModal");
       const btnCloseAbout = document.getElementById("btnCloseAboutModal");
@@ -92,7 +182,7 @@
         });
       }
 
-      // 2. Check for Updates
+      // 3. Check for Updates
       const btnCheckUpdates = document.getElementById("btnCheckUpdates");
       if (btnCheckUpdates) {
         btnCheckUpdates.addEventListener("click", () => {
@@ -105,14 +195,32 @@
       if (window.electronAPI && window.electronAPI.isDesktop) {
         const autostartCard = document.getElementById("desktopAutostartCard");
         const chkAutostart = document.getElementById("chkDesktopAutostart");
+        const chkAppAutostartModal = document.getElementById("chkAppAutostartModal");
+        const lblAppAutostartStatus = document.getElementById("lblAppAutostartStatus");
+
         if (autostartCard) autostartCard.style.display = "block";
 
         if (chkAutostart) {
           const isEnabled = await window.electronAPI.getAutostart();
           chkAutostart.checked = isEnabled;
+          if (chkAppAutostartModal) chkAppAutostartModal.checked = isEnabled;
+          if (lblAppAutostartStatus && window.i18n) {
+            lblAppAutostartStatus.textContent = isEnabled
+              ? window.i18n.t("lblAutostartStatusEnabled")
+              : window.i18n.t("lblAutostartStatusDisabled");
+            lblAppAutostartStatus.style.color = isEnabled ? "var(--accent-cyan)" : "var(--text-muted)";
+          }
+
           chkAutostart.addEventListener("change", async (e) => {
             const newState = await window.electronAPI.setAutostart(e.target.checked);
             chkAutostart.checked = newState;
+            if (chkAppAutostartModal) chkAppAutostartModal.checked = newState;
+            if (lblAppAutostartStatus && window.i18n) {
+              lblAppAutostartStatus.textContent = newState
+                ? window.i18n.t("lblAutostartStatusEnabled")
+                : window.i18n.t("lblAutostartStatusDisabled");
+              lblAppAutostartStatus.style.color = newState ? "var(--accent-cyan)" : "var(--text-muted)";
+            }
             const msg = newState
               ? (window.i18n ? window.i18n.t("toastAutostartEnabled") : "Windows startup launch enabled")
               : (window.i18n ? window.i18n.t("toastAutostartDisabled") : "Windows startup launch disabled");
@@ -123,38 +231,80 @@
     }
 
     _initSettingsControls() {
-      // 1. Debounce Time Pills
+      // 1. Debounce Algorithm (Engine) Selector
+      const savedDebounceType = localStorage.getItem("gmmk_debounce_type") || "0";
+      const debounceTypeBadge = document.getElementById("currentDebounceTypeBadge");
+      const typeContainer = document.getElementById("debounceTypePillsContainer");
+
+      const updateDebounceTypeBadgeText = (val) => {
+        if (!debounceTypeBadge) return;
+        const keyMap = {
+          "0": "badgeDefer",
+          "1": "badgeAsymEager",
+          "2": "badgeSymEager"
+        };
+        const key = keyMap[val] || "badgeDefer";
+        debounceTypeBadge.textContent = window.i18n ? window.i18n.t(key) : "Symmetric Defer (QMK Default)";
+      };
+
+      if (typeContainer) {
+        updateDebounceTypeBadgeText(savedDebounceType);
+        const typePills = typeContainer.querySelectorAll(".debounce-pill");
+        typePills.forEach((pill) => {
+          if (pill.dataset.val === savedDebounceType) {
+            pill.classList.add("active");
+          } else {
+            pill.classList.remove("active");
+          }
+
+          pill.addEventListener("click", () => {
+            typePills.forEach((p) => p.classList.remove("active"));
+            pill.classList.add("active");
+            const val = pill.dataset.val;
+            localStorage.setItem("gmmk_debounce_type", val);
+            updateDebounceTypeBadgeText(val);
+            const badgeText = debounceTypeBadge ? debounceTypeBadge.textContent : val;
+            this.showToast(window.i18n.t("toastDebounceTypeSet", { val: badgeText }), "success");
+          });
+        });
+      }
+
+      // 2. Debounce Time Selector
       const savedDebounce = localStorage.getItem("gmmk_debounce_ms") || "5";
       const debounceBadge = document.getElementById("currentDebounceBadge");
+      const timeContainer = document.getElementById("debouncePillsContainer");
       if (debounceBadge) debounceBadge.textContent = savedDebounce + " ms";
 
-      document.querySelectorAll(".debounce-pill").forEach((pill) => {
-        if (pill.dataset.val === savedDebounce) {
-          pill.classList.add("active");
-        } else {
-          pill.classList.remove("active");
-        }
-
-        pill.addEventListener("click", async () => {
-          document.querySelectorAll(".debounce-pill").forEach((p) => p.classList.remove("active"));
-          pill.classList.add("active");
-          const val = pill.dataset.val;
-          localStorage.setItem("gmmk_debounce_ms", val);
-          if (debounceBadge) debounceBadge.textContent = val + " ms";
-          if (window.gmmkProtocol && window.gmmkProtocol.isConnected) {
-            try {
-              await window.gmmkProtocol.setDebounceTime(parseInt(val, 10));
-            } catch (e) {
-              console.warn("Failed to set debounce on device:", e);
-            }
+      if (timeContainer) {
+        const timePills = timeContainer.querySelectorAll(".debounce-pill");
+        timePills.forEach((pill) => {
+          if (pill.dataset.val === savedDebounce) {
+            pill.classList.add("active");
+          } else {
+            pill.classList.remove("active");
           }
-          this.showToast(window.i18n.t("toastDebounceSet", { val: val + " ms" }), "success");
-        });
-      });
 
-      // 2. NKRO Switch Toggle
+          pill.addEventListener("click", async () => {
+            timePills.forEach((p) => p.classList.remove("active"));
+            pill.classList.add("active");
+            const val = pill.dataset.val;
+            localStorage.setItem("gmmk_debounce_ms", val);
+            if (debounceBadge) debounceBadge.textContent = val + " ms";
+            const proto = window.gProtocol || window.gmmkProtocol;
+            if (proto && proto.isConnected) {
+              try {
+                await proto.setDebounceTime(parseInt(val, 10));
+              } catch (e) {
+                console.warn("Failed to set debounce on device:", e);
+              }
+            }
+            this.showToast(window.i18n.t("toastDebounceSet", { val: val + " ms" }), "success");
+          });
+        });
+      }
+
+      // 3. NKRO Switch Toggle
       const chkNkro = document.getElementById("chkNkroToggle");
-      const nkroBadge = document.getElementById("nkroStatusBadge");
       const savedNkro = localStorage.getItem("gmmk_nkro_enabled") !== "0"; // Default true (NKRO on)
 
       if (chkNkro) {
@@ -170,7 +320,7 @@
         });
       }
 
-      // 3. Polling Rate Select
+      // 4. Polling Rate Select
       const selectPolling = document.getElementById("selectPollingRate");
       const savedPolling = localStorage.getItem("gmmk_polling_rate") || "1000";
       if (selectPolling) {
@@ -181,7 +331,7 @@
         });
       }
 
-      // 4. Maintenance Action Buttons
+      // 5. Maintenance Action Buttons
       const btnBootloader = document.getElementById("btnJumpBootloader");
       if (btnBootloader) {
         btnBootloader.addEventListener("click", async () => {
@@ -223,6 +373,34 @@
           }
         });
       }
+
+      // Sync badges when language is switched
+      if (window.i18n && typeof window.i18n.onChange === "function") {
+        window.i18n.onChange(() => {
+          const currentType = localStorage.getItem("gmmk_debounce_type") || "0";
+          updateDebounceTypeBadgeText(currentType);
+          const currentNkro = localStorage.getItem("gmmk_nkro_enabled") !== "0";
+          this._updateNkroBadge(currentNkro);
+        });
+      }
+    }
+
+    updateDebounceFromDevice(ms) {
+      if (typeof ms !== "number" || isNaN(ms)) return;
+      const strVal = String(ms);
+      localStorage.setItem("gmmk_debounce_ms", strVal);
+      const debounceBadge = document.getElementById("currentDebounceBadge");
+      if (debounceBadge) debounceBadge.textContent = strVal + " ms";
+      const container = document.getElementById("debouncePillsContainer");
+      if (container) {
+        container.querySelectorAll(".debounce-pill").forEach((pill) => {
+          if (pill.dataset.val === strVal) {
+            pill.classList.add("active");
+          } else {
+            pill.classList.remove("active");
+          }
+        });
+      }
     }
 
     _updateNkroBadge(active) {
@@ -247,14 +425,17 @@
 
       // Update view containers
       document.querySelectorAll(".view-container").forEach((view) => {
-        view.classList.toggle("active", view.id === `view-${viewId}`);
+        const isMatch = view.id === `view-${viewId}` || view.id === `view-${viewId.replace(/_/g, "-")}`;
+        view.classList.toggle("active", isMatch);
       });
 
       // Update Top Bar View Header Title
       const titles = {
         keymap: { t: "viewKeymapTitle", s: "viewKeymapSubtitle" },
+        macro: { t: "viewMacroTitle", s: "viewMacroSubtitle" },
         lighting: { t: "viewLightingTitle", s: "viewLightingSubtitle" },
-        audio: { t: "viewAudioTitle", s: "viewAudioSubtitle" },
+        studio_lighting: { t: "viewStudioLightingTitle", s: "viewStudioLightingSubtitle" },
+        audio: { t: "viewStudioLightingTitle", s: "viewStudioLightingSubtitle" },
         encoder: { t: "viewEncoderTitle", s: "viewEncoderSubtitle" },
         tester: { t: "viewTesterTitle", s: "viewTesterSubtitle" },
         backup: { t: "viewBackupTitle", s: "viewBackupSubtitle" },
@@ -264,12 +445,19 @@
       const meta = titles[viewId] || titles.keymap;
       const h1 = document.getElementById("topBarViewTitle");
       const p = document.getElementById("topBarViewSubtitle");
-      if (h1) h1.dataset.i18n = meta.t;
-      if (p) p.dataset.i18n = meta.s;
-      window.i18n.translatePage();
+      if (h1) {
+        h1.dataset.i18n = meta.t;
+        h1.textContent = window.i18n ? window.i18n.t(meta.t) : meta.t;
+      }
+      if (p) {
+        p.dataset.i18n = meta.s;
+        p.textContent = window.i18n ? window.i18n.t(meta.s) : meta.s;
+      }
 
-      // Ensure device connection labels are accurate after translatePage
-      this.syncDeviceStatusUI();
+      // Stop Macro Keystroke recording if navigating away from macro editor
+      if (window.gMacroManager && viewId !== "macro" && window.gMacroManager.isRecording) {
+        window.gMacroManager.stopRecording();
+      }
 
       // Start or stop Key Tester if entering/leaving tester view
       if (window.gKeyTester) {
@@ -282,7 +470,7 @@
 
       // Start or stop Lighting Visualizer loop
       if (window.gLightingController) {
-        if (viewId === "lighting" || viewId === "audio") {
+        if (viewId === "lighting" || viewId === "studio_lighting" || viewId === "audio") {
           window.gLightingController.startVisualizer();
         } else {
           window.gLightingController.stopVisualizer();
@@ -298,14 +486,17 @@
       if (devName) this.deviceName = devName;
       this.syncDeviceStatusUI();
 
-      // Enable/disable maintenance action buttons
+      // Enable/disable maintenance and macro action buttons
       const maintenanceButtons = [
         document.getElementById("btnJumpBootloader"),
         document.getElementById("btnResetEEPROM"),
         document.getElementById("btnQuickBackup"),
         document.getElementById("btnCreateBackup"),
         document.getElementById("btnRestoreBackup"),
-        document.getElementById("btnRefreshDevice")
+        document.getElementById("btnRefreshDevice"),
+        document.getElementById("btnSaveMacros"),
+        document.getElementById("btnReloadMacros"),
+        document.getElementById("btnResetAllMacros")
       ];
 
       maintenanceButtons.forEach((btn) => {
@@ -409,13 +600,38 @@
     }
 
     _bindLangSelect() {
-      const select = document.getElementById("langSelect");
-      if (select) {
-        select.value = window.i18n.currentLang;
-        select.addEventListener("change", (e) => {
-          window.i18n.setLang(e.target.value);
-          this.syncDeviceStatusUI();
-        });
+      const topSelect = document.getElementById("langSelect");
+      const modalSelect = document.getElementById("appLanguageSelectModal");
+
+      const handleLangChange = (lang) => {
+        if (!window.i18n) return;
+        window.i18n.setLang(lang);
+        if (topSelect) topSelect.value = lang;
+        if (modalSelect) modalSelect.value = lang;
+        this.syncDeviceStatusUI();
+
+        // Refresh autostart label if available
+        const lblAppAutostartStatus = document.getElementById("lblAppAutostartStatus");
+        const chkAppAutostartModal = document.getElementById("chkAppAutostartModal");
+        if (lblAppAutostartStatus && chkAppAutostartModal) {
+          if (window.electronAPI && window.electronAPI.isDesktop) {
+            lblAppAutostartStatus.textContent = chkAppAutostartModal.checked
+              ? window.i18n.t("lblAutostartStatusEnabled")
+              : window.i18n.t("lblAutostartStatusDisabled");
+          } else {
+            lblAppAutostartStatus.textContent = window.i18n.t("lblAutostartNotAvailable");
+          }
+        }
+      };
+
+      if (topSelect) {
+        topSelect.value = window.i18n ? window.i18n.currentLang : "en";
+        topSelect.addEventListener("change", (e) => handleLangChange(e.target.value));
+      }
+
+      if (modalSelect) {
+        modalSelect.value = window.i18n ? window.i18n.currentLang : "en";
+        modalSelect.addEventListener("change", (e) => handleLangChange(e.target.value));
       }
     }
 

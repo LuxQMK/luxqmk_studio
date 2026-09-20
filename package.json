@@ -15,6 +15,9 @@
   "build": {
     "appId": "com.luxqmk.studio",
     "productName": "LuxQMK Studio",
+    "asarUnpack": [
+      "bin/**"
+    ],
     "directories": {
       "output": "dist"
     },
