@@ -205,8 +205,18 @@
 
       // 1. Render all Keys + Logo Badge + Rotary Knob in each container
       layout.forEach((key) => {
-        const qmkX = (key.qmkPoint && key.qmkPoint[0] !== undefined) ? key.qmkPoint[0] : Math.round((key.x / bounds.width) * 224);
-        const qmkY = (key.qmkPoint && key.qmkPoint[1] !== undefined) ? key.qmkPoint[1] : Math.round((key.y / bounds.height) * 64);
+        const keyW = (key.w !== undefined) ? key.w : 1;
+        const keyH = (key.h !== undefined) ? key.h : 1;
+        const keyCenterX = key.x + (keyW / 2);
+        const keyCenterY = key.y + (keyH / 2);
+
+        // QMK hardware coordinate grid uses key switch anchor positions
+        const qmkX = (key.qmkPoint && key.qmkPoint[0] !== undefined)
+          ? key.qmkPoint[0]
+          : Math.round((key.x / bounds.width) * 224);
+        const qmkY = (key.qmkPoint && key.qmkPoint[1] !== undefined)
+          ? key.qmkPoint[1]
+          : Math.round((key.y / bounds.height) * 64);
         const dx = qmkX - centerX;
         const dy = qmkY - centerY;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -218,6 +228,7 @@
           keyEl.className = `lighting-keycap key-group-${key.group}`;
           keyEl.id = `vis-key-${key.id}-${container.id}`;
 
+          // Visual CSS placement uses top-left bounding box
           keyEl.style.left = `calc(${key.x} * var(--key-unit) + 18px)`;
           keyEl.style.top = `calc(${key.y} * var(--key-unit) + 18px)`;
           keyEl.style.width = `calc(${key.w} * var(--key-unit) - 4px)`;
@@ -267,8 +278,12 @@
         const keyObj = {
           id: key.id,
           matrix: key.matrix,
-          x: key.x,
-          y: key.y,
+          x: keyCenterX,
+          y: keyCenterY,
+          w: keyW,
+          h: keyH,
+          rawX: key.x,
+          rawY: key.y,
           qmkX: qmkX,
           qmkY: qmkY,
           dx: dx,
@@ -843,6 +858,12 @@
     _tickVisualizer(timestamp) {
       if (!this.isVisualizerRunning) return;
 
+      // If user is on the Studio Lighting tab, yield the thread to Studio Lighting
+      if (window.gStudioLighting && window.gStudioLighting.isRunning && window.gUI && window.gUI.currentView === "studio_lighting") {
+        this.animFrameId = requestAnimationFrame(this._tickBound);
+        return;
+      }
+
       try {
         const now = timestamp || performance.now();
         if (!this.lastHeatTick) this.lastHeatTick = now;
@@ -940,7 +961,7 @@
             }
 
             const rgb = this._hsvToRgb(h, s, v);
-            const logoTargets = k.els || [k.el];
+            const logoTargets = (k.els || [k.el]).filter(el => !el.id || !el.id.includes("studioLightingKeyboardCanvas"));
             for (let t = 0; t < logoTargets.length; t++) {
               const el = logoTargets[t];
               if (!el) continue;
@@ -964,10 +985,10 @@
 
             switch (rMode) {
               case 1: { // REACTIVE_MODE_FADE
-                const lastHit = this.lastHitPerKey.get(k.id);
-                if (lastHit && Number.isFinite(lastHit.time)) {
-                  const elapsedSec = (now - lastHit.time) / 1000;
-                  const tick = Math.min(255, Math.floor(elapsedSec * 60 * rSpdScale * 2.5));
+                const hit = this.lastHitPerKey.get(k.id);
+                if (hit && Number.isFinite(hit.time)) {
+                  const elapsedSec = (now - hit.time) / 1000;
+                  const tick = Math.min(255, Math.floor(elapsedSec * 60 * rSpdScale * 3.0));
                   if (tick < 255) {
                     reactiveIntensity = 255 - tick;
                   }
@@ -975,7 +996,25 @@
                 break;
               }
 
-              case 2:   // REACTIVE_MODE_SPLASH
+              case 2: { // REACTIVE_MODE_SPLASH
+                let sumInt = 0;
+                for (let j = 0; j < this.hits.length; j++) {
+                  const hit = this.hits[j];
+                  if (!hit || !Number.isFinite(hit.time)) continue;
+                  const dx = k.qmkX - hit.x;
+                  const dy = k.qmkY - hit.y;
+                  const dist = Math.sqrt(dx * dx + dy * dy);
+                  const elapsedSec = (now - hit.time) / 1000;
+                  const tick = Math.min(255, Math.floor(elapsedSec * 60 * rSpdScale * 3.5));
+                  const eff = tick - dist;
+                  if (eff >= 0 && eff < 28 && tick < 255) {
+                    sumInt = Math.min(255, sumInt + Math.floor((28 - eff) * (255 - tick) / 28));
+                  }
+                }
+                reactiveIntensity = sumInt;
+                break;
+              }
+
               case 3: { // REACTIVE_MODE_SPLASH_RAINBOW
                 let sumInt = 0;
                 for (let j = 0; j < this.hits.length; j++) {
@@ -985,15 +1024,12 @@
                   const dy = k.qmkY - hit.y;
                   const dist = Math.sqrt(dx * dx + dy * dy);
                   const elapsedSec = (now - hit.time) / 1000;
-                  const tick = Math.min(255, Math.floor(elapsedSec * 60 * rSpdScale * 2.5));
-                  const effDist = tick - dist;
-                  if (effDist >= 0 && effDist < 28 && tick < 255) {
-                    const waveInt = Math.floor((28 - effDist) * (255 - tick) / 28);
-                    sumInt = Math.min(255, sumInt + waveInt);
-                    if (rMode === 3) {
-                      reactiveH = (Math.round(dist + tick)) & 0xFF;
-                      reactiveS = 255;
-                    }
+                  const tick = Math.min(255, Math.floor(elapsedSec * 60 * rSpdScale * 3.5));
+                  const eff = tick - dist;
+                  if (eff >= 0 && eff < 28 && tick < 255) {
+                    sumInt = Math.min(255, sumInt + Math.floor((28 - eff) * (255 - tick) / 28));
+                    reactiveH = (dist + tick) & 0xFF;
+                    reactiveS = 255;
                   }
                 }
                 reactiveIntensity = sumInt;
@@ -1008,15 +1044,19 @@
                   const dx = Math.abs(k.qmkX - hit.x);
                   const dy = Math.abs(k.qmkY - hit.y);
                   const elapsedSec = (now - hit.time) / 1000;
-                  const tick = Math.min(255, Math.floor(elapsedSec * 60 * rSpdScale * 2.5));
+                  const tick = Math.min(255, Math.floor(elapsedSec * 60 * rSpdScale * 3.0));
                   if (tick < 255) {
                     if (dx < 10) {
                       const eff = tick - dy;
-                      if (eff >= 0 && eff < 24) sumInt = Math.min(255, sumInt + Math.floor((24 - eff) * (255 - tick) / 24));
+                      if (eff >= 0 && eff < 24) {
+                        sumInt = Math.min(255, sumInt + Math.floor((24 - eff) * (255 - tick) / 24));
+                      }
                     }
                     if (dy < 10) {
                       const eff = tick - dx;
-                      if (eff >= 0 && eff < 24) sumInt = Math.min(255, sumInt + Math.floor((24 - eff) * (255 - tick) / 24));
+                      if (eff >= 0 && eff < 24) {
+                        sumInt = Math.min(255, sumInt + Math.floor((24 - eff) * (255 - tick) / 24));
+                      }
                     }
                   }
                 }
@@ -1024,7 +1064,7 @@
                 break;
               }
 
-              case 5: { // REACTIVE_MODE_NEXUS
+              case 5: { // REACTIVE_MODE_NEXUS (Diagonal X burst)
                 let sumInt = 0;
                 for (let j = 0; j < this.hits.length; j++) {
                   const hit = this.hits[j];
@@ -1126,7 +1166,7 @@
           const glowAlpha = Math.min(0.85, (avgBri / 255) * 0.75);
           const textColor = (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114) > 140 ? '#111827' : '#ffffff';
 
-          const targets = k.els || [k.el];
+          const targets = (k.els || [k.el]).filter(el => !el.id || !el.id.includes("studioLightingKeyboardCanvas"));
           for (let t = 0; t < targets.length; t++) {
             const el = targets[t];
             if (!el) continue;
@@ -1145,7 +1185,7 @@
           let v = res.v * (isLayerActive ? layerDim : 1.0);
           const rgb = this._hsvToRgb(res.h, res.s, v);
 
-          const sdTargets = sd.els || [sd.el];
+          const sdTargets = (sd.els || [sd.el]).filter(el => !el.closest || !el.closest("#studioLightingKeyboardCanvas"));
           for (let t = 0; t < sdTargets.length; t++) {
             const el = sdTargets[t];
             if (!el) continue;
@@ -1192,7 +1232,8 @@
     }
 
     _hsvToRgb(hByte, sByte, vByte) {
-      const h = ((hByte % 256) / 255) * 360;
+      const normH = (((hByte % 256) + 256) % 256) / 256;
+      const h = normH * 360;
       const s = Math.max(0, Math.min(255, sByte)) / 255;
       const v = Math.max(0, Math.min(255, vByte)) / 255;
 
@@ -1209,9 +1250,9 @@
       else { r = c; g = 0; b = x; }
 
       return {
-        r: Math.round((r + m) * 255),
-        g: Math.round((g + m) * 255),
-        b: Math.round((b + m) * 255)
+        r: Math.max(0, Math.min(255, Math.round((r + m) * 255))),
+        g: Math.max(0, Math.min(255, Math.round((g + m) * 255))),
+        b: Math.max(0, Math.min(255, Math.round((b + m) * 255)))
       };
     }
 

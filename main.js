@@ -21,6 +21,11 @@ if (!gotTheLock) {
   });
 }
 
+// Disable background throttling for real-time 60 FPS RGB matrix streaming & audio visualizer
+app.commandLine.appendSwitch("disable-renderer-backgrounding");
+app.commandLine.appendSwitch("disable-background-timer-throttling");
+app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1360,

@@ -575,11 +575,19 @@
     }
 
     async sendDirectLightingBlock(startIdx, rgbTriplets) {
-      if (!this.isConnected || !rgbTriplets || rgbTriplets.length === 0) return;
+      if (!this.device || !this.device.opened || !rgbTriplets || rgbTriplets.length === 0) return;
       const count = Math.floor(rgbTriplets.length / 3);
-      const payload = [VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.CUSTOM, CUSTOM_VAL.DIRECT_LIGHTING_BLOCK, startIdx, count, ...rgbTriplets];
+      const report = new Uint8Array(32);
+      report[0] = VIA_CMD.CUSTOM_SET_VALUE;
+      report[1] = CHANNELS.CUSTOM;
+      report[2] = CUSTOM_VAL.DIRECT_LIGHTING_BLOCK;
+      report[3] = startIdx;
+      report[4] = count;
+      for (let i = 0; i < rgbTriplets.length && (5 + i) < 32; i++) {
+        report[5 + i] = rgbTriplets[i];
+      }
       try {
-        await this.sendCommand(payload);
+        await this.device.sendReport(0x00, report);
       } catch (e) { }
     }
   }

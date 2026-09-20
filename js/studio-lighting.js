@@ -1,12 +1,142 @@
 /**
  * LuxQMK Studio - Software Lighting Controller & 60 FPS Real-Time FX Suite
  * Universal support for:
- * 1. Audio Visualizers (WASAPI Loopback, Microphone, Stereo Mix)
- * 2. Real-Time PC Animation Engines (Cyber Wave, Matrix Rain, Particle Flow, Aurora, Radial Bloom)
- * 3. Bidirectional per-user persistence (AppData / localStorage)
+ * 1. Audio Visualizers (WASAPI Loopback, Microphone, Stereo Mix) with 7 Dynamic Modes
+ * 2. Real-Time PC Animation Engines with 7 High-End Presets & 6 Spatial Directions
+ * 3. 10 Curated Color Palettes + Custom Color Gradient Mapping
+ * 4. Smooth Parametric Controls: Speed, Intensity, Smoothing, Ambient Floor Glow
+ * 5. WebHID Direct Hardware Streaming & Bidirectional Persistence
  */
 
 (function () {
+  // Curated Color Palettes (RGB Stop Tables)
+  const PALETTES = {
+    rainbow: null, // Dynamic HSV Rainbow
+    cyberpunk: [
+      { pos: 0.0, rgb: [0, 240, 255] },    // Electric Cyan #00F0FF
+      { pos: 0.5, rgb: [255, 0, 85] },     // Neon Pink #FF0055
+      { pos: 1.0, rgb: [255, 208, 0] }     // Cyber Amber #FFD000
+    ],
+    vaporwave: [
+      { pos: 0.0, rgb: [155, 81, 224] },   // Pastel Violet #9B51E0
+      { pos: 0.5, rgb: [255, 117, 151] },  // Sunset Pink #FF7597
+      { pos: 1.0, rgb: [0, 229, 255] }     // Pastel Cyan #00E5FF
+    ],
+    fire_ember: [
+      { pos: 0.0, rgb: [255, 30, 0] },     // Magma Crimson #FF1E00
+      { pos: 0.5, rgb: [255, 119, 0] },    // Ember Orange #FF7700
+      { pos: 1.0, rgb: [255, 221, 0] }     // Gold Flame #FFDD00
+    ],
+    ocean_abyss: [
+      { pos: 0.0, rgb: [0, 34, 68] },      // Deep Navy #002244
+      { pos: 0.35, rgb: [0, 102, 255] },   // Azure #0066FF
+      { pos: 0.7, rgb: [0, 255, 255] },    // Electric Cyan #00FFFF
+      { pos: 1.0, rgb: [0, 255, 176] }     // Seafoam Aqua #00FFB0
+    ],
+    matrix_code: [
+      { pos: 0.0, rgb: [0, 255, 102] },    // Phosphor Green #00FF66
+      { pos: 0.5, rgb: [57, 255, 20] },    // Cyber Lime #39FF14
+      { pos: 1.0, rgb: [0, 143, 17] }      // Deep Emerald #008F11
+    ],
+    synthwave: [
+      { pos: 0.0, rgb: [138, 43, 226] },   // Blue Violet #8A2BE2
+      { pos: 0.5, rgb: [255, 20, 147] },   // Hot Pink #FF1493
+      { pos: 1.0, rgb: [255, 204, 0] }     // Sunburst Gold #FFCC00
+    ],
+    ice_glacier: [
+      { pos: 0.0, rgb: [0, 51, 102] },     // Arctic Deep Blue #003366
+      { pos: 0.5, rgb: [112, 214, 255] },  // Glacier Ice Blue #70D6FF
+      { pos: 1.0, rgb: [224, 247, 250] }   // Polar White Frost #E0F7FA
+    ],
+    toxic_radiation: [
+      { pos: 0.0, rgb: [166, 255, 0] },    // Acid Lime #A6FF00
+      { pos: 0.5, rgb: [243, 255, 0] },    // Toxic Yellow #F3FF00
+      { pos: 1.0, rgb: [0, 229, 58] }      // Radioactive Green #00E53A
+    ],
+    singleColor: null
+  };
+
+  // Dynamic HSV to RGB Converter (pure standalone function)
+  function hsvToRgb(hByte, sByte = 255, vByte = 255) {
+    // Normalization of H to [0, 360) ensuring safe positive modulo
+    const normH = (((hByte % 256) + 256) % 256) / 256;
+    const h = normH * 360;
+    const s = Math.max(0, Math.min(255, sByte)) / 255;
+    const v = Math.max(0, Math.min(255, vByte)) / 255;
+
+    const c = v * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = v - c;
+
+    let r = 0, g = 0, b = 0;
+    if (h >= 0 && h < 60) { r = c; g = x; b = 0; }
+    else if (h >= 60 && h < 120) { r = x; g = c; b = 0; }
+    else if (h >= 120 && h < 180) { r = 0; g = c; b = x; }
+    else if (h >= 180 && h < 240) { r = 0; g = x; b = c; }
+    else if (h >= 240 && h < 300) { r = x; g = 0; b = c; }
+    else { r = c; g = 0; b = x; }
+
+    return [
+      Math.max(0, Math.min(255, Math.round((r + m) * 255))),
+      Math.max(0, Math.min(255, Math.round((g + m) * 255))),
+      Math.max(0, Math.min(255, Math.round((b + m) * 255)))
+    ];
+  }
+
+  function samplePaletteRgb(paletteName, factor, customRgb = [0, 255, 255]) {
+    if (paletteName === "singleColor") {
+      return customRgb;
+    }
+    const f = ((factor % 1) + 1) % 1; // Normalize to 0..1
+    if (paletteName === "rainbow" || !PALETTES[paletteName]) {
+      return hsvToRgb(Math.round(f * 255), 255, 255);
+    }
+    const stops = PALETTES[paletteName];
+    if (f <= stops[0].pos) return stops[0].rgb;
+    if (f >= stops[stops.length - 1].pos) return stops[stops.length - 1].rgb;
+
+    for (let i = 0; i < stops.length - 1; i++) {
+      const s1 = stops[i];
+      const s2 = stops[i + 1];
+      if (f >= s1.pos && f <= s2.pos) {
+        const t = (f - s1.pos) / (s2.pos - s1.pos);
+        return [
+          Math.max(0, Math.min(255, Math.round(s1.rgb[0] + (s2.rgb[0] - s1.rgb[0]) * t))),
+          Math.max(0, Math.min(255, Math.round(s1.rgb[1] + (s2.rgb[1] - s1.rgb[1]) * t))),
+          Math.max(0, Math.min(255, Math.round(s1.rgb[2] + (s2.rgb[2] - s1.rgb[2]) * t)))
+        ];
+      }
+    }
+    return stops[0].rgb;
+  }
+
+  function getDirectedCoordinate(x, y, dir, maxX = 22.5, maxY = 5.5) {
+    const normX = Math.max(0, Math.min(1, x / maxX));
+    const normY = Math.max(0, Math.min(1, y / maxY));
+    const centerX = maxX / 2;
+    const centerY = maxY / 2;
+    const distCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+    const maxDist = Math.sqrt(Math.pow(centerX, 2) + Math.pow(centerY, 2));
+    const normDist = Math.min(1, distCenter / maxDist);
+
+    switch (dir) {
+      case "left_to_right":
+        return { primary: normX, secondary: normY, dist: normDist };
+      case "right_to_left":
+        return { primary: 1 - normX, secondary: normY, dist: normDist };
+      case "bottom_to_top":
+        return { primary: 1 - normY, secondary: normX, dist: normDist };
+      case "top_to_bottom":
+        return { primary: normY, secondary: normX, dist: normDist };
+      case "center_out":
+        return { primary: normDist, secondary: normDist, dist: normDist };
+      case "perimeter_in":
+        return { primary: 1 - normDist, secondary: 1 - normDist, dist: 1 - normDist };
+      default:
+        return { primary: normX, secondary: normY, dist: normDist };
+    }
+  }
+
   class StudioLightingController {
     constructor(protocol, lightingController) {
       this.protocol = protocol;
@@ -28,35 +158,73 @@
       this.isBeat = false;
       this.beatDecay = 0;
 
-      // Animation Engine State
+      // Animation State & Particles
       this.particles = [];
       this.matrixDrops = [];
+      this.starfield = [];
+      this.warpStars = [];
       this.lastFrameTime = 0;
 
-      // Configuration
+      // Configuration Model
       this.config = {
         enabled: false,
         activeTab: "audio",
-        // Audio Visualizer settings
+
+        // Audio Visualizer Settings
         sourceId: "system_loopback",
-        audioMode: "equalizer", // equalizer, bassPulse, audioWave, vuMeter
-        audioColorMode: "rainbow", // rainbow, singleColor
-        audioColor: [0, 255], // HSV [H, S]
+        audioMode: "equalizer", // equalizer, bassPulse, vuMeter, audioWave, spectrumHeatmap, starfieldBeats, voiceAura
+        audioColorMode: "rainbow", // rainbow, cyberpunk, vaporwave, fire_ember, ocean_abyss, matrix_code, synthwave, ice_glacier, toxic_radiation, singleColor
+        audioDirection: "bottom_to_top", // bottom_to_top, top_to_bottom, left_to_right, right_to_left, center_out, perimeter_in
+        audioColor: [0, 255], // HSV [H, S] for singleColor
+        audioCustomHex: "#00ffff",
         sensitivity: 1.2,
+        audioSpeed: 1.0,
+        audioIntensity: 1.0,
         smoothing: 0.82,
-        // PC Software Animation settings
-        effectPreset: "neonWave", // neonWave, matrixRain, particleStorm, aurora, pulseBloom
+        audioFloor: 0.15,
+
+        // PC Software Animation Settings
+        effectPreset: "neonWave", // neonWave, matrixRain, particleStorm, aurora, pulseBloom, fireEmber, hyperspaceWarp
+        softwarePalette: "rainbow",
+        softwareDirection: "left_to_right",
+        softwareCustomHex: "#00ffff",
         effectSpeed: 1.0,
         effectIntensity: 1.0,
-        effectColor: [180, 255] // HSV
+        softwareFloor: 0.10
       };
 
       // Hardware Direct Lighting Streaming
       this._lastHardwareStreamTime = 0;
       this._isHardwareStreaming = false;
       this._logoCurRgb = { r: 0, g: 0, b: 0 };
+      this._lastTickTime = 0;
+      this._bgTimer = null;
 
       this._boundTick = this._tick.bind(this);
+      this._boundBackgroundTick = this._backgroundTick.bind(this);
+      this._setupVisibilityHandler();
+    }
+
+    _setupVisibilityHandler() {
+      document.addEventListener("visibilitychange", () => {
+        if (!this.isRunning) return;
+        if (document.hidden) {
+          if (this.animFrameId) {
+            cancelAnimationFrame(this.animFrameId);
+            this.animFrameId = null;
+          }
+          if (this._bgTimer) clearInterval(this._bgTimer);
+          this._bgTimer = setInterval(this._boundBackgroundTick, 33);
+        } else {
+          if (this._bgTimer) {
+            clearInterval(this._bgTimer);
+            this._bgTimer = null;
+          }
+          if (!this.animFrameId) {
+            this.animFrameId = requestAnimationFrame(this._boundTick);
+          }
+        }
+      });
     }
 
     async init() {
@@ -65,6 +233,8 @@
       await this.enumerateAudioSources();
       this._initParticles();
       this._initMatrixDrops();
+      this._initStarfield();
+      this._initWarpStars();
       this._syncFormControls();
       this._updateUI();
 
@@ -75,11 +245,11 @@
         });
       }
 
-      // Auto-resume state if user left studio lighting enabled when exiting
+      // Auto-resume state if user left studio lighting enabled
       if (this.config.enabled) {
         setTimeout(async () => {
           try {
-            await this.start(true); // silent auto-resume
+            await this.start(true);
           } catch (e) {
             console.warn("Studio lighting auto-resume skipped on boot:", e);
           }
@@ -89,7 +259,7 @@
 
     _initParticles() {
       this.particles = [];
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 24; i++) {
         this.particles.push({
           x: Math.random() * 23,
           y: Math.random() * 6,
@@ -106,9 +276,36 @@
       for (let c = 0; c < 24; c++) {
         this.matrixDrops.push({
           x: c,
-          y: Math.random() * -10,
-          speed: 0.08 + Math.random() * 0.12,
-          length: 3 + Math.floor(Math.random() * 4)
+          y: Math.random() * -12,
+          speed: 0.08 + Math.random() * 0.14,
+          length: 3 + Math.floor(Math.random() * 5)
+        });
+      }
+    }
+
+    _initStarfield() {
+      this.starfield = [];
+      for (let i = 0; i < 30; i++) {
+        this.starfield.push({
+          x: Math.random() * 23,
+          y: Math.random() * 6,
+          vx: (Math.random() - 0.5) * 0.04,
+          vy: (Math.random() - 0.5) * 0.04,
+          brightness: Math.random() * 0.5,
+          colorOffset: Math.random()
+        });
+      }
+    }
+
+    _initWarpStars() {
+      this.warpStars = [];
+      for (let i = 0; i < 40; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        this.warpStars.push({
+          angle: angle,
+          dist: Math.random() * 14,
+          speed: 0.05 + Math.random() * 0.15,
+          colorOffset: Math.random()
         });
       }
     }
@@ -120,6 +317,7 @@
       const currentVal = this.config.sourceId || "system_loopback";
       const isPl = window.i18n && window.i18n.currentLang === "pl";
 
+      sel.innerHTML = "";
       const optLoopback = document.createElement("option");
       optLoopback.value = "system_loopback";
       optLoopback.textContent = isPl
@@ -152,6 +350,7 @@
     }
 
     _syncFormControls() {
+      // Audio controls
       const selSource = document.getElementById("audioSourceSelect");
       if (selSource) selSource.value = this.config.sourceId || "system_loopback";
 
@@ -167,6 +366,12 @@
         }
       }
 
+      const pickerAudio = document.getElementById("audioColorPicker");
+      if (pickerAudio) pickerAudio.value = this.config.audioCustomHex || "#00ffff";
+
+      const selAudioDir = document.getElementById("audioDirectionSelect");
+      if (selAudioDir) selAudioDir.value = this.config.audioDirection || "bottom_to_top";
+
       const sliderAudioSens = document.getElementById("audioSensitivitySlider");
       const lblSens = document.getElementById("audioSensVal");
       if (sliderAudioSens) {
@@ -174,8 +379,52 @@
         if (lblSens) lblSens.textContent = `${this.config.sensitivity}x`;
       }
 
+      const sliderAudioSpeed = document.getElementById("audioSpeedSlider");
+      const lblAudioSpd = document.getElementById("audioSpeedVal");
+      if (sliderAudioSpeed) {
+        sliderAudioSpeed.value = String(this.config.audioSpeed || 1.0);
+        if (lblAudioSpd) lblAudioSpd.textContent = `${this.config.audioSpeed}x`;
+      }
+
+      const sliderAudioInt = document.getElementById("audioIntensitySlider");
+      const lblAudioInt = document.getElementById("audioIntensityVal");
+      if (sliderAudioInt) {
+        sliderAudioInt.value = String(this.config.audioIntensity || 1.0);
+        if (lblAudioInt) lblAudioInt.textContent = `${Math.round((this.config.audioIntensity || 1.0) * 100)}%`;
+      }
+
+      const sliderAudioSmooth = document.getElementById("audioSmoothingSlider");
+      const lblAudioSmooth = document.getElementById("audioSmoothingVal");
+      if (sliderAudioSmooth) {
+        sliderAudioSmooth.value = String(this.config.smoothing || 0.82);
+        if (lblAudioSmooth) lblAudioSmooth.textContent = String(this.config.smoothing || 0.82);
+      }
+
+      const sliderAudioFloor = document.getElementById("audioFloorSlider");
+      const lblAudioFloor = document.getElementById("audioFloorVal");
+      if (sliderAudioFloor) {
+        sliderAudioFloor.value = String(this.config.audioFloor || 0.15);
+        if (lblAudioFloor) lblAudioFloor.textContent = `${Math.round((this.config.audioFloor || 0.15) * 100)}%`;
+      }
+
+      // PC Software FX controls
       const selEffect = document.getElementById("softwareEffectSelect");
       if (selEffect) selEffect.value = this.config.effectPreset || "neonWave";
+
+      const selSoftPalette = document.getElementById("softwarePaletteSelect");
+      if (selSoftPalette) {
+        selSoftPalette.value = this.config.softwarePalette || "rainbow";
+        const colorWrap = document.getElementById("softwareSingleColorGroup");
+        if (colorWrap) {
+          colorWrap.style.display = this.config.softwarePalette === "singleColor" ? "block" : "none";
+        }
+      }
+
+      const pickerSoft = document.getElementById("softwareColorPicker");
+      if (pickerSoft) pickerSoft.value = this.config.softwareCustomHex || "#00ffff";
+
+      const selSoftDir = document.getElementById("softwareDirectionSelect");
+      if (selSoftDir) selSoftDir.value = this.config.softwareDirection || "left_to_right";
 
       const sliderEffectSpeed = document.getElementById("softwareEffectSpeedSlider");
       const lblSpeed = document.getElementById("softwareEffectSpeedVal");
@@ -189,6 +438,13 @@
       if (sliderEffectIntensity) {
         sliderEffectIntensity.value = String(this.config.effectIntensity || 1.0);
         if (lblInt) lblInt.textContent = `${Math.round((this.config.effectIntensity || 1.0) * 100)}%`;
+      }
+
+      const sliderSoftFloor = document.getElementById("softwareEffectFloorSlider");
+      const lblSoftFloor = document.getElementById("softwareFloorVal");
+      if (sliderSoftFloor) {
+        sliderSoftFloor.value = String(this.config.softwareFloor || 0.10);
+        if (lblSoftFloor) lblSoftFloor.textContent = `${Math.round((this.config.softwareFloor || 0.10) * 100)}%`;
       }
     }
 
@@ -206,7 +462,6 @@
       if (audioPane) audioPane.style.display = tabName === "audio" ? "block" : "none";
       if (fxPane) fxPane.style.display = tabName === "effects" ? "block" : "none";
 
-      // If running and switched tabs, re-route capture/render seamlessly
       if (this.isRunning) {
         if (tabName === "effects" && this.audioCtx) {
           this._stopAudioStream();
@@ -233,7 +488,20 @@
           this.protocol.setDirectLightingEnable(true);
         }
 
-        this.animFrameId = requestAnimationFrame(this._boundTick);
+        if (this._bgTimer) {
+          clearInterval(this._bgTimer);
+          this._bgTimer = null;
+        }
+
+        if (document.hidden) {
+          this._bgTimer = setInterval(this._boundBackgroundTick, 33);
+        } else {
+          if (this.animFrameId) {
+            cancelAnimationFrame(this.animFrameId);
+            this.animFrameId = null;
+          }
+          this.animFrameId = requestAnimationFrame(this._boundTick);
+        }
 
         if (!silent && window.gUI) {
           window.gUI.showToast(window.i18n ? window.i18n.t("toastStudioLightingStarted") : "LuxQMK Studio Lighting activated", "success");
@@ -258,12 +526,59 @@
         this.animFrameId = null;
       }
 
+      if (this._bgTimer) {
+        clearInterval(this._bgTimer);
+        this._bgTimer = null;
+      }
+
       if (this.protocol && this.protocol.isConnected) {
         this.protocol.setDirectLightingEnable(false);
       }
 
       this._stopAudioStream();
       this._updateUI();
+
+      // Reset preview key styling to default
+      if (this.lighting && this.lighting.visualizerKeys) {
+        this.lighting.visualizerKeys.forEach((k) => {
+          k._curRgb = { r: 0, g: 0, b: 0 };
+          const targets = k.els || [k.el];
+          targets.forEach((el) => {
+            if (el) {
+              el.style.backgroundColor = "";
+              el.style.borderColor = "";
+              el.style.boxShadow = "";
+              el.style.color = "";
+              el.style.textShadow = "";
+            }
+          });
+        });
+      }
+
+      if (this.lighting && this.lighting.sideDiffusers) {
+        this.lighting.sideDiffusers.forEach((sd) => {
+          sd._curRgb = { r: 0, g: 0, b: 0 };
+          const targets = sd.els || [sd.el];
+          targets.forEach((el) => {
+            if (el) {
+              el.style.backgroundColor = "";
+              el.style.boxShadow = "";
+            }
+          });
+        });
+      }
+
+      if (this.lighting && this.lighting.logoBadgeEl) {
+        this._logoCurRgb = { r: 0, g: 0, b: 0 };
+        const targets = Array.isArray(this.lighting.logoBadgeEl) ? this.lighting.logoBadgeEl : [this.lighting.logoBadgeEl];
+        targets.forEach((el) => {
+          if (el) {
+            el.style.backgroundColor = "";
+            el.style.borderColor = "";
+            el.style.boxShadow = "";
+          }
+        });
+      }
 
       if (window.gUI) {
         window.gUI.showToast(window.i18n ? window.i18n.t("toastStudioLightingStopped") : "LuxQMK Studio Lighting stopped", "info");
@@ -287,7 +602,6 @@
               autoGainControl: false
             }
           });
-          // Stop unused video tracks immediately
           this.mediaStream.getVideoTracks().forEach((t) => t.stop());
         } else {
           throw new Error("System audio loopback is not supported in this environment");
@@ -311,7 +625,7 @@
       this.sourceNode = this.audioCtx.createMediaStreamSource(this.mediaStream);
       this.analyser = this.audioCtx.createAnalyser();
       this.analyser.fftSize = 256;
-      this.analyser.smoothingTimeConstant = this.config.smoothing;
+      this.analyser.smoothingTimeConstant = this.config.smoothing || 0.82;
 
       this.sourceNode.connect(this.analyser);
       this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
@@ -335,16 +649,33 @@
     _tick(now) {
       if (!this.isRunning) return;
 
+      const tNow = typeof now === "number" ? now : performance.now();
+      this._lastTickTime = tNow;
+
+      if (this.activeTab === "audio" && this.analyser) {
+        this._processAudioAnalysis();
+        this._renderAudioFrame(tNow);
+      } else {
+        this._renderSoftwareFxFrame(tNow);
+      }
+
+      this._streamToHardware(tNow);
+
+      if (this.isRunning && !document.hidden && typeof requestAnimationFrame !== "undefined") {
+        this.animFrameId = requestAnimationFrame(this._boundTick);
+      }
+    }
+
+    _backgroundTick() {
+      if (!this.isRunning || !document.hidden) return;
+      const now = performance.now();
       if (this.activeTab === "audio" && this.analyser) {
         this._processAudioAnalysis();
         this._renderAudioFrame(now);
       } else {
         this._renderSoftwareFxFrame(now);
       }
-
       this._streamToHardware(now);
-
-      this.animFrameId = requestAnimationFrame(this._boundTick);
     }
 
     _processAudioAnalysis() {
@@ -361,7 +692,7 @@
         for (let b = start; b < end; b++) {
           sum += this.dataArray[b];
         }
-        const avg = (sum / step) * this.config.sensitivity;
+        const avg = (sum / step) * (this.config.sensitivity || 1.2);
         this.frequencyBands[i] = Math.min(255, avg);
       }
 
@@ -370,17 +701,17 @@
       for (let b = 0; b < 4; b++) {
         bassSum += this.dataArray[b];
       }
-      const curBass = (bassSum / 4) * this.config.sensitivity;
+      const curBass = (bassSum / 4) * (this.config.sensitivity || 1.2);
       this.bassHistory.push(curBass);
       if (this.bassHistory.length > 30) this.bassHistory.shift();
 
       const avgBass = this.bassHistory.reduce((a, v) => a + v, 0) / this.bassHistory.length;
-      if (curBass > avgBass * 1.35 && curBass > 90) {
+      if (curBass > avgBass * 1.35 && curBass > 85) {
         this.isBeat = true;
         this.beatDecay = 255;
       } else {
         this.isBeat = false;
-        this.beatDecay = Math.max(0, this.beatDecay - 18);
+        this.beatDecay = Math.max(0, this.beatDecay - 16);
       }
       this.bassEnergy = curBass;
     }
@@ -389,236 +720,206 @@
       if (!this.lighting || !this.lighting.visualizerKeys) return;
 
       const keys = this.lighting.visualizerKeys;
+      const palette = this.config.audioColorMode || "rainbow";
+      const direction = this.config.audioDirection || "bottom_to_top";
+      const speed = this.config.audioSpeed || 1.0;
+      const intensity = this.config.audioIntensity || 1.0;
+      const floor = (this.config.audioFloor <= 0.01) ? 0 : (this.config.audioFloor || 0.15);
+      const customRgb = this.lighting._hexToRgb ? this._hexToRgbList(this.config.audioCustomHex || "#00ffff") : [0, 255, 255];
+
+      // Advance starfield particles if active
+      if (this.config.audioMode === "starfieldBeats") {
+        this.starfield.forEach((s) => {
+          s.x += s.vx * speed * (1 + this.bassEnergy * 0.005);
+          s.y += s.vy * speed * (1 + this.bassEnergy * 0.005);
+          if (s.x < 0) s.x = 23; if (s.x > 23) s.x = 0;
+          if (s.y < 0) s.y = 6;  if (s.y > 6) s.y = 0;
+        });
+      }
 
       for (let i = 0; i < keys.length; i++) {
         const k = keys[i];
         if (k.isLogo || k.isKnob) continue;
 
-        let h = 0, s = 255, v = 0;
+        const dirCoord = getDirectedCoordinate(k.x, k.y, direction);
+        let rgb = [0, 0, 0];
+        let brightFactor = floor;
 
         switch (this.config.audioMode) {
           case "equalizer": {
-            const bandIdx = Math.min(15, Math.max(0, Math.floor((k.x / 22.5) * 16)));
-            const bandVal = this.frequencyBands[bandIdx];
-            const heightThreshold = ((5.5 - k.y) / 5.5) * 255;
-            if (bandVal >= heightThreshold) {
-              v = Math.min(255, bandVal);
-              h = (this.config.audioColorMode === "rainbow") ? Math.round((k.x / 22.5) * 255) : this.config.audioColor[0];
-              s = (this.config.audioColorMode === "rainbow") ? 255 : this.config.audioColor[1];
+            // Equalizer spectrum columns along chosen direction
+            const bandIdx = Math.min(15, Math.max(0, Math.floor(dirCoord.secondary * 16)));
+            const bandVal = this.frequencyBands[bandIdx] || 0;
+            const noiseGate = 10;
+            const effectiveBand = bandVal > noiseGate ? bandVal : 0;
+            const heightThreshold = dirCoord.primary * 255;
+
+            if (effectiveBand > 0 && effectiveBand >= heightThreshold) {
+              const normVal = effectiveBand / 255;
+              brightFactor = (floor + (1 - floor) * normVal) * intensity;
+              const sampled = samplePaletteRgb(palette, dirCoord.secondary - now * 0.0005 * speed, customRgb);
+              rgb = sampled ? sampled : this._hsvToRgbList(Math.round((dirCoord.secondary * 255 + now * 0.02 * speed) % 256), 255, 255);
             } else {
-              v = 20;
-              h = (this.config.audioColorMode === "rainbow") ? Math.round((k.x / 22.5) * 255) : this.config.audioColor[0];
-              s = 200;
-            }
-            break;
-          }
-
-          case "bassPulse": {
-            v = Math.max(20, this.beatDecay);
-            h = (this.config.audioColorMode === "rainbow") ? Math.round((now * 0.05 + k.dist) % 256) : this.config.audioColor[0];
-            s = (this.config.audioColorMode === "rainbow") ? 255 : this.config.audioColor[1];
-            break;
-          }
-
-          case "audioWave": {
-            const waveFront = (now * 0.12) % 255;
-            const diff = Math.abs(k.dist - (waveFront / 2));
-            if (diff < 20) {
-              v = Math.min(255, (20 - diff) * 12 * (this.bassEnergy / 255));
-              h = (Math.round(k.dist + now * 0.05)) & 0xFF;
-            } else {
-              v = 15;
-            }
-            break;
-          }
-
-          case "vuMeter": {
-            const isRightChannel = k.x > 11;
-            const band = isRightChannel ? this.frequencyBands[12] : this.frequencyBands[3];
-            const xNorm = isRightChannel ? ((k.x - 11) / 11.5) : ((11 - k.x) / 11);
-            if ((xNorm * 255) <= band) {
-              v = 255;
-              h = Math.round(85 - (xNorm * 85));
-            } else {
-              v = 15;
-            }
-            break;
-          }
-        }
-
-        this._applyKeyColor(k, h, s, v);
-      }
-
-      // Render Left & Right Side Diffusers (Side light strips)
-      const diffusers = this.lighting.sideDiffusers || [];
-      for (let i = 0; i < diffusers.length; i++) {
-        const sd = diffusers[i];
-        if (!sd || !sd.el) continue;
-
-        let h = 0, s = 255, v = 0;
-
-        switch (this.config.audioMode) {
-          case "equalizer": {
-            const yFrac = Math.max(0, Math.min(1, 1 - (sd.qmkY / 64)));
-            const bandIdx = sd.isLeft
-              ? Math.min(7, Math.floor(yFrac * 8))
-              : Math.min(15, 8 + Math.floor(yFrac * 8));
-            const bandVal = this.frequencyBands[bandIdx];
-            const heightThreshold = yFrac * 255;
-            if (bandVal >= heightThreshold) {
-              v = Math.min(255, bandVal * 1.15);
-              h = (this.config.audioColorMode === "rainbow")
-                ? (sd.isLeft ? Math.round(yFrac * 128) : Math.round(128 + yFrac * 127))
-                : this.config.audioColor[0];
-              s = (this.config.audioColorMode === "rainbow") ? 255 : this.config.audioColor[1];
-            } else {
-              v = 20;
-              h = (this.config.audioColorMode === "rainbow") ? (sd.isLeft ? 0 : 160) : this.config.audioColor[0];
-              s = 200;
-            }
-            break;
-          }
-
-          case "bassPulse": {
-            v = Math.max(25, this.beatDecay);
-            h = (this.config.audioColorMode === "rainbow") ? Math.round((now * 0.05 + sd.dist) % 256) : this.config.audioColor[0];
-            s = (this.config.audioColorMode === "rainbow") ? 255 : this.config.audioColor[1];
-            break;
-          }
-
-          case "audioWave": {
-            const waveFront = (now * 0.12) % 255;
-            const diff = Math.abs(sd.dist - (waveFront / 2));
-            if (diff < 20) {
-              v = Math.min(255, (20 - diff) * 12 * (this.bassEnergy / 255));
-              h = (Math.round(sd.dist + now * 0.05)) & 0xFF;
-            } else {
-              v = 15;
-            }
-            break;
-          }
-
-          case "vuMeter": {
-            const band = sd.isLeft ? this.frequencyBands[3] : this.frequencyBands[12];
-            const yNorm = Math.max(0, Math.min(1, 1 - (sd.qmkY / 64)));
-            if ((yNorm * 255) <= band) {
-              v = 255;
-              h = Math.round(85 - (yNorm * 85));
-            } else {
-              v = 15;
-            }
-            break;
-          }
-        }
-
-        this._applyDiffuserColor(sd, h, s, v);
-      }
-
-      // Render Logo Badge LED (if present)
-      if (this.lighting.logoBadgeEl) {
-        const logoH = (this.config.audioColorMode === "rainbow") ? Math.round((now * 0.06) % 256) : this.config.audioColor[0];
-        const logoV = Math.max(30, Math.min(255, this.bassEnergy * 1.2));
-        this._applyLogoColor(this.lighting.logoBadgeEl, logoH, 255, logoV);
-      }
-    }
-
-    _renderSoftwareFxFrame(now) {
-      if (!this.lighting || !this.lighting.visualizerKeys) return;
-
-      const keys = this.lighting.visualizerKeys;
-      const speed = this.config.effectSpeed || 1.0;
-      const intensity = this.config.effectIntensity || 1.0;
-      const preset = this.config.effectPreset || "neonWave";
-
-      // Advance particles / matrix drops
-      this.particles.forEach((p) => {
-        p.x += p.vx * speed;
-        p.y += p.vy * speed;
-        if (p.x < 0 || p.x > 23) p.vx *= -1;
-        if (p.y < 0 || p.y > 6) p.vy *= -1;
-      });
-
-      this.matrixDrops.forEach((d) => {
-        d.y += d.speed * speed;
-        if (d.y > 8) {
-          d.y = -Math.random() * 4;
-          d.speed = 0.08 + Math.random() * 0.12;
-        }
-      });
-
-      for (let i = 0; i < keys.length; i++) {
-        const k = keys[i];
-        if (k.isLogo || k.isKnob) continue;
-
-        let h = 0, s = 255, v = 0;
-
-        switch (preset) {
-          case "neonWave": {
-            const wave = Math.sin((k.x * 0.35 + k.y * 0.2) + (now * 0.003 * speed));
-            h = Math.round((now * 0.04 * speed + k.x * 8 + k.y * 12) % 256);
-            v = Math.round((0.45 + 0.55 * wave) * 255 * intensity);
-            s = 255;
-            break;
-          }
-
-          case "matrixRain": {
-            const col = Math.floor(k.x);
-            const drop = this.matrixDrops[col % this.matrixDrops.length];
-            const distY = k.y - drop.y;
-            if (distY >= 0 && distY < drop.length) {
-              if (distY < 0.8) {
-                h = 100; s = 40; v = Math.round(255 * intensity);
+              brightFactor = floor * intensity;
+              if (floor > 0.005) {
+                const sampled = samplePaletteRgb(palette, dirCoord.secondary - now * 0.0005 * speed, customRgb);
+                rgb = sampled ? sampled : this._hsvToRgbList(Math.round((dirCoord.secondary * 255) % 256), 255, 255);
               } else {
-                h = 85; s = 255; v = Math.round((1 - (distY / drop.length)) * 240 * intensity);
+                rgb = [0, 0, 0];
               }
-            } else {
-              v = 15; h = 85; s = 255;
             }
             break;
           }
 
-          case "particleStorm": {
-            let maxBright = 15;
-            let pColor = 180;
-            this.particles.forEach((p) => {
-              const dx = k.x - p.x;
-              const dy = k.y - p.y;
+          case "bassPulse": {
+            // Bass beat drop shockwave radiating along chosen direction
+            const shockwave = Math.max(0, Math.sin((dirCoord.dist * 12) - (now * 0.008 * speed)));
+            const pulseNorm = (this.beatDecay / 255) * Math.pow(shockwave, 2);
+            if (pulseNorm > 0.02) {
+              brightFactor = (floor + (1 - floor) * pulseNorm) * intensity;
+              const sampled = samplePaletteRgb(palette, dirCoord.dist * 0.8 - now * 0.0008 * speed, customRgb);
+              rgb = sampled ? sampled : this._hsvToRgbList(Math.round((now * 0.04 * speed + dirCoord.dist * 40) % 256), 255, 255);
+            } else {
+              brightFactor = floor * intensity;
+              if (floor > 0.005) {
+                const sampled = samplePaletteRgb(palette, dirCoord.dist * 0.8, customRgb);
+                rgb = sampled ? sampled : this._hsvToRgbList(Math.round((dirCoord.dist * 40) % 256), 255, 255);
+              } else {
+                rgb = [0, 0, 0];
+              }
+            }
+            break;
+          }
+
+          case "vuMeter": {
+            // Stereo VU Meter
+            const isRightChannel = k.x > 11.25;
+            const band = isRightChannel ? this.frequencyBands[12] : this.frequencyBands[3];
+            const xNorm = isRightChannel ? ((k.x - 11.25) / 11.25) : ((11.25 - k.x) / 11.25);
+            if (band > 12 && (xNorm * 255) <= band) {
+              brightFactor = 1.0 * intensity;
+              const sampled = samplePaletteRgb(palette, xNorm, customRgb);
+              rgb = sampled ? sampled : this._hsvToRgbList(Math.round(85 - (xNorm * 85)), 255, 255);
+            } else {
+              brightFactor = floor * intensity;
+              if (floor > 0.005) {
+                const sampled = samplePaletteRgb(palette, xNorm, customRgb);
+                rgb = sampled ? sampled : this._hsvToRgbList(Math.round(85 - (xNorm * 85)), 255, 255);
+              } else {
+                rgb = [0, 0, 0];
+              }
+            }
+            break;
+          }
+
+          case "audioWave": {
+            // Propagating Energy Ripple Wavefront moving along dirCoord.primary
+            const waveProg = (now * 0.0006 * speed) % 1.0;
+            const diff = Math.abs(dirCoord.primary - waveProg);
+            const wrappedDiff = Math.min(diff, 1 - diff);
+            if (wrappedDiff < 0.12 && this.bassEnergy > 10) {
+              const ripple = Math.pow(1 - (wrappedDiff / 0.12), 2);
+              const waveNorm = Math.min(1.0, ripple * (this.bassEnergy / 180));
+              brightFactor = (floor + (1 - floor) * waveNorm) * intensity;
+              const sampled = samplePaletteRgb(palette, dirCoord.primary - now * 0.0006 * speed, customRgb);
+              rgb = sampled ? sampled : this._hsvToRgbList(Math.round((dirCoord.primary * 160 - now * 0.04 * speed) & 0xFF), 255, 255);
+            } else {
+              brightFactor = floor * intensity;
+              if (floor > 0.005) {
+                const sampled = samplePaletteRgb(palette, dirCoord.primary, customRgb);
+                rgb = sampled ? sampled : this._hsvToRgbList(Math.round(dirCoord.primary * 160) & 0xFF, 255, 255);
+              } else {
+                rgb = [0, 0, 0];
+              }
+            }
+            break;
+          }
+
+          case "spectrumHeatmap": {
+            // Frequency Zone Heatmap along chosen direction
+            const lowWeight = (this.frequencyBands[1] + this.frequencyBands[2]) / 510;
+            const midWeight = (this.frequencyBands[6] + this.frequencyBands[7]) / 510;
+            const highWeight = (this.frequencyBands[12] + this.frequencyBands[13]) / 510;
+
+            const dLow = Math.max(0, 1 - (dirCoord.primary * 1.5));
+            const dMid = 1 - Math.abs(dirCoord.primary - 0.5) * 2;
+            const dHigh = Math.max(0, (dirCoord.primary - 0.3) * 1.4);
+
+            const combinedEnergy = Math.min(1.0, lowWeight * dLow + midWeight * dMid + highWeight * dHigh);
+            if (combinedEnergy > 0.03) {
+              brightFactor = (floor + (1 - floor) * combinedEnergy) * intensity;
+              const palettePos = (dirCoord.primary * 0.7) + (combinedEnergy * 0.3);
+              const sampled = samplePaletteRgb(palette, palettePos, customRgb);
+              rgb = sampled ? sampled : this._hsvToRgbList(Math.round(dirCoord.primary * 180), 255, 255);
+            } else {
+              brightFactor = floor * intensity;
+              if (floor > 0.005) {
+                const sampled = samplePaletteRgb(palette, dirCoord.primary * 0.7, customRgb);
+                rgb = sampled ? sampled : this._hsvToRgbList(Math.round(dirCoord.primary * 180), 255, 255);
+              } else {
+                rgb = [0, 0, 0];
+              }
+            }
+            break;
+          }
+
+          case "starfieldBeats": {
+            // Starfield particle beats
+            let maxStarBright = 0;
+            let starColorOffset = 0;
+
+            this.starfield.forEach((s) => {
+              const dx = k.x - s.x;
+              const dy = k.y - s.y;
               const dist = Math.sqrt(dx * dx + dy * dy);
-              if (dist < p.radius) {
-                const b = (1 - (dist / p.radius)) * 255;
-                if (b > maxBright) {
-                  maxBright = b;
-                  pColor = p.hue;
+              if (dist < 2.0) {
+                const b = (1 - (dist / 2.0)) * (0.3 + (this.beatDecay / 255) * 1.2);
+                if (b > maxStarBright) {
+                  maxStarBright = b;
+                  starColorOffset = s.colorOffset;
                 }
               }
             });
-            v = Math.round(maxBright * intensity);
-            h = pColor;
-            s = 255;
+
+            if (maxStarBright > 0.05) {
+              brightFactor = (floor + (1 - floor) * Math.min(1.0, maxStarBright)) * intensity;
+              const sampled = samplePaletteRgb(palette, starColorOffset + now * 0.0003 * speed, customRgb);
+              rgb = sampled ? sampled : this._hsvToRgbList(Math.round(starColorOffset * 255 + now * 0.03) % 256, 255, 255);
+            } else {
+              brightFactor = floor * intensity;
+              if (floor > 0.005) {
+                const sampled = samplePaletteRgb(palette, 0.5, customRgb);
+                rgb = sampled ? sampled : [0, 100, 200];
+              } else {
+                rgb = [0, 0, 0];
+              }
+            }
             break;
           }
 
-          case "aurora": {
-            const p1 = Math.sin(k.x * 0.2 + now * 0.002 * speed);
-            const p2 = Math.cos(k.y * 0.4 - now * 0.0025 * speed);
-            const combined = (p1 + p2) * 0.5;
-            h = Math.round((120 + combined * 60) % 256);
-            s = 240;
-            v = Math.round((0.5 + 0.5 * Math.sin(now * 0.004 * speed + k.dist * 0.1)) * 255 * intensity);
-            break;
-          }
-
-          case "pulseBloom": {
-            const distCenter = Math.sqrt(Math.pow(k.x - 11.5, 2) + Math.pow(k.y - 3, 2));
-            const ring = Math.sin(distCenter * 0.8 - now * 0.005 * speed);
-            h = Math.round((now * 0.03 * speed + distCenter * 15) % 256);
-            v = Math.round(Math.max(20, Math.pow(Math.max(0, ring), 2) * 255 * intensity));
-            s = 255;
+          case "voiceAura": {
+            // Voice / Mic Breathing Aura
+            const micLevel = (this.frequencyBands[3] + this.frequencyBands[5] + this.frequencyBands[8]) / 765;
+            const wave = Math.sin((dirCoord.dist * 6) - (now * 0.004 * speed));
+            const auraNorm = Math.max(0, Math.min(1.0, micLevel * 1.3 + (micLevel > 0.05 ? wave * 0.2 : 0)));
+            if (auraNorm > 0.03) {
+              brightFactor = (floor + (1 - floor) * auraNorm) * intensity;
+              const sampled = samplePaletteRgb(palette, dirCoord.dist * 0.5 + micLevel * 0.5, customRgb);
+              rgb = sampled ? sampled : this._hsvToRgbList(Math.round(140 + wave * 30), 240, 255);
+            } else {
+              brightFactor = floor * intensity;
+              if (floor > 0.005) {
+                const sampled = samplePaletteRgb(palette, dirCoord.dist * 0.5, customRgb);
+                rgb = sampled ? sampled : [0, 150, 150];
+              } else {
+                rgb = [0, 0, 0];
+              }
+            }
             break;
           }
         }
 
-        this._applyKeyColor(k, h, s, v);
+        this._applyKeyRgb(k, rgb[0], rgb[1], rgb[2], brightFactor);
       }
 
       // Render Left & Right Side Diffusers
@@ -628,93 +929,332 @@
         if (!sd || !sd.el) continue;
 
         const x = sd.isLeft ? 0 : 22.5;
-        const y = (sd.qmkY / 64) * 6;
+        const y = (sd.qmkY / 64) * 5.5;
+        const dirCoord = getDirectedCoordinate(x, y, direction);
 
-        let h = 0, s = 255, v = 0;
+        let brightFactor = floor;
+        let rgb = [0, 0, 0];
+
+        const bandIdx = sd.isLeft
+          ? Math.min(7, Math.floor(dirCoord.primary * 8))
+          : Math.min(15, 8 + Math.floor(dirCoord.primary * 8));
+        const bandVal = this.frequencyBands[bandIdx] || 0;
+
+        if (bandVal > 10 || this.beatDecay > 10) {
+          const normVal = Math.min(1.0, ((bandVal / 255) + (this.beatDecay / 350)));
+          brightFactor = (floor + (1 - floor) * normVal) * intensity;
+          const sampled = samplePaletteRgb(palette, dirCoord.primary - now * 0.0005 * speed, customRgb);
+          rgb = sampled ? sampled : this._hsvToRgbList(Math.round(dirCoord.primary * 160 - now * 0.02 * speed) % 256, 255, 255);
+        } else {
+          brightFactor = floor * intensity;
+          if (floor > 0.005) {
+            const sampled = samplePaletteRgb(palette, dirCoord.primary, customRgb);
+            rgb = sampled ? sampled : [0, 120, 255];
+          } else {
+            rgb = [0, 0, 0];
+          }
+        }
+
+        this._applyDiffuserRgb(sd, rgb[0], rgb[1], rgb[2], brightFactor);
+      }
+
+      // Render Logo Badge LED
+      if (this.lighting.logoBadgeEl) {
+        let logoBright = floor * intensity;
+        let logoRgb = [0, 0, 0];
+        if (this.bassEnergy > 10) {
+          const normBass = Math.min(1.0, this.bassEnergy / 200);
+          logoBright = (floor + (1 - floor) * normBass) * intensity;
+          const sampled = samplePaletteRgb(palette, now * 0.0008 * speed, customRgb);
+          logoRgb = sampled ? sampled : this._hsvToRgbList(Math.round((now * 0.05 * speed) % 256), 255, 255);
+        } else if (floor > 0.005) {
+          const sampled = samplePaletteRgb(palette, now * 0.0008 * speed, customRgb);
+          logoRgb = sampled ? sampled : [0, 200, 255];
+        }
+        this._applyLogoRgb(this.lighting.logoBadgeEl, logoRgb[0], logoRgb[1], logoRgb[2], logoBright);
+      }
+    }
+
+    _renderSoftwareFxFrame(now) {
+      if (!this.lighting || !this.lighting.visualizerKeys) return;
+
+      const keys = this.lighting.visualizerKeys;
+      const preset = this.config.effectPreset || "neonWave";
+      const palette = this.config.softwarePalette || "rainbow";
+      const direction = this.config.softwareDirection || "left_to_right";
+      const speed = this.config.effectSpeed || 1.0;
+      const intensity = this.config.effectIntensity || 1.0;
+      const floor = (this.config.softwareFloor <= 0.01) ? 0 : (this.config.softwareFloor || 0.10);
+      const customRgb = this.lighting._hexToRgb ? this._hexToRgbList(this.config.softwareCustomHex || "#00ffff") : [0, 255, 255];
+
+      // Update particle physics
+      if (preset === "particleStorm") {
+        this.particles.forEach((p) => {
+          p.x += p.vx * speed;
+          p.y += p.vy * speed;
+          if (p.x < 0 || p.x > 23) p.vx *= -1;
+          if (p.y < 0 || p.y > 6) p.vy *= -1;
+        });
+      } else if (preset === "matrixRain") {
+        this.matrixDrops.forEach((d) => {
+          d.y += d.speed * speed;
+          if (d.y > 9) {
+            d.y = -Math.random() * 4;
+            d.speed = 0.08 + Math.random() * 0.12;
+          }
+        });
+      } else if (preset === "hyperspaceWarp") {
+        this.warpStars.forEach((ws) => {
+          ws.dist += ws.speed * speed;
+          if (ws.dist > 16) {
+            ws.dist = 0.5 + Math.random() * 2;
+            ws.angle = Math.random() * Math.PI * 2;
+          }
+        });
+      }
+
+      for (let i = 0; i < keys.length; i++) {
+        const k = keys[i];
+        if (k.isLogo || k.isKnob) continue;
+
+        const dirCoord = getDirectedCoordinate(k.x, k.y, direction);
+        let rgb = [0, 0, 0];
+        let brightFactor = floor;
 
         switch (preset) {
           case "neonWave": {
-            const wave = Math.sin((x * 0.35 + y * 0.2) + (now * 0.003 * speed));
-            h = Math.round((now * 0.04 * speed + x * 8 + y * 12) % 256);
-            v = Math.round((0.45 + 0.55 * wave) * 255 * intensity);
-            s = 255;
+            const waveRaw = Math.sin((dirCoord.primary * 5.0) - (now * 0.0035 * speed));
+            const waveCutoff = floor > 0.005 ? 0 : 0.08;
+            const wavePeak = Math.max(0, (waveRaw - waveCutoff) / (1 - waveCutoff));
+            const waveNorm = Math.pow(wavePeak, 1.5);
+            brightFactor = (floor + (1 - floor) * waveNorm) * intensity;
+            const palettePos = dirCoord.primary - (now * 0.0006 * speed);
+            const sampled = samplePaletteRgb(palette, palettePos, customRgb);
+            rgb = (brightFactor > 0.005)
+              ? (sampled ? sampled : this._hsvToRgbList(Math.round((dirCoord.primary * 160 - now * 0.04 * speed) % 256), 255, 255))
+              : [0, 0, 0];
             break;
           }
 
           case "matrixRain": {
-            const col = sd.isLeft ? 0 : 23;
+            const col = Math.min(23, Math.max(0, Math.floor(dirCoord.secondary * 24)));
             const drop = this.matrixDrops[col % this.matrixDrops.length];
-            const distY = y - drop.y;
-            if (distY >= 0 && distY < drop.length) {
-              if (distY < 0.8) {
-                h = 100; s = 40; v = Math.round(255 * intensity);
+            const distFlow = (dirCoord.primary * 8) - drop.y;
+            if (distFlow >= 0 && distFlow < drop.length) {
+              if (distFlow < 0.8) {
+                brightFactor = 1.2 * intensity;
+                rgb = [255, 255, 255]; // Leading spark
               } else {
-                h = 85; s = 255; v = Math.round((1 - (distY / drop.length)) * 240 * intensity);
+                const tail = (1 - (distFlow / drop.length));
+                brightFactor = (floor + (1 - floor) * tail) * intensity;
+                const sampled = samplePaletteRgb(palette, tail * 0.6 + 0.2, customRgb);
+                rgb = sampled ? sampled : [0, 255, 70];
               }
             } else {
-              v = 15; h = 85; s = 255;
+              brightFactor = floor * intensity;
+              if (floor > 0.005) {
+                const sampled = samplePaletteRgb(palette, 0.1, customRgb);
+                rgb = sampled ? sampled : [0, 80, 20];
+              } else {
+                rgb = [0, 0, 0];
+              }
             }
             break;
           }
 
           case "particleStorm": {
-            let maxBright = 15;
-            let pColor = 180;
+            let maxBright = 0;
+            let pColorFactor = 0;
+
             this.particles.forEach((p) => {
-              const dx = x - p.x;
-              const dy = y - p.y;
+              const dx = k.x - p.x;
+              const dy = k.y - p.y;
               const dist = Math.sqrt(dx * dx + dy * dy);
               if (dist < p.radius) {
-                const b = (1 - (dist / p.radius)) * 255;
+                const b = (1 - (dist / p.radius));
                 if (b > maxBright) {
                   maxBright = b;
-                  pColor = p.hue;
+                  pColorFactor = p.hue / 255;
                 }
               }
             });
-            v = Math.round(maxBright * intensity);
-            h = pColor;
-            s = 255;
+
+            if (maxBright > 0.02) {
+              brightFactor = (floor + (1 - floor) * maxBright) * intensity;
+              const sampled = samplePaletteRgb(palette, pColorFactor + now * 0.0004 * speed, customRgb);
+              rgb = sampled ? sampled : this._hsvToRgbList(Math.round(pColorFactor * 255), 255, 255);
+            } else {
+              brightFactor = floor * intensity;
+              if (floor > 0.005) {
+                const sampled = samplePaletteRgb(palette, dirCoord.dist, customRgb);
+                rgb = sampled ? sampled : [20, 20, 40];
+              } else {
+                rgb = [0, 0, 0];
+              }
+            }
             break;
           }
 
           case "aurora": {
-            const p1 = Math.sin(x * 0.2 + now * 0.002 * speed);
-            const p2 = Math.cos(y * 0.4 - now * 0.0025 * speed);
-            const combined = (p1 + p2) * 0.5;
-            h = Math.round((120 + combined * 60) % 256);
-            s = 240;
-            v = Math.round((0.5 + 0.5 * Math.sin(now * 0.004 * speed + sd.dist * 0.1)) * 255 * intensity);
+            const p1 = Math.sin(dirCoord.primary * 4.0 - now * 0.002 * speed);
+            const p2 = Math.cos(dirCoord.secondary * 4.0 - now * 0.0025 * speed);
+            const rawCombined = (p1 + p2) * 0.5;
+            const ribbonCutoff = floor > 0.005 ? 0 : 0.12;
+            const combined = Math.max(0, (rawCombined - ribbonCutoff) / (1 - ribbonCutoff));
+            const waveNorm = Math.pow(combined, 1.8);
+            brightFactor = (floor + (1 - floor) * waveNorm) * intensity;
+            const palettePos = 0.5 + rawCombined * 0.4;
+            const sampled = samplePaletteRgb(palette, palettePos, customRgb);
+            rgb = (brightFactor > 0.005)
+              ? (sampled ? sampled : this._hsvToRgbList(Math.round((120 + rawCombined * 60) % 256), 240, 255))
+              : [0, 0, 0];
             break;
           }
 
           case "pulseBloom": {
-            const distCenter = Math.sqrt(Math.pow(x - 11.5, 2) + Math.pow(y - 3, 2));
-            const ring = Math.sin(distCenter * 0.8 - now * 0.005 * speed);
-            h = Math.round((now * 0.03 * speed + distCenter * 15) % 256);
-            v = Math.round(Math.max(20, Math.pow(Math.max(0, ring), 2) * 255 * intensity));
-            s = 255;
+            const ring = Math.sin((dirCoord.primary * 10.0) - (now * 0.006 * speed));
+            const ringCutoff = floor > 0.005 ? 0 : 0.08;
+            const ringPeak = Math.max(0, (ring - ringCutoff) / (1 - ringCutoff));
+            const ringNorm = Math.pow(ringPeak, 2.5);
+            brightFactor = (floor + (1 - floor) * ringNorm) * intensity;
+            const palettePos = dirCoord.primary * 0.7 - (now * 0.0008 * speed);
+            const sampled = samplePaletteRgb(palette, palettePos, customRgb);
+            rgb = (brightFactor > 0.005)
+              ? (sampled ? sampled : this._hsvToRgbList(Math.round((dirCoord.primary * 120 - now * 0.04 * speed) % 256), 255, 255))
+              : [0, 0, 0];
+            break;
+          }
+
+          case "fireEmber": {
+            // Flame origin is at primary = 0, burning/rising towards primary = 1
+            const flameBase = 1 - dirCoord.primary;
+            const flicker = Math.sin(dirCoord.secondary * 4.0 - now * 0.008 * speed) * Math.cos(dirCoord.primary * 5.0 - now * 0.006 * speed);
+            const rawHeat = flameBase + flicker * 0.35;
+            const heatCutoff = floor > 0.005 ? 0 : 0.18;
+            const flameHeat = Math.max(0, Math.min(1.0, (rawHeat - heatCutoff) / (1 - heatCutoff)));
+            const flameNorm = Math.pow(flameHeat, 1.8);
+            brightFactor = (floor + (1 - floor) * flameNorm) * intensity;
+            const sampled = samplePaletteRgb(palette, 1 - flameHeat, customRgb);
+            rgb = (brightFactor > 0.005)
+              ? (sampled ? sampled : this._hsvToRgbList(Math.round(scaleBetween(flameHeat, 0, 40)), 255, 255))
+              : [0, 0, 0];
+            break;
+          }
+
+          case "hyperspaceWarp": {
+            // Cosmic Light Speed Tunnel
+            const centerX = 11.25, centerY = 2.75;
+            const dx = k.x - centerX, dy = k.y - centerY;
+            const angle = Math.atan2(dy, dx);
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            let maxStar = 0;
+            this.warpStars.forEach((ws) => {
+              const dAngle = Math.abs(angle - ws.angle);
+              const dDist = Math.abs(dist - ws.dist);
+              if (dAngle < 0.25 && dDist < 1.8) {
+                const b = (1 - (dDist / 1.8));
+                if (b > maxStar) maxStar = b;
+              }
+            });
+
+            if (maxStar > 0.05) {
+              brightFactor = (floor + (1 - floor) * maxStar) * intensity;
+              const sampled = samplePaletteRgb(palette, (dist / 14) + now * 0.0005 * speed, customRgb);
+              rgb = sampled ? sampled : this._hsvToRgbList(Math.round((dist * 18 + now * 0.03 * speed) % 256), 240, 255);
+            } else {
+              brightFactor = floor * intensity;
+              if (floor > 0.005) {
+                const sampled = samplePaletteRgb(palette, dist / 14, customRgb);
+                rgb = sampled ? sampled : [0, 20, 60];
+              } else {
+                rgb = [0, 0, 0];
+              }
+            }
             break;
           }
         }
 
-        this._applyDiffuserColor(sd, h, s, v);
+        this._applyKeyRgb(k, rgb[0], rgb[1], rgb[2], brightFactor);
+      }
+
+      // Render Left & Right Side Diffusers
+      const diffusers = this.lighting.sideDiffusers || [];
+      for (let i = 0; i < diffusers.length; i++) {
+        const sd = diffusers[i];
+        if (!sd || !sd.el) continue;
+
+        const x = sd.isLeft ? 0 : 22.5;
+        const y = (sd.qmkY / 64) * 5.5;
+        const dirCoord = getDirectedCoordinate(x, y, direction);
+
+        const wave = Math.max(0, Math.sin((dirCoord.primary * 4.0) - (now * 0.0035 * speed)));
+        const waveCutoff = floor > 0.005 ? 0 : 0.08;
+        const wavePeak = Math.max(0, (wave - waveCutoff) / (1 - waveCutoff));
+        const waveNorm = Math.pow(wavePeak, 1.5);
+        const brightFactor = (floor + (1 - floor) * waveNorm) * intensity;
+        const sampled = samplePaletteRgb(palette, dirCoord.primary - now * 0.0006 * speed, customRgb);
+        const rgb = (brightFactor > 0.005)
+          ? (sampled ? sampled : this._hsvToRgbList(Math.round((dirCoord.primary * 160 - now * 0.04 * speed) % 256), 255, 255))
+          : [0, 0, 0];
+
+        this._applyDiffuserRgb(sd, rgb[0], rgb[1], rgb[2], brightFactor);
       }
 
       // Render Logo Badge LED
       if (this.lighting.logoBadgeEl) {
-        const logoH = Math.round((now * 0.04 * speed + 180) % 256);
-        const logoV = Math.round(220 * intensity);
-        this._applyLogoColor(this.lighting.logoBadgeEl, logoH, 255, logoV);
+        const logoBright = Math.max(floor * intensity, 0.9 * intensity);
+        const sampled = samplePaletteRgb(palette, now * 0.0008 * speed, customRgb);
+        const rgb = sampled ? sampled : this._hsvToRgbList(Math.round((now * 0.05 * speed) % 256), 255, 255);
+        this._applyLogoRgb(this.lighting.logoBadgeEl, rgb[0], rgb[1], rgb[2], logoBright);
       }
     }
 
-    _applyKeyColor(k, h, s, v) {
-      const rgb = this.lighting._hsvToRgb(h, s, v);
-      k._curRgb = rgb;
-      const bg = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.85)`;
-      const border = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.6)`;
-      const shadow = `0 0 12px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${v / 255})`;
+    _applyKeyRgb(k, r, g, b, brightFactor = 1.0) {
+      if (brightFactor <= 0.005) {
+        k._curRgb = { r: 0, g: 0, b: 0 };
+        const targets = k.els || [k.el];
+        for (let t = 0; t < targets.length; t++) {
+          const el = targets[t];
+          if (el) {
+            el.style.backgroundColor = "#070a12";
+            el.style.borderColor = "rgba(255, 255, 255, 0.04)";
+            el.style.boxShadow = "none";
+            el.style.color = "rgba(255, 255, 255, 0.25)";
+            el.style.textShadow = "none";
+          }
+        }
+        return;
+      }
+
+      const clampedBright = Math.max(0, Math.min(1.5, brightFactor));
+      const finalR = Math.max(0, Math.min(255, Math.round(r * clampedBright)));
+      const finalG = Math.max(0, Math.min(255, Math.round(g * clampedBright)));
+      const finalB = Math.max(0, Math.min(255, Math.round(b * clampedBright)));
+
+      if (finalR === 0 && finalG === 0 && finalB === 0) {
+        k._curRgb = { r: 0, g: 0, b: 0 };
+        const targets = k.els || [k.el];
+        for (let t = 0; t < targets.length; t++) {
+          const el = targets[t];
+          if (el) {
+            el.style.backgroundColor = "#070a12";
+            el.style.borderColor = "rgba(255, 255, 255, 0.04)";
+            el.style.boxShadow = "none";
+            el.style.color = "rgba(255, 255, 255, 0.25)";
+            el.style.textShadow = "none";
+          }
+        }
+        return;
+      }
+
+      k._curRgb = { r: finalR, g: finalG, b: finalB };
+
+      const alpha = Math.max(0.2, Math.min(0.95, clampedBright));
+      const bg = `rgba(${finalR}, ${finalG}, ${finalB}, ${alpha})`;
+      const border = `rgba(${finalR}, ${finalG}, ${finalB}, ${Math.max(0.3, Math.min(0.85, clampedBright))})`;
+      const shadow = `0 0 ${Math.round(4 + clampedBright * 10)}px rgba(${finalR}, ${finalG}, ${finalB}, ${Math.min(1.0, clampedBright)})`;
+
       const targets = k.els || [k.el];
       for (let t = 0; t < targets.length; t++) {
         const el = targets[t];
@@ -722,15 +1262,49 @@
         el.style.backgroundColor = bg;
         el.style.borderColor = border;
         el.style.boxShadow = shadow;
+        el.style.color = "#ffffff";
+        el.style.textShadow = `0 0 6px rgba(${finalR}, ${finalG}, ${finalB}, 0.8)`;
       }
     }
 
-    _applyDiffuserColor(sd, h, s, v) {
+    _applyDiffuserRgb(sd, r, g, b, brightFactor = 1.0) {
       if (!sd) return;
-      const rgb = this.lighting._hsvToRgb(h, s, v);
-      sd._curRgb = rgb;
-      const bg = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.9)`;
-      const shadow = `0 0 14px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${Math.max(0.15, (v / 255) * 0.95)})`;
+      if (brightFactor <= 0.005) {
+        sd._curRgb = { r: 0, g: 0, b: 0 };
+        const targets = sd.els || [sd.el];
+        for (let t = 0; t < targets.length; t++) {
+          const el = targets[t];
+          if (el) {
+            el.style.backgroundColor = "rgba(0, 0, 0, 0.4)";
+            el.style.boxShadow = "none";
+          }
+        }
+        return;
+      }
+
+      const clampedBright = Math.max(0, Math.min(1.5, brightFactor));
+      const finalR = Math.max(0, Math.min(255, Math.round(r * clampedBright)));
+      const finalG = Math.max(0, Math.min(255, Math.round(g * clampedBright)));
+      const finalB = Math.max(0, Math.min(255, Math.round(b * clampedBright)));
+
+      if (finalR === 0 && finalG === 0 && finalB === 0) {
+        sd._curRgb = { r: 0, g: 0, b: 0 };
+        const targets = sd.els || [sd.el];
+        for (let t = 0; t < targets.length; t++) {
+          const el = targets[t];
+          if (el) {
+            el.style.backgroundColor = "rgba(0, 0, 0, 0.4)";
+            el.style.boxShadow = "none";
+          }
+        }
+        return;
+      }
+
+      sd._curRgb = { r: finalR, g: finalG, b: finalB };
+
+      const bg = `rgba(${finalR}, ${finalG}, ${finalB}, ${Math.max(0.2, Math.min(0.95, clampedBright))})`;
+      const shadow = `0 0 ${Math.round(6 + clampedBright * 12)}px rgba(${finalR}, ${finalG}, ${finalB}, ${Math.min(1.0, clampedBright)})`;
+
       const targets = sd.els || [sd.el];
       for (let t = 0; t < targets.length; t++) {
         const el = targets[t];
@@ -740,13 +1314,47 @@
       }
     }
 
-    _applyLogoColor(logoEl, h, s, v) {
+    _applyLogoRgb(logoEl, r, g, b, brightFactor = 1.0) {
       if (!logoEl) return;
-      const rgb = this.lighting._hsvToRgb(h, s, v);
-      this._logoCurRgb = rgb;
-      const bg = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.95)`;
-      const shadow = `0 0 14px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.95), inset 0 0 4px rgba(255, 255, 255, 0.5)`;
+      if (brightFactor <= 0.005) {
+        this._logoCurRgb = { r: 0, g: 0, b: 0 };
+        const targets = Array.isArray(logoEl) ? logoEl : [logoEl];
+        for (let t = 0; t < targets.length; t++) {
+          const el = targets[t];
+          if (el) {
+            el.style.backgroundColor = "#070a12";
+            el.style.borderColor = "rgba(255, 255, 255, 0.1)";
+            el.style.boxShadow = "none";
+          }
+        }
+        return;
+      }
+
+      const clampedBright = Math.max(0, Math.min(1.5, brightFactor));
+      const finalR = Math.max(0, Math.min(255, Math.round(r * clampedBright)));
+      const finalG = Math.max(0, Math.min(255, Math.round(g * clampedBright)));
+      const finalB = Math.max(0, Math.min(255, Math.round(b * clampedBright)));
+
+      if (finalR === 0 && finalG === 0 && finalB === 0) {
+        this._logoCurRgb = { r: 0, g: 0, b: 0 };
+        const targets = Array.isArray(logoEl) ? logoEl : [logoEl];
+        for (let t = 0; t < targets.length; t++) {
+          const el = targets[t];
+          if (el) {
+            el.style.backgroundColor = "#070a12";
+            el.style.borderColor = "rgba(255, 255, 255, 0.1)";
+            el.style.boxShadow = "none";
+          }
+        }
+        return;
+      }
+
+      this._logoCurRgb = { r: finalR, g: finalG, b: finalB };
+
+      const bg = `rgba(${finalR}, ${finalG}, ${finalB}, 0.95)`;
+      const shadow = `0 0 14px rgba(${finalR}, ${finalG}, ${finalB}, 0.95), inset 0 0 4px rgba(255, 255, 255, 0.5)`;
       const targets = Array.isArray(logoEl) ? logoEl : [logoEl];
+
       for (let t = 0; t < targets.length; t++) {
         const el = targets[t];
         if (!el) continue;
@@ -756,10 +1364,23 @@
       }
     }
 
+    _hexToRgbList(hex) {
+      const c = hex.replace("#", "");
+      return [
+        parseInt(c.substring(0, 2), 16) || 0,
+        parseInt(c.substring(2, 4), 16) || 0,
+        parseInt(c.substring(4, 6), 16) || 0
+      ];
+    }
+
+    _hsvToRgbList(h, s = 255, v = 255) {
+      return hsvToRgb(h, s, v);
+    }
+
     async _streamToHardware(now) {
       if (!this.protocol || !this.protocol.isConnected || !this.protocol.device) return;
       if (this._isHardwareStreaming) return;
-      if (now - this._lastHardwareStreamTime < 33) return; // 30 FPS throttle
+      if (now - this._lastHardwareStreamTime < 32) return; // ~30 FPS rock-solid hardware stream with atomic double-buffering
 
       this._lastHardwareStreamTime = now;
       this._isHardwareStreaming = true;
@@ -789,13 +1410,15 @@
           leds.push(this._logoCurRgb.r, this._logoCurRgb.g, this._logoCurRgb.b);
         }
 
-        // Stream to firmware in 8-LED blocks (24 RGB bytes per VIA packet)
-        const CHUNK_LEDS = 8;
+        // Stream to firmware in 9-LED blocks (27 RGB bytes per 32-byte VIA packet)
+        const CHUNK_LEDS = 9;
         const totalLeds = Math.floor(leds.length / 3);
         for (let startLed = 0; startLed < totalLeds; startLed += CHUNK_LEDS) {
           const count = Math.min(CHUNK_LEDS, totalLeds - startLed);
+          const isLast = (startLed + count >= totalLeds);
           const chunk = leds.slice(startLed * 3, (startLed + count) * 3);
-          await this.protocol.sendDirectLightingBlock(startLed, chunk);
+          const packetStartIdx = isLast ? (startLed | 0x80) : startLed;
+          await this.protocol.sendDirectLightingBlock(packetStartIdx, chunk);
         }
       } catch (e) {
         // Suppress transient frame dropping
@@ -871,10 +1494,18 @@
         });
       }
 
+      const selAudioDir = document.getElementById("audioDirectionSelect");
+      if (selAudioDir) {
+        selAudioDir.addEventListener("change", (e) => {
+          this.config.audioDirection = e.target.value;
+          this._saveConfig();
+        });
+      }
+
       const pickerAudioColor = document.getElementById("audioColorPicker");
-      if (pickerAudioColor && this.lighting) {
+      if (pickerAudioColor) {
         pickerAudioColor.addEventListener("change", (e) => {
-          this.config.audioColor = this.lighting._hexToHs(e.target.value);
+          this.config.audioCustomHex = e.target.value;
           this._saveConfig();
         });
       }
@@ -884,7 +1515,50 @@
         sliderAudioSens.addEventListener("input", (e) => {
           this.config.sensitivity = parseFloat(e.target.value);
           const lbl = document.getElementById("audioSensVal");
-          if (lbl) lbl.textContent = e.target.value + "x";
+          if (lbl) lbl.textContent = `${e.target.value}x`;
+          this._saveConfig();
+        });
+      }
+
+      const sliderAudioSpeed = document.getElementById("audioSpeedSlider");
+      if (sliderAudioSpeed) {
+        sliderAudioSpeed.addEventListener("input", (e) => {
+          this.config.audioSpeed = parseFloat(e.target.value);
+          const lbl = document.getElementById("audioSpeedVal");
+          if (lbl) lbl.textContent = `${e.target.value}x`;
+          this._saveConfig();
+        });
+      }
+
+      const sliderAudioIntensity = document.getElementById("audioIntensitySlider");
+      if (sliderAudioIntensity) {
+        sliderAudioIntensity.addEventListener("input", (e) => {
+          this.config.audioIntensity = parseFloat(e.target.value);
+          const lbl = document.getElementById("audioIntensityVal");
+          if (lbl) lbl.textContent = `${Math.round(parseFloat(e.target.value) * 100)}%`;
+          this._saveConfig();
+        });
+      }
+
+      const sliderAudioSmoothing = document.getElementById("audioSmoothingSlider");
+      if (sliderAudioSmoothing) {
+        sliderAudioSmoothing.addEventListener("input", (e) => {
+          this.config.smoothing = parseFloat(e.target.value);
+          if (this.analyser) {
+            this.analyser.smoothingTimeConstant = this.config.smoothing;
+          }
+          const lbl = document.getElementById("audioSmoothingVal");
+          if (lbl) lbl.textContent = String(e.target.value);
+          this._saveConfig();
+        });
+      }
+
+      const sliderAudioFloor = document.getElementById("audioFloorSlider");
+      if (sliderAudioFloor) {
+        sliderAudioFloor.addEventListener("input", (e) => {
+          this.config.audioFloor = parseFloat(e.target.value);
+          const lbl = document.getElementById("audioFloorVal");
+          if (lbl) lbl.textContent = `${Math.round(parseFloat(e.target.value) * 100)}%`;
           this._saveConfig();
         });
       }
@@ -894,6 +1568,34 @@
       if (selEffect) {
         selEffect.addEventListener("change", (e) => {
           this.config.effectPreset = e.target.value;
+          this._saveConfig();
+        });
+      }
+
+      const selSoftPalette = document.getElementById("softwarePaletteSelect");
+      if (selSoftPalette) {
+        selSoftPalette.addEventListener("change", (e) => {
+          this.config.softwarePalette = e.target.value;
+          const colorWrap = document.getElementById("softwareSingleColorGroup");
+          if (colorWrap) {
+            colorWrap.style.display = e.target.value === "singleColor" ? "block" : "none";
+          }
+          this._saveConfig();
+        });
+      }
+
+      const pickerSoftColor = document.getElementById("softwareColorPicker");
+      if (pickerSoftColor) {
+        pickerSoftColor.addEventListener("change", (e) => {
+          this.config.softwareCustomHex = e.target.value;
+          this._saveConfig();
+        });
+      }
+
+      const selSoftDir = document.getElementById("softwareDirectionSelect");
+      if (selSoftDir) {
+        selSoftDir.addEventListener("change", (e) => {
+          this.config.softwareDirection = e.target.value;
           this._saveConfig();
         });
       }
@@ -917,6 +1619,16 @@
           this._saveConfig();
         });
       }
+
+      const sliderSoftFloor = document.getElementById("softwareEffectFloorSlider");
+      if (sliderSoftFloor) {
+        sliderSoftFloor.addEventListener("input", (e) => {
+          this.config.softwareFloor = parseFloat(e.target.value);
+          const lbl = document.getElementById("softwareFloorVal");
+          if (lbl) lbl.textContent = `${Math.round(parseFloat(e.target.value) * 100)}%`;
+          this._saveConfig();
+        });
+      }
     }
 
     _saveConfig() {
@@ -926,12 +1638,20 @@
         sourceId: this.config.sourceId,
         audioMode: this.config.audioMode,
         audioColorMode: this.config.audioColorMode,
-        audioColor: this.config.audioColor,
+        audioDirection: this.config.audioDirection,
+        audioCustomHex: this.config.audioCustomHex,
         sensitivity: this.config.sensitivity,
+        audioSpeed: this.config.audioSpeed,
+        audioIntensity: this.config.audioIntensity,
         smoothing: this.config.smoothing,
+        audioFloor: this.config.audioFloor,
         effectPreset: this.config.effectPreset,
+        softwarePalette: this.config.softwarePalette,
+        softwareDirection: this.config.softwareDirection,
+        softwareCustomHex: this.config.softwareCustomHex,
         effectSpeed: this.config.effectSpeed,
-        effectIntensity: this.config.effectIntensity
+        effectIntensity: this.config.effectIntensity,
+        softwareFloor: this.config.softwareFloor
       };
 
       localStorage.setItem("luxqmk_studio_lighting_config", JSON.stringify(cfg));
@@ -966,12 +1686,20 @@
         if (cfg.sourceId) this.config.sourceId = cfg.sourceId;
         if (cfg.audioMode) this.config.audioMode = cfg.audioMode;
         if (cfg.audioColorMode) this.config.audioColorMode = cfg.audioColorMode;
-        if (cfg.audioColor) this.config.audioColor = cfg.audioColor;
+        if (cfg.audioDirection) this.config.audioDirection = cfg.audioDirection;
+        if (cfg.audioCustomHex) this.config.audioCustomHex = cfg.audioCustomHex;
         if (typeof cfg.sensitivity === "number") this.config.sensitivity = cfg.sensitivity;
+        if (typeof cfg.audioSpeed === "number") this.config.audioSpeed = cfg.audioSpeed;
+        if (typeof cfg.audioIntensity === "number") this.config.audioIntensity = cfg.audioIntensity;
         if (typeof cfg.smoothing === "number") this.config.smoothing = cfg.smoothing;
+        if (typeof cfg.audioFloor === "number") this.config.audioFloor = cfg.audioFloor;
         if (cfg.effectPreset) this.config.effectPreset = cfg.effectPreset;
+        if (cfg.softwarePalette) this.config.softwarePalette = cfg.softwarePalette;
+        if (cfg.softwareDirection) this.config.softwareDirection = cfg.softwareDirection;
+        if (cfg.softwareCustomHex) this.config.softwareCustomHex = cfg.softwareCustomHex;
         if (typeof cfg.effectSpeed === "number") this.config.effectSpeed = cfg.effectSpeed;
         if (typeof cfg.effectIntensity === "number") this.config.effectIntensity = cfg.effectIntensity;
+        if (typeof cfg.softwareFloor === "number") this.config.softwareFloor = cfg.softwareFloor;
       }
     }
 
@@ -996,7 +1724,6 @@
         badge.className = this.isRunning ? "badge-pill badge-success" : "badge-pill";
       }
 
-      // Also ensure sub-tab buttons match active tab
       document.querySelectorAll(".studio-lighting-tab-btn").forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.tab === this.activeTab);
       });
@@ -1009,6 +1736,10 @@
     updateUI() {
       this._updateUI();
     }
+  }
+
+  function scaleBetween(unscaledNum, minAllowed, maxAllowed, min = 0, max = 1) {
+    return (maxAllowed - minAllowed) * (unscaledNum - min) / (max - min) + minAllowed;
   }
 
   window.StudioLightingController = StudioLightingController;

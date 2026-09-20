@@ -1030,58 +1030,169 @@
               </span>
             </div>
 
-            <div class="grid-2" style="gap: 1.25rem;">
+            <!-- Mode, Palette & Direction Selectors -->
+            <div class="grid-3" style="gap: 1.25rem; margin-bottom: 1.25rem;">
               <div class="form-group">
                 <label data-i18n="audioMode">Visualization Mode</label>
                 <select id="audioModeSelect" class="form-control">
                   <option value="equalizer" data-i18n="optEqualizer">Graphic Equalizer (Spectrum Column Bars)</option>
-                  <option value="bassPulse" data-i18n="optBassPulse">Bass Pulse (Beat Drop Reaction)</option>
-                  <option value="audioWave" data-i18n="optAudioWave">Audio Wave (Energy Ripples)</option>
+                  <option value="bassPulse" data-i18n="optBassPulse">Bass Pulse (Beat Drop Shockwave)</option>
                   <option value="vuMeter" data-i18n="optVuMeter">Stereo VU Meter (Left/Right Channel Level)</option>
+                  <option value="audioWave" data-i18n="optAudioWave">Audio Wave (Energy Ripples)</option>
+                  <option value="spectrumHeatmap" data-i18n="optSpectrumHeatmap">Spectrum Heatmap (Frequency Zone Glow)</option>
+                  <option value="starfieldBeats" data-i18n="optStarfieldBeats">Starfield Audio Beats (Bouncing Stars)</option>
+                  <option value="voiceAura" data-i18n="optVoiceAura">Voice / Mic Aura (Breathing Acoustic Glow)</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label data-i18n="audioColorMode">Color Palette</label>
                 <select id="audioColorModeSelect" class="form-control">
-                  <option value="rainbow" data-i18n="optColorRainbow">Dynamic Rainbow Spectrum</option>
-                  <option value="singleColor" data-i18n="optColorSingle">Custom Accent Color</option>
+                  <option value="rainbow" data-i18n="optPaletteRainbow">Dynamic Rainbow Spectrum</option>
+                  <option value="cyberpunk" data-i18n="optPaletteCyberpunk">Cyberpunk Neon (Cyan / Pink / Amber)</option>
+                  <option value="vaporwave" data-i18n="optPaletteVaporwave">Vaporwave Sunset (Purple / Pink / Cyan)</option>
+                  <option value="fire_ember" data-i18n="optPaletteFireEmber">Magma & Fire Ember (Crimson / Orange / Gold)</option>
+                  <option value="ocean_abyss" data-i18n="optPaletteOceanAbyss">Deep Ocean & Abyss (Navy / Azure / Aqua)</option>
+                  <option value="matrix_code" data-i18n="optPaletteMatrixCode">Matrix Terminal (Cyber Lime / Emerald)</option>
+                  <option value="synthwave" data-i18n="optPaletteSynthwave">Synthwave 80s (Violet / Hot Pink / Yellow)</option>
+                  <option value="ice_glacier" data-i18n="optPaletteIceGlacier">Ice Glacier & Frost (Arctic Blue / Ice / White)</option>
+                  <option value="toxic_radiation" data-i18n="optPaletteToxic">Toxic Glow (Acid Lime / Radioactive Green)</option>
+                  <option value="singleColor" data-i18n="optPaletteSingle">Custom Accent Color</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label data-i18n="lblAudioDirection">Effect Direction</label>
+                <select id="audioDirectionSelect" class="form-control">
+                  <option value="bottom_to_top" data-i18n="optDirBottomToTop">Bottom to Top (Spacebar -> Function Row)</option>
+                  <option value="top_to_bottom" data-i18n="optDirTopToBottom">Top to Bottom (Function Row -> Spacebar)</option>
+                  <option value="left_to_right" data-i18n="optDirLeftToRight">Left to Right (A -> Enter)</option>
+                  <option value="right_to_left" data-i18n="optDirRightToLeft">Right to Left (Enter -> A)</option>
+                  <option value="center_out" data-i18n="optDirCenterOut">Center Outward (Radial Explosion)</option>
+                  <option value="perimeter_in" data-i18n="optDirPerimeterIn">Perimeter Inward (Diffusers -> Center)</option>
                 </select>
               </div>
             </div>
 
-            <div class="form-group" id="audioSingleColorGroup" style="display: none; margin-top: 1rem;">
+            <!-- Custom Accent Color Picker -->
+            <div class="form-group" id="audioSingleColorGroup" style="display: none; margin-bottom: 1.25rem;">
               <label data-i18n="lblAudioSingleColor">Audio Accent Color</label>
               <div class="color-input-wrap">
                 <input type="color" id="audioColorPicker" class="color-picker-input" value="#00ffff">
-                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblAudioSingleColorHint">Color of frequency bars and pulses</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblAudioSingleColorHint">Custom color for single-color pulses and spectrum bars</span>
               </div>
             </div>
 
-            <div class="form-group" style="margin-top: 1.25rem;">
-              <div style="display: flex; justify-content: space-between;">
-                <label data-i18n="audioSensitivity">Audio Sensitivity Multiplier</label>
-                <span id="audioSensVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">1.2x</span>
+            <!-- Audio Sliders Grid -->
+            <div class="grid-2" style="gap: 1.25rem;">
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between;">
+                  <label data-i18n="audioSensitivity">Audio Sensitivity Multiplier</label>
+                  <span id="audioSensVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">1.2x</span>
+                </div>
+                <div class="range-slider-wrap">
+                  <input type="range" id="audioSensitivitySlider" class="range-slider" min="0.5" max="3.0" step="0.1" value="1.2">
+                </div>
               </div>
-              <div class="range-slider-wrap">
-                <input type="range" id="audioSensitivitySlider" class="range-slider" min="0.5" max="3.0" step="0.1" value="1.2">
+
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between;">
+                  <label data-i18n="lblAudioSpeed">Animation & Wave Speed</label>
+                  <span id="audioSpeedVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">1.0x</span>
+                </div>
+                <div class="range-slider-wrap">
+                  <input type="range" id="audioSpeedSlider" class="range-slider" min="0.2" max="3.0" step="0.1" value="1.0">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between;">
+                  <label data-i18n="lblAudioIntensity">Effect Intensity & Brightness</label>
+                  <span id="audioIntensityVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">100%</span>
+                </div>
+                <div class="range-slider-wrap">
+                  <input type="range" id="audioIntensitySlider" class="range-slider" min="0.1" max="1.5" step="0.05" value="1.0">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between;">
+                  <label data-i18n="lblAudioSmoothing">Spectrum Decay & Smoothing</label>
+                  <span id="audioSmoothingVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">0.82</span>
+                </div>
+                <div class="range-slider-wrap">
+                  <input type="range" id="audioSmoothingSlider" class="range-slider" min="0.50" max="0.95" step="0.02" value="0.82">
+                </div>
+              </div>
+
+              <div class="form-group" style="grid-column: span 2;">
+                <div style="display: flex; justify-content: space-between;">
+                  <label data-i18n="lblAudioFloor">Ambient Floor Glow (Idle Background Brightness)</label>
+                  <span id="audioFloorVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">15%</span>
+                </div>
+                <div class="range-slider-wrap">
+                  <input type="range" id="audioFloorSlider" class="range-slider" min="0" max="1.0" step="0.05" value="0.15">
+                </div>
               </div>
             </div>
           </div>
 
           <!-- PANE 2: PC Software Animation Engines -->
           <div id="pane-studio-effects" class="studio-lighting-subview">
-            <div class="form-group" style="margin-bottom: 1.25rem;">
-              <label data-i18n="lblSoftwareEffectPreset">Animation Engine & Preset</label>
-              <select id="softwareEffectSelect" class="form-control">
-                <option value="neonWave" data-i18n="optEffectNeonWave">Cyber Neon Wave (Dynamic Plasma Gradient)</option>
-                <option value="matrixRain" data-i18n="optEffectMatrixRain">Matrix Digital Rain (Phosphor Cascades)</option>
-                <option value="particleStorm" data-i18n="optEffectParticleStorm">Particle Flow (Organic Floating Orbs)</option>
-                <option value="aurora" data-i18n="optEffectAurora">Nordic Aurora (Polar Shimmer)</option>
-                <option value="pulseBloom" data-i18n="optEffectPulseBloom">Radial Pulse Bloom (Center Shockwave)</option>
-              </select>
+            <!-- Preset, Palette & Direction Selectors -->
+            <div class="grid-3" style="gap: 1.25rem; margin-bottom: 1.25rem;">
+              <div class="form-group">
+                <label data-i18n="lblSoftwareEffectPreset">Animation Engine & Preset</label>
+                <select id="softwareEffectSelect" class="form-control">
+                  <option value="neonWave" data-i18n="optEffectNeonWave">Cyber Neon Wave (Dynamic Plasma Gradient)</option>
+                  <option value="matrixRain" data-i18n="optEffectMatrixRain">Matrix Digital Rain (Phosphor Cascades)</option>
+                  <option value="particleStorm" data-i18n="optEffectParticleStorm">Particle Flow & Vortex (Floating Orbs)</option>
+                  <option value="aurora" data-i18n="optEffectAurora">Nordic Aurora Borealis (Polar Shimmer)</option>
+                  <option value="pulseBloom" data-i18n="optEffectPulseBloom">Radial Pulse Bloom (Center Shockwave)</option>
+                  <option value="fireEmber" data-i18n="optEffectFireEmber">Fire & Ember Storm (Rising Flame Sparks)</option>
+                  <option value="hyperspaceWarp" data-i18n="optEffectHyperspaceWarp">Hyperspace Warp (Cosmic Light Speed Tunnel)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label data-i18n="lblSoftwarePalette">Color Palette</label>
+                <select id="softwarePaletteSelect" class="form-control">
+                  <option value="rainbow" data-i18n="optPaletteRainbow">Dynamic Rainbow Spectrum</option>
+                  <option value="cyberpunk" data-i18n="optPaletteCyberpunk">Cyberpunk Neon (Cyan / Pink / Amber)</option>
+                  <option value="vaporwave" data-i18n="optPaletteVaporwave">Vaporwave Sunset (Purple / Pink / Cyan)</option>
+                  <option value="fire_ember" data-i18n="optPaletteFireEmber">Magma & Fire Ember (Crimson / Orange / Gold)</option>
+                  <option value="ocean_abyss" data-i18n="optPaletteOceanAbyss">Deep Ocean & Abyss (Navy / Azure / Aqua)</option>
+                  <option value="matrix_code" data-i18n="optPaletteMatrixCode">Matrix Terminal (Cyber Lime / Emerald)</option>
+                  <option value="synthwave" data-i18n="optPaletteSynthwave">Synthwave 80s (Violet / Hot Pink / Yellow)</option>
+                  <option value="ice_glacier" data-i18n="optPaletteIceGlacier">Ice Glacier & Frost (Arctic Blue / Ice / White)</option>
+                  <option value="toxic_radiation" data-i18n="optPaletteToxic">Toxic Glow (Acid Lime / Radioactive Green)</option>
+                  <option value="singleColor" data-i18n="optPaletteSingle">Custom Accent Color</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label data-i18n="lblSoftwareDirection">Effect Direction</label>
+                <select id="softwareDirectionSelect" class="form-control">
+                  <option value="left_to_right" data-i18n="optDirLeftToRight">Left to Right (A -> Enter)</option>
+                  <option value="right_to_left" data-i18n="optDirRightToLeft">Right to Left (Enter -> A)</option>
+                  <option value="bottom_to_top" data-i18n="optDirBottomToTop">Bottom to Top (Spacebar -> Function Row)</option>
+                  <option value="top_to_bottom" data-i18n="optDirTopToBottom">Top to Bottom (Function Row -> Spacebar)</option>
+                  <option value="center_out" data-i18n="optDirCenterOut">Center Outward (Radial Explosion)</option>
+                  <option value="perimeter_in" data-i18n="optDirPerimeterIn">Perimeter Inward (Diffusers -> Center)</option>
+                </select>
+              </div>
             </div>
 
+            <!-- Custom Accent Color Picker for PC FX -->
+            <div class="form-group" id="softwareSingleColorGroup" style="display: none; margin-bottom: 1.25rem;">
+              <label data-i18n="lblSoftwareSingleColor">Custom Accent Color</label>
+              <div class="color-input-wrap">
+                <input type="color" id="softwareColorPicker" class="color-picker-input" value="#00ffff">
+                <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="lblSoftwareSingleColorHint">Custom accent color for PC animation effects</span>
+              </div>
+            </div>
+
+            <!-- Sliders Grid for PC FX -->
             <div class="grid-2" style="gap: 1.25rem;">
               <div class="form-group">
                 <div style="display: flex; justify-content: space-between;">
@@ -1095,11 +1206,21 @@
 
               <div class="form-group">
                 <div style="display: flex; justify-content: space-between;">
-                  <label data-i18n="lblSoftwareEffectIntensity">Effect Intensity / Brightness</label>
+                  <label data-i18n="lblSoftwareEffectIntensity">Effect Intensity & Brightness</label>
                   <span id="softwareEffectIntensityVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">100%</span>
                 </div>
                 <div class="range-slider-wrap">
-                  <input type="range" id="softwareEffectIntensitySlider" class="range-slider" min="0.1" max="1.0" step="0.05" value="1.0">
+                  <input type="range" id="softwareEffectIntensitySlider" class="range-slider" min="0.1" max="1.5" step="0.05" value="1.0">
+                </div>
+              </div>
+
+              <div class="form-group" style="grid-column: span 2;">
+                <div style="display: flex; justify-content: space-between;">
+                  <label data-i18n="lblSoftwareFloor">Ambient Floor Glow (Idle Background Brightness)</label>
+                  <span id="softwareFloorVal" style="font-family: var(--font-mono); color: var(--accent-cyan);">10%</span>
+                </div>
+                <div class="range-slider-wrap">
+                  <input type="range" id="softwareEffectFloorSlider" class="range-slider" min="0" max="1.0" step="0.05" value="0.10">
                 </div>
               </div>
             </div>
@@ -1783,7 +1904,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <div class="modal-title-wrap">
-          <div class="sidebar-logo-badge" style="width: 34px; height: 34px;">
+          <div class="sidebar-logo-badge" style="width: 44px; height: 44px;">
             <img src="assets/logo.svg" alt="LuxQMK" class="sidebar-logo-img">
           </div>
           <div>
