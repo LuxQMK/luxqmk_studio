@@ -110,6 +110,15 @@
     return stops[0].rgb;
   }
 
+  function lerpColor(rgb1, rgb2, t) {
+    const clampedT = Math.max(0, Math.min(1, t));
+    return [
+      Math.round(rgb1[0] + (rgb2[0] - rgb1[0]) * clampedT),
+      Math.round(rgb1[1] + (rgb2[1] - rgb1[1]) * clampedT),
+      Math.round(rgb1[2] + (rgb2[2] - rgb1[2]) * clampedT)
+    ];
+  }
+
   function getDirectedCoordinate(x, y, dir, maxX = 22.5, maxY = 5.5) {
     const normX = Math.max(0, Math.min(1, x / maxX));
     const normY = Math.max(0, Math.min(1, y / maxY));
@@ -137,6 +146,96 @@
     }
   }
 
+  const EFFECT_DIRECTION_MODES = {
+    // Spatial 6 directions for Signature PC Effects
+    spatial6: [
+      { value: "left_to_right", i18n: "optDirLeftToRight", label: "Left to Right (A -> Enter)" },
+      { value: "right_to_left", i18n: "optDirRightToLeft", label: "Right to Left (Enter -> A)" },
+      { value: "bottom_to_top", i18n: "optDirBottomToTop", label: "Bottom to Top (Spacebar -> Function Row)" },
+      { value: "top_to_bottom", i18n: "optDirTopToBottom", label: "Top to Bottom (Function Row -> Spacebar)" },
+      { value: "center_out", i18n: "optDirCenterOut", label: "Center Outward (Radial Explosion)" },
+      { value: "perimeter_in", i18n: "optDirPerimeterIn", label: "Perimeter Inward (Diffusers -> Center)" }
+    ],
+    // Horizontal (Left <-> Right)
+    horizontal: [
+      { value: "left_to_right", i18n: "optDirLeftToRight", label: "Left to Right (A -> Enter)" },
+      { value: "right_to_left", i18n: "optDirRightToLeft", label: "Right to Left (Enter -> A)" }
+    ],
+    // Vertical (Top <-> Bottom)
+    vertical: [
+      { value: "top_to_bottom", i18n: "optDirTopToBottom", label: "Top to Bottom (Function Row -> Spacebar)" },
+      { value: "bottom_to_top", i18n: "optDirBottomToTop", label: "Bottom to Top (Spacebar -> Function Row)" }
+    ],
+    // Radial (Out <-> In)
+    radial: [
+      { value: "perimeter_in", i18n: "optDirPerimeterIn", label: "Perimeter Inward (Diffusers -> Center)" },
+      { value: "center_out", i18n: "optDirCenterOut", label: "Center Outward (Radial Explosion)" }
+    ],
+    // Rotational (CW <-> CCW)
+    rotational: [
+      { value: "cw", i18n: "optDirClockwise", label: "Clockwise (Default)" },
+      { value: "ccw", i18n: "optDirCounterClockwise", label: "Counter-Clockwise (Reverse)" }
+    ],
+    // None / Omnidirectional
+    none: [
+      { value: "none", i18n: "optDirNotApplicable", label: "Not Applicable (Omnidirectional)" }
+    ]
+  };
+
+  const EFFECT_TO_DIR_CATEGORY = {
+    // Signature PC Effects
+    neonWave: "spatial6",
+    matrixRain: "spatial6",
+    particleStorm: "spatial6",
+    aurora: "spatial6",
+    pulseBloom: "spatial6",
+    fireEmber: "spatial6",
+    hyperspaceWarp: "spatial6",
+
+    // QMK Cycling & Radial
+    qmk_cycle_all: "none",
+    qmk_cycle_left_right: "horizontal",
+    qmk_cycle_up_down: "vertical",
+    qmk_rainbow_chevron: "horizontal",
+    qmk_cycle_out_in: "radial",
+    qmk_cycle_out_in_dual: "radial",
+    qmk_cycle_pinwheel: "rotational",
+    qmk_cycle_spiral: "rotational",
+    qmk_dual_beacon: "rotational",
+    qmk_rainbow_beacon: "rotational",
+    qmk_rainbow_pinwheels: "rotational",
+
+    // QMK Waves & Atmosphere
+    qmk_hue_wave: "horizontal",
+    qmk_hue_pendulum: "horizontal",
+    qmk_breathing: "none",
+    qmk_hue_breathing: "none",
+    qmk_flower_blooming: "radial",
+    qmk_riverflow: "horizontal",
+
+    // QMK Drops & Particles
+    qmk_raindrops: "none",
+    qmk_jellybean_raindrops: "none",
+    qmk_pixel_rain: "vertical",
+    qmk_pixel_flow: "horizontal",
+    qmk_pixel_fractal: "none",
+    qmk_starlight: "none",
+    qmk_starlight_smooth: "none",
+    qmk_starlight_dual_hue: "none",
+
+    // QMK Bands & Gradients
+    qmk_gradient_up_down: "vertical",
+    qmk_gradient_left_right: "horizontal",
+    qmk_colorband_sat: "horizontal",
+    qmk_colorband_val: "horizontal",
+    qmk_colorband_pinwheel_sat: "rotational",
+    qmk_colorband_pinwheel_val: "rotational",
+    qmk_colorband_spiral_sat: "rotational",
+    qmk_colorband_spiral_val: "rotational",
+    qmk_solid_color: "none",
+    qmk_alphas_mods: "none"
+  };
+
   class StudioLightingController {
     constructor(protocol, lightingController) {
       this.protocol = protocol;
@@ -163,6 +262,9 @@
       this.matrixDrops = [];
       this.starfield = [];
       this.warpStars = [];
+      this.raindrops = {};
+      this.starlightStars = [];
+      this.pixelRainDrops = [];
       this.lastFrameTime = 0;
 
       // Configuration Model
@@ -241,6 +343,7 @@
       if (window.i18n) {
         window.i18n.onChange(() => {
           this.enumerateAudioSources();
+          this._updateDirectionOptionsForEffect(this.config.effectPreset || "neonWave");
           this._updateUI();
         });
       }
@@ -423,8 +526,7 @@
       const pickerSoft = document.getElementById("softwareColorPicker");
       if (pickerSoft) pickerSoft.value = this.config.softwareCustomHex || "#00ffff";
 
-      const selSoftDir = document.getElementById("softwareDirectionSelect");
-      if (selSoftDir) selSoftDir.value = this.config.softwareDirection || "left_to_right";
+      this._updateDirectionOptionsForEffect(this.config.effectPreset || "neonWave");
 
       const sliderEffectSpeed = document.getElementById("softwareEffectSpeedSlider");
       const lblSpeed = document.getElementById("softwareEffectSpeedVal");
@@ -446,6 +548,36 @@
         sliderSoftFloor.value = String(this.config.softwareFloor || 0.10);
         if (lblSoftFloor) lblSoftFloor.textContent = `${Math.round((this.config.softwareFloor || 0.10) * 100)}%`;
       }
+    }
+
+    _updateDirectionOptionsForEffect(preset) {
+      const selDir = document.getElementById("softwareDirectionSelect");
+      if (!selDir) return;
+
+      const cat = EFFECT_TO_DIR_CATEGORY[preset] || "spatial6";
+      const options = EFFECT_DIRECTION_MODES[cat] || EFFECT_DIRECTION_MODES.spatial6;
+
+      const currentVal = this.config.softwareDirection;
+      selDir.innerHTML = "";
+
+      options.forEach((opt) => {
+        const optionEl = document.createElement("option");
+        optionEl.value = opt.value;
+        optionEl.setAttribute("data-i18n", opt.i18n);
+        optionEl.textContent = (window.i18n && typeof window.i18n.t === "function") ? window.i18n.t(opt.i18n) : opt.label;
+        selDir.appendChild(optionEl);
+      });
+
+      const hasCurrent = options.some((opt) => opt.value === currentVal);
+      if (hasCurrent) {
+        selDir.value = currentVal;
+      } else {
+        selDir.value = options[0].value;
+        this.config.softwareDirection = options[0].value;
+        this._saveConfig();
+      }
+
+      selDir.disabled = (cat === "none");
     }
 
     switchSubTab(tabName) {
@@ -725,7 +857,7 @@
       const speed = this.config.audioSpeed || 1.0;
       const intensity = this.config.audioIntensity || 1.0;
       const floor = (this.config.audioFloor <= 0.01) ? 0 : (this.config.audioFloor || 0.15);
-      const customRgb = this.lighting._hexToRgb ? this._hexToRgbList(this.config.audioCustomHex || "#00ffff") : [0, 255, 255];
+      const customRgb = this._hexToRgbList(this.config.audioCustomHex || "#00ffff");
 
       // Advance starfield particles if active
       if (this.config.audioMode === "starfieldBeats") {
@@ -985,9 +1117,9 @@
       const speed = this.config.effectSpeed || 1.0;
       const intensity = this.config.effectIntensity || 1.0;
       const floor = (this.config.softwareFloor <= 0.01) ? 0 : (this.config.softwareFloor || 0.10);
-      const customRgb = this.lighting._hexToRgb ? this._hexToRgbList(this.config.softwareCustomHex || "#00ffff") : [0, 255, 255];
+      const customRgb = this._hexToRgbList(this.config.softwareCustomHex || "#00ffff");
 
-      // Update particle physics
+      // Update particle physics & procedural generators
       if (preset === "particleStorm") {
         this.particles.forEach((p) => {
           p.x += p.vx * speed;
@@ -1011,169 +1143,69 @@
             ws.angle = Math.random() * Math.PI * 2;
           }
         });
+      } else if (preset === "qmk_pixel_rain") {
+        if (!this.pixelRainDrops || this.pixelRainDrops.length === 0) {
+          this.pixelRainDrops = [];
+          for (let c = 0; c < 24; c++) {
+            this.pixelRainDrops.push({
+              col: c,
+              y: Math.random() * -10,
+              speed: 0.04 + Math.random() * 0.07,
+              length: 2 + Math.floor(Math.random() * 3),
+              hue: Math.random()
+            });
+          }
+        }
+        this.pixelRainDrops.forEach((d) => {
+          d.y += d.speed * speed;
+          if (d.y > 8) {
+            d.y = -Math.random() * 5;
+            d.speed = 0.04 + Math.random() * 0.07;
+            d.hue = Math.random();
+          }
+        });
+      } else if (preset === "qmk_raindrops" || preset === "qmk_jellybean_raindrops") {
+        if (!this.raindrops) this.raindrops = {};
+        if (Math.random() < 0.35 * speed) {
+          const randIdx = Math.floor(Math.random() * keys.length);
+          this.raindrops[randIdx] = { life: 1.0, hue: Math.random() };
+        }
+        for (const idx in this.raindrops) {
+          this.raindrops[idx].life -= 0.018 * speed;
+          if (this.raindrops[idx].life <= 0) delete this.raindrops[idx];
+        }
+      } else if (preset.startsWith("qmk_starlight")) {
+        if (!this.starlightStars || this.starlightStars.length !== keys.length) {
+          this.starlightStars = keys.map((_, idx) => ({
+            phase: Math.random() * Math.PI * 2,
+            speed: 0.0015 + Math.random() * 0.0035,
+            hueOffset: Math.random(),
+            isAlt: (idx % 2 === 0)
+          }));
+        }
       }
 
       for (let i = 0; i < keys.length; i++) {
         const k = keys[i];
         if (k.isLogo || k.isKnob) continue;
 
-        const dirCoord = getDirectedCoordinate(k.x, k.y, direction);
-        let rgb = [0, 0, 0];
-        let brightFactor = floor;
+        const normX = (k.qmkX !== undefined) ? (k.qmkX / 224) : (k.x / 22.5);
+        const normY = (k.qmkY !== undefined) ? (k.qmkY / 64) : (k.y / 5.5);
+        const qmkX = (k.qmkX !== undefined) ? k.qmkX : Math.round(normX * 224);
+        const qmkY = (k.qmkY !== undefined) ? k.qmkY : Math.round(normY * 64);
+        const dx = (k.dx !== undefined) ? (k.dx / 112) : ((k.x - 11.25) / 11.25);
+        const dy = (k.dy !== undefined) ? (k.dy / 32) : ((k.y - 2.75) / 2.75);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        const angleNorm = ((angle / (Math.PI * 2)) + 1) % 1;
+        const isAlpha = (k.group === "alpha" || k.group === "alphas") ||
+          (!k.group && normY >= 0.2 && normY <= 0.7 && normX >= 0.08 && normX <= 0.65);
+        const dirCoord = getDirectedCoordinate(normX * 22.5, normY * 5.5, direction);
 
-        switch (preset) {
-          case "neonWave": {
-            const waveRaw = Math.sin((dirCoord.primary * 5.0) - (now * 0.0035 * speed));
-            const waveCutoff = floor > 0.005 ? 0 : 0.08;
-            const wavePeak = Math.max(0, (waveRaw - waveCutoff) / (1 - waveCutoff));
-            const waveNorm = Math.pow(wavePeak, 1.5);
-            brightFactor = (floor + (1 - floor) * waveNorm) * intensity;
-            const palettePos = dirCoord.primary - (now * 0.0006 * speed);
-            const sampled = samplePaletteRgb(palette, palettePos, customRgb);
-            rgb = (brightFactor > 0.005)
-              ? (sampled ? sampled : this._hsvToRgbList(Math.round((dirCoord.primary * 160 - now * 0.04 * speed) % 256), 255, 255))
-              : [0, 0, 0];
-            break;
-          }
-
-          case "matrixRain": {
-            const col = Math.min(23, Math.max(0, Math.floor(dirCoord.secondary * 24)));
-            const drop = this.matrixDrops[col % this.matrixDrops.length];
-            const distFlow = (dirCoord.primary * 8) - drop.y;
-            if (distFlow >= 0 && distFlow < drop.length) {
-              if (distFlow < 0.8) {
-                brightFactor = 1.2 * intensity;
-                rgb = [255, 255, 255]; // Leading spark
-              } else {
-                const tail = (1 - (distFlow / drop.length));
-                brightFactor = (floor + (1 - floor) * tail) * intensity;
-                const sampled = samplePaletteRgb(palette, tail * 0.6 + 0.2, customRgb);
-                rgb = sampled ? sampled : [0, 255, 70];
-              }
-            } else {
-              brightFactor = floor * intensity;
-              if (floor > 0.005) {
-                const sampled = samplePaletteRgb(palette, 0.1, customRgb);
-                rgb = sampled ? sampled : [0, 80, 20];
-              } else {
-                rgb = [0, 0, 0];
-              }
-            }
-            break;
-          }
-
-          case "particleStorm": {
-            let maxBright = 0;
-            let pColorFactor = 0;
-
-            this.particles.forEach((p) => {
-              const dx = k.x - p.x;
-              const dy = k.y - p.y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-              if (dist < p.radius) {
-                const b = (1 - (dist / p.radius));
-                if (b > maxBright) {
-                  maxBright = b;
-                  pColorFactor = p.hue / 255;
-                }
-              }
-            });
-
-            if (maxBright > 0.02) {
-              brightFactor = (floor + (1 - floor) * maxBright) * intensity;
-              const sampled = samplePaletteRgb(palette, pColorFactor + now * 0.0004 * speed, customRgb);
-              rgb = sampled ? sampled : this._hsvToRgbList(Math.round(pColorFactor * 255), 255, 255);
-            } else {
-              brightFactor = floor * intensity;
-              if (floor > 0.005) {
-                const sampled = samplePaletteRgb(palette, dirCoord.dist, customRgb);
-                rgb = sampled ? sampled : [20, 20, 40];
-              } else {
-                rgb = [0, 0, 0];
-              }
-            }
-            break;
-          }
-
-          case "aurora": {
-            const p1 = Math.sin(dirCoord.primary * 4.0 - now * 0.002 * speed);
-            const p2 = Math.cos(dirCoord.secondary * 4.0 - now * 0.0025 * speed);
-            const rawCombined = (p1 + p2) * 0.5;
-            const ribbonCutoff = floor > 0.005 ? 0 : 0.12;
-            const combined = Math.max(0, (rawCombined - ribbonCutoff) / (1 - ribbonCutoff));
-            const waveNorm = Math.pow(combined, 1.8);
-            brightFactor = (floor + (1 - floor) * waveNorm) * intensity;
-            const palettePos = 0.5 + rawCombined * 0.4;
-            const sampled = samplePaletteRgb(palette, palettePos, customRgb);
-            rgb = (brightFactor > 0.005)
-              ? (sampled ? sampled : this._hsvToRgbList(Math.round((120 + rawCombined * 60) % 256), 240, 255))
-              : [0, 0, 0];
-            break;
-          }
-
-          case "pulseBloom": {
-            const ring = Math.sin((dirCoord.primary * 10.0) - (now * 0.006 * speed));
-            const ringCutoff = floor > 0.005 ? 0 : 0.08;
-            const ringPeak = Math.max(0, (ring - ringCutoff) / (1 - ringCutoff));
-            const ringNorm = Math.pow(ringPeak, 2.5);
-            brightFactor = (floor + (1 - floor) * ringNorm) * intensity;
-            const palettePos = dirCoord.primary * 0.7 - (now * 0.0008 * speed);
-            const sampled = samplePaletteRgb(palette, palettePos, customRgb);
-            rgb = (brightFactor > 0.005)
-              ? (sampled ? sampled : this._hsvToRgbList(Math.round((dirCoord.primary * 120 - now * 0.04 * speed) % 256), 255, 255))
-              : [0, 0, 0];
-            break;
-          }
-
-          case "fireEmber": {
-            // Flame origin is at primary = 0, burning/rising towards primary = 1
-            const flameBase = 1 - dirCoord.primary;
-            const flicker = Math.sin(dirCoord.secondary * 4.0 - now * 0.008 * speed) * Math.cos(dirCoord.primary * 5.0 - now * 0.006 * speed);
-            const rawHeat = flameBase + flicker * 0.35;
-            const heatCutoff = floor > 0.005 ? 0 : 0.18;
-            const flameHeat = Math.max(0, Math.min(1.0, (rawHeat - heatCutoff) / (1 - heatCutoff)));
-            const flameNorm = Math.pow(flameHeat, 1.8);
-            brightFactor = (floor + (1 - floor) * flameNorm) * intensity;
-            const sampled = samplePaletteRgb(palette, 1 - flameHeat, customRgb);
-            rgb = (brightFactor > 0.005)
-              ? (sampled ? sampled : this._hsvToRgbList(Math.round(scaleBetween(flameHeat, 0, 40)), 255, 255))
-              : [0, 0, 0];
-            break;
-          }
-
-          case "hyperspaceWarp": {
-            // Cosmic Light Speed Tunnel
-            const centerX = 11.25, centerY = 2.75;
-            const dx = k.x - centerX, dy = k.y - centerY;
-            const angle = Math.atan2(dy, dx);
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            let maxStar = 0;
-            this.warpStars.forEach((ws) => {
-              const dAngle = Math.abs(angle - ws.angle);
-              const dDist = Math.abs(dist - ws.dist);
-              if (dAngle < 0.25 && dDist < 1.8) {
-                const b = (1 - (dDist / 1.8));
-                if (b > maxStar) maxStar = b;
-              }
-            });
-
-            if (maxStar > 0.05) {
-              brightFactor = (floor + (1 - floor) * maxStar) * intensity;
-              const sampled = samplePaletteRgb(palette, (dist / 14) + now * 0.0005 * speed, customRgb);
-              rgb = sampled ? sampled : this._hsvToRgbList(Math.round((dist * 18 + now * 0.03 * speed) % 256), 240, 255);
-            } else {
-              brightFactor = floor * intensity;
-              if (floor > 0.005) {
-                const sampled = samplePaletteRgb(palette, dist / 14, customRgb);
-                rgb = sampled ? sampled : [0, 20, 60];
-              } else {
-                rgb = [0, 0, 0];
-              }
-            }
-            break;
-          }
-        }
+        const { rgb, brightFactor } = this._sampleSoftwareFxPixel({
+          normX, normY, qmkX, qmkY, dx, dy, dist, angle, angleNorm, dirCoord, isAlpha, i, isDiffuser: false,
+          now, preset, palette, direction, speed, intensity, floor, customRgb
+        });
 
         this._applyKeyRgb(k, rgb[0], rgb[1], rgb[2], brightFactor);
       }
@@ -1184,19 +1216,21 @@
         const sd = diffusers[i];
         if (!sd || !sd.el) continue;
 
-        const x = sd.isLeft ? 0 : 22.5;
-        const y = (sd.qmkY / 64) * 5.5;
-        const dirCoord = getDirectedCoordinate(x, y, direction);
+        const normX = sd.isLeft ? 0 : 1.0;
+        const normY = (sd.qmkY !== undefined) ? (sd.qmkY / 64) : 0.5;
+        const qmkX = (sd.qmkX !== undefined) ? sd.qmkX : (sd.isLeft ? 0 : 224);
+        const qmkY = (sd.qmkY !== undefined) ? sd.qmkY : Math.round(normY * 64);
+        const dx = (sd.dx !== undefined) ? (sd.dx / 112) : (sd.isLeft ? -1.0 : 1.0);
+        const dy = (sd.dy !== undefined) ? (sd.dy / 32) : ((normY - 0.5) * 2);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        const angleNorm = ((angle / (Math.PI * 2)) + 1) % 1;
+        const dirCoord = getDirectedCoordinate(normX * 22.5, normY * 5.5, direction);
 
-        const wave = Math.max(0, Math.sin((dirCoord.primary * 4.0) - (now * 0.0035 * speed)));
-        const waveCutoff = floor > 0.005 ? 0 : 0.08;
-        const wavePeak = Math.max(0, (wave - waveCutoff) / (1 - waveCutoff));
-        const waveNorm = Math.pow(wavePeak, 1.5);
-        const brightFactor = (floor + (1 - floor) * waveNorm) * intensity;
-        const sampled = samplePaletteRgb(palette, dirCoord.primary - now * 0.0006 * speed, customRgb);
-        const rgb = (brightFactor > 0.005)
-          ? (sampled ? sampled : this._hsvToRgbList(Math.round((dirCoord.primary * 160 - now * 0.04 * speed) % 256), 255, 255))
-          : [0, 0, 0];
+        const { rgb, brightFactor } = this._sampleSoftwareFxPixel({
+          normX, normY, qmkX, qmkY, dx, dy, dist, angle, angleNorm, dirCoord, isAlpha: false, i: undefined, isDiffuser: true,
+          now, preset, palette, direction, speed, intensity, floor, customRgb
+        });
 
         this._applyDiffuserRgb(sd, rgb[0], rgb[1], rgb[2], brightFactor);
       }
@@ -1208,6 +1242,524 @@
         const rgb = sampled ? sampled : this._hsvToRgbList(Math.round((now * 0.05 * speed) % 256), 255, 255);
         this._applyLogoRgb(this.lighting.logoBadgeEl, rgb[0], rgb[1], rgb[2], logoBright);
       }
+    }
+
+    _sampleSoftwareFxPixel(params) {
+      const {
+        normX, normY, qmkX, qmkY, dx, dy, dist, angle, angleNorm, dirCoord, isAlpha, i, isDiffuser,
+        now, preset, palette, direction, speed, intensity, floor, customRgb
+      } = params;
+
+      const dx_qmk = (typeof qmkX === "number") ? (qmkX - 112) : Math.round(dx * 112);
+      const dy_qmk = (typeof qmkY === "number") ? (qmkY - 32) : Math.round(dy * 32);
+      const qmkDist = Math.sqrt(dx_qmk * dx_qmk + dy_qmk * dy_qmk);
+      const qmkAngle = ((Math.atan2(dy_qmk, dx_qmk) / (Math.PI * 2)) + 1) % 1 * 256;
+      const keyX = (typeof qmkX === "number") ? qmkX : Math.round(normX * 224);
+      const keyY = (typeof qmkY === "number") ? qmkY : Math.round(normY * 64);
+
+      let rgb = [0, 0, 0];
+      let brightFactor = floor;
+
+      switch (preset) {
+        // --- 🌟 Signature PC Effects ---
+        case "neonWave": {
+          const waveRaw = Math.sin((dirCoord.primary * 5.0) - (now * 0.0035 * speed));
+          const waveCutoff = floor > 0.005 ? 0 : 0.08;
+          const wavePeak = Math.max(0, (waveRaw - waveCutoff) / (1 - waveCutoff));
+          const waveNorm = Math.pow(wavePeak, 1.5);
+          brightFactor = (floor + (1 - floor) * waveNorm) * intensity;
+          const palettePos = dirCoord.primary - (now * 0.0006 * speed);
+          const sampled = samplePaletteRgb(palette, palettePos, customRgb);
+          rgb = (brightFactor > 0.005)
+            ? (sampled ? sampled : this._hsvToRgbList(Math.round((dirCoord.primary * 160 - now * 0.04 * speed) % 256), 255, 255))
+            : [0, 0, 0];
+          break;
+        }
+
+        case "matrixRain": {
+          const col = Math.min(23, Math.max(0, Math.floor(dirCoord.secondary * 24)));
+          const drop = this.matrixDrops[col % this.matrixDrops.length];
+          const distFlow = (dirCoord.primary * 8) - drop.y;
+          if (distFlow >= 0 && distFlow < drop.length) {
+            if (distFlow < 0.8) {
+              brightFactor = 1.2 * intensity;
+              rgb = [255, 255, 255]; // Leading spark
+            } else {
+              const tail = (1 - (distFlow / drop.length));
+              brightFactor = (floor + (1 - floor) * tail) * intensity;
+              const sampled = samplePaletteRgb(palette, tail * 0.6 + 0.2, customRgb);
+              rgb = sampled ? sampled : [0, 255, 70];
+            }
+          } else {
+            brightFactor = floor * intensity;
+            if (floor > 0.005) {
+              const sampled = samplePaletteRgb(palette, 0.1, customRgb);
+              rgb = sampled ? sampled : [0, 80, 20];
+            } else {
+              rgb = [0, 0, 0];
+            }
+          }
+          break;
+        }
+
+        case "particleStorm": {
+          let maxBright = 0;
+          let pColorFactor = 0;
+          const kx = normX * 22.5;
+          const ky = normY * 5.5;
+
+          this.particles.forEach((p) => {
+            const pdx = kx - p.x;
+            const pdy = ky - p.y;
+            const pdist = Math.sqrt(pdx * pdx + pdy * pdy);
+            if (pdist < p.radius) {
+              const b = (1 - (pdist / p.radius));
+              if (b > maxBright) {
+                maxBright = b;
+                pColorFactor = p.hue / 255;
+              }
+            }
+          });
+
+          if (maxBright > 0.02) {
+            brightFactor = (floor + (1 - floor) * maxBright) * intensity;
+            const sampled = samplePaletteRgb(palette, pColorFactor + now * 0.0004 * speed, customRgb);
+            rgb = sampled ? sampled : this._hsvToRgbList(Math.round(pColorFactor * 255), 255, 255);
+          } else {
+            brightFactor = floor * intensity;
+            if (floor > 0.005) {
+              const sampled = samplePaletteRgb(palette, dirCoord.dist, customRgb);
+              rgb = sampled ? sampled : [20, 20, 40];
+            } else {
+              rgb = [0, 0, 0];
+            }
+          }
+          break;
+        }
+
+        case "aurora": {
+          const p1 = Math.sin(dirCoord.primary * 4.0 - now * 0.002 * speed);
+          const p2 = Math.cos(dirCoord.secondary * 4.0 - now * 0.0025 * speed);
+          const rawCombined = (p1 + p2) * 0.5;
+          const ribbonCutoff = floor > 0.005 ? 0 : 0.12;
+          const combined = Math.max(0, (rawCombined - ribbonCutoff) / (1 - ribbonCutoff));
+          const waveNorm = Math.pow(combined, 1.8);
+          brightFactor = (floor + (1 - floor) * waveNorm) * intensity;
+          const palettePos = 0.5 + rawCombined * 0.4;
+          const sampled = samplePaletteRgb(palette, palettePos, customRgb);
+          rgb = (brightFactor > 0.005)
+            ? (sampled ? sampled : this._hsvToRgbList(Math.round((120 + rawCombined * 60) % 256), 240, 255))
+            : [0, 0, 0];
+          break;
+        }
+
+        case "pulseBloom": {
+          const ring = Math.sin((dirCoord.primary * 10.0) - (now * 0.006 * speed));
+          const ringCutoff = floor > 0.005 ? 0 : 0.08;
+          const ringPeak = Math.max(0, (ring - ringCutoff) / (1 - ringCutoff));
+          const ringNorm = Math.pow(ringPeak, 2.5);
+          brightFactor = (floor + (1 - floor) * ringNorm) * intensity;
+          const palettePos = dirCoord.primary * 0.7 - (now * 0.0008 * speed);
+          const sampled = samplePaletteRgb(palette, palettePos, customRgb);
+          rgb = (brightFactor > 0.005)
+            ? (sampled ? sampled : this._hsvToRgbList(Math.round((dirCoord.primary * 120 - now * 0.04 * speed) % 256), 255, 255))
+            : [0, 0, 0];
+          break;
+        }
+
+        case "fireEmber": {
+          const flameBase = 1 - dirCoord.primary;
+          const flicker = Math.sin(dirCoord.secondary * 4.0 - now * 0.008 * speed) * Math.cos(dirCoord.primary * 5.0 - now * 0.006 * speed);
+          const rawHeat = flameBase + flicker * 0.35;
+          const heatCutoff = floor > 0.005 ? 0 : 0.18;
+          const flameHeat = Math.max(0, Math.min(1.0, (rawHeat - heatCutoff) / (1 - heatCutoff)));
+          const flameNorm = Math.pow(flameHeat, 1.8);
+          brightFactor = (floor + (1 - floor) * flameNorm) * intensity;
+          const sampled = samplePaletteRgb(palette, 1 - flameHeat, customRgb);
+          rgb = (brightFactor > 0.005)
+            ? (sampled ? sampled : this._hsvToRgbList(Math.round(scaleBetween(flameHeat, 0, 40)), 255, 255))
+            : [0, 0, 0];
+          break;
+        }
+
+        case "hyperspaceWarp": {
+          let maxStar = 0;
+          const starDist = dist * 14;
+          this.warpStars.forEach((ws) => {
+            const dAngle = Math.abs(angle - ws.angle);
+            const dDist = Math.abs(starDist - ws.dist);
+            if (dAngle < 0.25 && dDist < 1.8) {
+              const b = (1 - (dDist / 1.8));
+              if (b > maxStar) maxStar = b;
+            }
+          });
+
+          if (maxStar > 0.05) {
+            brightFactor = (floor + (1 - floor) * maxStar) * intensity;
+            const sampled = samplePaletteRgb(palette, dist + now * 0.0005 * speed, customRgb);
+            rgb = sampled ? sampled : this._hsvToRgbList(Math.round((dist * 180 + now * 0.03 * speed) % 256), 240, 255);
+          } else {
+            brightFactor = floor * intensity;
+            if (floor > 0.005) {
+              const sampled = samplePaletteRgb(palette, dist, customRgb);
+              rgb = sampled ? sampled : [0, 20, 60];
+            } else {
+              rgb = [0, 0, 0];
+            }
+          }
+          break;
+        }
+
+        // --- 🌈 QMK Cycling & Radial (Exact QMK Firmware Math) ---
+        case "qmk_cycle_all": {
+          const t = ((direction === "right_to_left" || direction === "ccw" ? -1 : 1) * now * 0.00035 * speed);
+          const palettePos = (t % 1.0 + 1.0) % 1.0;
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, palettePos, customRgb);
+          break;
+        }
+
+        case "qmk_cycle_left_right": {
+          const time = (direction === "right_to_left" ? -1 : 1) * (now * 0.00035 * speed * 256);
+          const huePos = ((keyX - time) % 256 + 256) % 256 / 256.0;
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, huePos, customRgb);
+          break;
+        }
+
+        case "qmk_cycle_up_down": {
+          const time = (direction === "bottom_to_top" ? -1 : 1) * (now * 0.00035 * speed * 256);
+          const huePos = ((keyY * 4 - time) % 256 + 256) % 256 / 256.0;
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, huePos, customRgb);
+          break;
+        }
+
+        case "qmk_rainbow_chevron": {
+          const time = (direction === "right_to_left" ? -1 : 1) * (now * 0.00035 * speed * 256);
+          const chevron = Math.abs(dy_qmk) * 2 + keyX + time;
+          const huePos = ((chevron % 256 + 256) % 256) / 256.0;
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, huePos, customRgb);
+          break;
+        }
+
+        case "qmk_cycle_out_in": {
+          const time = (direction === "center_out" ? -1 : 1) * (now * 0.00035 * speed * 256);
+          const huePos = (((qmkDist * 1.5) + time) % 256 + 256) % 256 / 256.0;
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, huePos, customRgb);
+          break;
+        }
+
+        case "qmk_cycle_out_in_dual": {
+          const dx_dual = 56 - Math.abs(dx_qmk);
+          const dist_dual = Math.sqrt(dx_dual * dx_dual + dy_qmk * dy_qmk);
+          const time = (direction === "center_out" ? -1 : 1) * (now * 0.00035 * speed * 256);
+          const huePos = (((dist_dual * 3.0) + time) % 256 + 256) % 256 / 256.0;
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, huePos, customRgb);
+          break;
+        }
+
+        case "qmk_cycle_pinwheel": {
+          const rotDir = (direction === "ccw" || direction === "right_to_left") ? -1 : 1;
+          const time = rotDir * (now * 0.00035 * speed * 256);
+          const huePos = ((qmkAngle + time) % 256 + 256) % 256 / 256.0;
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, huePos, customRgb);
+          break;
+        }
+
+        case "qmk_cycle_spiral": {
+          const rotDir = (direction === "ccw" || direction === "right_to_left") ? -1 : 1;
+          const time = rotDir * (now * 0.00035 * speed * 256);
+          const huePos = ((qmkDist + time - qmkAngle) % 256 + 256) % 256 / 256.0;
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, huePos, customRgb);
+          break;
+        }
+
+        case "qmk_dual_beacon": {
+          const rotDir = (direction === "ccw" || direction === "right_to_left") ? -1 : 1;
+          const angleBeam = rotDir * (now * 0.0008 * speed);
+          const cos = Math.cos(angleBeam);
+          const sin = Math.sin(angleBeam);
+          const proj = (dy_qmk * cos + dx_qmk * sin) / 128.0;
+          const huePos = ((proj % 1.0) + 1.0) % 1.0;
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, huePos, customRgb);
+          break;
+        }
+
+        case "qmk_rainbow_beacon": {
+          const rotDir = (direction === "ccw" || direction === "right_to_left") ? -1 : 1;
+          const angleBeam = rotDir * (now * 0.0008 * speed);
+          const cos = Math.cos(angleBeam);
+          const sin = Math.sin(angleBeam);
+          const proj = (dy_qmk * 2 * cos + dx_qmk * 2 * sin) / 128.0;
+          const huePos = ((proj % 1.0) + 1.0) % 1.0;
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, huePos, customRgb);
+          break;
+        }
+
+        case "qmk_rainbow_pinwheels": {
+          const rotDir = (direction === "ccw" || direction === "right_to_left") ? -1 : 1;
+          const angleBeam = rotDir * (now * 0.0008 * speed);
+          const cos = Math.cos(angleBeam);
+          const sin = Math.sin(angleBeam);
+          const proj = (dy_qmk * 3 * cos + (56 - Math.abs(dx_qmk)) * 3 * sin) / 128.0;
+          const huePos = ((proj % 1.0) + 1.0) % 1.0;
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, huePos, customRgb);
+          break;
+        }
+
+        // --- 🌊 QMK Waves & Atmosphere ---
+        case "qmk_hue_wave": {
+          const time = (now * 0.00035 * speed * 256) % 256;
+          const t = (direction === "right_to_left") ? (255 - time) : time;
+          const diff = Math.abs(keyX - t);
+          const hueShift = (diff * (24 / 255)) / 256.0;
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, 0.5 + hueShift, customRgb);
+          break;
+        }
+
+        case "qmk_hue_pendulum": {
+          const sinVal = (Math.sin(now * 0.002 * speed) + 1) * 127.5;
+          const x = (direction === "right_to_left") ? (224 - keyX) : keyX;
+          const diff = Math.abs(sinVal + x - 128);
+          const hueShift = (Math.min(255, diff * 2) * (12 / 255)) / 256.0;
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, 0.5 + hueShift, customRgb);
+          break;
+        }
+
+        case "qmk_breathing": {
+          const breath = Math.abs(Math.sin(now * 0.0015 * speed));
+          brightFactor = (floor + (1 - floor) * breath) * intensity;
+          rgb = samplePaletteRgb(palette, 0.5, customRgb);
+          break;
+        }
+
+        case "qmk_hue_breathing": {
+          const breath = Math.abs(Math.sin(now * 0.0015 * speed));
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, 0.5 + breath * (12 / 256), customRgb);
+          break;
+        }
+
+        case "qmk_flower_blooming": {
+          const time = (direction === "center_out" ? -1 : 1) * (now * 0.00035 * speed * 256);
+          const sign = (dy_qmk > 0) ? 1 : -1;
+          const huePos = ((keyX * 3 - keyY * 3 + sign * time) % 256 + 256) % 256 / 256.0;
+          const col = samplePaletteRgb(palette, huePos, customRgb);
+          rgb = (dy_qmk > 0) ? [col[2], col[1], col[0]] : col;
+          brightFactor = 1.0 * intensity;
+          break;
+        }
+
+        case "qmk_riverflow": {
+          const idx = (direction === "right_to_left") ? (100 - (i || 0)) : (i || 0);
+          const flow = Math.abs(Math.sin(now * 0.0025 * speed + idx * 0.35));
+          brightFactor = (floor + (1 - floor) * flow) * intensity;
+          rgb = samplePaletteRgb(palette, (idx * 0.02 + now * 0.0002 * speed) % 1.0, customRgb);
+          break;
+        }
+
+        // --- ✨ QMK Drops & Particles ---
+        case "qmk_raindrops": {
+          const drop = (this.raindrops && i !== undefined) ? this.raindrops[i] : null;
+          if (drop && drop.life > 0) {
+            brightFactor = (floor + (1 - floor) * Math.pow(drop.life, 1.5)) * intensity;
+            rgb = samplePaletteRgb(palette, drop.hue, customRgb);
+          } else {
+            brightFactor = floor * intensity;
+            rgb = (floor > 0.005) ? samplePaletteRgb(palette, 0.5, customRgb) : [0, 0, 0];
+          }
+          break;
+        }
+
+        case "qmk_jellybean_raindrops": {
+          const drop = (this.raindrops && i !== undefined) ? this.raindrops[i] : null;
+          if (drop && drop.life > 0) {
+            brightFactor = (floor + (1 - floor) * Math.pow(drop.life, 1.5)) * intensity;
+            rgb = hsvToRgb(Math.round(drop.hue * 255), 255, 255);
+          } else {
+            brightFactor = floor * intensity;
+            rgb = (floor > 0.005) ? [20, 20, 40] : [0, 0, 0];
+          }
+          break;
+        }
+
+        case "qmk_pixel_rain": {
+          const col = Math.min(23, Math.max(0, Math.floor(normX * 24)));
+          const drop = (this.pixelRainDrops && this.pixelRainDrops.length > 0)
+            ? this.pixelRainDrops[col % this.pixelRainDrops.length]
+            : null;
+          const posY = (direction === "bottom_to_top") ? (1.0 - normY) : normY;
+          const distFlow = drop ? ((posY * 6) - drop.y) : -1;
+          if (distFlow >= 0 && distFlow < (drop ? drop.length : 2)) {
+            const tail = 1 - (distFlow / (drop ? drop.length : 2));
+            brightFactor = (floor + (1 - floor) * tail) * intensity;
+            rgb = samplePaletteRgb(palette, (drop ? drop.hue : 0.5), customRgb);
+          } else {
+            brightFactor = floor * intensity;
+            rgb = (floor > 0.005) ? samplePaletteRgb(palette, 0.1, customRgb) : [0, 0, 0];
+          }
+          break;
+        }
+
+        case "qmk_pixel_flow": {
+          const posX = (direction === "right_to_left") ? (1.0 - normX) : normX;
+          const flowVal = Math.sin((posX * 12.0) - (now * 0.004 * speed)) * Math.cos((normY * 8.0) - (now * 0.003 * speed));
+          const flowNorm = (flowVal + 1) / 2;
+          brightFactor = (floor + (1 - floor) * Math.pow(flowNorm, 1.5)) * intensity;
+          const palettePos = (posX * 0.6) + (flowNorm * 0.4) - (now * 0.0003 * speed);
+          rgb = samplePaletteRgb(palette, palettePos, customRgb);
+          break;
+        }
+
+        case "qmk_pixel_fractal": {
+          const fx = Math.floor(normX * 32);
+          const fy = Math.floor(normY * 12);
+          const ft = Math.floor(now * 0.005 * speed);
+          const pattern = ((fx ^ fy ^ ft) % 8) / 8;
+          brightFactor = (floor + (1 - floor) * pattern) * intensity;
+          const palettePos = pattern + (now * 0.0002 * speed);
+          rgb = samplePaletteRgb(palette, palettePos, customRgb);
+          break;
+        }
+
+        case "qmk_starlight": {
+          const star = (this.starlightStars && i !== undefined && this.starlightStars[i]) ? this.starlightStars[i] : null;
+          const phase = star ? star.phase : 0;
+          const twinkle = Math.abs(Math.sin((now * 0.0015 * speed) + phase));
+          brightFactor = (floor + (1 - floor) * twinkle) * intensity;
+          rgb = samplePaletteRgb(palette, star ? star.hueOffset : 0.5, customRgb);
+          break;
+        }
+
+        case "qmk_starlight_smooth": {
+          const star = (this.starlightStars && i !== undefined && this.starlightStars[i]) ? this.starlightStars[i] : null;
+          const phase = star ? star.phase : 0;
+          const twinkle = Math.abs(Math.sin((now * 0.0015 * speed) + phase));
+          brightFactor = (floor + (1 - floor) * Math.pow(twinkle, 1.5)) * intensity;
+          const palettePos = (star ? star.hueOffset : 0.5) + (now * 0.0001 * speed);
+          rgb = samplePaletteRgb(palette, palettePos, customRgb);
+          break;
+        }
+
+        case "qmk_starlight_dual_hue": {
+          const star = (this.starlightStars && i !== undefined && this.starlightStars[i]) ? this.starlightStars[i] : null;
+          const phase = star ? star.phase : 0;
+          const twinkle = Math.abs(Math.sin((now * 0.0015 * speed) + phase));
+          brightFactor = (floor + (1 - floor) * Math.pow(twinkle, 1.5)) * intensity;
+          const palettePos = (star && star.isAlt) ? 0.15 : 0.65;
+          rgb = samplePaletteRgb(palette, palettePos, customRgb);
+          break;
+        }
+
+        // --- 🎨 QMK Bands & Gradients (Exact QMK Firmware Math) ---
+        case "qmk_gradient_up_down": {
+          const pos = (direction === "bottom_to_top") ? (1.0 - normY) : normY;
+          const palettePos = pos * (speed * 0.8);
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, palettePos, customRgb);
+          break;
+        }
+
+        case "qmk_gradient_left_right": {
+          const pos = (direction === "right_to_left") ? (1.0 - normX) : normX;
+          const palettePos = pos * (speed * 0.8);
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, palettePos, customRgb);
+          break;
+        }
+
+        case "qmk_colorband_sat": {
+          const time = (now * 0.00035 * speed * 256) % 256;
+          const t = (direction === "right_to_left") ? (255 - time) : time;
+          const x255 = (keyX * 228 / 224) + 28;
+          const diff = Math.abs(x255 - t);
+          const satVal = Math.max(0, 1.0 - (diff * 8.0 / 255.0));
+          const baseRgb = samplePaletteRgb(palette, normX, customRgb);
+          brightFactor = 1.0 * intensity;
+          rgb = lerpColor([255, 255, 255], baseRgb, satVal);
+          break;
+        }
+
+        case "qmk_colorband_val": {
+          const time = (now * 0.00035 * speed * 256) % 256;
+          const t = (direction === "right_to_left") ? (255 - time) : time;
+          const x255 = (keyX * 228 / 224) + 28;
+          const diff = Math.abs(x255 - t);
+          const val = Math.max(0, 1.0 - (diff * 8.0 / 255.0));
+          brightFactor = (floor + (1 - floor) * val) * intensity;
+          rgb = samplePaletteRgb(palette, normX, customRgb);
+          break;
+        }
+
+        case "qmk_colorband_pinwheel_sat": {
+          const rotDir = (direction === "ccw" || direction === "right_to_left") ? -1 : 1;
+          const time = rotDir * (now * 0.0004 * speed * 256);
+          const wave = ((time - qmkAngle * 3) % 256 + 256) % 256 / 255.0;
+          const baseRgb = samplePaletteRgb(palette, angleNorm, customRgb);
+          brightFactor = 1.0 * intensity;
+          rgb = lerpColor([255, 255, 255], baseRgb, wave);
+          break;
+        }
+
+        case "qmk_colorband_pinwheel_val": {
+          const rotDir = (direction === "ccw" || direction === "right_to_left") ? -1 : 1;
+          const time = rotDir * (now * 0.0004 * speed * 256);
+          const wave = ((time - qmkAngle * 3) % 256 + 256) % 256 / 255.0;
+          brightFactor = (floor + (1 - floor) * wave) * intensity;
+          rgb = samplePaletteRgb(palette, angleNorm, customRgb);
+          break;
+        }
+
+        case "qmk_colorband_spiral_sat": {
+          const rotDir = (direction === "ccw" || direction === "right_to_left") ? -1 : 1;
+          const time = rotDir * (now * 0.0004 * speed * 256);
+          const wave = ((qmkDist + time - qmkAngle) % 256 + 256) % 256 / 255.0;
+          const baseRgb = samplePaletteRgb(palette, angleNorm, customRgb);
+          brightFactor = 1.0 * intensity;
+          rgb = lerpColor([255, 255, 255], baseRgb, wave);
+          break;
+        }
+
+        case "qmk_colorband_spiral_val": {
+          const rotDir = (direction === "ccw" || direction === "right_to_left") ? -1 : 1;
+          const time = rotDir * (now * 0.0004 * speed * 256);
+          const wave = ((qmkDist + time - qmkAngle) % 256 + 256) % 256 / 255.0;
+          brightFactor = (floor + (1 - floor) * wave) * intensity;
+          rgb = samplePaletteRgb(palette, angleNorm, customRgb);
+          break;
+        }
+
+        case "qmk_solid_color": {
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, 0.5, customRgb);
+          break;
+        }
+
+        case "qmk_alphas_mods": {
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, isAlpha ? 0.15 : 0.65, customRgb);
+          break;
+        }
+
+        default: {
+          brightFactor = 1.0 * intensity;
+          rgb = samplePaletteRgb(palette, 0.5, customRgb);
+          break;
+        }
+      }
+
+      return { rgb, brightFactor };
     }
 
     _applyKeyRgb(k, r, g, b, brightFactor = 1.0) {
@@ -1504,10 +2056,12 @@
 
       const pickerAudioColor = document.getElementById("audioColorPicker");
       if (pickerAudioColor) {
-        pickerAudioColor.addEventListener("change", (e) => {
+        const onAudioColor = (e) => {
           this.config.audioCustomHex = e.target.value;
           this._saveConfig();
-        });
+        };
+        pickerAudioColor.addEventListener("input", onAudioColor);
+        pickerAudioColor.addEventListener("change", onAudioColor);
       }
 
       const sliderAudioSens = document.getElementById("audioSensitivitySlider");
@@ -1568,6 +2122,7 @@
       if (selEffect) {
         selEffect.addEventListener("change", (e) => {
           this.config.effectPreset = e.target.value;
+          this._updateDirectionOptionsForEffect(e.target.value);
           this._saveConfig();
         });
       }
@@ -1586,10 +2141,12 @@
 
       const pickerSoftColor = document.getElementById("softwareColorPicker");
       if (pickerSoftColor) {
-        pickerSoftColor.addEventListener("change", (e) => {
+        const onSoftColor = (e) => {
           this.config.softwareCustomHex = e.target.value;
           this._saveConfig();
-        });
+        };
+        pickerSoftColor.addEventListener("input", onSoftColor);
+        pickerSoftColor.addEventListener("change", onSoftColor);
       }
 
       const selSoftDir = document.getElementById("softwareDirectionSelect");

@@ -11,6 +11,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
   saveUserConfig: (cfg) => ipcRenderer.invoke("save-user-config", cfg),
   loadUserConfig: () => ipcRenderer.invoke("load-user-config"),
 
+  onAutostartChanged: (callback) => {
+    const handler = (event, enabled) => callback(enabled);
+    ipcRenderer.on("autostart-changed", handler);
+    return () => ipcRenderer.removeListener("autostart-changed", handler);
+  },
+
   // Firmware Flasher APIs
   getFlasherToolsStatus: () => ipcRenderer.invoke("flasher:get-tools-status"),
   selectFirmwareFile: () => ipcRenderer.invoke("flasher:select-firmware-file"),

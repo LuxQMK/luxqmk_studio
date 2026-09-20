@@ -26,7 +26,76 @@ app.commandLine.appendSwitch("disable-renderer-backgrounding");
 app.commandLine.appendSwitch("disable-background-timer-throttling");
 app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
 
+/**
+ * Detects whether the application should start silently in background / system tray.
+ * Returns true if launched with startup flags or triggered by OS login item.
+ */
+function shouldStartHidden() {
+  const args = process.argv || [];
+  const hiddenFlags = [
+    "--hidden",
+    "-hidden",
+    "/hidden",
+    "--autostart",
+    "-autostart",
+    "/autostart",
+    "--minimized",
+    "-minimized",
+    "/minimized"
+  ];
+  const hasHiddenFlag = args.some((arg) => hiddenFlags.includes(String(arg).toLowerCase()));
+  if (hasHiddenFlag) return true;
+
+  try {
+    const loginSettings = app.getLoginItemSettings();
+    if (loginSettings && (loginSettings.wasOpenedAsHidden || loginSettings.wasOpenedAtLogin)) {
+      return true;
+    }
+  } catch (e) {
+    // Ignore query error
+  }
+
+  return false;
+}
+
+/**
+ * Checks if autostart at login is currently registered in Windows registry.
+ */
+function isAutostartEnabled() {
+  try {
+    const withHidden = app.getLoginItemSettings({ args: ["--hidden", "--autostart"] });
+    if (withHidden && withHidden.openAtLogin) return true;
+    const withSingleArg = app.getLoginItemSettings({ args: ["--hidden"] });
+    if (withSingleArg && withSingleArg.openAtLogin) return true;
+    const standard = app.getLoginItemSettings();
+    if (standard && standard.openAtLogin) return true;
+  } catch (e) {
+    console.error("Failed to query autostart status:", e);
+  }
+  return false;
+}
+
+/**
+ * Configures autostart at login with hidden flags so Windows launches it silently in tray.
+ */
+function setAutostartState(enable) {
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: !!enable,
+      openAsHidden: true,
+      args: enable ? ["--hidden", "--autostart"] : []
+    });
+  } catch (e) {
+    console.error("Failed to set login item settings:", e);
+  }
+  return isAutostartEnabled();
+}
+
+let updateTrayMenuFn = null;
+
 function createWindow() {
+  const startHidden = shouldStartHidden();
+
   mainWindow = new BrowserWindow({
     width: 1360,
     height: 900,
@@ -36,6 +105,7 @@ function createWindow() {
     autoHideMenuBar: true,
     title: "LuxQMK Studio",
     icon: path.join(__dirname, "assets", "icon.png"),
+    show: false, // Initially false to prevent flicker; shown when ready if not startHidden
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
@@ -43,6 +113,15 @@ function createWindow() {
       backgroundThrottling: false // Keep RGB & Audio running at 60 FPS in background!
     }
   });
+
+  // Only show the window on startup if not starting hidden in tray
+  if (!startHidden) {
+    mainWindow.once("ready-to-show", () => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.show();
+      }
+    });
+  }
 
   // Enable WebHID permissions automatically
   const ses = mainWindow.webContents.session;
@@ -102,12 +181,13 @@ function createTray() {
   tray.setToolTip("LuxQMK Studio");
 
   const updateMenu = () => {
-    const isAutostart = app.getLoginItemSettings().openAtLogin;
+    const isAutostart = isAutostartEnabled();
     const contextMenu = Menu.buildFromTemplate([
       {
         label: "Otwórz LuxQMK Studio",
         click: () => {
           if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
             mainWindow.show();
             mainWindow.focus();
           }
@@ -119,11 +199,11 @@ function createTray() {
         type: "checkbox",
         checked: isAutostart,
         click: (menuItem) => {
-          app.setLoginItemSettings({
-            openAtLogin: menuItem.checked,
-            openAsHidden: true
-          });
+          setAutostartState(menuItem.checked);
           updateMenu();
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send("autostart-changed", menuItem.checked);
+          }
         }
       },
       { type: "separator" },
@@ -138,27 +218,41 @@ function createTray() {
     tray.setContextMenu(contextMenu);
   };
 
+  updateTrayMenuFn = updateMenu;
   updateMenu();
 
   tray.on("double-click", () => {
     if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.show();
       mainWindow.focus();
+    }
+  });
+
+  tray.on("click", () => {
+    if (mainWindow) {
+      if (mainWindow.isVisible()) {
+        mainWindow.focus();
+      } else {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+      }
     }
   });
 }
 
 // IPC Handlers
 ipcMain.handle("get-autostart", () => {
-  return app.getLoginItemSettings().openAtLogin;
+  return isAutostartEnabled();
 });
 
 ipcMain.handle("set-autostart", (event, enable) => {
-  app.setLoginItemSettings({
-    openAtLogin: !!enable,
-    openAsHidden: true
-  });
-  return app.getLoginItemSettings().openAtLogin;
+  const state = setAutostartState(enable);
+  if (updateTrayMenuFn) {
+    updateTrayMenuFn();
+  }
+  return state;
 });
 
 ipcMain.on("minimize-to-tray", () => {

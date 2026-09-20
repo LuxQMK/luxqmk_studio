@@ -1144,13 +1144,62 @@
               <div class="form-group">
                 <label data-i18n="lblSoftwareEffectPreset">Animation Engine & Preset</label>
                 <select id="softwareEffectSelect" class="form-control">
-                  <option value="neonWave" data-i18n="optEffectNeonWave">Cyber Neon Wave (Dynamic Plasma Gradient)</option>
-                  <option value="matrixRain" data-i18n="optEffectMatrixRain">Matrix Digital Rain (Phosphor Cascades)</option>
-                  <option value="particleStorm" data-i18n="optEffectParticleStorm">Particle Flow & Vortex (Floating Orbs)</option>
-                  <option value="aurora" data-i18n="optEffectAurora">Nordic Aurora Borealis (Polar Shimmer)</option>
-                  <option value="pulseBloom" data-i18n="optEffectPulseBloom">Radial Pulse Bloom (Center Shockwave)</option>
-                  <option value="fireEmber" data-i18n="optEffectFireEmber">Fire & Ember Storm (Rising Flame Sparks)</option>
-                  <option value="hyperspaceWarp" data-i18n="optEffectHyperspaceWarp">Hyperspace Warp (Cosmic Light Speed Tunnel)</option>
+                  <optgroup label="🌟 Signature PC Effects" data-i18n-label="optGroupSignature">
+                    <option value="neonWave" data-i18n="optEffectNeonWave">Cyber Neon Wave (Dynamic Plasma Gradient)</option>
+                    <option value="matrixRain" data-i18n="optEffectMatrixRain">Matrix Digital Rain (Phosphor Cascades)</option>
+                    <option value="particleStorm" data-i18n="optEffectParticleStorm">Particle Flow & Vortex (Floating Orbs)</option>
+                    <option value="aurora" data-i18n="optEffectAurora">Nordic Aurora Borealis (Polar Shimmer)</option>
+                    <option value="pulseBloom" data-i18n="optEffectPulseBloom">Radial Pulse Bloom (Center Shockwave)</option>
+                    <option value="fireEmber" data-i18n="optEffectFireEmber">Fire & Ember Storm (Rising Flame Sparks)</option>
+                    <option value="hyperspaceWarp" data-i18n="optEffectHyperspaceWarp">Hyperspace Warp (Cosmic Light Speed Tunnel)</option>
+                  </optgroup>
+
+                  <optgroup label="🌈 QMK Cycling & Radial" data-i18n-label="optGroupQmkCycling">
+                    <option value="qmk_cycle_all" data-i18n="optEffectQmkCycleAll">Cycle All (Full Keyboard Spectrum)</option>
+                    <option value="qmk_cycle_left_right" data-i18n="optEffectQmkCycleLeftRight">Cycle Left/Right (Rainbow Wave)</option>
+                    <option value="qmk_cycle_up_down" data-i18n="optEffectQmkCycleUpDown">Cycle Up/Down</option>
+                    <option value="qmk_rainbow_chevron" data-i18n="optEffectQmkRainbowChevron">Rainbow Moving Chevron (Directional V-Arrows)</option>
+                    <option value="qmk_cycle_out_in" data-i18n="optEffectQmkCycleOutIn">Cycle Out/In (Radial Wave)</option>
+                    <option value="qmk_cycle_out_in_dual" data-i18n="optEffectQmkCycleOutInDual">Cycle Out/In Dual (Dual Focal Centers)</option>
+                    <option value="qmk_cycle_pinwheel" data-i18n="optEffectQmkCyclePinwheel">Cycle Pinwheel (Rotating Turbine)</option>
+                    <option value="qmk_cycle_spiral" data-i18n="optEffectQmkCycleSpiral">Cycle Spiral (Logarithmic Spiral)</option>
+                    <option value="qmk_dual_beacon" data-i18n="optEffectQmkDualBeacon">Dual Beacon (Rotating Radar Beam)</option>
+                    <option value="qmk_rainbow_beacon" data-i18n="optEffectQmkRainbowBeacon">Rainbow Beacon (Sweeping Spotlight)</option>
+                    <option value="qmk_rainbow_pinwheels" data-i18n="optEffectQmkRainbowPinwheels">Rainbow Pinwheels (4 Synchronized Turbines)</option>
+                  </optgroup>
+
+                  <optgroup label="🌊 QMK Waves & Atmosphere" data-i18n-label="optGroupQmkWaves">
+                    <option value="qmk_hue_wave" data-i18n="optEffectQmkHueWave">Hue Wave (Sine Color Wave)</option>
+                    <option value="qmk_hue_pendulum" data-i18n="optEffectQmkHuePendulum">Hue Pendulum (Oscillating Harmonic Swing)</option>
+                    <option value="qmk_breathing" data-i18n="optEffectQmkBreathing">Breathing (Deep Brightness Pulse)</option>
+                    <option value="qmk_hue_breathing" data-i18n="optEffectQmkHueBreathing">Hue Breathing (Smooth Color Transitions)</option>
+                    <option value="qmk_flower_blooming" data-i18n="optEffectQmkFlowerBlooming">Flower Blooming (Radial Petal Bloom)</option>
+                    <option value="qmk_riverflow" data-i18n="optEffectQmkRiverflow">Riverflow (Flowing Stream)</option>
+                  </optgroup>
+
+                  <optgroup label="✨ QMK Drops & Particles" data-i18n-label="optGroupQmkParticles">
+                    <option value="qmk_raindrops" data-i18n="optEffectQmkRaindrops">Raindrops (Smooth Fading Drops)</option>
+                    <option value="qmk_jellybean_raindrops" data-i18n="optEffectQmkJellybeanRaindrops">Jellybean Raindrops (Vibrant Candy Drops)</option>
+                    <option value="qmk_pixel_rain" data-i18n="optEffectQmkPixelRain">Pixel Rain (Matrix Cascades)</option>
+                    <option value="qmk_pixel_flow" data-i18n="optEffectQmkPixelFlow">Pixel Flow (Micro-Particle Stream)</option>
+                    <option value="qmk_pixel_fractal" data-i18n="optEffectQmkPixelFractal">Pixel Fractal (Cellular Automata)</option>
+                    <option value="qmk_starlight" data-i18n="optEffectQmkStarlight">Starlight (Twinkling Night Sky)</option>
+                    <option value="qmk_starlight_smooth" data-i18n="optEffectQmkStarlightSmooth">Starlight Smooth (Soft Pulsing Stars)</option>
+                    <option value="qmk_starlight_dual_hue" data-i18n="optEffectQmkStarlightDualHue">Starlight Dual Hue (Two-Tone Starfield)</option>
+                  </optgroup>
+
+                  <optgroup label="🎨 QMK Bands & Gradients" data-i18n-label="optGroupQmkGradients">
+                    <option value="qmk_gradient_up_down" data-i18n="optEffectQmkGradientUpDown">Gradient Up/Down (Vertical Gradient)</option>
+                    <option value="qmk_gradient_left_right" data-i18n="optEffectQmkGradientLeftRight">Gradient Left/Right (Horizontal Gradient)</option>
+                    <option value="qmk_colorband_sat" data-i18n="optEffectQmkColorbandSat">Colorband Saturation (Traveling Saturation Waves)</option>
+                    <option value="qmk_colorband_val" data-i18n="optEffectQmkColorbandVal">Colorband Brightness (Traveling Brightness Waves)</option>
+                    <option value="qmk_colorband_pinwheel_sat" data-i18n="optEffectQmkColorbandPinwheelSat">Pinwheel Saturation (Turbine Saturation)</option>
+                    <option value="qmk_colorband_pinwheel_val" data-i18n="optEffectQmkColorbandPinwheelVal">Pinwheel Brightness (Turbine Brightness)</option>
+                    <option value="qmk_colorband_spiral_sat" data-i18n="optEffectQmkColorbandSpiralSat">Spiral Saturation (Vortex Saturation)</option>
+                    <option value="qmk_colorband_spiral_val" data-i18n="optEffectQmkColorbandSpiralVal">Spiral Brightness (Vortex Brightness)</option>
+                    <option value="qmk_solid_color" data-i18n="optEffectQmkSolidColor">Solid Color (Parametric Static Tint)</option>
+                    <option value="qmk_alphas_mods" data-i18n="optEffectQmkAlphasMods">Alphas & Modifiers (Distinct Dual Color Scheme)</option>
+                  </optgroup>
                 </select>
               </div>
 
@@ -1179,6 +1228,9 @@
                   <option value="top_to_bottom" data-i18n="optDirTopToBottom">Top to Bottom (Function Row -> Spacebar)</option>
                   <option value="center_out" data-i18n="optDirCenterOut">Center Outward (Radial Explosion)</option>
                   <option value="perimeter_in" data-i18n="optDirPerimeterIn">Perimeter Inward (Diffusers -> Center)</option>
+                  <option value="cw" data-i18n="optDirClockwise">Clockwise (Default)</option>
+                  <option value="ccw" data-i18n="optDirCounterClockwise">Counter-Clockwise (Reverse)</option>
+                  <option value="none" data-i18n="optDirNotApplicable">Not Applicable (Omnidirectional)</option>
                 </select>
               </div>
             </div>

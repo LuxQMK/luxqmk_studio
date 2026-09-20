@@ -64,6 +64,17 @@ test('LuxQMK Studio modular scripts exist and have valid syntax', () => {
   }
 });
 
+test('LuxQMK Studio Electron entry files (main.js, preload.js) exist and have valid syntax', () => {
+  const vm = require('vm');
+  const electronFiles = ['main.js', 'preload.js'];
+  for (const file of electronFiles) {
+    const filePath = path.join(STUDIO_DIR, file);
+    assert(fs.existsSync(filePath), `File ${file} must exist`);
+    const code = fs.readFileSync(filePath, 'utf-8');
+    assert.doesNotThrow(() => new vm.Script(code), `File ${file} has syntax error`);
+  }
+});
+
 test('LuxQMK Studio device drivers exist', () => {
   const devices = ['gmmk3.js', 'gmmk2.js', 'generic-via.js'];
   for (const dev of devices) {
@@ -115,7 +126,7 @@ test('100% of HTML data-i18n keys are translated in EN and PL dictionaries', () 
   const vm = require('vm');
   const html = fs.readFileSync(path.join(STUDIO_DIR, 'index.html'), 'utf8');
   const i18nJs = fs.readFileSync(path.join(STUDIO_DIR, 'js', 'i18n.js'), 'utf8');
-  const regex = /data-i18n="([^"]+)"/g;
+  const regex = /data-i18n(?:-title|-placeholder|-label)?="([^"]+)"/g;
   let match;
   const htmlKeys = new Set();
   while ((match = regex.exec(html)) !== null) {

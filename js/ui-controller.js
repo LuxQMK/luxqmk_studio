@@ -121,6 +121,20 @@
 
       // Autostart switch in App Settings Modal
       if (chkAppAutostartModal && window.electronAPI && window.electronAPI.isDesktop) {
+        if (typeof window.electronAPI.onAutostartChanged === "function") {
+          window.electronAPI.onAutostartChanged((isEnabled) => {
+            if (chkAppAutostartModal) chkAppAutostartModal.checked = isEnabled;
+            const chkDesktop = document.getElementById("chkDesktopAutostart");
+            if (chkDesktop) chkDesktop.checked = isEnabled;
+            if (lblAppAutostartStatus && window.i18n) {
+              lblAppAutostartStatus.textContent = isEnabled
+                ? window.i18n.t("lblAutostartStatusEnabled")
+                : window.i18n.t("lblAutostartStatusDisabled");
+              lblAppAutostartStatus.style.color = isEnabled ? "var(--accent-cyan)" : "var(--text-muted)";
+            }
+          });
+        }
+
         chkAppAutostartModal.addEventListener("change", async (e) => {
           try {
             const newState = await window.electronAPI.setAutostart(e.target.checked);

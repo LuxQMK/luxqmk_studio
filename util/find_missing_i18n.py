@@ -14,7 +14,8 @@ with open(os.path.join(SRC_DIR, "index.html"), "r", encoding="utf-8") as f:
 data_i18n_keys = set(re.findall(r'data-i18n=["\']([^"\']+)["\']', html))
 data_i18n_titles = set(re.findall(r'data-i18n-title=["\']([^"\']+)["\']', html))
 data_i18n_placeholders = set(re.findall(r'data-i18n-placeholder=["\']([^"\']+)["\']', html))
-all_html_keys = data_i18n_keys | data_i18n_titles | data_i18n_placeholders
+data_i18n_labels = set(re.findall(r'data-i18n-label=["\']([^"\']+)["\']', html))
+all_html_keys = data_i18n_keys | data_i18n_titles | data_i18n_placeholders | data_i18n_labels
 
 with open(os.path.join(SRC_DIR, "js", "i18n.js"), "r", encoding="utf-8") as f:
     i18n_code = f.read()
