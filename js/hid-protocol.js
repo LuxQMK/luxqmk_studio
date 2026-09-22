@@ -204,6 +204,14 @@
         throw new Error(window.i18n ? window.i18n.t("optNoDevices") : "No device specified");
       }
 
+      if (this.device && this.device !== targetDevice) {
+        try {
+          if (this.device.opened) {
+            await this.device.close();
+          }
+        } catch (e) { }
+      }
+
       this.cleanup();
       this.device = targetDevice;
 

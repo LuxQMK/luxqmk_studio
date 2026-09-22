@@ -819,7 +819,7 @@
       if (this.toastTimeout) clearTimeout(this.toastTimeout);
       this.toastTimeout = setTimeout(() => {
         toast.classList.remove("show");
-      }, 3500);
+      }, 4500);
     }
 
     _bindSidebarNav() {

@@ -247,6 +247,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       btnConnect && (btnConnect.disabled = true);
+
+      // Check already authorized/connected devices count on system
+      const authorized = await protocol.getAuthorizedDevices();
+      if (isCurrentlyConnected && authorized.length === 1 && protocol.getDeviceId(authorized[0]) === prevDevId) {
+        ui.showToast(window.i18n.t("toastNoOtherDevices", { name: prevDevName }), "info");
+        return;
+      }
+
       const dev = await protocol.requestAndConnect();
       if (dev) {
         const newDevId = protocol.getDeviceId(dev);
@@ -259,7 +267,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     } catch (err) {
       const errMsg = (err && err.message) ? err.message.toLowerCase() : "";
-      const isCancelled = errMsg.includes("cancel") || errMsg.includes("anulow") || errMsg.includes("no device selected") || errMsg.includes("nie wybrano");
+      const isCancelled = errMsg.includes("cancel") || errMsg.includes("anulow") || errMsg.includes("no device selected") || errMsg.includes("nie wybrano") || errMsg.includes("already open");
 
       if (isCancelled) {
         if (isCurrentlyConnected) {
