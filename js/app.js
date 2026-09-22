@@ -136,14 +136,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         itemBtn.className = `device-dropdown-item ${isCurrent ? "active" : ""}`;
         itemBtn.type = "button";
         itemBtn.innerHTML = `
-          <span class="item-icon">⌨️</span>
+          <span class="item-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"/></svg></span>
           <span class="item-name">${d.productName || "GMMK Keyboard"}</span>
-          ${isCurrent ? '<span class="item-check">✓</span>' : ''}
+          ${isCurrent ? '<span class="item-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>' : ''}
         `;
 
         itemBtn.addEventListener("click", async () => {
           closeDeviceDropdown();
-          if (isCurrent) return;
+          if (isCurrent) {
+            ui.showToast(window.i18n.t("toastDeviceAlreadyActive", { name: d.productName || "GMMK Keyboard" }), "info");
+            return;
+          }
           try {
             ui.showToast(window.i18n.t("toastSwitchingDevice"), "info");
             const dev = await protocol.connectDevice(d);
@@ -238,15 +241,33 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function triggerPairNewDevice() {
+    const isCurrentlyConnected = protocol.isConnected && protocol.device;
+    const prevDevId = isCurrentlyConnected ? protocol.getDeviceId(protocol.device) : null;
+    const prevDevName = isCurrentlyConnected ? (protocol.device.productName || "GMMK Keyboard") : null;
+
     try {
       btnConnect && (btnConnect.disabled = true);
       const dev = await protocol.requestAndConnect();
       if (dev) {
-        ui.showToast(window.i18n.t("toastNewConnected", { name: dev.productName || "GMMK Keyboard" }), "success");
-        await handleDeviceConnected(dev);
+        const newDevId = protocol.getDeviceId(dev);
+        if (isCurrentlyConnected && prevDevId && prevDevId === newDevId) {
+          ui.showToast(window.i18n.t("toastNoOtherDevices", { name: prevDevName }), "info");
+        } else {
+          ui.showToast(window.i18n.t("toastNewConnected", { name: dev.productName || "GMMK Keyboard" }), "success");
+          await handleDeviceConnected(dev);
+        }
       }
     } catch (err) {
-      if (err.message && !err.message.includes("cancel") && !err.message.includes("anulow")) {
+      const errMsg = (err && err.message) ? err.message.toLowerCase() : "";
+      const isCancelled = errMsg.includes("cancel") || errMsg.includes("anulow") || errMsg.includes("no device selected") || errMsg.includes("nie wybrano");
+
+      if (isCancelled) {
+        if (isCurrentlyConnected) {
+          ui.showToast(window.i18n.t("toastNoOtherDevices", { name: prevDevName }), "info");
+        } else {
+          ui.showToast(window.i18n.t("toastNoNewDeviceSelected"), "info");
+        }
+      } else {
         ui.showToast("Connection error: " + err.message, "error");
       }
     } finally {
