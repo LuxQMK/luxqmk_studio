@@ -44,6 +44,7 @@ def bundle():
         ("js/keycodes-db.js", os.path.join(SRC_DIR, "js", "keycodes-db.js")),
         ("js/i18n.js", os.path.join(SRC_DIR, "js", "i18n.js")),
         ("js/hid-protocol.js", os.path.join(SRC_DIR, "js", "hid-protocol.js")),
+        ("js/gradient-editor.js", os.path.join(SRC_DIR, "js", "gradient-editor.js")),
         ("js/keymap-editor.js", os.path.join(SRC_DIR, "js", "keymap-editor.js")),
         ("js/lighting-controller.js", os.path.join(SRC_DIR, "js", "lighting-controller.js")),
         ("js/audio-visualizer.js", os.path.join(SRC_DIR, "js", "audio-visualizer.js")),
