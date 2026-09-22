@@ -11864,6 +11864,31 @@ input:checked + .switch-slider:before {
       return hasRaw && !hasOSInterface;
     }
 
+    isSameDevice(d1, d2) {
+      if (!d1 || !d2) return false;
+      if (d1 === d2) return true;
+      const v1 = d1.vendorId || 0;
+      const p1 = d1.productId || 0;
+      const v2 = d2.vendorId || 0;
+      const p2 = d2.productId || 0;
+      if (v1 !== v2 || p1 !== p2) return false;
+      const s1 = (d1.serialNumber && String(d1.serialNumber).trim()) ? String(d1.serialNumber).trim() : null;
+      const s2 = (d2.serialNumber && String(d2.serialNumber).trim()) ? String(d2.serialNumber).trim() : null;
+      if (s1 && s2) return s1 === s2;
+      return true;
+    }
+
+    getUniqueDevices(devices) {
+      if (!Array.isArray(devices)) return [];
+      const unique = [];
+      for (const d of devices) {
+        if (!unique.some(u => this.isSameDevice(u, d))) {
+          unique.push(d);
+        }
+      }
+      return unique;
+    }
+
     getDeviceId(d, index = 0) {
       if (!d) return "";
       const v = (d.vendorId || 0).toString(16).padStart(4, "0");
@@ -22560,13 +22585,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   async function refreshDeviceList() {
-    const devices = await protocol.getAuthorizedDevices();
+    const rawDevices = await protocol.getAuthorizedDevices();
+    const devices = protocol.getUniqueDevices(rawDevices);
     if (!deviceDropdownList) return;
 
     deviceDropdownList.innerHTML = "";
 
     const isConnected = protocol.isConnected && protocol.device;
-    const currentId = isConnected ? protocol.getDeviceId(protocol.device) : null;
+    const currentDevice = isConnected ? protocol.device : null;
     const currentName = isConnected ? (protocol.device.productName || "GMMK Keyboard") : null;
 
     if (devices.length === 0) {
@@ -22582,9 +22608,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       deviceSelectorDot?.classList.remove("connected");
     } else {
-      devices.forEach((d, idx) => {
-        const id = protocol.getDeviceId(d, idx);
-        const isCurrent = isConnected && currentId === id;
+      devices.forEach((d) => {
+        const isCurrent = isConnected && protocol.isSameDevice(currentDevice, d);
 
         const itemBtn = document.createElement("button");
         itemBtn.className = `device-dropdown-item ${isCurrent ? "active" : ""}`;
@@ -22696,24 +22721,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function triggerPairNewDevice() {
     const isCurrentlyConnected = protocol.isConnected && protocol.device;
-    const prevDevId = isCurrentlyConnected ? protocol.getDeviceId(protocol.device) : null;
-    const prevDevName = isCurrentlyConnected ? (protocol.device.productName || "GMMK Keyboard") : null;
+    const currentDev = isCurrentlyConnected ? protocol.device : null;
+    const currentName = isCurrentlyConnected ? (protocol.device.productName || "GMMK Keyboard") : null;
 
     try {
       btnConnect && (btnConnect.disabled = true);
 
-      // Check already authorized/connected devices count on system
-      const authorized = await protocol.getAuthorizedDevices();
-      if (isCurrentlyConnected && authorized.length === 1 && protocol.getDeviceId(authorized[0]) === prevDevId) {
-        ui.showToast(window.i18n.t("toastNoOtherDevices", { name: prevDevName }), "info");
+      // Check unique physical devices currently recognized
+      const rawAuthorized = await protocol.getAuthorizedDevices();
+      const uniqueAuthorized = protocol.getUniqueDevices(rawAuthorized);
+
+      // If already connected and there are no other unique physical keyboards plugged in
+      if (isCurrentlyConnected && uniqueAuthorized.length <= 1) {
+        ui.showToast(window.i18n.t("toastNoOtherDevices", { name: currentName }), "info");
         return;
       }
 
       const dev = await protocol.requestAndConnect();
       if (dev) {
-        const newDevId = protocol.getDeviceId(dev);
-        if (isCurrentlyConnected && prevDevId && prevDevId === newDevId) {
-          ui.showToast(window.i18n.t("toastNoOtherDevices", { name: prevDevName }), "info");
+        if (isCurrentlyConnected && protocol.isSameDevice(currentDev, dev)) {
+          ui.showToast(window.i18n.t("toastNoOtherDevices", { name: currentName }), "info");
         } else {
           ui.showToast(window.i18n.t("toastNewConnected", { name: dev.productName || "GMMK Keyboard" }), "success");
           await handleDeviceConnected(dev);
@@ -22725,7 +22752,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (isCancelled) {
         if (isCurrentlyConnected) {
-          ui.showToast(window.i18n.t("toastNoOtherDevices", { name: prevDevName }), "info");
+          ui.showToast(window.i18n.t("toastNoOtherDevices", { name: currentName }), "info");
         } else {
           ui.showToast(window.i18n.t("toastNoNewDeviceSelected"), "info");
         }

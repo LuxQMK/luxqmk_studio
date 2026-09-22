@@ -180,6 +180,31 @@
       return hasRaw && !hasOSInterface;
     }
 
+    isSameDevice(d1, d2) {
+      if (!d1 || !d2) return false;
+      if (d1 === d2) return true;
+      const v1 = d1.vendorId || 0;
+      const p1 = d1.productId || 0;
+      const v2 = d2.vendorId || 0;
+      const p2 = d2.productId || 0;
+      if (v1 !== v2 || p1 !== p2) return false;
+      const s1 = (d1.serialNumber && String(d1.serialNumber).trim()) ? String(d1.serialNumber).trim() : null;
+      const s2 = (d2.serialNumber && String(d2.serialNumber).trim()) ? String(d2.serialNumber).trim() : null;
+      if (s1 && s2) return s1 === s2;
+      return true;
+    }
+
+    getUniqueDevices(devices) {
+      if (!Array.isArray(devices)) return [];
+      const unique = [];
+      for (const d of devices) {
+        if (!unique.some(u => this.isSameDevice(u, d))) {
+          unique.push(d);
+        }
+      }
+      return unique;
+    }
+
     getDeviceId(d, index = 0) {
       if (!d) return "";
       const v = (d.vendorId || 0).toString(16).padStart(4, "0");
