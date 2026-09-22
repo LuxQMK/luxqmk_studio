@@ -1,7 +1,8 @@
 const { app, BrowserWindow, Tray, Menu, ipcMain, desktopCapturer, session, shell, dialog } = require("electron");
 const fs = require("fs");
 const path = require("path");
-const { spawn } = require("child_process");
+const os = require("os");
+const { spawn, execSync } = require("child_process");
 
 let mainWindow = null;
 let tray = null;
@@ -27,8 +28,179 @@ app.commandLine.appendSwitch("disable-background-timer-throttling");
 app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
 
 /**
+ * Reads user-config.json safely from userData directory.
+ */
+function getUserConfig() {
+  try {
+    const userPath = app.getPath("userData");
+    const cfgFile = path.join(userPath, "user-config.json");
+    if (fs.existsSync(cfgFile)) {
+      return JSON.parse(fs.readFileSync(cfgFile, "utf-8")) || {};
+    }
+  } catch (e) {}
+  return {};
+}
+
+/**
+ * Updates user-config.json with a patch object.
+ */
+function persistUserConfigPatch(patch) {
+  try {
+    const userPath = app.getPath("userData");
+    if (!fs.existsSync(userPath)) {
+      fs.mkdirSync(userPath, { recursive: true });
+    }
+    const cfgFile = path.join(userPath, "user-config.json");
+    let existing = {};
+    if (fs.existsSync(cfgFile)) {
+      try {
+        existing = JSON.parse(fs.readFileSync(cfgFile, "utf-8")) || {};
+      } catch (e) {}
+    }
+    const updated = { ...existing, ...patch, lastUpdated: new Date().toISOString() };
+    fs.writeFileSync(cfgFile, JSON.stringify(updated, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Failed to patch user config:", e);
+  }
+}
+
+/**
+ * Checks if autostart at login is currently registered in Windows registry or app settings.
+ */
+function isAutostartEnabled() {
+  if (process.platform === "win32") {
+    try {
+      const out = execSync('reg query "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "LuxQMK Studio"', {
+        encoding: "utf-8",
+        windowsHide: true,
+        stdio: ["ignore", "pipe", "ignore"]
+      });
+      if (out && out.includes("LuxQMK Studio")) return true;
+    } catch (e) {}
+    try {
+      const outLegacy = execSync('reg query "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "electron.app.LuxQMK Studio"', {
+        encoding: "utf-8",
+        windowsHide: true,
+        stdio: ["ignore", "pipe", "ignore"]
+      });
+      if (outLegacy && outLegacy.includes("LuxQMK Studio")) return true;
+    } catch (e) {}
+  }
+
+  // Fallback to Electron API
+  try {
+    const withHidden = app.getLoginItemSettings({ args: ["--hidden", "--autostart"] });
+    if (withHidden && withHidden.openAtLogin) return true;
+    const withSingleArg = app.getLoginItemSettings({ args: ["--hidden"] });
+    if (withSingleArg && withSingleArg.openAtLogin) return true;
+    const standard = app.getLoginItemSettings();
+    if (standard && standard.openAtLogin) return true;
+  } catch (e) {}
+
+  // Check user config
+  const cfg = getUserConfig();
+  if (cfg.autostart === true) return true;
+
+  return false;
+}
+
+/**
+ * Configures autostart at login with hidden flags so Windows launches it silently in tray.
+ */
+function setAutostartState(enable) {
+  const isEnabled = !!enable;
+
+  if (process.platform === "win32") {
+    const exePath = process.execPath;
+    if (isEnabled) {
+      const cmd = `\\"${exePath}\\" --hidden --autostart`;
+      try {
+        execSync(`reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "LuxQMK Studio" /t REG_SZ /d "${cmd}" /f`, { windowsHide: true });
+        // Clean up legacy key if present to prevent unflagged duplicates
+        try {
+          execSync(`reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "electron.app.LuxQMK Studio" /f`, { windowsHide: true });
+        } catch (e) {}
+      } catch (err) {
+        console.error("Failed to add autostart registry entry via reg.exe:", err);
+      }
+    } else {
+      try {
+        execSync(`reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "LuxQMK Studio" /f`, { windowsHide: true });
+      } catch (e) {}
+      try {
+        execSync(`reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "electron.app.LuxQMK Studio" /f`, { windowsHide: true });
+      } catch (e) {}
+    }
+  }
+
+  // Also synchronize Electron's internal login item settings
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: isEnabled,
+      openAsHidden: true,
+      path: process.execPath,
+      args: isEnabled ? ["--hidden", "--autostart"] : []
+    });
+  } catch (e) {
+    console.error("Failed to set login item settings:", e);
+  }
+
+  // Persist preference in user-config.json
+  persistUserConfigPatch({ autostart: isEnabled });
+
+  return isAutostartEnabled();
+}
+
+/**
+ * Verifies and repairs the autostart registry entry on application boot if needed.
+ * Ensures that if autostart is enabled, it contains the mandatory `--hidden --autostart` flags.
+ */
+function ensureAutostartIntegrity() {
+  if (process.platform !== "win32") return;
+  try {
+    if (isAutostartEnabled()) {
+      let needsFix = false;
+      try {
+        const out = execSync('reg query "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "LuxQMK Studio"', {
+          encoding: "utf-8",
+          windowsHide: true,
+          stdio: ["ignore", "pipe", "ignore"]
+        });
+        if (!out.includes("--hidden") && !out.includes("--autostart")) {
+          needsFix = true;
+        }
+      } catch (e) {
+        needsFix = true; // Key was missing or in legacy name
+      }
+
+      // Check if legacy key is present
+      try {
+        const legacyOut = execSync('reg query "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "electron.app.LuxQMK Studio"', {
+          encoding: "utf-8",
+          windowsHide: true,
+          stdio: ["ignore", "pipe", "ignore"]
+        });
+        if (legacyOut) {
+          needsFix = true;
+        }
+      } catch (e) {}
+
+      if (needsFix) {
+        setAutostartState(true);
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to verify autostart integrity:", e);
+  }
+}
+
+/**
  * Detects whether the application should start silently in background / system tray.
- * Returns true if launched with startup flags or triggered by OS login item.
+ * Uses multi-layered detection:
+ * 1. Command-line flags (--hidden, --autostart, /hidden, --minimized, etc.)
+ * 2. Electron login item settings (wasOpenedAsHidden, wasOpenedAtLogin)
+ * 3. System Uptime Heuristic (launched within 5 min of system boot with autostart enabled)
+ * 4. User config flag (startMinimizedToTray)
  */
 function shouldStartHidden() {
   const args = process.argv || [];
@@ -41,54 +213,49 @@ function shouldStartHidden() {
     "/autostart",
     "--minimized",
     "-minimized",
-    "/minimized"
+    "/minimized",
+    "--background",
+    "-background",
+    "/background",
+    "--tray",
+    "-tray",
+    "/tray"
   ];
   const hasHiddenFlag = args.some((arg) => hiddenFlags.includes(String(arg).toLowerCase()));
-  if (hasHiddenFlag) return true;
+  if (hasHiddenFlag) {
+    console.log("[Startup] Starting hidden in system tray (Flag detected in process.argv).");
+    return true;
+  }
 
   try {
     const loginSettings = app.getLoginItemSettings();
     if (loginSettings && (loginSettings.wasOpenedAsHidden || loginSettings.wasOpenedAtLogin)) {
+      console.log("[Startup] Starting hidden in system tray (Electron login item detected).");
       return true;
     }
-  } catch (e) {
-    // Ignore query error
-  }
+  } catch (e) {}
 
-  return false;
-}
-
-/**
- * Checks if autostart at login is currently registered in Windows registry.
- */
-function isAutostartEnabled() {
+  // Heuristic: If autostart is enabled AND system was booted recently (within 5 minutes / 300s),
+  // this is an OS startup boot launch!
   try {
-    const withHidden = app.getLoginItemSettings({ args: ["--hidden", "--autostart"] });
-    if (withHidden && withHidden.openAtLogin) return true;
-    const withSingleArg = app.getLoginItemSettings({ args: ["--hidden"] });
-    if (withSingleArg && withSingleArg.openAtLogin) return true;
-    const standard = app.getLoginItemSettings();
-    if (standard && standard.openAtLogin) return true;
-  } catch (e) {
-    console.error("Failed to query autostart status:", e);
-  }
-  return false;
-}
+    const uptimeSec = os.uptime();
+    if (uptimeSec < 300 && isAutostartEnabled()) {
+      console.log(`[Startup] Starting hidden in system tray (System uptime ${Math.round(uptimeSec)}s < 300s & autostart enabled).`);
+      return true;
+    }
+  } catch (e) {}
 
-/**
- * Configures autostart at login with hidden flags so Windows launches it silently in tray.
- */
-function setAutostartState(enable) {
+  // Check user config preference for explicit start minimized
   try {
-    app.setLoginItemSettings({
-      openAtLogin: !!enable,
-      openAsHidden: true,
-      args: enable ? ["--hidden", "--autostart"] : []
-    });
-  } catch (e) {
-    console.error("Failed to set login item settings:", e);
-  }
-  return isAutostartEnabled();
+    const cfg = getUserConfig();
+    if (cfg.startMinimizedToTray === true) {
+      console.log("[Startup] Starting hidden in system tray (startMinimizedToTray configured).");
+      return true;
+    }
+  } catch (e) {}
+
+  console.log("[Startup] Starting visible window.");
+  return false;
 }
 
 let updateTrayMenuFn = null;
@@ -580,6 +747,7 @@ ipcMain.handle("flasher:flash-firmware", async (event, { filePath, toolType = "w
 });
 
 app.whenReady().then(() => {
+  ensureAutostartIntegrity();
   createWindow();
   createTray();
 
