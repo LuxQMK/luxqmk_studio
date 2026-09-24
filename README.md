@@ -1,6 +1,6 @@
-# LuxQMK Studio (v1.1.0)
+# LuxQMK Studio (v1.3.0)
 
-Professional WebHID / Desktop companion suite for real-time keymap remapping, lighting configuration, reactive effect layering, audio visualizers, raw HID diagnostics, and backup/restore workflows for keyboards running **LuxQMK** / **QMK Firmware** and the **VIA v12 Protocol**.
+Professional WebHID / Desktop companion suite for real-time keymap remapping, lighting configuration, reactive effect layering, multi-stop gradients, audio visualizers, raw HID diagnostics, and backup/restore workflows for keyboards running **LuxQMK** / **QMK Firmware** and the **VIA Protocol**.
 
 ---
 
@@ -8,19 +8,22 @@ Professional WebHID / Desktop companion suite for real-time keymap remapping, li
 
 - **Universal Dynamic VIA Layout Engine**: Native matrix rendering for 100%, 96%, 80% TKL, 75%, 65%, and 60% form factors (ANSI & ISO), plus on-the-fly custom VIA `design_layout.json` & QMK `keyboard.json` importing.
 - **Visual Keymap & Rotary Encoder Editor**: Interactive real-time keycode remapping across layers 0 to 2, full VIA keycode categories (Basic, Media, Macro, Layers, Special, Lighting, Custom), and rotary knob action configuration.
-- **Lighting Studio & Reactive Engine**: 1:1 parity with QMK RGB Matrix animation algorithms, custom Lux Wave & Cycle Dynamic modes, dual-layer reactive overlays, per-layer lighting, and Logo Badge / Sidelight controls.
-- **Web Audio Visualizer**: Real-time microphone/system audio frequency visualizer mapped to keyboard backlighting.
+- **Advanced Multi-Stop Gradient Engine**: Custom gradient designer supporting up to 8 color stops, CIE1931 perceptual lightness curve, spatial density controls, and EEPROM persistence.
+- **Sidelight & Underglow Suite**: Center-out wave dynamics, board-aware optical window calibration (GMMK 3, GMMK 2, Generic), density tuning, and independent color/speed control.
+- **Dual-Layer Reactive Lighting**: Real-time hardware layering for reactive effects (Fade, Splash, Rainbow Ripple, Cross, Nexus Star, Wide Wave, Typing Heatmap).
+- **Direct Lighting Atomic Streamer**: High-performance double-buffered direct LED streaming over WebHID for software animations.
+- **Web Audio Visualizer**: Real-time microphone/system audio frequency visualizer mapped to keyboard backlighting and sidelights.
 - **Live Keystroke & Matrix Tester**: Low-latency switch actuation tester with keycode logging and hit tracking.
-- **Hardware Profile & Capability Detection**: Auto-detects GMMK 3 (100%, 75%, 65%), GMMK 2 (96%, 65%), Keychron, and generic VIA/QMK keyboards, dynamically adapting peripheral UI elements.
+- **Hardware Profile & Capability Detection**: Auto-detects GMMK 3 (100%, 75%, 65%), GMMK 2 (96%, 65%), Keychron, and generic VIA/QMK keyboards.
 - **Full Settings Backup & Restore**: One-click JSON serialization and safe chunked restore for EEPROM settings.
-- **Multilingual Support (i18n)**: English (EN) and Polish (PL) localization with automatic browser detection and persistent preferences.
+- **Multilingual Support (i18n)**: 100% complete English (EN) and Polish (PL) localization with automatic browser detection and persistent preferences.
 
 ---
 
 ## 📁 Modular Architecture
 
 ```text
-luxqmk-studio/
+luxqmk_studio/
 ├── index.html               # Semantic HTML5 UI shell
 ├── css/
 │   ├── variables.css        # CSS design system tokens (colors, glow, radiuses)
@@ -30,20 +33,25 @@ luxqmk-studio/
 ├── js/
 │   ├── app.js               # Application bootstrap & event lifecycle
 │   ├── layout-data.js       # Universal physical layout definitions & VIA JSON parser
-│   ├── device-manager.js    # Multi-device detection and capability manager (v1.1.0)
+│   ├── device-manager.js    # Multi-device detection and capability manager
 │   ├── devices/             # Device hardware profile descriptors (gmmk3, gmmk2, generic-via)
-│   ├── hid-protocol.js      # Low-level WebHID communication layer (VIA v12 & Raw HID)
+│   ├── hid-protocol.js      # Low-level WebHID communication layer (VIA & Raw HID)
 │   ├── keycodes-db.js       # Comprehensive VIA / QMK keycodes database
 │   ├── keymap-editor.js     # Visual key remapping & encoder manager
 │   ├── lighting-controller.js# Real-time RGB visualizer and hardware sync engine
+│   ├── gradient-editor.js   # Multi-stop color stop designer with CIE1931 preview
 │   ├── audio-visualizer.js  # Web Audio API reactive spectrum visualizer
+│   ├── studio-lighting.js   # Studio direct streaming animation engine
 │   ├── key-tester.js        # Switch actuation tester & keycode history
 │   ├── backup-manager.js    # JSON configuration backup & restore engine
+│   ├── macro-manager.js     # QMK bytecode macro editor & recorder
+│   ├── firmware-flasher.js  # Integrated DFU flasher & bootloader trigger
 │   ├── ui-controller.js     # DOM controller, modal management, toasts, tabs
 │   └── i18n.js              # Internationalization dictionary & manager (EN/PL)
 ├── main.js                  # Electron desktop application main process
+├── preload.js               # Secure IPC bridge for Electron
 └── util/
-    ├── bundle_studio.py     # Standalone portable HTML bundler
+    ├── bundle_studio.py     # Standalone single-file HTML bundler
     └── update_companion_html.py
 ```
 
@@ -62,8 +70,11 @@ npm install
 # Start development app
 npm start
 
-# Build portable and installer executables (.exe)
-npm run dist
+# Run comprehensive test suite
+npm test
+
+# Build NSIS Windows Installer (.exe)
+npm run dist:installer
 ```
 
 ---
