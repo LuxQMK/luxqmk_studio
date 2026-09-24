@@ -70,6 +70,13 @@
     PERKEY_PROFILE_SAVE_EEPROM: 40,
     PERKEY_PROFILE_ACTIVE: 41,
     RELOAD_EEPROM: 42,
+    SIDELIGHT_ENABLE: 43,
+    SIDELIGHT_MODE: 44,
+    SIDELIGHT_COLOR: 45,
+    SIDELIGHT_SPEED: 46,
+    SIDELIGHT_GRADIENT: 47,
+    SIDELIGHT_REVERSE: 48,
+    SIDELIGHT_DENSITY: 49,
     BOOTLOADER_JUMP: 0xFE
   };
 
@@ -550,7 +557,7 @@
         const major = res[3];
         const minor = res[4];
         const patch = res[5];
-        const capFlags = res[6] || 0;
+        const capFlags = (res[6] || 0) | ((res[7] || 0) << 8);
         return {
           major,
           minor,
@@ -565,7 +572,8 @@
             heatmap: (capFlags & 0x20) !== 0,
             directLighting: (capFlags & 0x40) !== 0,
             multiGradients: (capFlags & 0x80) !== 0,
-            perKeyProfiles: (capFlags & 0x100) !== 0 || (major > 0 || minor > 2 || (minor === 2 && patch >= 1))
+            sidelights: (capFlags & 0x100) !== 0 || (major > 0 || minor >= 3),
+            perKeyProfiles: (capFlags & 0x200) !== 0 || (major > 0 || minor > 2 || (minor === 2 && patch >= 1))
           }
         };
       } catch (e) {
@@ -773,6 +781,82 @@
           CUSTOM_VAL.PERKEY_PROFILE_ACTIVE,
           profileIdx
         ]);
+      } catch (e) { }
+    }
+
+    // --- Sidelight (Underglow Lightbar) Controls ---
+    async getSidelightConfig() {
+      if (!this.isConnected) return null;
+      try {
+        const enRes = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_ENABLE);
+        const modeRes = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_MODE);
+        const colorRes = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_COLOR);
+        const speedRes = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_SPEED);
+        const gradRes = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_GRADIENT);
+        const revRes = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_REVERSE);
+        const densRes = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_DENSITY);
+
+        return {
+          enable: (enRes && enRes[0] !== 0xFF && enRes[1] === CHANNELS.CUSTOM && enRes[2] === CUSTOM_VAL.SIDELIGHT_ENABLE) ? (enRes[3] === 1) : false,
+          mode: (modeRes && modeRes[0] !== 0xFF && modeRes[1] === CHANNELS.CUSTOM && modeRes[2] === CUSTOM_VAL.SIDELIGHT_MODE) ? modeRes[3] : 0,
+          hue: (colorRes && colorRes[0] !== 0xFF && colorRes[1] === CHANNELS.CUSTOM && colorRes[2] === CUSTOM_VAL.SIDELIGHT_COLOR) ? colorRes[3] : 0,
+          sat: (colorRes && colorRes[0] !== 0xFF && colorRes[1] === CHANNELS.CUSTOM && colorRes[2] === CUSTOM_VAL.SIDELIGHT_COLOR) ? colorRes[4] : 255,
+          speed: (speedRes && speedRes[0] !== 0xFF && speedRes[1] === CHANNELS.CUSTOM && speedRes[2] === CUSTOM_VAL.SIDELIGHT_SPEED) ? speedRes[3] : 128,
+          gradient: (gradRes && gradRes[0] !== 0xFF && gradRes[1] === CHANNELS.CUSTOM && gradRes[2] === CUSTOM_VAL.SIDELIGHT_GRADIENT) ? gradRes[3] : 0,
+          reverse: (revRes && revRes[0] !== 0xFF && revRes[1] === CHANNELS.CUSTOM && revRes[2] === CUSTOM_VAL.SIDELIGHT_REVERSE) ? (revRes[3] === 1) : false,
+          density: (densRes && densRes[0] !== 0xFF && densRes[1] === CHANNELS.CUSTOM && densRes[2] === CUSTOM_VAL.SIDELIGHT_DENSITY) ? (densRes[3] || 128) : 128
+        };
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async setSidelightEnable(enable) {
+      if (!this.isConnected) return;
+      try {
+        await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_ENABLE, enable ? 1 : 0]);
+      } catch (e) { }
+    }
+
+    async setSidelightMode(mode) {
+      if (!this.isConnected) return;
+      try {
+        await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_MODE, mode]);
+      } catch (e) { }
+    }
+
+    async setSidelightColor(h, s) {
+      if (!this.isConnected) return;
+      try {
+        await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_COLOR, h, s]);
+      } catch (e) { }
+    }
+
+    async setSidelightSpeed(speed) {
+      if (!this.isConnected) return;
+      try {
+        await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_SPEED, speed]);
+      } catch (e) { }
+    }
+
+    async setSidelightGradient(gradId) {
+      if (!this.isConnected) return;
+      try {
+        await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_GRADIENT, gradId]);
+      } catch (e) { }
+    }
+
+    async setSidelightReverse(reverse) {
+      if (!this.isConnected) return;
+      try {
+        await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_REVERSE, reverse ? 1 : 0]);
+      } catch (e) { }
+    }
+
+    async setSidelightDensity(density) {
+      if (!this.isConnected) return;
+      try {
+        await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_DENSITY, density || 128]);
       } catch (e) { }
     }
   }

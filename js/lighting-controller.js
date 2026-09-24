@@ -206,7 +206,14 @@
             this._generateDefaultPerKeyProfile(0), // FPS Gaming
             this._generateDefaultPerKeyProfile(1), // MOBA Gaming
             this._generateDefaultPerKeyProfile(2)  // MMO / RPG
-          ]
+          ],
+          sidelightCustomEnable: false,
+          sidelightMode: 1,
+          sidelightColor: [0, 255],
+          sidelightSpeed: 128,
+          sidelightGradient: 0,
+          sidelightReverse: false,
+          sidelightDensity: 128
         },
         monochrome: {
           enabled: true,
@@ -1781,9 +1788,14 @@
         for (let sIdx = 0; sIdx < this.sideDiffusers.length; sIdx++) {
           const sd = this.sideDiffusers[sIdx];
           if (!sd) continue;
-          const res = this._evalQmkEffect(effect, sd, tByte, baseH, baseS, baseV, rev, now, speed);
-          let v = res.v * (isLayerActive ? layerDim : 1.0);
-          const rgb = res.rgb ? res.rgb : this._hsvToRgb(res.h, res.s, v);
+          let rgb;
+          if (this.state.custom.sidelightCustomEnable && this.state.custom.sidelightMode > 0) {
+            rgb = this._evalSidelightEffect(sd, now, brightness);
+          } else {
+            const res = this._evalQmkEffect(effect, sd, tByte, baseH, baseS, baseV, rev, now, speed);
+            let v = res.v * (isLayerActive ? layerDim : 1.0);
+            rgb = res.rgb ? res.rgb : this._hsvToRgb(res.h, res.s, v);
+          }
 
           const sdTargets = sd.lightingEls || [sd.el];
           for (let t = 0; t < sdTargets.length; t++) {
@@ -1802,6 +1814,141 @@
         if (this.isVisualizerRunning) {
           this.animFrameId = requestAnimationFrame(this._tickBound);
         }
+      }
+    }
+
+    _evalSidelightEffect(sd, now, brightness) {
+      const mode = Number(this.state.custom.sidelightMode) || 1;
+      const speed = Number(this.state.custom.sidelightSpeed) || 128;
+      // Exact 1:1 parity with QMK uint8_t speed_scaled = qadd8(g_sidelight_speed / 4, 1);
+      const speedScaled = Math.floor(speed / 4) + 1;
+      // Exact 1:1 parity with QMK scale16by8(g_rgb_timer, speed_scaled) -> (now * speedScaled) / 256
+      const t = Math.round((now * speedScaled) / 256) & 0xFF;
+
+      const color = Array.isArray(this.state.custom.sidelightColor) ? this.state.custom.sidelightColor : [0, 255];
+      const hue = Number.isFinite(color[0]) ? color[0] : 0;
+      const sat = Number.isFinite(color[1]) ? color[1] : 255;
+      const gradPreset = Number(this.state.custom.sidelightGradient) || 0;
+      const rev = Boolean(this.state.custom.sidelightReverse);
+      const density = Number(this.state.custom.sidelightDensity) || 128;
+      const baseV = 255 * brightness;
+
+      // Exact 1:1 physical optical calibration (Left: visible 1..8, Right: visible 2..9)
+      let yScaled = 0;
+      let distScaled = 0;
+      let optStep = 0;
+      let isHidden = false;
+
+      if (sd.id && sd.id.startsWith("SLED")) {
+        const num = parseInt(sd.id.replace("SLED", ""), 10);
+        if (num >= 1 && num <= 10) {
+          // Left: 0..9 (visible: 1..8)
+          const kLeft = num - 1;
+          if (kLeft < 1 || kLeft > 8) isHidden = true;
+          const normLeft = Math.max(0, Math.min(7, kLeft - 1));
+          optStep = normLeft;
+          yScaled = Math.round((normLeft * 255 * density) / (7 * 128)) & 0xFF;
+          const distSym = Math.min(7, Math.abs(2 * kLeft - 9));
+          distScaled = Math.round((distSym * 255 * density) / (7 * 128)) & 0xFF;
+        } else if (num >= 11 && num <= 20) {
+          // Right: 0..9 (visible: 2..9)
+          const kRight = 20 - num;
+          if (kRight < 2 || kRight > 9) isHidden = true;
+          const normRight = Math.max(0, Math.min(7, kRight - 2));
+          optStep = normRight;
+          yScaled = Math.round((normRight * 255 * density) / (7 * 128)) & 0xFF;
+          const distSym = Math.min(7, Math.abs(2 * kRight - 11));
+          distScaled = Math.round((distSym * 255 * density) / (7 * 128)) & 0xFF;
+        }
+      }
+
+      switch (mode) {
+        case 1: // SOLID_COLOR
+          return this._hsvToRgb(hue, sat, baseV);
+
+        case 2: // BREATHING (1:1 QMK scale8(abs8(sin8(time)), val))
+          {
+            const breathSin = Math.abs(Math.sin((t / 256) * Math.PI * 2));
+            return this._hsvToRgb(hue, sat, baseV * breathSin);
+          }
+
+        case 3: // CYCLE_RAINBOW
+          {
+            const phase = (rev ? (255 - t) : t) & 0xFF;
+            return this._hsvToRgb(phase, 255, baseV);
+          }
+
+        case 4: // RAINBOW_WAVE (Top to Bottom normal, Bottom to Top reversed)
+          {
+            const phase = (t + (rev ? yScaled : (256 - yScaled)) + hue) % 256;
+            return this._hsvToRgb(phase, 255, baseV);
+          }
+
+        case 5: // RAINBOW_CENTER_WAVE (Center Outward normal, Outward into Center reversed)
+          {
+            const phase = (t + (rev ? distScaled : (256 - distScaled)) + hue) % 256;
+            return this._hsvToRgb(phase, 255, baseV);
+          }
+
+        case 6: // GRADIENT_WAVE (Top to Bottom normal, Bottom to Top reversed)
+          {
+            const phase = (t + (rev ? yScaled : (256 - yScaled))) % 256;
+            return this._sampleGradientRgb(gradPreset, phase, brightness, 1.0);
+          }
+
+        case 7: // GRADIENT_CENTER_WAVE (Center Outward normal, Outward into Center reversed)
+          {
+            const phase = (t + (rev ? distScaled : (256 - distScaled))) % 256;
+            return this._sampleGradientRgb(gradPreset, phase, brightness, 1.0);
+          }
+
+        case 8: // GRADIENT_CYCLE
+          {
+            const phase = (rev ? (255 - t) : t) & 0xFF;
+            return this._sampleGradientRgb(gradPreset, phase, brightness, 1.0);
+          }
+
+        case 9: // GRADIENT_BREATHE
+          {
+            const gradSpeedScaled = Math.floor(speed / 16) + 1;
+            const tGrad = Math.round((now * gradSpeedScaled) / 256) & 0xFF;
+            const breathSin = Math.abs(Math.sin((t / 256) * Math.PI * 2));
+            return this._sampleGradientRgb(gradPreset, tGrad, brightness * breathSin, 1.0);
+          }
+
+        case 10: // SINGLE_WAVE (1:1 QMK sin8(time + ...))
+          {
+            const wavePhase = (t + (rev ? yScaled : (256 - yScaled))) & 0xFF;
+            const waveSin = 0.5 + 0.5 * Math.sin((wavePhase / 256) * Math.PI * 2);
+            return this._hsvToRgb(hue, sat, baseV * waveSin);
+          }
+
+        case 11: // DIAGNOSTIC OPTICAL CALIBRATION
+          {
+            if (isHidden) return { r: 0, g: 0, b: 0 };
+            const diagColors = [
+              { r: 255, g: 0, b: 0 },     // 0: Red (Visible Top on BOTH strips)
+              { r: 255, g: 128, b: 0 },   // 1: Orange
+              { r: 255, g: 255, b: 0 },   // 2: Yellow
+              { r: 0, g: 255, b: 0 },     // 3: Green (Visible Center 1)
+              { r: 0, g: 255, b: 0 },     // 4: Green (Visible Center 2)
+              { r: 0, g: 255, b: 255 },   // 5: Cyan
+              { r: 255, g: 0, b: 255 },   // 6: Magenta
+              { r: 0, g: 0, b: 255 }      // 7: Blue (Visible Bottom on BOTH strips)
+            ];
+            const col = diagColors[Math.min(7, Math.max(0, optStep))];
+            return {
+              r: Math.round((col.r * baseV) / 255),
+              g: Math.round((col.g * baseV) / 255),
+              b: Math.round((col.b * baseV) / 255)
+            };
+          }
+
+        case 12: // OFF
+          return { r: 0, g: 0, b: 0 };
+
+        default:
+          return this._hsvToRgb(hue, sat, baseV);
       }
     }
 
@@ -2118,6 +2265,24 @@
           console.warn("Could not load per-key profiles from device:", err);
         }
 
+        // Sidelight (Underglow lightbars) custom configuration
+        try {
+          if (typeof this.protocol.getSidelightConfig === "function") {
+            const sideCfg = await this.protocol.getSidelightConfig();
+            if (sideCfg) {
+              this.state.custom.sidelightCustomEnable = sideCfg.enable;
+              this.state.custom.sidelightMode = sideCfg.mode || 1;
+              this.state.custom.sidelightColor = [sideCfg.hue, sideCfg.sat];
+              this.state.custom.sidelightSpeed = sideCfg.speed || 128;
+              this.state.custom.sidelightGradient = sideCfg.gradient || 0;
+              this.state.custom.sidelightReverse = sideCfg.reverse;
+              this.state.custom.sidelightDensity = sideCfg.density || 128;
+            }
+          }
+        } catch (err) {
+          console.warn("Could not load sidelight config from device:", err);
+        }
+
         if (this.hardwareGradientEditor) {
           const activeProfIdx = (this.state.custom.activeGradient === 9) ? 1 : 0;
           if (this.state.custom.customProfiles && this.state.custom.customProfiles[activeProfIdx]) {
@@ -2242,6 +2407,53 @@
       const reverseWrap = document.getElementById("rgbReverseWrap");
       if (reverseWrap) {
         reverseWrap.style.display = isPerKeyActive ? "none" : "flex";
+      }
+
+      // Sidelight (Underglow lightbars) UI
+      const chkSidelight = document.getElementById("chkSidelightCustomEnable");
+      if (chkSidelight) chkSidelight.checked = !!this.state.custom.sidelightCustomEnable;
+
+      const sidelightSettings = document.getElementById("sidelightSettingsContainer");
+      if (sidelightSettings) {
+        sidelightSettings.style.display = this.state.custom.sidelightCustomEnable ? "block" : "none";
+      }
+
+      const selSidelightEffect = document.getElementById("sidelightEffectSelect");
+      if (selSidelightEffect) selSidelightEffect.value = this.state.custom.sidelightMode || 1;
+
+      const sliderSidelightSpd = document.getElementById("sidelightSpeedSlider");
+      if (sliderSidelightSpd) sliderSidelightSpd.value = this.state.custom.sidelightSpeed || 128;
+      const lblSidelightSpd = document.getElementById("sidelightSpdVal");
+      if (lblSidelightSpd) lblSidelightSpd.textContent = this.state.custom.sidelightSpeed || 128;
+
+      const sliderSidelightDens = document.getElementById("sidelightDensitySlider");
+      if (sliderSidelightDens) sliderSidelightDens.value = this.state.custom.sidelightDensity ?? 128;
+      const lblSidelightDens = document.getElementById("sidelightDensityVal");
+      if (lblSidelightDens) lblSidelightDens.textContent = this.state.custom.sidelightDensity ?? 128;
+
+      const colorSidelight = document.getElementById("sidelightColorPicker");
+      if (colorSidelight && Array.isArray(this.state.custom.sidelightColor)) {
+        colorSidelight.value = this._hsToHex(this.state.custom.sidelightColor[0], this.state.custom.sidelightColor[1]);
+      }
+
+      const selSidelightGrad = document.getElementById("sidelightGradientPresetSelect");
+      if (selSidelightGrad) selSidelightGrad.value = this.state.custom.sidelightGradient || 0;
+
+      const chkSidelightRev = document.getElementById("chkSidelightReverse");
+      if (chkSidelightRev) chkSidelightRev.checked = !!this.state.custom.sidelightReverse;
+
+      const sideMode = Number(this.state.custom.sidelightMode) || 1;
+      const sideColorGrp = document.getElementById("sidelightColorGroup");
+      if (sideColorGrp) {
+        sideColorGrp.style.display = (sideMode === 1 || sideMode === 2 || sideMode === 4 || sideMode === 5 || sideMode === 10) ? "block" : "none";
+      }
+      const sideGradGrp = document.getElementById("sidelightGradientGroup");
+      if (sideGradGrp) {
+        sideGradGrp.style.display = (sideMode === 6 || sideMode === 7 || sideMode === 8 || sideMode === 9) ? "block" : "none";
+      }
+      const sideDensGrp = document.getElementById("sidelightDensityGroup");
+      if (sideDensGrp) {
+        sideDensGrp.style.display = (sideMode === 4 || sideMode === 5 || sideMode === 6 || sideMode === 7 || sideMode === 10) ? "block" : "none";
       }
 
       // Reactive Layer UI
@@ -2446,6 +2658,7 @@
     setControlsEnabled(enabled) {
       const controlIds = [
         "rgbBrightnessSlider", "rgbEffectSelect", "rgbSpeedSlider", "rgbDensitySlider", "rgbColorPicker", "chkRgbReverse",
+        "chkSidelightCustomEnable", "sidelightEffectSelect", "sidelightSpeedSlider", "sidelightDensitySlider", "sidelightColorPicker", "sidelightGradientPresetSelect", "chkSidelightReverse",
         "chkReactiveEnable", "reactiveModeSelect", "reactiveColorPicker", "reactiveSpeedSlider", "reactiveBlendSelect",
         "winLockModeSelect", "winLockColorPicker", "chkWinLockToggle",
         "chkLayerLighting", "layerDimSlider", "layer1ColorPicker", "layer2ColorPicker", "layer3ColorPicker",
@@ -2601,6 +2814,108 @@
         this._markUnsaved("lighting");
         if (this.protocol && this.protocol.device) {
           await this.protocol.setCustomValue(C.CHANNELS.CUSTOM, C.CUSTOM_VAL.RGB_REVERSE, val);
+        }
+      });
+
+      // Sidelight (Underglow Lightbars) Events
+      document.getElementById("chkSidelightCustomEnable")?.addEventListener("change", async (e) => {
+        const isEnabled = e.target.checked;
+        this.state.custom.sidelightCustomEnable = isEnabled;
+        this._markUnsaved("lighting");
+        const settingsWrap = document.getElementById("sidelightSettingsContainer");
+        if (settingsWrap) {
+          settingsWrap.style.display = isEnabled ? "block" : "none";
+        }
+        if (this.protocol && this.protocol.device && typeof this.protocol.setSidelightEnable === "function") {
+          await this.protocol.setSidelightEnable(isEnabled);
+        }
+      });
+
+      document.getElementById("sidelightEffectSelect")?.addEventListener("change", async (e) => {
+        const val = parseInt(e.target.value, 10);
+        this.state.custom.sidelightMode = val;
+        this._markUnsaved("lighting");
+        const sideColorGrp = document.getElementById("sidelightColorGroup");
+        if (sideColorGrp) {
+          sideColorGrp.style.display = (val === 1 || val === 2 || val === 4 || val === 5 || val === 10) ? "block" : "none";
+        }
+        const sideGradGrp = document.getElementById("sidelightGradientGroup");
+        if (sideGradGrp) {
+          sideGradGrp.style.display = (val === 6 || val === 7 || val === 8 || val === 9) ? "block" : "none";
+        }
+        const sideDensGrp = document.getElementById("sidelightDensityGroup");
+        if (sideDensGrp) {
+          sideDensGrp.style.display = (val === 4 || val === 5 || val === 6 || val === 7 || val === 10) ? "block" : "none";
+        }
+        if (this.protocol && this.protocol.device && typeof this.protocol.setSidelightMode === "function") {
+          await this.protocol.setSidelightMode(val);
+        }
+      });
+
+      document.getElementById("sidelightSpeedSlider")?.addEventListener("input", (e) => {
+        const val = parseInt(e.target.value, 10);
+        this.state.custom.sidelightSpeed = val;
+        this._markUnsaved("lighting");
+        const lbl = document.getElementById("sidelightSpdVal");
+        if (lbl) lbl.textContent = val;
+        if (this.protocol && this.protocol.device && typeof this.protocol.setSidelightSpeed === "function") {
+          this._throttleHid("sidelight_spd", async () => {
+            await this.protocol.setSidelightSpeed(val);
+          }, 80);
+        }
+      });
+
+      document.getElementById("sidelightSpeedSlider")?.addEventListener("change", async () => {
+        this._markUnsaved("lighting");
+        if (this.protocol && this.protocol.device && typeof this.protocol.setSidelightSpeed === "function") {
+          await this.protocol.setSidelightSpeed(this.state.custom.sidelightSpeed);
+        }
+      });
+
+      document.getElementById("sidelightDensitySlider")?.addEventListener("input", (e) => {
+        const val = parseInt(e.target.value, 10);
+        this.state.custom.sidelightDensity = val;
+        this._markUnsaved("lighting");
+        const lbl = document.getElementById("sidelightDensityVal");
+        if (lbl) lbl.textContent = val;
+        if (this.protocol && this.protocol.device && typeof this.protocol.setSidelightDensity === "function") {
+          this._throttleHid("sidelight_density", async () => {
+            await this.protocol.setSidelightDensity(val);
+          }, 80);
+        }
+      });
+
+      document.getElementById("sidelightDensitySlider")?.addEventListener("change", async () => {
+        this._markUnsaved("lighting");
+        if (this.protocol && this.protocol.device && typeof this.protocol.setSidelightDensity === "function") {
+          await this.protocol.setSidelightDensity(this.state.custom.sidelightDensity);
+        }
+      });
+
+      document.getElementById("sidelightColorPicker")?.addEventListener("change", async (e) => {
+        const [h, s] = this._hexToHs(e.target.value);
+        this.state.custom.sidelightColor = [h, s];
+        this._markUnsaved("lighting");
+        if (this.protocol && this.protocol.device && typeof this.protocol.setSidelightColor === "function") {
+          await this.protocol.setSidelightColor(h, s);
+        }
+      });
+
+      document.getElementById("sidelightGradientPresetSelect")?.addEventListener("change", async (e) => {
+        const val = parseInt(e.target.value, 10);
+        this.state.custom.sidelightGradient = val;
+        this._markUnsaved("lighting");
+        if (this.protocol && this.protocol.device && typeof this.protocol.setSidelightGradient === "function") {
+          await this.protocol.setSidelightGradient(val);
+        }
+      });
+
+      document.getElementById("chkSidelightReverse")?.addEventListener("change", async (e) => {
+        const isRev = e.target.checked;
+        this.state.custom.sidelightReverse = isRev;
+        this._markUnsaved("lighting");
+        if (this.protocol && this.protocol.device && typeof this.protocol.setSidelightReverse === "function") {
+          await this.protocol.setSidelightReverse(isRev);
         }
       });
 

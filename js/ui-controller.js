@@ -429,17 +429,13 @@
     }
 
     _initUnsavedChangesBanner() {
-      const btnSaveFloating = document.getElementById("btnFloatingSaveEEPROM");
-      if (btnSaveFloating) {
-        btnSaveFloating.addEventListener("click", () => this.saveAllToEEPROM());
-      }
-      const btnDiscardFloating = document.getElementById("btnDiscardChangesBanner");
-      if (btnDiscardFloating) {
-        btnDiscardFloating.addEventListener("click", () => this.discardAllUnsavedChanges());
-      }
       const btnTopBarSave = document.getElementById("btnTopBarSave");
       if (btnTopBarSave) {
         btnTopBarSave.addEventListener("click", () => this.saveAllToEEPROM());
+      }
+      const btnTopBarDiscard = document.getElementById("btnTopBarDiscard");
+      if (btnTopBarDiscard) {
+        btnTopBarDiscard.addEventListener("click", () => this.discardAllUnsavedChanges());
       }
 
       window.addEventListener("beforeunload", (e) => {
@@ -479,7 +475,6 @@
     }
 
     _updateUnsavedUI() {
-      const banner = document.getElementById("unsavedChangesBanner");
       const topBarBadge = document.getElementById("topBarUnsavedBadge");
 
       // 1. Update pulsating highlight on lighting save buttons
@@ -508,32 +503,9 @@
         perfBtn.classList.toggle("btn-save-eeprom-pulse", Boolean(this.unsavedDomains.performance));
       }
 
-      // 5. Update global banner and top bar indicator
-      if (this.hasUnsavedChanges) {
-        if (topBarBadge) topBarBadge.style.display = "inline-flex";
-        if (banner) {
-          banner.classList.remove("saved-success");
-          banner.classList.add("visible");
-          const title = document.getElementById("unsavedBannerTitle");
-          const sub = document.getElementById("unsavedBannerSub");
-          if (title) title.textContent = window.i18n ? window.i18n.t("unsavedChangesTitle") : "Unsaved changes (RAM live preview)";
-          if (sub) sub.textContent = window.i18n ? window.i18n.t("unsavedChangesSub") : "Changes are active on keyboard, but will reset after disconnect.";
-        }
-      } else {
-        if (topBarBadge) topBarBadge.style.display = "none";
-        if (banner) {
-          banner.classList.add("saved-success");
-          const title = document.getElementById("unsavedBannerTitle");
-          const sub = document.getElementById("unsavedBannerSub");
-          if (title) title.textContent = window.i18n ? window.i18n.t("unsavedChangesSavedTitle") : "Saved successfully!";
-          if (sub) sub.textContent = window.i18n ? window.i18n.t("unsavedChangesSavedSub") : "Settings permanently saved to keyboard EEPROM.";
-        }
-
-        setTimeout(() => {
-          if (!this.hasUnsavedChanges && banner) {
-            banner.classList.remove("visible", "saved-success");
-          }
-        }, 2200);
+      // 5. Update top bar unsaved changes indicator
+      if (topBarBadge) {
+        topBarBadge.style.display = this.hasUnsavedChanges ? "inline-flex" : "none";
       }
     }
 

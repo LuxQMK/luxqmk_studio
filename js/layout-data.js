@@ -628,28 +628,28 @@
 
   const GMMK3_SIDE_LEDS = {
     left: [
-      { id: "SLED1", x: 0, y: 1.02, qmkPoint: [0, 10] },
-      { id: "SLED2", x: 0, y: 1.48, qmkPoint: [0, 16] },
-      { id: "SLED3", x: 0, y: 1.95, qmkPoint: [0, 22] },
-      { id: "SLED4", x: 0, y: 2.41, qmkPoint: [0, 28] },
-      { id: "SLED5", x: 0, y: 2.87, qmkPoint: [0, 34] },
+      { id: "SLED1", x: 0, y: 1.02, qmkPoint: [0, 15] },
+      { id: "SLED2", x: 0, y: 1.48, qmkPoint: [0, 20] },
+      { id: "SLED3", x: 0, y: 1.95, qmkPoint: [0, 25] },
+      { id: "SLED4", x: 0, y: 2.41, qmkPoint: [0, 30] },
+      { id: "SLED5", x: 0, y: 2.87, qmkPoint: [0, 35] },
       { id: "SLED6", x: 0, y: 3.33, qmkPoint: [0, 40] },
-      { id: "SLED7", x: 0, y: 3.79, qmkPoint: [0, 46] },
-      { id: "SLED8", x: 0, y: 4.26, qmkPoint: [0, 52] },
-      { id: "SLED9", x: 0, y: 4.72, qmkPoint: [0, 58] },
-      { id: "SLED10", x: 0, y: 5.18, qmkPoint: [0, 64] }
+      { id: "SLED7", x: 0, y: 3.79, qmkPoint: [0, 45] },
+      { id: "SLED8", x: 0, y: 4.26, qmkPoint: [0, 50] },
+      { id: "SLED9", x: 0, y: 4.72, qmkPoint: [0, 55] },
+      { id: "SLED10", x: 0, y: 5.18, qmkPoint: [0, 60] }
     ],
     right: [
-      { id: "SLED11", x: 22.5, y: 1.02, qmkPoint: [224, 10] },
-      { id: "SLED12", x: 22.5, y: 1.48, qmkPoint: [224, 16] },
-      { id: "SLED13", x: 22.5, y: 1.95, qmkPoint: [224, 22] },
-      { id: "SLED14", x: 22.5, y: 2.41, qmkPoint: [224, 28] },
-      { id: "SLED15", x: 22.5, y: 2.87, qmkPoint: [224, 34] },
-      { id: "SLED16", x: 22.5, y: 3.33, qmkPoint: [224, 40] },
-      { id: "SLED17", x: 22.5, y: 3.79, qmkPoint: [224, 46] },
-      { id: "SLED18", x: 22.5, y: 4.26, qmkPoint: [224, 52] },
-      { id: "SLED19", x: 22.5, y: 4.72, qmkPoint: [224, 58] },
-      { id: "SLED20", x: 22.5, y: 5.18, qmkPoint: [224, 64] }
+      { id: "SLED11", x: 22.5, y: 5.18, qmkPoint: [224, 60] },
+      { id: "SLED12", x: 22.5, y: 4.72, qmkPoint: [224, 55] },
+      { id: "SLED13", x: 22.5, y: 4.26, qmkPoint: [224, 50] },
+      { id: "SLED14", x: 22.5, y: 3.79, qmkPoint: [224, 45] },
+      { id: "SLED15", x: 22.5, y: 3.33, qmkPoint: [224, 40] },
+      { id: "SLED16", x: 22.5, y: 2.87, qmkPoint: [224, 35] },
+      { id: "SLED17", x: 22.5, y: 2.41, qmkPoint: [224, 30] },
+      { id: "SLED18", x: 22.5, y: 1.95, qmkPoint: [224, 25] },
+      { id: "SLED19", x: 22.5, y: 1.48, qmkPoint: [224, 20] },
+      { id: "SLED20", x: 22.5, y: 1.02, qmkPoint: [224, 15] }
     ]
   };
 

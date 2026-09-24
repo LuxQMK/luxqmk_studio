@@ -2,8 +2,8 @@
  * LuxQMK Studio - Device Manager & Adaptive Capability Engine
  */
 (function () {
-  const STUDIO_VERSION = "1.2.1";
-  const REQUIRED_FW_VERSION = { major: 0, minor: 2, patch: 1 };
+  const STUDIO_VERSION = "1.3.0";
+  const REQUIRED_FW_VERSION = { major: 0, minor: 3, patch: 0 };
 
   class DeviceManager {
     constructor() {
@@ -320,6 +320,17 @@
       }
       if (logoCard) {
         logoCard.style.display = (lightingType === 'rgb_matrix' && hasLogo) ? 'block' : 'none';
+      }
+
+      // 4b. Adapt Sidelights Controls UI visibility (Main Backlight & Studio Lighting)
+      const sidelightWrap = document.getElementById('sidelightCustomEnableWrap');
+      const studioSidelightWrap = document.getElementById('studioSidelightCard');
+      const hasSidelights = this.hasCapability('hasSidelights') || this.hasCapability('sidelights') || !!(profile.capabilities && profile.capabilities.hasSidelights);
+      if (sidelightWrap) {
+        sidelightWrap.style.display = (lightingType === 'rgb_matrix' && hasSidelights) ? 'flex' : 'none';
+      }
+      if (studioSidelightWrap) {
+        studioSidelightWrap.style.display = (lightingType === 'rgb_matrix' && hasSidelights) ? 'block' : 'none';
       }
 
       // 5. Update Header Device Label & Layout Preset Selector

@@ -373,7 +373,15 @@
         softwareCustomHex: "#00ffff",
         effectSpeed: 1.0,
         effectIntensity: 1.0,
-        softwareFloor: 0.10
+        softwareFloor: 0.10,
+
+        // Sidelight (Underglow Lightbars) Settings
+        sidelightCustomEnable: false,
+        sidelightMode: "followMain", // followMain, vuMeterStereo, waveFlow, rhythmicPulse, solidAccent, off
+        sidelightPalette: "rainbow",
+        sidelightCustomHex: "#00ffff",
+        sidelightSpeed: 1.0,
+        sidelightIntensity: 1.0
       };
 
       // Hardware Direct Lighting Streaming
@@ -628,6 +636,44 @@
       if (sliderSoftFloor) {
         sliderSoftFloor.value = String(this.config.softwareFloor || 0.10);
         if (lblSoftFloor) lblSoftFloor.textContent = `${Math.round((this.config.softwareFloor || 0.10) * 100)}%`;
+      }
+
+      // Studio Sidelights (Underglow Lightbars) controls
+      const chkStudioSide = document.getElementById("chkStudioSidelightCustomEnable");
+      if (chkStudioSide) chkStudioSide.checked = !!this.config.sidelightCustomEnable;
+
+      const studioSideWrap = document.getElementById("studioSidelightControlsContainer");
+      if (studioSideWrap) {
+        studioSideWrap.style.display = this.config.sidelightCustomEnable ? "block" : "none";
+      }
+
+      const selStudioSideMode = document.getElementById("studioSidelightModeSelect");
+      if (selStudioSideMode) selStudioSideMode.value = this.config.sidelightMode || "followMain";
+
+      const selStudioSidePalette = document.getElementById("studioSidelightPaletteSelect");
+      if (selStudioSidePalette) {
+        selStudioSidePalette.value = this.config.sidelightPalette || "rainbow";
+        const sideColorGrp = document.getElementById("studioSidelightColorGroup");
+        if (sideColorGrp) {
+          sideColorGrp.style.display = (this.config.sidelightPalette === "singleColor" || this.config.sidelightMode === "solidAccent") ? "block" : "none";
+        }
+      }
+
+      const pickerStudioSide = document.getElementById("studioSidelightColorPicker");
+      if (pickerStudioSide) pickerStudioSide.value = this.config.sidelightCustomHex || "#00ffff";
+
+      const sliderStudioSideSpeed = document.getElementById("studioSidelightSpeedSlider");
+      const lblStudioSideSpeed = document.getElementById("studioSidelightSpeedVal");
+      if (sliderStudioSideSpeed) {
+        sliderStudioSideSpeed.value = String(this.config.sidelightSpeed || 1.0);
+        if (lblStudioSideSpeed) lblStudioSideSpeed.textContent = `${this.config.sidelightSpeed}x`;
+      }
+
+      const sliderStudioSideInt = document.getElementById("studioSidelightIntensitySlider");
+      const lblStudioSideInt = document.getElementById("studioSidelightIntensityVal");
+      if (sliderStudioSideInt) {
+        sliderStudioSideInt.value = String(this.config.sidelightIntensity || 1.0);
+        if (lblStudioSideInt) lblStudioSideInt.textContent = `${Math.round((this.config.sidelightIntensity || 1.0) * 100)}%`;
       }
     }
 
@@ -1136,39 +1182,43 @@
       }
 
       // Render Left & Right Side Diffusers
-      const diffusers = this.lighting.sideDiffusers || [];
-      for (let i = 0; i < diffusers.length; i++) {
-        const sd = diffusers[i];
-        if (!sd || !sd.el) continue;
+      if (this.config.sidelightCustomEnable && this.config.sidelightMode !== "followMain") {
+        this._renderStudioSidelights(now, speed, intensity, floor);
+      } else {
+        const diffusers = this.lighting.sideDiffusers || [];
+        for (let i = 0; i < diffusers.length; i++) {
+          const sd = diffusers[i];
+          if (!sd || !sd.el) continue;
 
-        const x = sd.isLeft ? 0 : 22.5;
-        const y = (sd.qmkY / 64) * 5.5;
-        const dirCoord = getDirectedCoordinate(x, y, direction);
+          const x = sd.isLeft ? 0 : 22.5;
+          const y = (sd.qmkY / 64) * 5.5;
+          const dirCoord = getDirectedCoordinate(x, y, direction);
 
-        let brightFactor = floor;
-        let rgb = [0, 0, 0];
+          let brightFactor = floor;
+          let rgb = [0, 0, 0];
 
-        const bandIdx = sd.isLeft
-          ? Math.min(7, Math.floor(dirCoord.primary * 8))
-          : Math.min(15, 8 + Math.floor(dirCoord.primary * 8));
-        const bandVal = this.frequencyBands[bandIdx] || 0;
+          const bandIdx = sd.isLeft
+            ? Math.min(7, Math.floor(dirCoord.primary * 8))
+            : Math.min(15, 8 + Math.floor(dirCoord.primary * 8));
+          const bandVal = this.frequencyBands[bandIdx] || 0;
 
-        if (bandVal > 10 || this.beatDecay > 10) {
-          const normVal = Math.min(1.0, ((bandVal / 255) + (this.beatDecay / 350)));
-          brightFactor = (floor + (1 - floor) * normVal) * intensity;
-          const sampled = samplePaletteRgb(palette, dirCoord.primary - now * 0.0005 * speed, customRgb);
-          rgb = sampled ? sampled : this._hsvToRgbList(Math.round(dirCoord.primary * 160 - now * 0.02 * speed) % 256, 255, 255);
-        } else {
-          brightFactor = floor * intensity;
-          if (floor > 0.005) {
-            const sampled = samplePaletteRgb(palette, dirCoord.primary, customRgb);
-            rgb = sampled ? sampled : [0, 120, 255];
+          if (bandVal > 10 || this.beatDecay > 10) {
+            const normVal = Math.min(1.0, ((bandVal / 255) + (this.beatDecay / 350)));
+            brightFactor = (floor + (1 - floor) * normVal) * intensity;
+            const sampled = samplePaletteRgb(palette, dirCoord.primary - now * 0.0005 * speed, customRgb);
+            rgb = sampled ? sampled : this._hsvToRgbList(Math.round(dirCoord.primary * 160 - now * 0.02 * speed) % 256, 255, 255);
           } else {
-            rgb = [0, 0, 0];
+            brightFactor = floor * intensity;
+            if (floor > 0.005) {
+              const sampled = samplePaletteRgb(palette, dirCoord.primary, customRgb);
+              rgb = sampled ? sampled : [0, 120, 255];
+            } else {
+              rgb = [0, 0, 0];
+            }
           }
-        }
 
-        this._applyDiffuserRgb(sd, rgb[0], rgb[1], rgb[2], brightFactor);
+          this._applyDiffuserRgb(sd, rgb[0], rgb[1], rgb[2], brightFactor);
+        }
       }
 
       // Render Logo Badge LED
@@ -1185,6 +1235,102 @@
           logoRgb = sampled ? sampled : [0, 200, 255];
         }
         this._applyLogoRgb(this.lighting.logoBadgeEl, logoRgb[0], logoRgb[1], logoRgb[2], logoBright);
+      }
+    }
+
+    _renderStudioSidelights(now, masterSpeed, masterIntensity, floor) {
+      const diffusers = this.lighting.sideDiffusers || [];
+      if (diffusers.length === 0) return;
+
+      const sideMode = this.config.sidelightMode || "followMain";
+      const palette = this.config.sidelightPalette || "rainbow";
+      const sSpeed = (this.config.sidelightSpeed || 1.0) * (masterSpeed || 1.0);
+      const sIntensity = (this.config.sidelightIntensity || 1.0) * (masterIntensity || 1.0);
+      const customRgb = this._hexToRgbList(this.config.sidelightCustomHex || "#00ffff");
+
+      for (let i = 0; i < diffusers.length; i++) {
+        const sd = diffusers[i];
+        if (!sd || !sd.el) continue;
+
+        let rgb = [0, 0, 0];
+        let brightFactor = floor;
+
+        const qY = (sd.qmkY !== undefined) ? sd.qmkY : 37.5;
+        const normY = Math.max(0, Math.min(1, (qY - 15) / 45));
+
+        switch (sideMode) {
+          case "vuMeterStereo": {
+            // Left channel (bands 0..7), Right channel (bands 8..15)
+            const bandIdx = sd.isLeft
+              ? Math.min(7, Math.max(0, Math.floor((1 - normY) * 8)))
+              : Math.min(15, Math.max(8, 8 + Math.floor((1 - normY) * 8)));
+            const bandVal = (this.frequencyBands && this.frequencyBands[bandIdx]) || 0;
+            const threshold = (1 - normY) * 255;
+
+            if (bandVal > 15 && bandVal >= threshold) {
+              brightFactor = Math.min(1.0, (bandVal / 255)) * sIntensity;
+              const sampled = samplePaletteRgb(palette, 1 - normY, customRgb);
+              rgb = sampled ? sampled : this._hsvToRgbList(Math.round(85 - ((1 - normY) * 85)), 255, 255);
+            } else {
+              brightFactor = floor * sIntensity;
+              if (floor > 0.005) {
+                const sampled = samplePaletteRgb(palette, 1 - normY, customRgb);
+                rgb = sampled ? sampled : [0, 100, 200];
+              }
+            }
+            break;
+          }
+
+          case "waveFlow": {
+            const wavePhase = (now * 0.0008 * sSpeed - normY * 1.5) % 1.0;
+            const phaseNorm = (wavePhase + 1.0) % 1.0;
+            const waveSin = 0.5 + 0.5 * Math.sin(phaseNorm * Math.PI * 2);
+            brightFactor = (floor + (1 - floor) * waveSin) * sIntensity;
+            const sampled = samplePaletteRgb(palette, phaseNorm, customRgb);
+            rgb = sampled ? sampled : this._hsvToRgbList(Math.round(phaseNorm * 255), 255, 255);
+            break;
+          }
+
+          case "centerWaveFlow": {
+            const distCenter = Math.abs(normY - 0.5) * 2.0;
+            const wavePhase = (now * 0.0008 * sSpeed - distCenter * 1.5) % 1.0;
+            const phaseNorm = (wavePhase + 1.0) % 1.0;
+            const waveSin = 0.5 + 0.5 * Math.sin(phaseNorm * Math.PI * 2);
+            brightFactor = (floor + (1 - floor) * waveSin) * sIntensity;
+            const sampled = samplePaletteRgb(palette, phaseNorm, customRgb);
+            rgb = sampled ? sampled : this._hsvToRgbList(Math.round(phaseNorm * 255), 255, 255);
+            break;
+          }
+
+          case "rhythmicPulse": {
+            const pulse = (this.beatDecay > 10)
+              ? (this.beatDecay / 255)
+              : (0.3 + 0.7 * (0.5 + 0.5 * Math.sin(now * 0.004 * sSpeed)));
+            brightFactor = (floor + (1 - floor) * pulse) * sIntensity;
+            const sampled = samplePaletteRgb(palette, now * 0.0005 * sSpeed, customRgb);
+            rgb = sampled ? sampled : this._hsvToRgbList(Math.round((now * 0.03 * sSpeed) % 256), 255, 255);
+            break;
+          }
+
+          case "solidAccent": {
+            brightFactor = 1.0 * sIntensity;
+            rgb = customRgb;
+            break;
+          }
+
+          case "off": {
+            brightFactor = 0;
+            rgb = [0, 0, 0];
+            break;
+          }
+
+          default:
+            brightFactor = floor;
+            rgb = [0, 0, 0];
+            break;
+        }
+
+        this._applyDiffuserRgb(sd, rgb[0], rgb[1], rgb[2], brightFactor);
       }
     }
 
@@ -1293,28 +1439,32 @@
       }
 
       // Render Left & Right Side Diffusers
-      const diffusers = this.lighting.sideDiffusers || [];
-      for (let i = 0; i < diffusers.length; i++) {
-        const sd = diffusers[i];
-        if (!sd || !sd.el) continue;
+      if (this.config.sidelightCustomEnable && this.config.sidelightMode !== "followMain") {
+        this._renderStudioSidelights(now, speed, intensity, floor);
+      } else {
+        const diffusers = this.lighting.sideDiffusers || [];
+        for (let i = 0; i < diffusers.length; i++) {
+          const sd = diffusers[i];
+          if (!sd || !sd.el) continue;
 
-        const normX = sd.isLeft ? 0 : 1.0;
-        const normY = (sd.qmkY !== undefined) ? (sd.qmkY / 64) : 0.5;
-        const qmkX = (sd.qmkX !== undefined) ? sd.qmkX : (sd.isLeft ? 0 : 224);
-        const qmkY = (sd.qmkY !== undefined) ? sd.qmkY : Math.round(normY * 64);
-        const dx = (sd.dx !== undefined) ? (sd.dx / 112) : (sd.isLeft ? -1.0 : 1.0);
-        const dy = (sd.dy !== undefined) ? (sd.dy / 32) : ((normY - 0.5) * 2);
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const angle = Math.atan2(dy, dx);
-        const angleNorm = ((angle / (Math.PI * 2)) + 1) % 1;
-        const dirCoord = getDirectedCoordinate(normX * 22.5, normY * 5.5, direction);
+          const normX = sd.isLeft ? 0 : 1.0;
+          const normY = (sd.qmkY !== undefined) ? (sd.qmkY / 64) : 0.5;
+          const qmkX = (sd.qmkX !== undefined) ? sd.qmkX : (sd.isLeft ? 0 : 224);
+          const qmkY = (sd.qmkY !== undefined) ? sd.qmkY : Math.round(normY * 64);
+          const dx = (sd.dx !== undefined) ? (sd.dx / 112) : (sd.isLeft ? -1.0 : 1.0);
+          const dy = (sd.dy !== undefined) ? (sd.dy / 32) : ((normY - 0.5) * 2);
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const angle = Math.atan2(dy, dx);
+          const angleNorm = ((angle / (Math.PI * 2)) + 1) % 1;
+          const dirCoord = getDirectedCoordinate(normX * 22.5, normY * 5.5, direction);
 
-        const { rgb, brightFactor } = this._sampleSoftwareFxPixel({
-          normX, normY, qmkX, qmkY, dx, dy, dist, angle, angleNorm, dirCoord, isAlpha: false, i: undefined, isDiffuser: true,
-          now, preset, palette, direction, speed, intensity, floor, customRgb, customGradientStops
-        });
+          const { rgb, brightFactor } = this._sampleSoftwareFxPixel({
+            normX, normY, qmkX, qmkY, dx, dy, dist, angle, angleNorm, dirCoord, isAlpha: false, i: undefined, isDiffuser: true,
+            now, preset, palette, direction, speed, intensity, floor, customRgb, customGradientStops
+          });
 
-        this._applyDiffuserRgb(sd, rgb[0], rgb[1], rgb[2], brightFactor);
+          this._applyDiffuserRgb(sd, rgb[0], rgb[1], rgb[2], brightFactor);
+        }
       }
 
       // Render Logo Badge LED
@@ -2304,6 +2454,71 @@
           this._saveConfig();
         });
       }
+
+      // 5. Studio Sidelights (Underglow Lightbars) Controls
+      const chkStudioSide = document.getElementById("chkStudioSidelightCustomEnable");
+      if (chkStudioSide) {
+        chkStudioSide.addEventListener("change", (e) => {
+          this.config.sidelightCustomEnable = e.target.checked;
+          const wrap = document.getElementById("studioSidelightControlsContainer");
+          if (wrap) wrap.style.display = e.target.checked ? "block" : "none";
+          this._saveConfig();
+        });
+      }
+
+      const selStudioSideMode = document.getElementById("studioSidelightModeSelect");
+      if (selStudioSideMode) {
+        selStudioSideMode.addEventListener("change", (e) => {
+          this.config.sidelightMode = e.target.value;
+          const sideColorGrp = document.getElementById("studioSidelightColorGroup");
+          if (sideColorGrp) {
+            sideColorGrp.style.display = (this.config.sidelightPalette === "singleColor" || e.target.value === "solidAccent") ? "block" : "none";
+          }
+          this._saveConfig();
+        });
+      }
+
+      const selStudioSidePalette = document.getElementById("studioSidelightPaletteSelect");
+      if (selStudioSidePalette) {
+        selStudioSidePalette.addEventListener("change", (e) => {
+          this.config.sidelightPalette = e.target.value;
+          const sideColorGrp = document.getElementById("studioSidelightColorGroup");
+          if (sideColorGrp) {
+            sideColorGrp.style.display = (e.target.value === "singleColor" || this.config.sidelightMode === "solidAccent") ? "block" : "none";
+          }
+          this._saveConfig();
+        });
+      }
+
+      const pickerStudioSide = document.getElementById("studioSidelightColorPicker");
+      if (pickerStudioSide) {
+        const onSideColor = (e) => {
+          this.config.sidelightCustomHex = e.target.value;
+          this._saveConfig();
+        };
+        pickerStudioSide.addEventListener("input", onSideColor);
+        pickerStudioSide.addEventListener("change", onSideColor);
+      }
+
+      const sliderStudioSideSpeed = document.getElementById("studioSidelightSpeedSlider");
+      if (sliderStudioSideSpeed) {
+        sliderStudioSideSpeed.addEventListener("input", (e) => {
+          this.config.sidelightSpeed = parseFloat(e.target.value);
+          const lbl = document.getElementById("studioSidelightSpeedVal");
+          if (lbl) lbl.textContent = `${e.target.value}x`;
+          this._saveConfig();
+        });
+      }
+
+      const sliderStudioSideInt = document.getElementById("studioSidelightIntensitySlider");
+      if (sliderStudioSideInt) {
+        sliderStudioSideInt.addEventListener("input", (e) => {
+          this.config.sidelightIntensity = parseFloat(e.target.value);
+          const lbl = document.getElementById("studioSidelightIntensityVal");
+          if (lbl) lbl.textContent = `${Math.round(parseFloat(e.target.value) * 100)}%`;
+          this._saveConfig();
+        });
+      }
     }
 
     _saveConfig() {
@@ -2326,7 +2541,13 @@
         softwareCustomHex: this.config.softwareCustomHex,
         effectSpeed: this.config.effectSpeed,
         effectIntensity: this.config.effectIntensity,
-        softwareFloor: this.config.softwareFloor
+        softwareFloor: this.config.softwareFloor,
+        sidelightCustomEnable: this.config.sidelightCustomEnable,
+        sidelightMode: this.config.sidelightMode,
+        sidelightPalette: this.config.sidelightPalette,
+        sidelightCustomHex: this.config.sidelightCustomHex,
+        sidelightSpeed: this.config.sidelightSpeed,
+        sidelightIntensity: this.config.sidelightIntensity
       };
 
       localStorage.setItem("luxqmk_studio_lighting_config", JSON.stringify(cfg));
@@ -2375,6 +2596,12 @@
         if (typeof cfg.effectSpeed === "number") this.config.effectSpeed = cfg.effectSpeed;
         if (typeof cfg.effectIntensity === "number") this.config.effectIntensity = cfg.effectIntensity;
         if (typeof cfg.softwareFloor === "number") this.config.softwareFloor = cfg.softwareFloor;
+        if (typeof cfg.sidelightCustomEnable === "boolean") this.config.sidelightCustomEnable = cfg.sidelightCustomEnable;
+        if (cfg.sidelightMode) this.config.sidelightMode = cfg.sidelightMode;
+        if (cfg.sidelightPalette) this.config.sidelightPalette = cfg.sidelightPalette;
+        if (cfg.sidelightCustomHex) this.config.sidelightCustomHex = cfg.sidelightCustomHex;
+        if (typeof cfg.sidelightSpeed === "number") this.config.sidelightSpeed = cfg.sidelightSpeed;
+        if (typeof cfg.sidelightIntensity === "number") this.config.sidelightIntensity = cfg.sidelightIntensity;
       }
     }
 
