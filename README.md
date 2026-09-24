@@ -1,4 +1,8 @@
-# LuxQMK Studio (v1.3.0)
+# LuxQMK Studio
+
+[![Latest Release](https://img.shields.io/badge/Release-v1.3.0-00b4d8.svg?style=flat)](https://github.com/LuxQMK/luxqmk_studio/releases/tag/v1.3.0)
+[![Firmware Engine](https://img.shields.io/badge/Firmware-LuxQMK%20v0.3.0-8a2be2.svg?style=flat)](https://github.com/LuxQMK/qmk_firmware)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 Professional WebHID / Desktop companion suite for real-time keymap remapping, lighting configuration, reactive effect layering, multi-stop gradients, audio visualizers, raw HID diagnostics, and backup/restore workflows for keyboards running **LuxQMK** / **QMK Firmware** and the **VIA Protocol**.
 
