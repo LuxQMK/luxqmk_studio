@@ -15580,7 +15580,7 @@ input:checked + .switch-slider:before {
       const density = Number(this.state.custom.sidelightDensity) || 128;
       const baseV = 255 * brightness;
 
-      // Exact 1:1 physical optical calibration (Left: visible 1..8, Right: visible 2..9)
+      // Board-aware physical optical calibration (GMMK 3 Chassis offset vs GMMK 2 / Generic symmetric)
       let yScaled = 0;
       let distScaled = 0;
       let optStep = 0;
@@ -15588,24 +15588,36 @@ input:checked + .switch-slider:before {
 
       if (sd.id && sd.id.startsWith("SLED")) {
         const num = parseInt(sd.id.replace("SLED", ""), 10);
-        if (num >= 1 && num <= 10) {
-          // Left: 0..9 (visible: 1..8)
-          const kLeft = num - 1;
-          if (kLeft < 1 || kLeft > 8) isHidden = true;
-          const normLeft = Math.max(0, Math.min(7, kLeft - 1));
-          optStep = normLeft;
-          yScaled = Math.round((normLeft * 255 * density) / (7 * 128)) & 0xFF;
-          const distSym = Math.min(7, Math.abs(2 * kLeft - 9));
-          distScaled = Math.round((distSym * 255 * density) / (7 * 128)) & 0xFF;
-        } else if (num >= 11 && num <= 20) {
-          // Right: 0..9 (visible: 2..9)
-          const kRight = 20 - num;
-          if (kRight < 2 || kRight > 9) isHidden = true;
-          const normRight = Math.max(0, Math.min(7, kRight - 2));
-          optStep = normRight;
-          yScaled = Math.round((normRight * 255 * density) / (7 * 128)) & 0xFF;
-          const distSym = Math.min(7, Math.abs(2 * kRight - 11));
-          distScaled = Math.round((distSym * 255 * density) / (7 * 128)) & 0xFF;
+        const isGmmk3 = !this.device || !this.device.family || this.device.family.includes('GMMK 3');
+        if (isGmmk3) {
+          // GMMK 3 Chassis calibration (Left: visible 1..8, Right: visible 2..9)
+          if (num >= 1 && num <= 10) {
+            const kLeft = num - 1;
+            if (kLeft < 1 || kLeft > 8) isHidden = true;
+            const normLeft = Math.max(0, Math.min(7, kLeft - 1));
+            optStep = normLeft;
+            yScaled = Math.round((normLeft * 255 * density) / (7 * 128)) & 0xFF;
+            const distSym = Math.min(7, Math.abs(2 * kLeft - 9));
+            distScaled = Math.round((distSym * 255 * density) / (7 * 128)) & 0xFF;
+          } else if (num >= 11 && num <= 20) {
+            const kRight = 20 - num;
+            if (kRight < 2 || kRight > 9) isHidden = true;
+            const normRight = Math.max(0, Math.min(7, kRight - 2));
+            optStep = normRight;
+            yScaled = Math.round((normRight * 255 * density) / (7 * 128)) & 0xFF;
+            const distSym = Math.min(7, Math.abs(2 * kRight - 11));
+            distScaled = Math.round((distSym * 255 * density) / (7 * 128)) & 0xFF;
+          }
+        } else {
+          // GMMK 2 & Generic symmetric 1:1 linear strip
+          const totalSide = (this.device && this.device.capabilities && this.device.capabilities.sidelightCount) ? Math.floor(this.device.capabilities.sidelightCount / 2) : 10;
+          const span = Math.max(1, totalSide - 1);
+          const k = (num <= totalSide) ? (num - 1) : ((totalSide * 2) - num);
+          const kClamped = Math.max(0, Math.min(span, k));
+          optStep = kClamped;
+          yScaled = Math.round((kClamped * 255 * density) / (span * 128)) & 0xFF;
+          const distSym = Math.min(span, Math.abs(2 * kClamped - span));
+          distScaled = Math.round((distSym * 255 * density) / (span * 128)) & 0xFF;
         }
       }
 
