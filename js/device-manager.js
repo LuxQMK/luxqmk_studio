@@ -192,13 +192,14 @@
 
           if (isOlderThanRequired) {
             const detectedStr = `(v${fw.major}.${fw.minor}.${fw.patch})`;
-            hwCompat.textContent = i18n ? `${i18n.t('statusFwUpdateRequired')} ${detectedStr}` : `Firmware Update Recommended (LuxQMK v0.2.1+) ${detectedStr}`;
+            const reqStr = `v${REQUIRED_FW_VERSION.major}.${REQUIRED_FW_VERSION.minor}.${REQUIRED_FW_VERSION.patch}+`;
+            hwCompat.textContent = i18n ? `${i18n.t('statusFwUpdateRequired', { reqVersion: reqStr })} ${detectedStr}` : `Firmware Update Recommended (LuxQMK ${reqStr}) ${detectedStr}`;
             hwCompat.style.color = 'var(--accent-amber, #ffaa00)';
           } else if (fw.major > REQUIRED_FW_VERSION.major || (fw.major === REQUIRED_FW_VERSION.major && fw.minor > REQUIRED_FW_VERSION.minor)) {
             hwCompat.textContent = i18n ? i18n.t('statusFwNewer') : 'Newer Firmware Detected (Update Studio)';
             hwCompat.style.color = 'var(--accent-cyan, #00e5ff)';
           } else {
-            hwCompat.textContent = i18n ? i18n.t('statusFwCompatible') : `Fully Compatible (LuxQMK Studio v${STUDIO_VERSION})`;
+            hwCompat.textContent = i18n ? i18n.t('statusFwCompatible', { version: STUDIO_VERSION }) : `Fully Compatible (LuxQMK Studio v${STUDIO_VERSION})`;
             hwCompat.style.color = 'var(--accent-green, #00ff88)';
           }
         }
@@ -368,5 +369,9 @@
     }
   }
 
+  DeviceManager.STUDIO_VERSION = STUDIO_VERSION;
+  DeviceManager.REQUIRED_FW_VERSION = REQUIRED_FW_VERSION;
+  window.STUDIO_VERSION = STUDIO_VERSION;
+  window.DeviceManager = DeviceManager;
   window.deviceManager = new DeviceManager();
 })();

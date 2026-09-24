@@ -7627,13 +7627,14 @@ input:checked + .switch-slider:before {
 
           if (isOlderThanRequired) {
             const detectedStr = `(v${fw.major}.${fw.minor}.${fw.patch})`;
-            hwCompat.textContent = i18n ? `${i18n.t('statusFwUpdateRequired')} ${detectedStr}` : `Firmware Update Recommended (LuxQMK v0.2.1+) ${detectedStr}`;
+            const reqStr = `v${REQUIRED_FW_VERSION.major}.${REQUIRED_FW_VERSION.minor}.${REQUIRED_FW_VERSION.patch}+`;
+            hwCompat.textContent = i18n ? `${i18n.t('statusFwUpdateRequired', { reqVersion: reqStr })} ${detectedStr}` : `Firmware Update Recommended (LuxQMK ${reqStr}) ${detectedStr}`;
             hwCompat.style.color = 'var(--accent-amber, #ffaa00)';
           } else if (fw.major > REQUIRED_FW_VERSION.major || (fw.major === REQUIRED_FW_VERSION.major && fw.minor > REQUIRED_FW_VERSION.minor)) {
             hwCompat.textContent = i18n ? i18n.t('statusFwNewer') : 'Newer Firmware Detected (Update Studio)';
             hwCompat.style.color = 'var(--accent-cyan, #00e5ff)';
           } else {
-            hwCompat.textContent = i18n ? i18n.t('statusFwCompatible') : `Fully Compatible (LuxQMK Studio v${STUDIO_VERSION})`;
+            hwCompat.textContent = i18n ? i18n.t('statusFwCompatible', { version: STUDIO_VERSION }) : `Fully Compatible (LuxQMK Studio v${STUDIO_VERSION})`;
             hwCompat.style.color = 'var(--accent-green, #00ff88)';
           }
         }
@@ -7803,6 +7804,10 @@ input:checked + .switch-slider:before {
     }
   }
 
+  DeviceManager.STUDIO_VERSION = STUDIO_VERSION;
+  DeviceManager.REQUIRED_FW_VERSION = REQUIRED_FW_VERSION;
+  window.STUDIO_VERSION = STUDIO_VERSION;
+  window.DeviceManager = DeviceManager;
   window.deviceManager = new DeviceManager();
 })();
 
@@ -10475,7 +10480,7 @@ input:checked + .switch-slider:before {
       lblLegalTitle: "Legal Notices & License",
       lblLegalDesc: "LuxQMK Studio is an independent companion configuration suite developed for keyboards running LuxQMK custom firmware (fork of QMK Firmware) communicating via standard WebHID / VIA protocol channels.<br><br>• <strong>LuxQMK Studio Application</strong>: GNU General Public License v3 (GPLv3)<br>• <strong>LuxQMK Firmware</strong>: GNU General Public License v2 / v3 (GPL)<br>• <strong>QMK Firmware</strong>: Open-source software licensed under GPLv2+. VIA is an open configuration protocol standard.<br><br>All product names, logos, trademarks, and registered trademarks (including Glorious, GMMK 3, GMMK 2, WB32) are property of their respective owners and are used solely for identification and compatibility purposes.",
       msgUpdateCheckTitle: "LuxQMK Studio Updates",
-      msgUpdateCheckLatest: "You are running the latest version of LuxQMK Studio (v1.3.0). Automatic update downloads will be available soon!",
+      msgUpdateCheckLatest: "You are running the latest version of LuxQMK Studio (v{version}). Automatic update downloads will be available soon!",
       tooltipAddDevice: "Add / Pair New Device (+)",
       optSearchingDevices: "Searching for devices...",
       optNoDevices: "No devices found (Click + to connect)",
@@ -11038,8 +11043,8 @@ input:checked + .switch-slider:before {
       lblCompatibilityStatus: "Compatibility Status:",
       valCompatibilityStatus: "— (Connect keyboard to inspect)",
       statusFwNotConnected: "— (Connect keyboard to inspect)",
-      statusFwCompatible: "Fully Compatible (LuxQMK Studio v1.2.1)",
-      statusFwUpdateRequired: "Firmware Update Recommended (LuxQMK v0.2.1+)",
+      statusFwCompatible: "Fully Compatible (LuxQMK Studio v{version})",
+      statusFwUpdateRequired: "Firmware Update Recommended (LuxQMK {reqVersion})",
       // Settings View - Smart Firmware Flasher
       cardFlasherTitle: "Smart Firmware Upgrade (Zero Data Loss)",
       cardFlasherSubtitle: "Safely flash new LuxQMK & QMK firmware with automatic pre-flash backup and post-flash memory restoration.",
@@ -11155,7 +11160,7 @@ input:checked + .switch-slider:before {
       lblLegalTitle: "Informacje prawne i nota licencyjna",
       lblLegalDesc: "LuxQMK Studio jest niezależnym oprogramowaniem towarzyszącym do konfiguracji klawiatur bazującym na protokole WebHID oraz VIA.<br><br>• <strong>Aplikacja LuxQMK Studio</strong>: GNU General Public License v3 (GPLv3)<br>• <strong>Firmware LuxQMK</strong>: GNU General Public License v2 / v3 (GPL)<br>• <strong>QMK Firmware</strong>: Oprogramowanie open-source na licencji GPLv2+. VIA jest otwartym standardem protokołu konfiguracji.<br><br>Wszelkie nazwy produktów, logotypy, znaki towarowe i zarejestrowane znaki handlowe (w tym Glorious, GMMK 3, GMMK 2, WB32) należą do ich prawnych właścicieli i zostały użyte wyłącznie w celach informacyjnych oraz identyfikacji kompatybilności sprzętowej.",
       msgUpdateCheckTitle: "Aktualizacje LuxQMK Studio",
-      msgUpdateCheckLatest: "Posiadasz najnowszą wersję LuxQMK Studio (v1.3.0). Automatyczne pobieranie aktualizacji z poziomu programu będzie dostępne wkrótce!",
+      msgUpdateCheckLatest: "Posiadasz najnowszą wersję LuxQMK Studio (v{version}). Automatyczne pobieranie aktualizacji z poziomu programu będzie dostępne wkrótce!",
       tooltipAddDevice: "Dodaj / Połącz nowe urządzenie (+)",
       optSearchingDevices: "Wyszukiwanie urządzeń...",
       optNoDevices: "Brak urządzeń (Kliknij + aby połączyć)",
@@ -11717,8 +11722,8 @@ input:checked + .switch-slider:before {
       lblCompatibilityStatus: "Status zgodności:",
       valCompatibilityStatus: "— (Podłącz klawiaturę, aby sprawdzić)",
       statusFwNotConnected: "— (Podłącz klawiaturę, aby sprawdzić)",
-      statusFwCompatible: "W pełni zgodny (LuxQMK Studio v1.2.1)",
-      statusFwUpdateRequired: "Zalecana aktualizacja firmware (LuxQMK v0.2.1+)",
+      statusFwCompatible: "W pełni zgodny (LuxQMK Studio v{version})",
+      statusFwUpdateRequired: "Zalecana aktualizacja firmware (LuxQMK {reqVersion})",
       // Settings View - Smart Firmware Flasher
       cardFlasherTitle: "Inteligentna aktualizacja firmware (bezstratna)",
       cardFlasherSubtitle: "Bezpiecznie wgrywaj nowy firmware z automatyczną kopią zapasową i przywracaniem mapowania, makr oraz RGB.",
@@ -23167,7 +23172,8 @@ input:checked + .switch-slider:before {
       const btnCheckUpdates = document.getElementById("btnCheckUpdates");
       if (btnCheckUpdates) {
         btnCheckUpdates.addEventListener("click", () => {
-          this.showToast(window.i18n.t("msgUpdateCheckLatest"), "info");
+          const appVer = window.STUDIO_VERSION || "1.3.0";
+          this.showToast(window.i18n.t("msgUpdateCheckLatest", { version: appVer }), "info");
         });
       }
     }

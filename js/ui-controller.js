@@ -208,7 +208,8 @@
       const btnCheckUpdates = document.getElementById("btnCheckUpdates");
       if (btnCheckUpdates) {
         btnCheckUpdates.addEventListener("click", () => {
-          this.showToast(window.i18n.t("msgUpdateCheckLatest"), "info");
+          const appVer = window.STUDIO_VERSION || "1.3.0";
+          this.showToast(window.i18n.t("msgUpdateCheckLatest", { version: appVer }), "info");
         });
       }
     }
