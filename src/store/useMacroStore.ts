@@ -197,7 +197,7 @@ export const useMacroStore = create<MacroState>((set, get) => ({
   },
 
   saveMacrosToKeyboard: async () => {
-    useDeviceStore.getState().markDirty('macro');
+    useDeviceStore.getState().clearDirty('macro');
     useUIStore.getState().showToast(useI18n.getState().t('toastMacrosSaved'), 'success');
   },
 }));

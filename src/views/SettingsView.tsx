@@ -21,7 +21,7 @@ export const SettingsView: React.FC = () => {
     cancelFlash,
   } = useSettingsStore();
 
-  const { isConnected, activeDescriptor, firmwareInfo } = useDeviceStore();
+  const { isConnected, activeDescriptor, firmwareInfo, dirtyModules } = useDeviceStore();
   const { t } = useI18n();
 
   const firmwareInputRef = useRef<HTMLInputElement>(null);
@@ -255,7 +255,7 @@ export const SettingsView: React.FC = () => {
           <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem', marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
             <button
               type="button"
-              className="btn btn-primary"
+              className={`btn btn-primary ${dirtyModules.has('performance') || dirtyModules.has('settings') ? 'btn-save-eeprom-pulse' : ''}`}
               id="btnSavePerformanceEEPROM"
               disabled={!isConnected}
               onClick={savePerformanceToEeprom}

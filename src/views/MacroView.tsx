@@ -1,8 +1,10 @@
 import React from 'react';
 import { useMacroStore } from '../store/useMacroStore';
+import { useDeviceStore } from '../store/useDeviceStore';
 import { useI18n } from '../i18n';
 
 export const MacroView: React.FC = () => {
+  const dirtyModules = useDeviceStore((s) => s.dirtyModules);
   const {
     activeSlotId,
     setActiveSlotId,
@@ -133,7 +135,7 @@ export const MacroView: React.FC = () => {
               </button>
               <button
                 type="button"
-                className="btn btn-primary"
+                className={`btn btn-primary ${dirtyModules.has('macro') ? 'btn-save-eeprom-pulse' : ''}`}
                 id="btnSaveMacros"
                 onClick={saveMacrosToKeyboard}
               >

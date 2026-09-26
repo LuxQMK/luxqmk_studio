@@ -40,7 +40,7 @@ export const LightingView: React.FC = () => {
   } = useLightingStore();
 
   const { presetLayoutId, getKeycode, layerKeymaps } = useKeymapStore();
-  const { discardAllChanges, activeLayer: hwActiveLayer } = useDeviceStore();
+  const { discardAllChanges, activeLayer: hwActiveLayer, dirtyModules } = useDeviceStore();
   const { lightingSubTab, setLightingSubTab } = useUIStore();
   const { t } = useI18n();
 
@@ -841,7 +841,12 @@ export const LightingView: React.FC = () => {
                   </svg>
                   <span>{t('btnDiscardLightingEEPROM', 'Cofnij do zapisanych')}</span>
                 </button>
-                <button type="button" className="btn btn-primary btn-sm" id="btnSaveBacklightEEPROM" onClick={saveLightingToHardware}>
+                <button
+                  type="button"
+                  className={`btn btn-primary btn-sm ${dirtyModules.has('lighting') || dirtyModules.has('sidelight') ? 'btn-save-eeprom-pulse' : ''}`}
+                  id="btnSaveBacklightEEPROM"
+                  onClick={saveLightingToHardware}
+                >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                     <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -984,7 +989,13 @@ export const LightingView: React.FC = () => {
                       </svg>
                       <span>{t('btnDiscardProfileEEPROM', 'Cofnij')}</span>
                     </button>
-                    <button type="button" className="btn btn-primary btn-sm" style={{ flex: 2 }} id="btnSavePerKeyProfile" onClick={saveLightingToHardware}>
+                    <button
+                      type="button"
+                      className={`btn btn-primary btn-sm ${dirtyModules.has('perkey') ? 'btn-save-eeprom-pulse' : ''}`}
+                      style={{ flex: 2 }}
+                      id="btnSavePerKeyProfile"
+                      onClick={saveLightingToHardware}
+                    >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                         <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -1169,7 +1180,12 @@ export const LightingView: React.FC = () => {
                 </svg>
                 <span>{t('btnDiscardLightingEEPROM', 'Cofnij do zapisanych')}</span>
               </button>
-              <button type="button" className="btn btn-primary btn-sm" id="btnSaveReactiveEEPROM" onClick={saveLightingToHardware}>
+              <button
+                type="button"
+                className={`btn btn-primary btn-sm ${dirtyModules.has('reactive') ? 'btn-save-eeprom-pulse' : ''}`}
+                id="btnSaveReactiveEEPROM"
+                onClick={saveLightingToHardware}
+              >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                   <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -1246,7 +1262,12 @@ export const LightingView: React.FC = () => {
                 </svg>
                 <span>{t('btnDiscardLightingEEPROM', 'Cofnij do zapisanych')}</span>
               </button>
-              <button type="button" className="btn btn-primary btn-sm" id="btnSaveWinLockEEPROM" onClick={saveLightingToHardware}>
+              <button
+                type="button"
+                className={`btn btn-primary btn-sm ${dirtyModules.has('winlock') ? 'btn-save-eeprom-pulse' : ''}`}
+                id="btnSaveWinLockEEPROM"
+                onClick={saveLightingToHardware}
+              >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                   <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -1347,7 +1368,12 @@ export const LightingView: React.FC = () => {
               </svg>
               <span>{t('btnDiscardLightingEEPROM', 'Cofnij do zapisanych')}</span>
             </button>
-            <button type="button" className="btn btn-primary btn-sm" id="btnSaveLayersEEPROM" onClick={saveLightingToHardware}>
+            <button
+              type="button"
+              className={`btn btn-primary btn-sm ${dirtyModules.has('layer_lighting') ? 'btn-save-eeprom-pulse' : ''}`}
+              id="btnSaveLayersEEPROM"
+              onClick={saveLightingToHardware}
+            >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                 <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -1417,7 +1443,12 @@ export const LightingView: React.FC = () => {
               </svg>
               <span>{t('btnDiscardLightingEEPROM', 'Cofnij do zapisanych')}</span>
             </button>
-            <button type="button" className="btn btn-primary btn-sm" id="btnSaveLogoEEPROM" onClick={saveLightingToHardware}>
+            <button
+              type="button"
+              className={`btn btn-primary btn-sm ${dirtyModules.has('logo') ? 'btn-save-eeprom-pulse' : ''}`}
+              id="btnSaveLogoEEPROM"
+              onClick={saveLightingToHardware}
+            >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                 <polyline points="17 21 17 13 7 13 7 21"></polyline>
