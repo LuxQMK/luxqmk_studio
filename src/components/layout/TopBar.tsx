@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useUIStore, ViewTab } from '../../store/useUIStore';
 import { useDeviceStore } from '../../store/useDeviceStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import { useI18n } from '../../i18n';
 
 export const TopBar: React.FC = () => {
-  const { activeView } = useUIStore();
+  const { activeView, setActiveView } = useUIStore();
+  const { flasher, studioUpdate } = useSettingsStore();
   const {
     isConnected,
     isConnecting,
@@ -207,6 +209,75 @@ export const TopBar: React.FC = () => {
               <span>{t('unsavedBadgeSaveBtn', 'Save (EEPROM)')}</span>
             </button>
           </div>
+        )}
+
+        {/* Firmware Update Available Badge */}
+        {isConnected && flasher.cloudUpdateAvailable && (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            id="btnTopBarFwUpdate"
+            title={t('tooltipFirmwareUpdateAvailable', 'New firmware update available for your keyboard!')}
+            onClick={() => setActiveView('settings')}
+            style={{
+              borderColor: 'rgba(0, 245, 255, 0.4)',
+              background: 'rgba(0, 245, 255, 0.1)',
+              color: 'var(--accent-cyan, #00f5ff)',
+              gap: '0.4rem',
+              fontWeight: 700,
+              fontSize: '0.8rem',
+              padding: '0.45rem 0.8rem'
+            }}
+          >
+            <span style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: '#00f5ff',
+              boxShadow: '0 0 8px #00f5ff',
+              display: 'inline-block'
+            }} />
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>{t('badgeFwUpdate', `FW ${flasher.cloudEntry?.version || 'Update'}`)}</span>
+          </button>
+        )}
+
+        {/* Studio Update Available Badge */}
+        {studioUpdate.available && (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            id="btnTopBarStudioUpdate"
+            title={t('tooltipStudioUpdateAvailable', 'New LuxQMK Studio version available!')}
+            onClick={() => setActiveView('settings')}
+            style={{
+              borderColor: 'rgba(189, 0, 255, 0.4)',
+              background: 'rgba(189, 0, 255, 0.1)',
+              color: 'var(--accent-purple, #bd00ff)',
+              gap: '0.4rem',
+              fontWeight: 700,
+              fontSize: '0.8rem',
+              padding: '0.45rem 0.8rem'
+            }}
+          >
+            <span style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: '#bd00ff',
+              boxShadow: '0 0 8px #bd00ff',
+              display: 'inline-block'
+            }} />
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 8 12 12 14 14"></polyline>
+            </svg>
+            <span>{t('badgeStudioUpdate', `Studio ${studioUpdate.latestVersion || 'Update'}`)}</span>
+          </button>
         )}
 
         {/* Refresh Button */}

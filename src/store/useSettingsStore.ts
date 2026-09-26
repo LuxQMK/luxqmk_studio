@@ -1,17 +1,20 @@
 import { create } from 'zustand';
-import { PerformanceConfig, HardwareInfo, FlasherState } from '../types/settings';
+import { PerformanceConfig, HardwareInfo, FlasherState, StudioUpdateState } from '../types/settings';
 import { hidProtocol } from '../core/hid-protocol';
-import { catalogService, CatalogKeyboardEntry, FirmwareCatalog } from '../services/catalog-service';
+import { catalogService, CatalogKeyboardEntry, FirmwareCatalog, StudioVersionInfo } from '../services/catalog-service';
 import { useDeviceStore } from './useDeviceStore';
 import { useUIStore } from './useUIStore';
 import { useKeymapStore } from './useKeymapStore';
 import { useLightingStore } from './useLightingStore';
 import { useI18n } from '../i18n';
 
+const CURRENT_STUDIO_VERSION = '1.4.0';
+
 interface SettingsState {
   performance: PerformanceConfig;
   hardwareInfo: HardwareInfo;
   flasher: FlasherState;
+  studioUpdate: StudioUpdateState;
 
   setDebounceType: (type: number) => void;
   setDebounceTime: (timeMs: number) => void;
@@ -28,6 +31,7 @@ interface SettingsState {
   startSmartFlash: () => Promise<void>;
   cancelFlash: () => void;
   checkCloudUpdates: () => Promise<void>;
+  checkStudioUpdates: () => Promise<void>;
   applyCloudFirmware: (entry?: CatalogKeyboardEntry) => Promise<void>;
 }
 
@@ -88,8 +92,19 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     cloudUpdateAvailable: false,
     cloudEntry: null,
     consoleLogs: [
-      { time: '[Ready]', text: 'Select firmware .bin file or use Cloud Update from browse.luxqmk.click.' }
+      { time: '[Ready]', text: 'Select firmware .bin file or use Cloud Update from files.luxqmk.click.' }
     ],
+  },
+  studioUpdate: {
+    isChecking: false,
+    available: false,
+    currentVersion: CURRENT_STUDIO_VERSION,
+    latestVersion: CURRENT_STUDIO_VERSION,
+    releaseTag: `v${CURRENT_STUDIO_VERSION}`,
+    releaseDate: '',
+    downloadUrl: `https://files.luxqmk.click/studio/v${CURRENT_STUDIO_VERSION}/LuxQMK-Studio-Setup-${CURRENT_STUDIO_VERSION}.exe`,
+    webAppUrl: 'https://studio.luxqmk.click',
+    changelog: [],
   },
 
   setDebounceType: (type) => {
@@ -444,8 +459,38 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     useUIStore.getState().showToast(useI18n.getState().t('toastUpgradeCancelled'), 'warning');
   },
 
+  checkStudioUpdates: async () => {
+    set((state) => ({ studioUpdate: { ...state.studioUpdate, isChecking: true } }));
+    try {
+      const info = await catalogService.getStudioVersion();
+      if (info) {
+        const isNewer = catalogService.hasNewerStudioVersion(CURRENT_STUDIO_VERSION, info);
+        set((state) => ({
+          studioUpdate: {
+            ...state.studioUpdate,
+            isChecking: false,
+            available: isNewer,
+            latestVersion: info.version || CURRENT_STUDIO_VERSION,
+            releaseTag: info.release_tag || `v${info.version}`,
+            releaseDate: info.release_date || '',
+            downloadUrl: info.downloads?.windows_installer || `https://files.luxqmk.click/studio/${info.release_tag}/LuxQMK-Studio-Setup-${info.version}.exe`,
+            webAppUrl: info.downloads?.web_app || 'https://studio.luxqmk.click',
+            changelog: info.changelog || [],
+          },
+        }));
+      } else {
+        set((state) => ({ studioUpdate: { ...state.studioUpdate, isChecking: false } }));
+      }
+    } catch (e) {
+      set((state) => ({ studioUpdate: { ...state.studioUpdate, isChecking: false } }));
+    }
+  },
+
   checkCloudUpdates: async () => {
     set((state) => ({ flasher: { ...state.flasher, isCheckingCloud: true } }));
+    // Also check studio updates concurrently
+    get().checkStudioUpdates();
+
     try {
       const catalog = await catalogService.getCatalog();
       const devState = useDeviceStore.getState();
@@ -456,7 +501,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
           devState.activeDescriptor.productId,
           devState.activeDescriptor.name
         );
-        const hasNewer = match ? catalogService.hasNewerVersion(devState.firmwareInfo, match) : false;
+        const hasNewer = match ? catalogService.hasNewerFirmwareVersion(devState.firmwareInfo, match) : false;
         set((state) => ({
           flasher: {
             ...state.flasher,
@@ -477,6 +522,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const entry = targetEntry || get().flasher.cloudEntry;
     if (!entry) return;
 
+    const isPolish = useI18n.getState().language === 'pl';
+
     set((state) => ({
       flasher: {
         ...state.flasher,
@@ -485,15 +532,22 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
           ...state.flasher.consoleLogs,
           {
             time: `[${new Date().toLocaleTimeString()}]`,
-            text: `Pobieranie oficjalnego firmware LuxQMK ${entry.version} z browse.luxqmk.click (${entry.filename})...`,
+            text: isPolish
+              ? `Pobieranie oficjalnego firmware LuxQMK ${entry.version} z files.luxqmk.click (${entry.filename})...`
+              : `Downloading official LuxQMK ${entry.version} firmware from files.luxqmk.click (${entry.filename})...`,
           },
         ],
       },
     }));
 
     try {
-      const file = await catalogService.downloadFirmwareFile(entry);
+      const { file, sha256, verified } = await catalogService.downloadFirmwareFile(entry);
       get().setFlasherFile(file);
+
+      const verificationText = verified
+        ? (isPolish ? `Suma SHA-256 zweryfikowana pomyślnie (${sha256.slice(0, 16)}...)` : `SHA-256 checksum verified successfully (${sha256.slice(0, 16)}...)`)
+        : (isPolish ? `Pobrano plik (${sha256.slice(0, 16)}...). Gotowy do flashowania!` : `File downloaded (${sha256.slice(0, 16)}...). Ready to flash!`);
+
       set((state) => ({
         flasher: {
           ...state.flasher,
@@ -502,13 +556,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
             ...state.flasher.consoleLogs,
             {
               time: `[${new Date().toLocaleTimeString()}]`,
-              text: `Pobieranie zakończone pomyślnie. Suma SHA256 zweryfikowana: ${entry.sha256.slice(0, 16)}... Gotowy do wgrania!`,
+              text: `${verificationText}`,
             },
           ],
         },
       }));
       useUIStore.getState().showToast(
-        useI18n.getState().t('toastCloudFirmwareDownloaded', 'Pobrano najnowszy firmware z chmury!'),
+        useI18n.getState().t('toastCloudFirmwareDownloaded', isPolish ? 'Pobrano najnowszy firmware z chmury!' : 'Downloaded latest firmware from cloud!'),
         'success'
       );
     } catch (err: any) {
@@ -520,7 +574,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
             ...state.flasher.consoleLogs,
             {
               time: `[${new Date().toLocaleTimeString()}]`,
-              text: `Nie udało się pobrać firmware z chmury: ${err.message}`,
+              text: isPolish
+                ? `Nie udało się pobrać firmware z chmury: ${err.message}`
+                : `Failed to download firmware from cloud: ${err.message}`,
               isError: true,
             },
           ],

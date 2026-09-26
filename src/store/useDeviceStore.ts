@@ -123,6 +123,8 @@ const syncConnectedDeviceState = (desc: DeviceDescriptor) => {
       await useKeymapStore.getState().readAllLayersFromKeyboard();
       // 3. Sync performance & NKRO settings from hardware
       await useSettingsStore.getState().loadFromHardware();
+      // 4. Check for cloud firmware & studio updates
+      useSettingsStore.getState().checkCloudUpdates();
     } catch (e) {
       console.warn('Failed to sync connected device state from hardware:', e);
     }

@@ -19,6 +19,18 @@ export interface HardwareInfo {
   compatibilityStatus: string;
 }
 
+export interface StudioUpdateState {
+  isChecking: boolean;
+  available: boolean;
+  currentVersion: string;
+  latestVersion: string;
+  releaseTag: string;
+  releaseDate: string;
+  downloadUrl: string;
+  webAppUrl: string;
+  changelog: string[];
+}
+
 export interface FlasherState {
   file: File | null;
   filePath?: string;
@@ -34,3 +46,4 @@ export interface FlasherState {
   cloudEntry: any | null;
   consoleLogs: Array<{ time: string; text: string; isError?: boolean }>;
 }
+

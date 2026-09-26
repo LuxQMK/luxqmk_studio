@@ -8,6 +8,7 @@ export const SettingsView: React.FC = () => {
     performance,
     hardwareInfo,
     flasher,
+    studioUpdate,
     setDebounceType,
     setDebounceTime,
     setNkroEnabled,
@@ -20,6 +21,7 @@ export const SettingsView: React.FC = () => {
     startSmartFlash,
     cancelFlash,
     checkCloudUpdates,
+    checkStudioUpdates,
     applyCloudFirmware,
   } = useSettingsStore();
 
@@ -462,10 +464,10 @@ export const SettingsView: React.FC = () => {
             <div
               className="cloud-firmware-banner"
               style={{
-                background: flasher.cloudUpdateAvailable ? 'rgba(0, 240, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
-                border: `1px solid ${flasher.cloudUpdateAvailable ? 'rgba(0, 240, 255, 0.3)' : 'var(--border-color)'}`,
+                background: flasher.cloudUpdateAvailable ? 'rgba(0, 245, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                border: `1px solid ${flasher.cloudUpdateAvailable ? 'rgba(0, 245, 255, 0.4)' : 'var(--border-color)'}`,
                 borderRadius: '12px',
-                padding: '0.9rem 1.1rem',
+                padding: '1rem 1.25rem',
                 marginBottom: '1rem',
                 display: 'flex',
                 alignItems: 'center',
@@ -476,26 +478,26 @@ export const SettingsView: React.FC = () => {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <span style={{ color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
                   </svg>
                 </span>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <strong style={{ fontSize: '0.9rem' }}>{flasher.cloudEntry.name}</strong>
+                    <strong style={{ fontSize: '0.95rem', color: 'var(--text-primary)' }}>{flasher.cloudEntry.name}</strong>
                     <span className={`badge-pill ${flasher.cloudUpdateAvailable ? 'badge-warning' : 'badge-success'}`}>
-                      {flasher.cloudUpdateAvailable ? `Update: v${flasher.cloudEntry.version}` : `Cloud: v${flasher.cloudEntry.version}`}
+                      {flasher.cloudUpdateAvailable ? `${t('lblCloudFirmwareUpdateAvailable', { current: firmwareInfo ? `v${firmwareInfo.major}.${firmwareInfo.minor}.${firmwareInfo.patch}` : 'v1.4.0', latest: `v${flasher.cloudEntry.version}` })}` : `Cloud: v${flasher.cloudEntry.version} (${t('lblCloudFirmwareUpToDate')})`}
                     </span>
                   </div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                    {t('lblCloudCatalogDesc', 'Official verified LuxQMK build from browse.luxqmk.click')}
+                    {t('lblCloudCatalogDesc', 'Official verified LuxQMK build from files.luxqmk.click')}
                   </span>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
                 <a
-                  href="https://browse.luxqmk.click"
+                  href="https://luxqmk.click/#firmware"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-sm btn-secondary"
@@ -505,7 +507,7 @@ export const SettingsView: React.FC = () => {
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                   </svg>
-                  <span>browse.luxqmk.click</span>
+                  <span>luxqmk.click</span>
                 </a>
                 <button
                   type="button"
@@ -518,7 +520,7 @@ export const SettingsView: React.FC = () => {
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                   </svg>
-                  <span>{flasher.isDownloadingCloud ? 'Pobieranie...' : t('btnCloudUpdate', '1-Click Cloud Load')}</span>
+                  <span>{flasher.isDownloadingCloud ? 'Pobieranie...' : t('btnOneClickFwUpdate', '1-Click Cloud Update')}</span>
                 </button>
               </div>
             </div>
@@ -665,6 +667,84 @@ export const SettingsView: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* CARD 5: LUXQMK STUDIO APP UPDATES */}
+        <div className="palette-card settings-card">
+          <div className="settings-card-header">
+            <span className="settings-card-icon" style={{ background: 'rgba(189, 0, 255, 0.1)', color: 'var(--accent-purple)' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </span>
+            <div>
+              <h3>{t('cardStudioUpdatesTitle')}</h3>
+              <p className="settings-card-subtitle">{t('cardStudioUpdatesSubtitle')}</p>
+            </div>
+          </div>
+
+          <div style={{
+            background: studioUpdate.available ? 'rgba(189, 0, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+            border: `1px solid ${studioUpdate.available ? 'rgba(189, 0, 255, 0.35)' : 'var(--border-color)'}`,
+            borderRadius: '12px',
+            padding: '1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
+                  LuxQMK Studio v{studioUpdate.currentVersion}
+                </strong>
+                <span className={`badge-pill ${studioUpdate.available ? 'badge-warning' : 'badge-success'}`}>
+                  {studioUpdate.available ? `New: v${studioUpdate.latestVersion}` : t('lblStudioUpToDate')}
+                </span>
+              </div>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
+                {studioUpdate.available ? t('lblStudioUpdateAvailable') : `Latest cloud manifest from files.luxqmk.click (${studioUpdate.releaseTag})`}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={studioUpdate.isChecking || flasher.isCheckingCloud}
+                onClick={() => checkCloudUpdates()}
+                style={{ padding: '0.55rem 0.9rem', fontSize: '0.85rem' }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={studioUpdate.isChecking ? 'spin' : ''}>
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                <span>{studioUpdate.isChecking ? t('btnCheckingUpdates') : t('btnCheckAllUpdates')}</span>
+              </button>
+
+              {studioUpdate.available && (
+                <a
+                  href={studioUpdate.downloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                  style={{ textDecoration: 'none', padding: '0.55rem 1rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>{t('btnDownloadStudioInstaller')}</span>
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
   );

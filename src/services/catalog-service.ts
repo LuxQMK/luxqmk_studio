@@ -1,9 +1,10 @@
 import { ALL_DEVICE_DESCRIPTORS } from '../data/devices';
 
 /**
- * LuxQMK Cloud Firmware Catalog Service
- * Connects to GitHub Releases API (and optionally browse.luxqmk.click) to fetch firmware releases,
- * match connected keyboard profiles, detect available OTA updates, and download binaries.
+ * LuxQMK Cloud Firmware Catalog & Studio Update Service
+ * Connects to files.luxqmk.click CDN (and Cloudflare Pages fallbacks) to fetch:
+ * 1. Global firmware catalog for connected keyboards (OTA firmware update detection).
+ * 2. LuxQMK Studio version manifests (Desktop installer & Web app update detection).
  */
 
 export interface CatalogKeyboardEntry {
@@ -22,147 +23,142 @@ export interface CatalogKeyboardEntry {
   file_size_bytes: number;
   sha256: string;
   download_url: string;
-  studio_url: string;
+  latest_url?: string;
+  studio_url?: string;
 }
 
 export interface FirmwareCatalog {
   version: string;
   release_tag: string;
-  updated_at: string;
-  portal_url: string;
-  api_url: string;
-  github_repo: string;
+  generated_at?: string;
+  updated_at?: string;
+  domain?: string;
+  base_url?: string;
   total_keyboards: number;
   keyboards: CatalogKeyboardEntry[];
 }
 
-const PRIMARY_CATALOG_URL = 'https://browse.luxqmk.click/catalog.json';
-const FALLBACK_GITHUB_API = 'https://api.github.com/repos/LuxQMK/qmk_firmware/releases/latest';
+export interface StudioVersionInfo {
+  version: string;
+  release_tag: string;
+  release_name?: string;
+  release_date?: string;
+  min_compatible_firmware?: string;
+  changelog?: string[];
+  downloads?: {
+    windows_installer?: string;
+    web_app?: string;
+  };
+  sha256?: string;
+}
+
+const FIRMWARE_CATALOG_URLS = [
+  'https://files.luxqmk.click/firmware/catalog.json',
+  'https://files.luxqmk.click/catalog.json',
+  'https://luxqmk-firmware.pages.dev/firmware/catalog.json',
+  'https://luxqmk-firmware.pages.dev/catalog.json',
+];
+
+const STUDIO_VERSION_URLS = [
+  'https://files.luxqmk.click/studio/version.json',
+  'https://files.luxqmk.click/studio/latest.json',
+  'https://luxqmk-firmware.pages.dev/studio/version.json',
+];
+
+export function parseSemVer(v: string | number | null | undefined): [number, number, number] {
+  if (v === null || v === undefined) return [0, 0, 0];
+  const clean = String(v).replace(/^v/i, '').trim();
+  const parts = clean.split('.').map((p) => parseInt(p, 10) || 0);
+  return [parts[0] || 0, parts[1] || 0, parts[2] || 0];
+}
+
+export function compareSemVer(
+  v1: string | { major: number; minor: number; patch: number } | null | undefined,
+  v2: string | { major: number; minor: number; patch: number } | null | undefined
+): number {
+  const [maj1, min1, pat1] = typeof v1 === 'object' && v1 !== null
+    ? [v1.major || 0, v1.minor || 0, v1.patch || 0]
+    : parseSemVer(v1);
+
+  const [maj2, min2, pat2] = typeof v2 === 'object' && v2 !== null
+    ? [v2.major || 0, v2.minor || 0, v2.patch || 0]
+    : parseSemVer(v2);
+
+  if (maj1 !== maj2) return maj1 - maj2;
+  if (min1 !== min2) return min1 - min2;
+  return pat1 - pat2;
+}
+
+export async function computeSha256(buffer: ArrayBuffer): Promise<string> {
+  if (typeof crypto !== 'undefined' && crypto.subtle && typeof crypto.subtle.digest === 'function') {
+    const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
+    const hashArr = Array.from(new Uint8Array(hashBuf));
+    return hashArr.map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  return '';
+}
 
 class CatalogService {
   private cachedCatalog: FirmwareCatalog | null = null;
-  private lastFetchTime = 0;
-  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache
+  private lastCatalogFetchTime = 0;
+  private cachedStudioVersion: StudioVersionInfo | null = null;
+  private lastStudioFetchTime = 0;
+  private readonly CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes cache
 
   /**
-   * Fetches the global firmware catalog from GitHub Releases API or primary catalog.
+   * Fetches the global firmware catalog from files.luxqmk.click or Cloudflare Pages fallbacks.
    */
   async getCatalog(forceRefresh = false): Promise<FirmwareCatalog | null> {
     const now = Date.now();
-    if (!forceRefresh && this.cachedCatalog && now - this.lastFetchTime < this.CACHE_TTL_MS) {
+    if (!forceRefresh && this.cachedCatalog && now - this.lastCatalogFetchTime < this.CACHE_TTL_MS) {
       return this.cachedCatalog;
     }
 
-    try {
-      // 1. Try primary browse.luxqmk.click catalog endpoint if available
-      const res = await fetch(PRIMARY_CATALOG_URL, { cache: 'no-cache' });
-      if (res.ok) {
-        const data: FirmwareCatalog = await res.json();
-        this.cachedCatalog = data;
-        this.lastFetchTime = now;
-        return data;
-      }
-    } catch {
-      // Standalone website not yet deployed or unreachable — use GitHub Releases API
-    }
-
-    try {
-      // 2. Fetch directly from GitHub Releases API
-      const res = await fetch(FALLBACK_GITHUB_API);
-      if (res.ok) {
-        const release = await res.json();
-
-        // Check if catalog.json was explicitly attached
-        const catalogAsset = release.assets?.find((a: any) => a.name === 'catalog.json');
-        if (catalogAsset?.browser_download_url) {
-          try {
-            const catRes = await fetch(catalogAsset.browser_download_url);
-            if (catRes.ok) {
-              const data: FirmwareCatalog = await catRes.json();
-              this.cachedCatalog = data;
-              this.lastFetchTime = now;
-              return data;
-            }
-          } catch {
-            // fallback to asset synthesizing
+    for (const url of FIRMWARE_CATALOG_URLS) {
+      try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (res.ok) {
+          const data: FirmwareCatalog = await res.json();
+          if (data && Array.isArray(data.keyboards) && data.keyboards.length > 0) {
+            this.cachedCatalog = data;
+            this.lastCatalogFetchTime = now;
+            return data;
           }
         }
-
-        // Synthesize catalog directly from GitHub Release binary assets
-        if (release.assets && Array.isArray(release.assets)) {
-          const synthesized = this.synthesizeCatalogFromRelease(release);
-          this.cachedCatalog = synthesized;
-          this.lastFetchTime = now;
-          return synthesized;
-        }
+      } catch (e) {
+        // Continue to next mirror
       }
-    } catch (e) {
-      console.error('Failed to fetch cloud firmware catalog from GitHub Releases:', e);
     }
 
     return this.cachedCatalog;
   }
 
   /**
-   * Synthesizes a structured firmware catalog directly from GitHub Release assets.
+   * Fetches the latest LuxQMK Studio version manifest from files.luxqmk.click or fallbacks.
    */
-  private synthesizeCatalogFromRelease(release: any): FirmwareCatalog {
-    const tag = release.tag_name || 'v0.3.1';
-    const binaryAssets = (release.assets || []).filter((a: any) => {
-      const name = (a.name || '').toLowerCase();
-      return name.endsWith('.bin') || name.endsWith('.hex') || name.endsWith('.uf2');
-    });
+  async getStudioVersion(forceRefresh = false): Promise<StudioVersionInfo | null> {
+    const now = Date.now();
+    if (!forceRefresh && this.cachedStudioVersion && now - this.lastStudioFetchTime < this.CACHE_TTL_MS) {
+      return this.cachedStudioVersion;
+    }
 
-    const keyboards: CatalogKeyboardEntry[] = binaryAssets.map((asset: any) => {
-      const fn = asset.name.toLowerCase();
+    for (const url of STUDIO_VERSION_URLS) {
+      try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (res.ok) {
+          const data: StudioVersionInfo = await res.json();
+          if (data && data.version) {
+            this.cachedStudioVersion = data;
+            this.lastStudioFetchTime = now;
+            return data;
+          }
+        }
+      } catch (e) {
+        // Continue to next mirror
+      }
+    }
 
-      // Find matching device descriptor from built-in database
-      const matchedDesc = ALL_DEVICE_DESCRIPTORS.find((d) => {
-        if (fn.includes('gmmk3') && fn.includes('100') && d.id.includes('gmmk3-100')) return true;
-        if (fn.includes('gmmk3') && fn.includes('75') && d.id.includes('gmmk3-75')) return true;
-        if (fn.includes('gmmk3') && fn.includes('65') && d.id.includes('gmmk3-65')) return true;
-        if (fn.includes('gmmk2') && fn.includes('96') && d.id.includes('gmmk2-96')) return true;
-        if (fn.includes('gmmk2') && fn.includes('65') && d.id.includes('gmmk2-65')) return true;
-        return false;
-      });
-
-      const id = matchedDesc?.id || asset.name.replace(/\.(bin|hex|uf2)$/i, '');
-      const name = matchedDesc?.name || asset.name.replace(/_via\.(bin|hex|uf2)$/i, '').replace(/_/g, ' ').toUpperCase();
-      const mcu = matchedDesc?.mcu || (fn.endsWith('.hex') ? 'ATmega32U4' : 'ARM Cortex-M4');
-      const flasher = fn.includes('gmmk') ? 'wb32-dfu-updater_cli' : 'dfu-util';
-      const vidHex = matchedDesc?.vendorId ? `0x${matchedDesc.vendorId.toString(16).toUpperCase()}` : undefined;
-      const pidHex = matchedDesc?.productId ? `0x${matchedDesc.productId.toString(16).toUpperCase()}` : undefined;
-
-      return {
-        id,
-        name,
-        filename: asset.name,
-        version: tag,
-        release_tag: tag,
-        vendor_id: vidHex,
-        product_id: pidHex,
-        mcu,
-        flasher,
-        layout: matchedDesc?.layout || 'ANSI',
-        tier: 'LuxQMK Dual-Layer Reactive',
-        features: ['RGB Matrix', 'Reactive Lighting', 'WebHID VIA', 'Full NKRO', 'Hardware Debounce'],
-        file_size_bytes: asset.size || 0,
-        sha256: '',
-        download_url: asset.browser_download_url,
-        studio_url: `https://studio.luxqmk.click/#/settings?flash=${encodeURIComponent(asset.name)}`,
-      };
-    });
-
-    return {
-      version: tag,
-      release_tag: tag,
-      updated_at: release.published_at || new Date().toISOString(),
-      portal_url: 'https://browse.luxqmk.click',
-      api_url: FALLBACK_GITHUB_API,
-      github_repo: 'LuxQMK/qmk_firmware',
-      total_keyboards: keyboards.length,
-      keyboards,
-    };
+    return this.cachedStudioVersion;
   }
 
   /**
@@ -176,32 +172,48 @@ class CatalogService {
   ): CatalogKeyboardEntry | null {
     if (!catalog || !catalog.keyboards || catalog.keyboards.length === 0) return null;
 
-    const vidHex = vendorId !== null ? `0x${vendorId.toString(16).toUpperCase()}` : null;
-    const pidHex = productId !== null ? `0x${productId.toString(16).toUpperCase()}` : null;
+    const vidHex = vendorId !== null ? `0x${vendorId.toString(16).toUpperCase().padStart(4, '0')}` : null;
+    const pidHex = productId !== null ? `0x${productId.toString(16).toUpperCase().padStart(4, '0')}` : null;
 
     // 1. Exact VID & PID Match
     if (vidHex && pidHex) {
-      const match = catalog.keyboards.find(
-        (kb) =>
-          kb.vendor_id?.toUpperCase() === vidHex &&
-          kb.product_id?.toUpperCase() === pidHex
-      );
+      const match = catalog.keyboards.find((kb) => {
+        if (!kb.vendor_id || !kb.product_id) return false;
+        const kbVid = kb.vendor_id.toUpperCase();
+        const kbPid = kb.product_id.toUpperCase();
+        return kbVid === vidHex && kbPid === pidHex;
+      });
       if (match) return match;
     }
 
-    // 2. Fallback: Fuzzy Name Match (e.g., GMMK 3, GMMK 2, Keychron)
+    // 2. Normalized String Match
     if (productName) {
-      const pLower = productName.toLowerCase();
-      const nameMatch = catalog.keyboards.find((kb) => {
-        const kLower = kb.name.toLowerCase();
-        if (pLower.includes('100') && kLower.includes('100') && pLower.includes('gmmk 3') && kLower.includes('gmmk 3')) return true;
-        if (pLower.includes('75') && kLower.includes('75') && pLower.includes('gmmk 3') && kLower.includes('gmmk 3')) return true;
-        if (pLower.includes('65') && kLower.includes('65') && pLower.includes('gmmk 3') && kLower.includes('gmmk 3')) return true;
-        if (pLower.includes('96') && kLower.includes('96') && pLower.includes('gmmk 2') && kLower.includes('gmmk 2')) return true;
-        if (pLower.includes('65') && kLower.includes('65') && pLower.includes('gmmk 2') && kLower.includes('gmmk 2')) return true;
-        return false;
+      const pNorm = productName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const match = catalog.keyboards.find((kb) => {
+        const kNorm = kb.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const idNorm = kb.id.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return pNorm.includes(kNorm) || kNorm.includes(pNorm) || pNorm.includes(idNorm);
       });
-      if (nameMatch) return nameMatch;
+      if (match) return match;
+
+      // 3. Keyword Heuristics
+      const isGmmk3 = pNorm.includes('gmmk3') || (pNorm.includes('gmmk') && pNorm.includes('3'));
+      const isGmmk2 = pNorm.includes('gmmk2') || (pNorm.includes('gmmk') && pNorm.includes('2'));
+      const is100 = pNorm.includes('100') || pNorm.includes('full');
+      const is75 = pNorm.includes('75');
+      const is65 = pNorm.includes('65');
+      const is96 = pNorm.includes('96');
+      const isIso = pNorm.includes('iso') || pNorm.includes('uk') || pNorm.includes('de') || pNorm.includes('nordic');
+
+      if (isGmmk3) {
+        if (is100) return catalog.keyboards.find((k) => k.id.includes('gmmk3') && (k.id.includes('100') || k.id.includes('p100')) && k.id.includes(isIso ? 'iso' : 'ansi')) || null;
+        if (is75) return catalog.keyboards.find((k) => k.id.includes('gmmk3') && (k.id.includes('75') || k.id.includes('p75')) && k.id.includes(isIso ? 'iso' : 'ansi')) || null;
+        if (is65) return catalog.keyboards.find((k) => k.id.includes('gmmk3') && (k.id.includes('65') || k.id.includes('p65')) && k.id.includes(isIso ? 'iso' : 'ansi')) || null;
+      }
+      if (isGmmk2) {
+        if (is96) return catalog.keyboards.find((k) => k.id.includes('gmmk2') && (k.id.includes('96') || k.id.includes('p96')) && k.id.includes(isIso ? 'iso' : 'ansi')) || null;
+        if (is65) return catalog.keyboards.find((k) => k.id.includes('gmmk2') && (k.id.includes('65') || k.id.includes('p65')) && k.id.includes(isIso ? 'iso' : 'ansi')) || null;
+      }
     }
 
     return null;
@@ -210,32 +222,54 @@ class CatalogService {
   /**
    * Checks if the catalog has a newer firmware version than currently running on the keyboard.
    */
-  hasNewerVersion(currentFw: { major: number; minor: number; patch: number } | null, cloudEntry: CatalogKeyboardEntry): boolean {
-    if (!currentFw) return false;
-    const cloudVersionStr = cloudEntry.version.replace(/^v/, '');
-    const parts = cloudVersionStr.split('.').map(Number);
-    const [cMajor = 0, cMinor = 0, cPatch = 0] = parts;
-
-    if (cMajor > currentFw.major) return true;
-    if (cMajor === currentFw.major && cMinor > currentFw.minor) return true;
-    if (cMajor === currentFw.major && cMinor === currentFw.minor && cPatch > currentFw.patch) return true;
-
-    return false;
+  hasNewerFirmwareVersion(
+    currentFw: { major: number; minor: number; patch: number } | null | undefined,
+    cloudEntry: CatalogKeyboardEntry
+  ): boolean {
+    if (!currentFw || !cloudEntry) return false;
+    return compareSemVer(cloudEntry.version, currentFw) > 0;
   }
 
   /**
-   * Downloads a firmware binary directly from the cloud repository into a local File object ready for flasher.
+   * Checks if a newer LuxQMK Studio version is available.
    */
-  async downloadFirmwareFile(entry: CatalogKeyboardEntry): Promise<File> {
-    const res = await fetch(entry.download_url);
-    if (!res.ok) {
-      throw new Error(`Failed to download firmware (${res.status} ${res.statusText})`);
+  hasNewerStudioVersion(currentStudioVersion: string, cloudStudio: StudioVersionInfo): boolean {
+    if (!currentStudioVersion || !cloudStudio || !cloudStudio.version) return false;
+    return compareSemVer(cloudStudio.version, currentStudioVersion) > 0;
+  }
+
+  /**
+   * Downloads a firmware binary directly from files.luxqmk.click into a local File object ready for flasher.
+   * Performs SHA-256 integrity validation if checksum is provided in manifest.
+   */
+  async downloadFirmwareFile(entry: CatalogKeyboardEntry): Promise<{ file: File; sha256: string; verified: boolean }> {
+    const downloadUrl = entry.download_url || entry.latest_url;
+    if (!downloadUrl) {
+      throw new Error('Missing download URL in catalog entry');
     }
-    const blob = await res.blob();
+
+    const res = await fetch(downloadUrl, { cache: 'no-cache' });
+    if (!res.ok) {
+      throw new Error(`Failed to download firmware binary (${res.status} ${res.statusText})`);
+    }
+
+    const arrayBuf = await res.arrayBuffer();
+    const calculatedHash = await computeSha256(arrayBuf);
+    const expectedHash = (entry.sha256 || '').trim().toLowerCase();
+
+    const verified = Boolean(expectedHash && calculatedHash && calculatedHash.toLowerCase() === expectedHash);
+
+    const blob = new Blob([arrayBuf], { type: 'application/octet-stream' });
     const file = new File([blob], entry.filename, { type: 'application/octet-stream' });
-    return file;
+
+    return {
+      file,
+      sha256: calculatedHash,
+      verified,
+    };
   }
 }
 
 export const catalogService = new CatalogService();
+
 
