@@ -31,6 +31,20 @@ export const SettingsView: React.FC = () => {
   const firmwareInputRef = useRef<HTMLInputElement>(null);
   const consoleLogRef = useRef<HTMLDivElement>(null);
 
+  const isDesktop = typeof window !== 'undefined' && !!window.electronAPI && !!window.electronAPI.isDesktop;
+
+  const openExternalUrl = (url: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (isDesktop && window.electronAPI && typeof window.electronAPI.openExternal === 'function') {
+      window.electronAPI.openExternal(url);
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   const [toolBadge, setToolBadge] = useState<{ text: string; className: string }>({
     text: t('flasherToolReady'),
     className: 'badge-pill badge-success',
@@ -501,6 +515,7 @@ export const SettingsView: React.FC = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-sm btn-secondary"
+                  onClick={(e) => openExternalUrl('https://luxqmk.click/#firmware', e)}
                   style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -668,7 +683,7 @@ export const SettingsView: React.FC = () => {
           </div>
         </div>
 
-        {/* CARD 5: LUXQMK STUDIO APP UPDATES */}
+        {/* CARD 5: LUXQMK STUDIO APP UPDATES (DESKTOP) / APP DOWNLOAD (WEB) */}
         <div className="palette-card settings-card">
           <div className="settings-card-header">
             <span className="settings-card-icon" style={{ background: 'rgba(189, 0, 255, 0.1)', color: 'var(--accent-purple)' }}>
@@ -679,14 +694,14 @@ export const SettingsView: React.FC = () => {
               </svg>
             </span>
             <div>
-              <h3>{t('cardStudioUpdatesTitle')}</h3>
-              <p className="settings-card-subtitle">{t('cardStudioUpdatesSubtitle')}</p>
+              <h3>{isDesktop ? t('cardStudioUpdatesTitle') : t('lblStudioDesktopAppTitle')}</h3>
+              <p className="settings-card-subtitle">{isDesktop ? t('cardStudioUpdatesSubtitle') : t('lblStudioDesktopAppDesc')}</p>
             </div>
           </div>
 
           <div style={{
-            background: studioUpdate.available ? 'rgba(189, 0, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-            border: `1px solid ${studioUpdate.available ? 'rgba(189, 0, 255, 0.35)' : 'var(--border-color)'}`,
+            background: isDesktop && studioUpdate.available ? 'rgba(189, 0, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+            border: `1px solid ${isDesktop && studioUpdate.available ? 'rgba(189, 0, 255, 0.35)' : 'var(--border-color)'}`,
             borderRadius: '12px',
             padding: '1.25rem',
             display: 'flex',
@@ -698,39 +713,44 @@ export const SettingsView: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
                 <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
-                  LuxQMK Studio v{studioUpdate.currentVersion}
+                  LuxQMK Studio {isDesktop ? `v${studioUpdate.currentVersion}` : `Desktop v${studioUpdate.latestVersion || '1.4.0'}`}
                 </strong>
-                <span className={`badge-pill ${studioUpdate.available ? 'badge-warning' : 'badge-success'}`}>
-                  {studioUpdate.available ? `New: v${studioUpdate.latestVersion}` : t('lblStudioUpToDate')}
+                <span className={`badge-pill ${isDesktop && studioUpdate.available ? 'badge-warning' : 'badge-success'}`}>
+                  {isDesktop ? (studioUpdate.available ? `New: v${studioUpdate.latestVersion}` : t('lblStudioUpToDate')) : 'Windows 64-bit'}
                 </span>
               </div>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-                {studioUpdate.available ? t('lblStudioUpdateAvailable') : `Latest cloud manifest from files.luxqmk.click (${studioUpdate.releaseTag})`}
+                {isDesktop
+                  ? (studioUpdate.available ? t('lblStudioUpdateAvailable') : `Latest cloud manifest from files.luxqmk.click (${studioUpdate.releaseTag})`)
+                  : 'Oficjalny pakiet instalacyjny z files.luxqmk.click'}
               </span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                disabled={studioUpdate.isChecking || flasher.isCheckingCloud}
-                onClick={() => checkCloudUpdates()}
-                style={{ padding: '0.55rem 0.9rem', fontSize: '0.85rem' }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={studioUpdate.isChecking ? 'spin' : ''}>
-                  <polyline points="23 4 23 10 17 10"></polyline>
-                  <polyline points="1 20 1 14 7 14"></polyline>
-                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                </svg>
-                <span>{studioUpdate.isChecking ? t('btnCheckingUpdates') : t('btnCheckAllUpdates')}</span>
-              </button>
+              {isDesktop && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  disabled={studioUpdate.isChecking || flasher.isCheckingCloud}
+                  onClick={() => checkCloudUpdates()}
+                  style={{ padding: '0.55rem 0.9rem', fontSize: '0.85rem' }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={studioUpdate.isChecking ? 'spin' : ''}>
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                  </svg>
+                  <span>{studioUpdate.isChecking ? t('btnCheckingUpdates') : t('btnCheckAllUpdates')}</span>
+                </button>
+              )}
 
-              {studioUpdate.available && (
+              {(!isDesktop || studioUpdate.available) && (
                 <a
-                  href={studioUpdate.downloadUrl}
+                  href={studioUpdate.downloadUrl || 'https://files.luxqmk.click/studio/v1.4.0/LuxQMK-Studio-Setup-1.4.0.exe'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-primary"
+                  onClick={(e) => openExternalUrl(studioUpdate.downloadUrl || 'https://files.luxqmk.click/studio/v1.4.0/LuxQMK-Studio-Setup-1.4.0.exe', e)}
                   style={{ textDecoration: 'none', padding: '0.55rem 1rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

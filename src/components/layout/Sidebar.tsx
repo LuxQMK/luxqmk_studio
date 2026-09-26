@@ -1,5 +1,6 @@
 import React from 'react';
 import { useUIStore, ViewTab } from '../../store/useUIStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import { useI18n } from '../../i18n';
 import logoSvg from '../../../assets/logo.svg';
 
@@ -11,9 +12,22 @@ interface NavItem {
 
 export const Sidebar: React.FC = () => {
   const { activeView, setActiveView, setAppSettingsOpen, setAboutOpen, showToast } = useUIStore();
+  const { checkCloudUpdates } = useSettingsStore();
   const { t } = useI18n();
 
   const isDesktop = typeof window !== 'undefined' && !!window.electronAPI && !!window.electronAPI.isDesktop;
+
+  const handleCheckUpdates = async () => {
+    showToast(t('btnCheckingUpdates'), 'info');
+    await checkCloudUpdates();
+    const store = useSettingsStore.getState();
+    if (store.studioUpdate.available) {
+      showToast(t('lblStudioUpdateAvailable'), 'warning');
+      setActiveView('settings');
+    } else {
+      showToast(t('lblStudioUpToDate'), 'success');
+    }
+  };
 
   const navItems: NavItem[] = [
     {
@@ -147,21 +161,23 @@ export const Sidebar: React.FC = () => {
             </span>
           </button>
 
-          <button
-            type="button"
-            className="sidebar-icon-btn"
-            id="btnCheckUpdates"
-            title={t('btnCheckUpdatesTitle')}
-            onClick={() => showToast(t('msgUpdateCheckLatest', { version: '1.4.0' }), 'info')}
-          >
-            <span className="footer-btn-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="23 4 23 10 17 10"></polyline>
-                <polyline points="1 20 1 14 7 14"></polyline>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-              </svg>
-            </span>
-          </button>
+          {isDesktop && (
+            <button
+              type="button"
+              className="sidebar-icon-btn"
+              id="btnCheckUpdates"
+              title={t('btnCheckUpdatesTitle')}
+              onClick={handleCheckUpdates}
+            >
+              <span className="footer-btn-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+              </span>
+            </button>
+          )}
 
           <button
             type="button"

@@ -22,6 +22,7 @@ export const TopBar: React.FC = () => {
     discardAllChanges,
   } = useDeviceStore();
   const { t } = useI18n();
+  const isDesktop = typeof window !== 'undefined' && !!window.electronAPI && !!window.electronAPI.isDesktop;
 
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -246,8 +247,8 @@ export const TopBar: React.FC = () => {
           </button>
         )}
 
-        {/* Studio Update Available Badge */}
-        {studioUpdate.available && (
+        {/* Studio Update Available Badge (Desktop only) */}
+        {isDesktop && studioUpdate.available && (
           <button
             type="button"
             className="btn btn-secondary"

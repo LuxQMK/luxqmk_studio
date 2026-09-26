@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   openAppDataFolder: () => ipcRenderer.invoke("open-app-data-folder"),
   saveUserConfig: (cfg) => ipcRenderer.invoke("save-user-config", cfg),
   loadUserConfig: () => ipcRenderer.invoke("load-user-config"),
+  openExternal: (url) => ipcRenderer.invoke("open-external", url),
 
   onAutostartChanged: (callback) => {
     const handler = (event, enabled) => callback(enabled);

@@ -26,6 +26,7 @@ interface Window {
     openAppDataFolder: () => Promise<string>;
     saveUserConfig: (cfg: any) => Promise<{ success: boolean; path?: string; error?: string }>;
     loadUserConfig: () => Promise<any>;
+    openExternal: (url: string) => Promise<boolean>;
     onAutostartChanged: (callback: (enabled: boolean) => void) => () => void;
     getFlasherToolsStatus: () => Promise<{ wb32Available: boolean; wb32Path?: string; dfuUtilAvailable: boolean; dfuUtilPath?: string }>;
     selectFirmwareFile: () => Promise<{ filePath: string; fileName: string; fileSize: number; extension: string } | null>;

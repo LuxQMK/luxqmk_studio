@@ -336,6 +336,22 @@ function createWindow() {
     });
   }
 
+  // Intercept all new window requests (target="_blank", window.open) to open in default system browser
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("mailto:")) {
+      shell.openExternal(url);
+    }
+    return { action: "deny" };
+  });
+
+  // Intercept in-window external navigation to keep Electron on the local app
+  mainWindow.webContents.on("will-navigate", (event, url) => {
+    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("mailto:")) {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
+  });
+
   const distIndex = path.join(__dirname, "dist", "index.html");
   if (fs.existsSync(distIndex)) {
     mainWindow.loadFile(distIndex);
@@ -753,6 +769,18 @@ ipcMain.handle("flasher:flash-firmware", async (event, { filePath, toolType = "w
 
   sendProgress(100, "done", "Firmware został pomyślnie wgrany do pamięci klawiatury!");
   return { success: true, output: flashResult.output };
+});
+
+ipcMain.handle("open-external", async (_, url) => {
+  if (url && (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("mailto:"))) {
+    try {
+      await shell.openExternal(url);
+      return true;
+    } catch (e) {
+      console.error("Failed to open external URL:", e);
+    }
+  }
+  return false;
 });
 
 app.whenReady().then(() => {

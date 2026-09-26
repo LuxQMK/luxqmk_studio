@@ -658,7 +658,9 @@ export const translations = {
     "btnOneClickFwUpdate": "1-Click Cloud Update",
     "lblCloudFirmwareTitle": "Cloud Firmware Manifest",
     "lblCloudFirmwareUpToDate": "Your keyboard is running the latest firmware version.",
-    "lblCloudFirmwareUpdateAvailable": "New firmware update available ({current} → {latest})"
+    "lblCloudFirmwareUpdateAvailable": "New firmware update available ({current} → {latest})",
+    "lblStudioDesktopAppTitle": "LuxQMK Studio Desktop App (Windows)",
+    "lblStudioDesktopAppDesc": "Download the official standalone Windows installer (.exe) with WASAPI Audio Visualizer and background RGB streaming support."
   },
   "pl": {
     "appName": "LuxQMK Studio",
@@ -1319,7 +1321,9 @@ export const translations = {
     "btnOneClickFwUpdate": "Aktualizuj Firmware (1-Click)",
     "lblCloudFirmwareTitle": "Oficjalny rejestr firmware w chmurze",
     "lblCloudFirmwareUpToDate": "Oprogramowanie układowe klawiatury jest w najnowszej wersji.",
-    "lblCloudFirmwareUpdateAvailable": "Dostępna nowa wersja firmware ({current} → {latest})"
+    "lblCloudFirmwareUpdateAvailable": "Dostępna nowa wersja firmware ({current} → {latest})",
+    "lblStudioDesktopAppTitle": "Aplikacja desktopowa LuxQMK Studio (Windows)",
+    "lblStudioDesktopAppDesc": "Pobierz oficjalny instalator desktopowy (.exe) z obsługą Audio Visualizera WASAPI oraz bezpośredniego streamingu RGB w tle."
   }
 } as const;
 
