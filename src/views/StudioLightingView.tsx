@@ -96,6 +96,8 @@ const EFFECT_TO_DIR_CATEGORY: Record<string, string> = {
 };
 
 export const StudioLightingView: React.FC = () => {
+  const isDesktop = typeof window !== 'undefined' && !!window.electronAPI && !!window.electronAPI.isDesktop;
+
   const { config, setConfig, toggleStudioLighting } = useVisualizerStore();
   const { presetLayoutId } = useKeymapStore();
   const { studioSubTab, setStudioSubTab } = useUIStore();
@@ -112,11 +114,36 @@ export const StudioLightingView: React.FC = () => {
   };
 
   useEffect(() => {
+    if (!isDesktop) return;
     refreshAudioSources();
     if (useDeviceStore.getState().isConnected) {
       useLightingStore.getState().loadFromHardware();
     }
-  }, []);
+  }, [isDesktop]);
+
+  if (!isDesktop) {
+    return (
+      <div className="view-container" style={{ padding: '3rem 2rem', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <div className="card text-center" style={{ maxWidth: '560px', padding: '2.5rem', border: '1px solid rgba(0, 245, 255, 0.25)', borderRadius: '16px', background: 'var(--card-bg, #10111a)' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '0.75rem', color: '#fff' }}>
+            Studio Lighting (Desktop App Only)
+          </h2>
+          <p style={{ color: '#94a3b8', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '1.75rem' }}>
+            Real-time 60 FPS software RGB matrix streaming and WASAPI audio visualizers are available exclusively in the standalone desktop app to ensure ultra-low latency and avoid browser tab throttling.
+          </p>
+          <a
+            href="https://luxqmk.click"
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-primary"
+            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0.75rem 1.5rem', fontWeight: 700, borderRadius: '9999px', textDecoration: 'none' }}
+          >
+            Download Desktop Installer &rarr;
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   const layoutKeys = getLayoutForPreset(presetLayoutId);
 

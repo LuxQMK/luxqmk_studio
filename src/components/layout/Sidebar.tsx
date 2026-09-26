@@ -13,6 +13,8 @@ export const Sidebar: React.FC = () => {
   const { activeView, setActiveView, setAppSettingsOpen, setAboutOpen, showToast } = useUIStore();
   const { t } = useI18n();
 
+  const isDesktop = typeof window !== 'undefined' && !!window.electronAPI && !!window.electronAPI.isDesktop;
+
   const navItems: NavItem[] = [
     {
       id: 'keymap',
@@ -65,8 +67,8 @@ export const Sidebar: React.FC = () => {
         </svg>
       ),
     },
-    {
-      id: 'studio_lighting',
+    ...(isDesktop ? [{
+      id: 'studio_lighting' as ViewTab,
       labelKey: 'navStudioLighting',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -75,7 +77,7 @@ export const Sidebar: React.FC = () => {
           <path d="M19 17v4"></path>
         </svg>
       ),
-    },
+    }] : []),
     {
       id: 'backup',
       labelKey: 'navBackup',

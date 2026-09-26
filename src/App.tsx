@@ -30,6 +30,8 @@ export const App: React.FC = () => {
     autoConnect();
   }, [autoConnect]);
 
+  const isDesktop = typeof window !== 'undefined' && !!window.electronAPI && !!window.electronAPI.isDesktop;
+
   return (
     <div className="app-wrapper">
       {/* 1. Left Sidebar Navigation (8 Views + Footer Modals) */}
@@ -46,7 +48,7 @@ export const App: React.FC = () => {
         {activeView === 'encoder' && <EncoderView />}
         {activeView === 'tester' && <TesterView />}
         {activeView === 'lighting' && <LightingView />}
-        {activeView === 'studio_lighting' && <StudioLightingView />}
+        {activeView === 'studio_lighting' && (isDesktop ? <StudioLightingView /> : <LightingView />)}
         {activeView === 'backup' && <BackupView />}
         {activeView === 'settings' && <SettingsView />}
       </main>
