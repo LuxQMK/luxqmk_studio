@@ -238,7 +238,8 @@ export function evalSidelightEffect(
   sidelight: SidelightConfig,
   now: number,
   brightness: number,
-  deviceFamily?: string
+  deviceFamily?: string,
+  totalSegments = 10
 ): { r: number; g: number; b: number } {
   const mode = Number(sidelight.effect) || 1;
   const speed = Math.max(10, Number(sidelight.speed) || 128);
@@ -280,24 +281,13 @@ export function evalSidelightEffect(
     }
   }
 
-  const isGmmk3 = !deviceFamily || deviceFamily.includes('GMMK 3') || deviceFamily.includes('gmmk3');
-
-  if (isGmmk3) {
-    // GMMK 3 8-segment visible diffuser window (top segIndex=0, bottom segIndex=7)
-    const norm = Math.max(0, Math.min(7, segIndex));
-    optStep = norm;
-    yScaled = Math.round((norm * 255 * density) / (7 * 128)) & 0xFF;
-    const distSym = Math.min(7, Math.abs(2 * (norm + 1) - 9)); // 7, 5, 3, 1, 1, 3, 5, 7 from center
-    distScaled = Math.round((distSym * 255 * density) / (7 * 128)) & 0xFF;
-  } else {
-    // GMMK 2 & Generic symmetric 1:1 linear strip
-    const span = 7;
-    const kClamped = Math.max(0, Math.min(span, segIndex));
-    optStep = kClamped;
-    yScaled = Math.round((kClamped * 255 * density) / (span * 128)) & 0xFF;
-    const distSym = Math.min(span, Math.abs(2 * kClamped - span));
-    distScaled = Math.round((distSym * 255 * density) / (span * 128)) & 0xFF;
-  }
+  const N = Math.max(2, totalSegments);
+  const span = N - 1;
+  const kClamped = Math.max(0, Math.min(span, segIndex));
+  optStep = Math.min(7, Math.round((kClamped * 7) / span));
+  yScaled = Math.round((kClamped * 255 * density) / (span * 128)) & 0xFF;
+  const distSym = Math.abs(2 * kClamped - span);
+  distScaled = Math.round((distSym * 255 * density) / (span * 128)) & 0xFF;
 
   switch (mode) {
     case 1: // SOLID_COLOR
@@ -916,6 +906,9 @@ export function useLightingVisualizer(
         }
       }
 
+      const leftCount = sideDiffusers.filter((d) => d.isLeft).length || 10;
+      const rightCount = sideDiffusers.filter((d) => !d.isLeft).length || 10;
+
       for (let sIdx = 0; sIdx < sideDiffusers.length; sIdx++) {
         const sd = sideDiffusers[sIdx];
         if (!sd.el) {
@@ -926,7 +919,8 @@ export function useLightingVisualizer(
         let rgb: { r: number; g: number; b: number };
 
         if (isCustomSidelight) {
-          rgb = evalSidelightEffect(sd, sidelight, now, brightness, currentDeviceFamily);
+          const totalSegs = sd.isLeft ? leftCount : rightCount;
+          rgb = evalSidelightEffect(sd, sidelight, now, brightness, currentDeviceFamily, totalSegs);
         } else {
           // Follow 1:1 main QMK matrix lighting calculation
           let h = baseH;
