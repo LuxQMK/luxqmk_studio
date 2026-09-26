@@ -8181,7 +8181,7 @@ export function isSidelightSupported(presetId: string, desc?: { capabilities?: {
  */
 export function getSideLedSegments(
   presetId: string,
-  canvasHeight: number,
+  canvasHeight?: number,
   desc?: { capabilities?: { hasSidelights?: boolean; sidelightCount?: number } } | null
 ): SideLedsLayout | null {
   if (!isSidelightSupported(presetId, desc)) {
@@ -8189,18 +8189,35 @@ export function getSideLedSegments(
   }
 
   // GMMK 3 has 20 side LEDs (10 per side); GMMK 2 65% has 16 (8 per side); GMMK 2 96% has 20 (10 per side)
-  const totalSideLeds = desc?.capabilities?.sidelightCount || (presetId.startsWith('gmmk2-65') ? 16 : 20);
+  const totalSideLeds = desc?.capabilities?.sidelightCount || (presetId.includes('65') ? (presetId.includes('gmmk2') ? 16 : 20) : 20);
   const countPerSide = Math.max(1, Math.floor(totalSideLeds / 2));
 
-  const topPadding = 18;
-  const bottomPadding = 18;
-  const segmentHeight = 14;
-  const usableHeight = Math.max(20, canvasHeight - topPadding - bottomPadding - segmentHeight);
+  let startY = 1.02;
+  let endY = 5.18;
 
+  if (presetId.includes('65') || presetId.includes('60')) {
+    // 5-row keyboard (starts at number row y=0 down to space row y=4)
+    startY = 0.05;
+    endY = 3.95;
+  } else if (presetId.includes('75')) {
+    // Compact 6-row keyboard (starts below compact F-row y=0.95 down to space row y=4.95)
+    startY = 0.95;
+    endY = 4.95;
+  } else if (presetId.includes('96') || presetId.includes('100')) {
+    // Standard 6-row keyboard with F-row gap (starts at number row y=1.02 down to space row y=5.18)
+    startY = 1.02;
+    endY = 5.18;
+  }
+
+  const unitSize = 46;
+  const segmentHeight = 14;
   const left: SideLedItem[] = [];
+  const right: SideLedItem[] = [];
+
   for (let i = 0; i < countPerSide; i++) {
     const fraction = countPerSide > 1 ? i / (countPerSide - 1) : 0.5;
-    const top = Math.round(topPadding + fraction * usableHeight);
+    const y = startY + fraction * (endY - startY);
+    const top = Math.round(y * unitSize + 18);
     left.push({
       id: `SLED_L_${i + 1}`,
       side: 'left',
@@ -8208,12 +8225,6 @@ export function getSideLedSegments(
       top,
       height: segmentHeight,
     });
-  }
-
-  const right: SideLedItem[] = [];
-  for (let i = 0; i < countPerSide; i++) {
-    const fraction = countPerSide > 1 ? i / (countPerSide - 1) : 0.5;
-    const top = Math.round(topPadding + fraction * usableHeight);
     right.push({
       id: `SLED_R_${i + 1}`,
       side: 'right',
