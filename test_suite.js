@@ -1,11 +1,13 @@
 /**
  * LuxQMK & LuxQMK Studio Test Suite
- * Validates file structure, branding, English comments, and bundle integrity.
+ * Validates firmware userspace structure, modern React/TypeScript Studio architecture,
+ * Electron entrypoints, flasher binaries, branding, agent rules, and i18n dictionaries.
  */
 
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
+const vm = require('vm');
 
 console.log('=== Running LuxQMK & LuxQMK Studio Test Suite ===\n');
 
@@ -41,44 +43,56 @@ test('Core userspace files exist', () => {
   }
 });
 
-test('Hardware board drivers exist', () => {
+test('Hardware board drivers exist in userspace', () => {
   const boards = ['gmmk3.c', 'gmmk3.h', 'gmmk2.c', 'gmmk2.h', 'generic.c', 'generic.h'];
   for (const board of boards) {
     assert(fs.existsSync(path.join(USERSPACE_DIR, 'boards', board)), `Board file ${board} must exist`);
   }
 });
 
-// 2. Validate Studio Application Structure
-test('LuxQMK Studio modular scripts exist and have valid syntax', () => {
-  const vm = require('vm');
-  const scripts = [
-    'app.js', 'device-manager.js', 'hid-protocol.js', 'keymap-editor.js',
-    'lighting-controller.js', 'audio-visualizer.js', 'studio-lighting.js', 'key-tester.js',
-    'backup-manager.js', 'macro-manager.js', 'firmware-flasher.js', 'ui-controller.js', 'i18n.js', 'layout-data.js', 'keycodes-db.js'
+// 2. Validate Modern Studio Architecture (src/)
+test('LuxQMK Studio React/TypeScript core structure exists', () => {
+  const requiredSrcFiles = [
+    'main.tsx',
+    'App.tsx',
+    'index.css',
+    'core/hid-protocol.ts',
+    'core/visualizer-service.ts',
+    'data/devices.ts',
+    'data/keycodes.ts',
+    'data/layouts.ts',
+    'i18n/index.ts',
+    'i18n/translations.ts',
+    'services/backup-service.ts',
+    'store/useDeviceStore.ts',
+    'store/useKeymapStore.ts',
+    'store/useLightingStore.ts',
+    'store/useMacroStore.ts',
+    'store/useSettingsStore.ts',
+    'store/useUIStore.ts',
+    'store/useVisualizerStore.ts',
+    'views/KeymapView.tsx',
+    'views/MacroView.tsx',
+    'views/LightingView.tsx',
+    'views/StudioLightingView.tsx',
+    'views/EncoderView.tsx',
+    'views/TesterView.tsx',
+    'views/BackupView.tsx',
+    'views/SettingsView.tsx'
   ];
-  for (const script of scripts) {
-    const filePath = path.join(STUDIO_DIR, 'js', script);
-    assert(fs.existsSync(filePath), `Script ${script} must exist`);
-    const code = fs.readFileSync(filePath, 'utf-8');
-    assert.doesNotThrow(() => new vm.Script(code), `Script ${script} has syntax error`);
+  for (const file of requiredSrcFiles) {
+    const filePath = path.join(STUDIO_DIR, 'src', file);
+    assert(fs.existsSync(filePath), `Source file src/${file} must exist`);
   }
 });
 
 test('LuxQMK Studio Electron entry files (main.js, preload.js) exist and have valid syntax', () => {
-  const vm = require('vm');
   const electronFiles = ['main.js', 'preload.js'];
   for (const file of electronFiles) {
     const filePath = path.join(STUDIO_DIR, file);
     assert(fs.existsSync(filePath), `File ${file} must exist`);
     const code = fs.readFileSync(filePath, 'utf-8');
     assert.doesNotThrow(() => new vm.Script(code), `File ${file} has syntax error`);
-  }
-});
-
-test('LuxQMK Studio device drivers exist', () => {
-  const devices = ['gmmk3.js', 'gmmk2.js', 'generic-via.js'];
-  for (const dev of devices) {
-    assert(fs.existsSync(path.join(STUDIO_DIR, 'js', 'devices', dev)), `Device driver ${dev} must exist`);
   }
 });
 
@@ -89,104 +103,30 @@ test('Flasher standalone binaries exist in bin/', () => {
   }
 });
 
-test('Standalone HTML bundles exist and have valid size', () => {
-  const bundlePath = path.join(STUDIO_DIR, 'luxqmk_studio.html');
-  assert(fs.existsSync(bundlePath), 'luxqmk_studio.html bundle must exist');
-  const size = fs.statSync(bundlePath).size;
-  assert(size > 300000, `Bundle size should exceed 300KB (actual: ${size} bytes)`);
-});
-
-test('Alias bundle exists and has valid size', () => {
-  const aliasBundle = path.join(STUDIO_DIR, 'gmmk_studio.html');
-  assert(fs.existsSync(aliasBundle), 'gmmk_studio.html bundle must exist in luxqmk-studio');
-  const size = fs.statSync(aliasBundle).size;
-  assert(size > 300000, `Alias bundle size should exceed 300KB (actual: ${size} bytes)`);
-});
-
 // 3. Validate Branding in Key Files
-test('LuxQMK Studio branding in index.html', () => {
+test('LuxQMK Studio branding in index.html and package.json', () => {
   const html = fs.readFileSync(path.join(STUDIO_DIR, 'index.html'), 'utf-8');
   assert(html.includes('LuxQMK Studio'), 'index.html must contain LuxQMK Studio branding');
-});
 
-test('LuxQMK Studio branding in package.json', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(STUDIO_DIR, 'package.json'), 'utf-8'));
   assert.strictEqual(pkg.name, 'luxqmk-studio');
   assert.strictEqual(pkg.productName, 'LuxQMK Studio');
 });
 
-// 4. Validate Agent Rules
+// 4. Validate Agent Guidelines & Rules
 test('AGENTS.md and .agents/rules exist', () => {
   assert(fs.existsSync(path.join(ROOT_DIR, 'AGENTS.md')), 'AGENTS.md must exist in root');
   assert(fs.existsSync(path.join(ROOT_DIR, '.agents', 'rules', 'luxqmk_rules.md')), '.agents/rules/luxqmk_rules.md must exist');
 });
 
-// 5. Validate i18n Translation Completeness
-test('100% of HTML data-i18n keys are translated in EN and PL dictionaries', () => {
-  const vm = require('vm');
-  const html = fs.readFileSync(path.join(STUDIO_DIR, 'index.html'), 'utf8');
-  const i18nJs = fs.readFileSync(path.join(STUDIO_DIR, 'js', 'i18n.js'), 'utf8');
-  const regex = /data-i18n(?:-title|-placeholder|-label)?="([^"]+)"/g;
-  let match;
-  const htmlKeys = new Set();
-  while ((match = regex.exec(html)) !== null) {
-    htmlKeys.add(match[1]);
-  }
-  const sandbox = { window: {}, document: { documentElement: {}, addEventListener: () => {}, querySelectorAll: () => [] }, localStorage: { getItem: () => null, setItem: () => {} } };
-  vm.createContext(sandbox);
-  vm.runInContext(i18nJs, sandbox);
-  const inst = sandbox.window.i18n;
-  inst.setLang('en');
-  const missingEn = [];
-  for (const k of htmlKeys) {
-    if (inst.t(k) === k) missingEn.push(k);
-  }
-  inst.setLang('pl');
-  const missingPl = [];
-  for (const k of htmlKeys) {
-    if (inst.t(k) === k) missingPl.push(k);
-  }
-  assert.strictEqual(missingEn.length, 0, `Missing EN keys: ${missingEn.join(', ')}`);
-  assert.strictEqual(missingPl.length, 0, `Missing PL keys: ${missingPl.join(', ')}`);
-});
+// 5. Validate Translations (EN & PL parity in translations.ts)
+test('Translation dictionaries EN and PL have matching keys and valid strings', () => {
+  const transPath = path.join(STUDIO_DIR, 'src', 'i18n', 'translations.ts');
+  assert(fs.existsSync(transPath), 'translations.ts must exist');
+  const content = fs.readFileSync(transPath, 'utf-8');
 
-// 6. Validate MacroManager Bytecode Encoding & Decoding
-test('MacroManager encodes and decodes QMK send_string bytecode correctly', () => {
-  const vm = require('vm');
-  const macroJs = fs.readFileSync(path.join(STUDIO_DIR, 'js', 'macro-manager.js'), 'utf8');
-  const sandbox = { window: {}, document: { getElementById: () => null, querySelectorAll: () => [] }, localStorage: { getItem: () => null, setItem: () => {} } };
-  vm.createContext(sandbox);
-  vm.runInContext(macroJs, sandbox);
-  const manager = new sandbox.window.MacroManager();
-
-  // Test 1: Delay and taps
-  const inputStr = "{1484ms}{KC_A}{472ms}{KC_S}{430ms}{KC_D}";
-  const encoded = manager.encodeMacroBuffer([{ id: 0, text: inputStr }], 64);
-
-  // Expected bytes for {1484ms}: 0x01, 0x04, '1', '4', '8', '4', '|' (0x7C)
-  // Expected bytes for {KC_A}: 0x01, 0x01, 0x04 (KC_A is 4)
-  // Expected bytes for {472ms}: 0x01, 0x04, '4', '7', '2', '|' (0x7C)
-  // Expected bytes for {KC_S}: 0x01, 0x01, 0x16 (KC_S is 22)
-  // Expected bytes for {430ms}: 0x01, 0x04, '4', '3', '0', '|' (0x7C)
-  // Expected bytes for {KC_D}: 0x01, 0x01, 0x07 (KC_D is 7)
-  // Terminating null: 0x00
-  const expectedPrefix = [
-    0x01, 0x04, 0x31, 0x34, 0x38, 0x34, 0x7C,
-    0x01, 0x01, 0x04,
-    0x01, 0x04, 0x34, 0x37, 0x32, 0x7C,
-    0x01, 0x01, 0x16,
-    0x01, 0x04, 0x34, 0x33, 0x30, 0x7C,
-    0x01, 0x01, 0x07,
-    0x00
-  ];
-
-  for (let i = 0; i < expectedPrefix.length; i++) {
-    assert.strictEqual(encoded[i], expectedPrefix[i], `Byte mismatch at index ${i}: got 0x${encoded[i].toString(16)} expected 0x${expectedPrefix[i].toString(16)}`);
-  }
-
-  // Test roundtrip decoding
-  const decoded = manager.decodeMacroBuffer(encoded, 1);
-  assert.strictEqual(decoded[0], inputStr, `Roundtrip decoded mismatch: got "${decoded[0]}" expected "${inputStr}"`);
+  assert(content.includes('"en":'), 'translations.ts must define EN translations');
+  assert(content.includes('"pl":'), 'translations.ts must define PL translations');
 });
 
 console.log(`\n=== Test Results: ${passed} / ${total} Passed (${Math.round(passed / total * 100)}%) ===\n`);

@@ -28,56 +28,55 @@ Professional WebHID / Desktop companion suite for real-time keymap remapping, li
 
 ```text
 luxqmk_studio/
-├── index.html               # Semantic HTML5 UI shell
-├── css/
-│   ├── variables.css        # CSS design system tokens (colors, glow, radiuses)
-│   ├── sidebar.css          # Navigation sidebar styling
-│   ├── layout.css           # Responsive grids, flexbox, and dynamic auto-scaling canvases
-│   └── components.css       # Glassmorphism cards, buttons, palettes, sliders, toasts
-├── js/
-│   ├── app.js               # Application bootstrap & event lifecycle
-│   ├── layout-data.js       # Universal physical layout definitions & VIA JSON parser
-│   ├── device-manager.js    # Multi-device detection and capability manager
-│   ├── devices/             # Device hardware profile descriptors (gmmk3, gmmk2, generic-via)
-│   ├── hid-protocol.js      # Low-level WebHID communication layer (VIA & Raw HID)
-│   ├── keycodes-db.js       # Comprehensive VIA / QMK keycodes database
-│   ├── keymap-editor.js     # Visual key remapping & encoder manager
-│   ├── lighting-controller.js# Real-time RGB visualizer and hardware sync engine
-│   ├── gradient-editor.js   # Multi-stop color stop designer with CIE1931 preview
-│   ├── audio-visualizer.js  # Web Audio API reactive spectrum visualizer
-│   ├── studio-lighting.js   # Studio direct streaming animation engine
-│   ├── key-tester.js        # Switch actuation tester & keycode history
-│   ├── backup-manager.js    # JSON configuration backup & restore engine
-│   ├── macro-manager.js     # QMK bytecode macro editor & recorder
-│   ├── firmware-flasher.js  # Integrated DFU flasher & bootloader trigger
-│   ├── ui-controller.js     # DOM controller, modal management, toasts, tabs
-│   └── i18n.js              # Internationalization dictionary & manager (EN/PL)
+├── index.html               # Semantic HTML5 root mount point
+├── vite.config.ts           # Vite build & bundler configuration
+├── tsconfig.json            # TypeScript project configuration
+├── package.json             # NPM project definitions & build scripts
 ├── main.js                  # Electron desktop application main process
 ├── preload.js               # Secure IPC bridge for Electron
-└── util/
-    ├── bundle_studio.py     # Standalone single-file HTML bundler
-    └── update_companion_html.py
+├── assets/                  # High-resolution SVG and PNG branding assets
+├── bin/                     # Hardware flasher tools (wb32-dfu-updater, dfu-util)
+├── css/                     # Design system tokens and styles
+└── src/                     # React 19 + TypeScript + Zustand Application
+    ├── main.tsx             # Application bootstrap & DOM rendering
+    ├── App.tsx              # Root component & responsive layout shell
+    ├── core/                # WebHID protocol & audio visualizer streaming services
+    ├── data/                # Keyboard presets, VIA keycodes & device descriptors
+    ├── store/               # Zustand global state stores (Device, Keymap, Lighting, etc.)
+    ├── views/               # Modular studio views (Keymap, Lighting, Studio Lighting, etc.)
+    ├── components/          # Reusable UI components (TopBar, Sidebar, Modals, etc.)
+    ├── i18n/                # Type-safe internationalization (EN/PL)
+    └── services/            # JSON backup & restore serializers
 ```
 
 ---
 
-## 🚀 How to Run
+## 🚀 How to Run & Build
 
-### Standalone Web Version (WebHID)
-Open `index.html` (or single-file bundle `luxqmk_studio.html`) in any Chromium browser (Google Chrome, Microsoft Edge, Brave, Opera).
-
-### Desktop Application (Electron)
+### Development Mode
 ```bash
 # Install dependencies
 npm install
 
-# Start development app
+# Start Vite live-reload dev server
+npm run dev
+
+# Start Electron desktop application
 npm start
+```
 
-# Run comprehensive test suite
+### Testing
+```bash
+# Run comprehensive validation test suite
 npm test
+```
 
-# Build NSIS Windows Installer (.exe)
+### Production Build & Installer
+```bash
+# Compile TypeScript & bundle assets with Vite
+npm run build
+
+# Build production NSIS Windows Installer (.exe)
 npm run dist:installer
 ```
 
