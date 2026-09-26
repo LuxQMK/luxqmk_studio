@@ -708,8 +708,11 @@ export const LightingView: React.FC = () => {
                 <label className="switch">
                   <input
                     type="checkbox"
-                    checked={sidelight.customEnable}
-                    onChange={(e) => setSidelight({ customEnable: e.target.checked })}
+                    checked={Boolean(sidelight.customEnable)}
+                    onChange={(e) => setSidelight({
+                      customEnable: e.target.checked,
+                      effect: sidelight.effect ? sidelight.effect : 1
+                    })}
                   />
                   <span className="slider"></span>
                 </label>

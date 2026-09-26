@@ -881,8 +881,35 @@ export function useLightingVisualizer(
 
       // Render Left & Right Side Diffuser Lightbars
       const { sidelight } = store;
-      const isCustomSidelight = Boolean(sidelight?.customEnable && sidelight.effect > 0);
+      const isCustomSidelight = Boolean(sidelight?.customEnable);
       const currentDeviceFamily = useDeviceStore.getState().activeDescriptor?.family;
+
+      if (sideDiffusers.length === 0) {
+        const sideEls = container.querySelectorAll<HTMLElement>('.side-diffuser-segment');
+        if (sideEls.length > 0) {
+          const cRect = container.getBoundingClientRect();
+          sideEls.forEach((el) => {
+            const id = el.getAttribute('data-key-id') || '';
+            const isLeft = el.classList.contains('side-diffuser-left');
+            const rect = el.getBoundingClientRect();
+            const relY = cRect.height > 0 ? (rect.top + rect.height / 2 - cRect.top) / cRect.height : 0.5;
+            const qmkX = isLeft ? 0 : 224;
+            const qmkY = Math.round(relY * 64);
+            const dx = qmkX - centerX;
+            const dy = qmkY - centerY;
+            sideDiffusers.push({
+              id,
+              qmkX,
+              qmkY,
+              dx,
+              dy,
+              dist: Math.sqrt(dx * dx + dy * dy),
+              isLeft,
+              el,
+            });
+          });
+        }
+      }
 
       for (let sIdx = 0; sIdx < sideDiffusers.length; sIdx++) {
         const sd = sideDiffusers[sIdx];

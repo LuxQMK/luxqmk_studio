@@ -337,7 +337,12 @@ export class HidProtocol {
 
   // Monochromatic Backlight (Channel 2)
   public async getBacklightValue(valueId: number): Promise<number[]> {
-    const res = await this.sendCommand([VIA_CMD.CUSTOM_GET_VALUE, CHANNELS.BACKLIGHT, valueId]);
+    const res = await this.sendCommand(
+      [VIA_CMD.CUSTOM_GET_VALUE, CHANNELS.BACKLIGHT, valueId],
+      3000,
+      2,
+      (data) => (data[0] === VIA_CMD.CUSTOM_GET_VALUE && data[1] === CHANNELS.BACKLIGHT && data[2] === valueId) || data[0] === 0xFF
+    );
     return Array.from(res.slice(3));
   }
 
@@ -347,7 +352,12 @@ export class HidProtocol {
 
   // RGB Matrix (Channel 3)
   public async getRGBMatrixValue(valueId: number): Promise<number[]> {
-    const res = await this.sendCommand([VIA_CMD.CUSTOM_GET_VALUE, CHANNELS.RGB_MATRIX, valueId]);
+    const res = await this.sendCommand(
+      [VIA_CMD.CUSTOM_GET_VALUE, CHANNELS.RGB_MATRIX, valueId],
+      3000,
+      2,
+      (data) => (data[0] === VIA_CMD.CUSTOM_GET_VALUE && data[1] === CHANNELS.RGB_MATRIX && data[2] === valueId) || data[0] === 0xFF
+    );
     return Array.from(res.slice(3));
   }
 
@@ -357,7 +367,12 @@ export class HidProtocol {
 
   // Custom channels
   public async getCustomValue(channel: number, valueId: number, ...args: number[]): Promise<number[]> {
-    const res = await this.sendCommand([VIA_CMD.CUSTOM_GET_VALUE, channel, valueId, ...args]);
+    const res = await this.sendCommand(
+      [VIA_CMD.CUSTOM_GET_VALUE, channel, valueId, ...args],
+      3000,
+      2,
+      (data) => (data[0] === VIA_CMD.CUSTOM_GET_VALUE && data[1] === channel && data[2] === valueId) || data[0] === 0xFF
+    );
     return Array.from(res.slice(3));
   }
 
@@ -471,14 +486,14 @@ export class HidProtocol {
       const densRes = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_DENSITY);
 
       return {
-        enable: enRes ? enRes[0] === 1 : false,
-        mode: modeRes ? modeRes[0] : 1,
-        hue: colorRes ? colorRes[0] : 0,
-        sat: colorRes ? colorRes[1] : 255,
-        speed: speedRes ? speedRes[0] : 128,
-        gradient: gradRes ? gradRes[0] : 0,
-        reverse: revRes ? revRes[0] === 1 : false,
-        density: densRes ? densRes[0] || 128 : 128,
+        enable: enRes && enRes.length > 0 ? enRes[0] === 1 : false,
+        mode: modeRes && modeRes.length > 0 ? (modeRes[0] === 0 ? 1 : modeRes[0]) : 1,
+        hue: colorRes && colorRes.length > 0 ? colorRes[0] : 0,
+        sat: colorRes && colorRes.length > 1 ? colorRes[1] : 255,
+        speed: speedRes && speedRes.length > 0 ? speedRes[0] : 128,
+        gradient: gradRes && gradRes.length > 0 ? gradRes[0] : 0,
+        reverse: revRes && revRes.length > 0 ? revRes[0] === 1 : false,
+        density: densRes && densRes.length > 0 ? (densRes[0] || 128) : 128,
       };
     } catch (e) {
       return null;

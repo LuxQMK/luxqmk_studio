@@ -259,13 +259,22 @@ export const useLightingStore = create<LightingState>((set, get) => ({
   },
 
   setSidelight: (patch) => {
-    set((state) => ({ sidelight: { ...state.sidelight, ...patch } }));
+    set((state) => {
+      const nextSidelight = { ...state.sidelight, ...patch };
+      if (nextSidelight.customEnable && (!nextSidelight.effect || nextSidelight.effect === 0)) {
+        nextSidelight.effect = 1;
+      }
+      return { sidelight: nextSidelight };
+    });
     useDeviceStore.getState().markDirty('sidelight');
 
     if (useDeviceStore.getState().isConnected) {
       const s = get().sidelight;
       if (patch.customEnable !== undefined) {
         hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_ENABLE, [s.customEnable ? 1 : 0]);
+        if (s.customEnable) {
+          hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_MODE, [s.effect || 1]);
+        }
       }
       if (patch.effect !== undefined) {
         hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_MODE, [s.effect]);
@@ -661,16 +670,19 @@ export const useLightingStore = create<LightingState>((set, get) => ({
       try {
         const sConf = await hidProtocol.getSidelightConfig();
         if (sConf) {
+          const isEnabled = Boolean(sConf.enable);
+          const rawMode = Number(sConf.mode) || 0;
+          const safeMode = rawMode === 0 ? 1 : rawMode;
           set((state) => ({
             sidelight: {
               ...state.sidelight,
-              customEnable: sConf.enable,
-              effect: sConf.mode,
+              customEnable: isEnabled,
+              effect: safeMode,
               speed: sConf.speed < 10 ? 128 : sConf.speed,
               color: hsToHex(sConf.hue, sConf.sat),
               gradientPreset: sConf.gradient,
-              reverse: sConf.reverse,
-              density: sConf.density,
+              reverse: Boolean(sConf.reverse),
+              density: sConf.density || 128,
             },
           }));
         }
