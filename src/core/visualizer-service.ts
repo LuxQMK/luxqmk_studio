@@ -1,6 +1,6 @@
 /**
  * LuxQMK Studio - 60 FPS Real-Time Software Lighting & Audio Visualizer Engine
- * 1:1 Parity with LuxQMK Studio v1.3.0
+ * High-performance audio loopback and procedural RGB matrix streaming engine.
  * Supports:
  * - Web Audio API / WASAPI Loopback (7 Dynamic Audio Modes)
  * - 30+ Real-Time PC Animation Engines with 6 Spatial Directions
@@ -15,7 +15,7 @@ import { useVisualizerStore } from '../store/useVisualizerStore';
 import { useKeymapStore } from '../store/useKeymapStore';
 import { useUIStore } from '../store/useUIStore';
 import { useI18n } from '../i18n';
-import { getLayoutForPreset, GMMK3_SIDE_LEDS } from '../data/layouts';
+import { getLayoutForPreset } from '../data/layouts';
 import { KeyLayoutItem } from '../types/keyboard';
 import { HARDWARE_LIGHTING_PROFILES, getHardwareLedIndex } from '../data/led-mappings';
 
@@ -1184,42 +1184,34 @@ class VisualizerEngineService {
   }
 
   private _renderSidelightDom(now: number, config: any): void {
-    const leftLeds = GMMK3_SIDE_LEDS.left;
-    const rightLeds = GMMK3_SIDE_LEDS.right;
+    const leftEls = document.querySelectorAll<HTMLElement>('#studioLightingKeyboardCanvas .side-diffuser-left');
+    const rightEls = document.querySelectorAll<HTMLElement>('#studioLightingKeyboardCanvas .side-diffuser-right');
 
-    for (let i = 0; i < leftLeds.length; i++) {
-      const sled = leftLeds[i];
-      const el = document.querySelector<HTMLElement>(`#studioLightingKeyboardCanvas [data-key-id="${sled.id}"]`);
-      if (el) {
-        const rgb = this._computeSidelightRgb('left', i, leftLeds.length, now, config);
-        if (rgb.r === 0 && rgb.g === 0 && rgb.b === 0) {
-          el.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-          el.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-          el.style.boxShadow = 'none';
-        } else {
-          el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.92)`;
-          el.style.borderColor = `rgba(${Math.min(255, rgb.r + 50)}, ${Math.min(255, rgb.g + 50)}, ${Math.min(255, rgb.b + 50)}, 0.6)`;
-          el.style.boxShadow = `0 0 10px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.85)`;
-        }
+    leftEls.forEach((el, i) => {
+      const rgb = this._computeSidelightRgb('left', i, leftEls.length, now, config);
+      if (rgb.r === 0 && rgb.g === 0 && rgb.b === 0) {
+        el.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+        el.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+        el.style.boxShadow = 'none';
+      } else {
+        el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.92)`;
+        el.style.borderColor = `rgba(${Math.min(255, rgb.r + 50)}, ${Math.min(255, rgb.g + 50)}, ${Math.min(255, rgb.b + 50)}, 0.6)`;
+        el.style.boxShadow = `0 0 10px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.85)`;
       }
-    }
+    });
 
-    for (let i = 0; i < rightLeds.length; i++) {
-      const sled = rightLeds[i];
-      const el = document.querySelector<HTMLElement>(`#studioLightingKeyboardCanvas [data-key-id="${sled.id}"]`);
-      if (el) {
-        const rgb = this._computeSidelightRgb('right', i, rightLeds.length, now, config);
-        if (rgb.r === 0 && rgb.g === 0 && rgb.b === 0) {
-          el.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-          el.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-          el.style.boxShadow = 'none';
-        } else {
-          el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.92)`;
-          el.style.borderColor = `rgba(${Math.min(255, rgb.r + 50)}, ${Math.min(255, rgb.g + 50)}, ${Math.min(255, rgb.b + 50)}, 0.6)`;
-          el.style.boxShadow = `0 0 10px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.85)`;
-        }
+    rightEls.forEach((el, i) => {
+      const rgb = this._computeSidelightRgb('right', i, rightEls.length, now, config);
+      if (rgb.r === 0 && rgb.g === 0 && rgb.b === 0) {
+        el.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+        el.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+        el.style.boxShadow = 'none';
+      } else {
+        el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.92)`;
+        el.style.borderColor = `rgba(${Math.min(255, rgb.r + 50)}, ${Math.min(255, rgb.g + 50)}, ${Math.min(255, rgb.b + 50)}, 0.6)`;
+        el.style.boxShadow = `0 0 10px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.85)`;
       }
-    }
+    });
   }
 
   private _computeSidelightRgb(

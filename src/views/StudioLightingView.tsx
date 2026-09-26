@@ -4,7 +4,7 @@ import { useKeymapStore } from '../store/useKeymapStore';
 import { useDeviceStore } from '../store/useDeviceStore';
 import { useLightingStore } from '../store/useLightingStore';
 import { useUIStore } from '../store/useUIStore';
-import { getLayoutForPreset, GMMK3_SIDE_LEDS } from '../data/layouts';
+import { getLayoutForPreset, getSideLedSegments, isSidelightSupported } from '../data/layouts';
 import { ALL_DEVICE_DESCRIPTORS } from '../data/devices';
 import { useI18n } from '../i18n';
 import { useKeyboardFit } from '../hooks/useKeyboardFit';
@@ -148,8 +148,8 @@ export const StudioLightingView: React.FC = () => {
   const layoutKeys = getLayoutForPreset(presetLayoutId);
 
   const activeDescriptor = useDeviceStore((s) => s.activeDescriptor);
-  const desc = activeDescriptor || ALL_DEVICE_DESCRIPTORS.find((d) => d.id === presetLayoutId) || ALL_DEVICE_DESCRIPTORS[0];
-  const hasSidelights = desc?.capabilities?.hasSidelights ?? (presetLayoutId.includes('gmmk') || presetLayoutId.includes('100') || presetLayoutId.includes('75') || presetLayoutId.includes('65') || presetLayoutId.includes('96'));
+  const desc = activeDescriptor || ALL_DEVICE_DESCRIPTORS.find((d) => d.id === presetLayoutId) || null;
+  const hasSidelights = isSidelightSupported(presetLayoutId, desc);
 
   // Compute bounding box
   let maxX = 0;
@@ -195,34 +195,40 @@ export const StudioLightingView: React.FC = () => {
             style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, position: 'relative' }}
           >
             {/* Left & Right Sidelight LED Diffusers */}
-            {hasSidelights && (
-              <div className="side-diffusers-container">
-                {GMMK3_SIDE_LEDS.left.map((sled) => (
-                  <div
-                    key={sled.id}
-                    data-key-id={sled.id}
-                    className="side-diffuser-segment side-diffuser-left"
-                    style={{
-                      top: `${sled.y * unitSize + 18}px`,
-                      left: '6px',
-                    }}
-                    title={`Side LED Left (${sled.id})`}
-                  />
-                ))}
-                {GMMK3_SIDE_LEDS.right.map((sled) => (
-                  <div
-                    key={sled.id}
-                    data-key-id={sled.id}
-                    className="side-diffuser-segment side-diffuser-right"
-                    style={{
-                      top: `${sled.y * unitSize + 18}px`,
-                      right: '6px',
-                    }}
-                    title={`Side LED Right (${sled.id})`}
-                  />
-                ))}
-              </div>
-            )}
+            {hasSidelights && (() => {
+              const sideLeds = getSideLedSegments(presetLayoutId, canvasHeight, desc);
+              if (!sideLeds) return null;
+              return (
+                <div className="side-diffusers-container">
+                  {sideLeds.left.map((sled) => (
+                    <div
+                      key={sled.id}
+                      data-key-id={sled.id}
+                      className="side-diffuser-segment side-diffuser-left"
+                      style={{
+                        top: `${sled.top}px`,
+                        height: `${sled.height}px`,
+                        left: '6px',
+                      }}
+                      title={`Side LED Left (${sled.id})`}
+                    />
+                  ))}
+                  {sideLeds.right.map((sled) => (
+                    <div
+                      key={sled.id}
+                      data-key-id={sled.id}
+                      className="side-diffuser-segment side-diffuser-right"
+                      style={{
+                        top: `${sled.top}px`,
+                        height: `${sled.height}px`,
+                        right: '6px',
+                      }}
+                      title={`Side LED Right (${sled.id})`}
+                    />
+                  ))}
+                </div>
+              );
+            })()}
 
             {layoutKeys.map((key, idx) => {
               const w = (key.w || 1) * unitSize - 4;

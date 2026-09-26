@@ -68,7 +68,14 @@ export const useKeymapStore = create<KeymapState>((set, get) => ({
 
   setActiveLayer: (layer) => set({ activeLayer: layer }),
   setSelectedKey: (key) => set({ selectedKey: key }),
-  setPresetLayoutId: (presetId) => set({ presetLayoutId: presetId, selectedKey: null }),
+  setPresetLayoutId: (presetId) => {
+    const isConn = useDeviceStore.getState().isConnected;
+    set({
+      presetLayoutId: presetId,
+      selectedKey: null,
+      ...(!isConn ? { layerKeymaps: { 0: {}, 1: {}, 2: {} } } : {}),
+    });
+  },
   setActiveCategory: (cat) => set({ activeCategory: cat }),
 
   getKeycode: (layer, row, col) => {

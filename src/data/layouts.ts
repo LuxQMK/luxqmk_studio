@@ -2844,22 +2844,8 @@ export const LAYOUT_65_ANSI = [
     "defaultKeycode": 42
   },
   {
-    "id": "LOGO_LED",
-    "label": "",
-    "matrix": [
-      -1,
-      -1
-    ],
-    "x": 14.1,
-    "y": 0.37,
-    "w": 0.55,
-    "h": 0.26,
-    "group": "logo",
-    "isLogo": true
-  },
-  {
-    "id": "DEL",
-    "label": "Del",
+    "id": "KNOB_PRESS",
+    "label": "Mute",
     "matrix": [
       11,
       6
@@ -2868,8 +2854,9 @@ export const LAYOUT_65_ANSI = [
     "y": 0,
     "w": 1,
     "h": 1,
-    "group": "nav",
-    "defaultKeycode": 76
+    "group": "knob",
+    "defaultKeycode": 127,
+    "isKnob": true
   },
   {
     "id": "TAB",
@@ -3068,20 +3055,6 @@ export const LAYOUT_65_ANSI = [
     "defaultKeycode": 49
   },
   {
-    "id": "PGUP",
-    "label": "PgUp",
-    "matrix": [
-      1,
-      5
-    ],
-    "x": 15,
-    "y": 1,
-    "w": 1,
-    "h": 1,
-    "group": "nav",
-    "defaultKeycode": 75
-  },
-  {
     "id": "CAPS",
     "label": "Caps",
     "matrix": [
@@ -3264,10 +3237,955 @@ export const LAYOUT_65_ANSI = [
     "defaultKeycode": 40
   },
   {
+    "id": "PGUP",
+    "label": "PgUp",
+    "matrix": [
+      1,
+      5
+    ],
+    "x": 15,
+    "y": 2,
+    "w": 1,
+    "h": 1,
+    "group": "nav",
+    "defaultKeycode": 75
+  },
+  {
+    "id": "LSFT",
+    "label": "Shift",
+    "matrix": [
+      0,
+      0
+    ],
+    "x": 0,
+    "y": 3,
+    "w": 2.25,
+    "h": 1,
+    "group": "mod",
+    "defaultKeycode": 225
+  },
+  {
+    "id": "Z",
+    "label": "Z",
+    "matrix": [
+      1,
+      4
+    ],
+    "x": 2.25,
+    "y": 3,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 29
+  },
+  {
+    "id": "X",
+    "label": "X",
+    "matrix": [
+      2,
+      4
+    ],
+    "x": 3.25,
+    "y": 3,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 27
+  },
+  {
+    "id": "C",
+    "label": "C",
+    "matrix": [
+      3,
+      4
+    ],
+    "x": 4.25,
+    "y": 3,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 6
+  },
+  {
+    "id": "V",
+    "label": "V",
+    "matrix": [
+      4,
+      4
+    ],
+    "x": 5.25,
+    "y": 3,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 25
+  },
+  {
+    "id": "B",
+    "label": "B",
+    "matrix": [
+      4,
+      5
+    ],
+    "x": 6.25,
+    "y": 3,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 5
+  },
+  {
+    "id": "N",
+    "label": "N",
+    "matrix": [
+      5,
+      5
+    ],
+    "x": 7.25,
+    "y": 3,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 17
+  },
+  {
+    "id": "M",
+    "label": "M",
+    "matrix": [
+      5,
+      4
+    ],
+    "x": 8.25,
+    "y": 3,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 16
+  },
+  {
+    "id": "COMM",
+    "label": "< ,",
+    "matrix": [
+      6,
+      4
+    ],
+    "x": 9.25,
+    "y": 3,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 54
+  },
+  {
+    "id": "DOT",
+    "label": "> .",
+    "matrix": [
+      7,
+      4
+    ],
+    "x": 10.25,
+    "y": 3,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 55
+  },
+  {
+    "id": "SLSH",
+    "label": "? /",
+    "matrix": [
+      8,
+      5
+    ],
+    "x": 11.25,
+    "y": 3,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 56
+  },
+  {
+    "id": "RSFT",
+    "label": "Shift",
+    "matrix": [
+      9,
+      1
+    ],
+    "x": 12.25,
+    "y": 3,
+    "w": 1.75,
+    "h": 1,
+    "group": "mod",
+    "defaultKeycode": 229
+  },
+  {
+    "id": "UP",
+    "label": "▲",
+    "matrix": [
+      3,
+      5
+    ],
+    "x": 14,
+    "y": 3,
+    "w": 1,
+    "h": 1,
+    "group": "nav",
+    "defaultKeycode": 82
+  },
+  {
+    "id": "END",
+    "label": "End",
+    "matrix": [
+      2,
+      5
+    ],
+    "x": 15,
+    "y": 3,
+    "w": 1,
+    "h": 1,
+    "group": "nav",
+    "defaultKeycode": 77
+  },
+  {
+    "id": "LCTL",
+    "label": "Ctrl",
+    "matrix": [
+      0,
+      6
+    ],
+    "x": 0,
+    "y": 4,
+    "w": 1.25,
+    "h": 1,
+    "group": "mod",
+    "defaultKeycode": 224
+  },
+  {
+    "id": "LWIN",
+    "label": "Win",
+    "matrix": [
+      9,
+      0
+    ],
+    "x": 1.25,
+    "y": 4,
+    "w": 1.25,
+    "h": 1,
+    "group": "mod",
+    "defaultKeycode": 227
+  },
+  {
+    "id": "LALT",
+    "label": "Alt",
+    "matrix": [
+      9,
+      3
+    ],
+    "x": 2.5,
+    "y": 4,
+    "w": 1.25,
+    "h": 1,
+    "group": "mod",
+    "defaultKeycode": 226
+  },
+  {
+    "id": "SPC",
+    "label": "Space",
+    "matrix": [
+      9,
+      4
+    ],
+    "x": 3.75,
+    "y": 4,
+    "w": 6.25,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 44,
+    "qmkPoint": [
+      97,
+      64
+    ]
+  },
+  {
+    "id": "RALT",
+    "label": "Alt",
+    "matrix": [
+      9,
+      5
+    ],
+    "x": 10,
+    "y": 4,
+    "w": 1.25,
+    "h": 1,
+    "group": "mod",
+    "defaultKeycode": 230
+  },
+  {
+    "id": "FN",
+    "label": "Fn",
+    "matrix": [
+      9,
+      2
+    ],
+    "x": 11.25,
+    "y": 4,
+    "w": 1.25,
+    "h": 1,
+    "group": "mod",
+    "defaultKeycode": 20993
+  },
+  {
+    "id": "LEFT",
+    "label": "◀",
+    "matrix": [
+      0,
+      3
+    ],
+    "x": 13,
+    "y": 4,
+    "w": 1,
+    "h": 1,
+    "group": "nav",
+    "defaultKeycode": 80
+  },
+  {
+    "id": "DOWN",
+    "label": "▼",
+    "matrix": [
+      7,
+      3
+    ],
+    "x": 14,
+    "y": 4,
+    "w": 1,
+    "h": 1,
+    "group": "nav",
+    "defaultKeycode": 81
+  },
+  {
+    "id": "RGHT",
+    "label": "▶",
+    "matrix": [
+      0,
+      5
+    ],
+    "x": 15,
+    "y": 4,
+    "w": 1,
+    "h": 1,
+    "group": "nav",
+    "defaultKeycode": 79
+  }
+] as KeyLayoutItem[];
+
+export const LAYOUT_GMMK2_65_ANSI = [
+  {
+    "id": "ESC",
+    "label": "Esc",
+    "matrix": [
+      1,
+      3
+    ],
+    "x": 0,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "group": "func",
+    "defaultKeycode": 41
+  },
+  {
+    "id": "1",
+    "label": "! 1",
+    "matrix": [
+      1,
+      7
+    ],
+    "x": 1,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "group": "num",
+    "defaultKeycode": 30
+  },
+  {
+    "id": "2",
+    "label": "@ 2",
+    "matrix": [
+      2,
+      7
+    ],
+    "x": 2,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "group": "num",
+    "defaultKeycode": 31
+  },
+  {
+    "id": "3",
+    "label": "# 3",
+    "matrix": [
+      3,
+      7
+    ],
+    "x": 3,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "group": "num",
+    "defaultKeycode": 32
+  },
+  {
+    "id": "4",
+    "label": "$ 4",
+    "matrix": [
+      4,
+      7
+    ],
+    "x": 4,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "group": "num",
+    "defaultKeycode": 33
+  },
+  {
+    "id": "5",
+    "label": "% 5",
+    "matrix": [
+      4,
+      6
+    ],
+    "x": 5,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "group": "num",
+    "defaultKeycode": 34
+  },
+  {
+    "id": "6",
+    "label": "^ 6",
+    "matrix": [
+      5,
+      6
+    ],
+    "x": 6,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "group": "num",
+    "defaultKeycode": 35
+  },
+  {
+    "id": "7",
+    "label": "& 7",
+    "matrix": [
+      5,
+      7
+    ],
+    "x": 7,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "group": "num",
+    "defaultKeycode": 36
+  },
+  {
+    "id": "8",
+    "label": "* 8",
+    "matrix": [
+      6,
+      7
+    ],
+    "x": 8,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "group": "num",
+    "defaultKeycode": 37
+  },
+  {
+    "id": "9",
+    "label": "( 9",
+    "matrix": [
+      7,
+      7
+    ],
+    "x": 9,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "group": "num",
+    "defaultKeycode": 38
+  },
+  {
+    "id": "0",
+    "label": ") 0",
+    "matrix": [
+      8,
+      7
+    ],
+    "x": 10,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "group": "num",
+    "defaultKeycode": 39
+  },
+  {
+    "id": "MINS",
+    "label": "_ -",
+    "matrix": [
+      8,
+      6
+    ],
+    "x": 11,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "group": "num",
+    "defaultKeycode": 45
+  },
+  {
+    "id": "EQL",
+    "label": "+ =",
+    "matrix": [
+      6,
+      6
+    ],
+    "x": 12,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "group": "num",
+    "defaultKeycode": 46
+  },
+  {
+    "id": "BSPC",
+    "label": "Bksp",
+    "matrix": [
+      7,
+      1
+    ],
+    "x": 13,
+    "y": 0,
+    "w": 2,
+    "h": 1,
+    "group": "mod",
+    "defaultKeycode": 42
+  },
+  {
+    "id": "DEL",
+    "label": "Del",
+    "matrix": [
+      2,
+      5
+    ],
+    "x": 15,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "group": "nav",
+    "defaultKeycode": 76
+  },
+  {
+    "id": "TAB",
+    "label": "Tab",
+    "matrix": [
+      1,
+      1
+    ],
+    "x": 0,
+    "y": 1,
+    "w": 1.5,
+    "h": 1,
+    "group": "mod",
+    "defaultKeycode": 43
+  },
+  {
+    "id": "Q",
+    "label": "Q",
+    "matrix": [
+      1,
+      0
+    ],
+    "x": 1.5,
+    "y": 1,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 20
+  },
+  {
+    "id": "W",
+    "label": "W",
+    "matrix": [
+      2,
+      0
+    ],
+    "x": 2.5,
+    "y": 1,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 26
+  },
+  {
+    "id": "E",
+    "label": "E",
+    "matrix": [
+      3,
+      0
+    ],
+    "x": 3.5,
+    "y": 1,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 8
+  },
+  {
+    "id": "R",
+    "label": "R",
+    "matrix": [
+      4,
+      0
+    ],
+    "x": 4.5,
+    "y": 1,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 21
+  },
+  {
+    "id": "T",
+    "label": "T",
+    "matrix": [
+      4,
+      1
+    ],
+    "x": 5.5,
+    "y": 1,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 23
+  },
+  {
+    "id": "Y",
+    "label": "Y",
+    "matrix": [
+      5,
+      1
+    ],
+    "x": 6.5,
+    "y": 1,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 28
+  },
+  {
+    "id": "U",
+    "label": "U",
+    "matrix": [
+      5,
+      0
+    ],
+    "x": 7.5,
+    "y": 1,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 24
+  },
+  {
+    "id": "I",
+    "label": "I",
+    "matrix": [
+      6,
+      0
+    ],
+    "x": 8.5,
+    "y": 1,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 12
+  },
+  {
+    "id": "O",
+    "label": "O",
+    "matrix": [
+      7,
+      0
+    ],
+    "x": 9.5,
+    "y": 1,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 18
+  },
+  {
+    "id": "P",
+    "label": "P",
+    "matrix": [
+      8,
+      0
+    ],
+    "x": 10.5,
+    "y": 1,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 19
+  },
+  {
+    "id": "LBRC",
+    "label": "{ [",
+    "matrix": [
+      8,
+      1
+    ],
+    "x": 11.5,
+    "y": 1,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 47
+  },
+  {
+    "id": "RBRC",
+    "label": "} ]",
+    "matrix": [
+      6,
+      1
+    ],
+    "x": 12.5,
+    "y": 1,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 48
+  },
+  {
+    "id": "BSLS",
+    "label": "| \\",
+    "matrix": [
+      7,
+      6
+    ],
+    "x": 13.5,
+    "y": 1,
+    "w": 1.5,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 49
+  },
+  {
+    "id": "PGUP",
+    "label": "PgUp",
+    "matrix": [
+      2,
+      6
+    ],
+    "x": 15,
+    "y": 1,
+    "w": 1,
+    "h": 1,
+    "group": "nav",
+    "defaultKeycode": 75
+  },
+  {
+    "id": "CAPS",
+    "label": "Caps",
+    "matrix": [
+      2,
+      1
+    ],
+    "x": 0,
+    "y": 2,
+    "w": 1.75,
+    "h": 1,
+    "group": "mod",
+    "defaultKeycode": 57
+  },
+  {
+    "id": "A",
+    "label": "A",
+    "matrix": [
+      1,
+      2
+    ],
+    "x": 1.75,
+    "y": 2,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 4
+  },
+  {
+    "id": "S",
+    "label": "S",
+    "matrix": [
+      2,
+      2
+    ],
+    "x": 2.75,
+    "y": 2,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 22
+  },
+  {
+    "id": "D",
+    "label": "D",
+    "matrix": [
+      3,
+      2
+    ],
+    "x": 3.75,
+    "y": 2,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 7
+  },
+  {
+    "id": "F",
+    "label": "F",
+    "matrix": [
+      4,
+      2
+    ],
+    "x": 4.75,
+    "y": 2,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 9
+  },
+  {
+    "id": "G",
+    "label": "G",
+    "matrix": [
+      4,
+      3
+    ],
+    "x": 5.75,
+    "y": 2,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 10
+  },
+  {
+    "id": "H",
+    "label": "H",
+    "matrix": [
+      5,
+      3
+    ],
+    "x": 6.75,
+    "y": 2,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 11
+  },
+  {
+    "id": "J",
+    "label": "J",
+    "matrix": [
+      5,
+      2
+    ],
+    "x": 7.75,
+    "y": 2,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 13
+  },
+  {
+    "id": "K",
+    "label": "K",
+    "matrix": [
+      6,
+      2
+    ],
+    "x": 8.75,
+    "y": 2,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 14
+  },
+  {
+    "id": "L",
+    "label": "L",
+    "matrix": [
+      7,
+      2
+    ],
+    "x": 9.75,
+    "y": 2,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 15
+  },
+  {
+    "id": "SCLN",
+    "label": ": ;",
+    "matrix": [
+      8,
+      2
+    ],
+    "x": 10.75,
+    "y": 2,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 51
+  },
+  {
+    "id": "QUOT",
+    "label": "\" '",
+    "matrix": [
+      8,
+      3
+    ],
+    "x": 11.75,
+    "y": 2,
+    "w": 1,
+    "h": 1,
+    "group": "alpha",
+    "defaultKeycode": 52
+  },
+  {
+    "id": "ENT",
+    "label": "Enter",
+    "matrix": [
+      8,
+      4
+    ],
+    "x": 12.75,
+    "y": 2,
+    "w": 2.25,
+    "h": 1,
+    "group": "mod",
+    "defaultKeycode": 40
+  },
+  {
     "id": "PGDN",
     "label": "PgDn",
     "matrix": [
-      2,
+      6,
       5
     ],
     "x": 15,
@@ -3397,7 +4315,7 @@ export const LAYOUT_65_ANSI = [
       4
     ],
     "x": 9.25,
-    "y": 4.25,
+    "y": 3,
     "w": 1,
     "h": 1,
     "group": "alpha",
@@ -3411,7 +4329,7 @@ export const LAYOUT_65_ANSI = [
       4
     ],
     "x": 10.25,
-    "y": 4.25,
+    "y": 3,
     "w": 1,
     "h": 1,
     "group": "alpha",
@@ -3425,7 +4343,7 @@ export const LAYOUT_65_ANSI = [
       5
     ],
     "x": 11.25,
-    "y": 4.25,
+    "y": 3,
     "w": 1,
     "h": 1,
     "group": "alpha",
@@ -3435,11 +4353,11 @@ export const LAYOUT_65_ANSI = [
     "id": "RSFT",
     "label": "Shift",
     "matrix": [
-      9,
-      1
+      0,
+      7
     ],
     "x": 12.25,
-    "y": 4.25,
+    "y": 3,
     "w": 1.75,
     "h": 1,
     "group": "mod",
@@ -3463,8 +4381,8 @@ export const LAYOUT_65_ANSI = [
     "id": "END",
     "label": "End",
     "matrix": [
-      2,
-      5
+      0,
+      1
     ],
     "x": 15,
     "y": 3,
@@ -3491,8 +4409,8 @@ export const LAYOUT_65_ANSI = [
     "id": "LWIN",
     "label": "Win",
     "matrix": [
-      9,
-      0
+      1,
+      5
     ],
     "x": 1.25,
     "y": 4,
@@ -3505,7 +4423,7 @@ export const LAYOUT_65_ANSI = [
     "id": "LALT",
     "label": "Alt",
     "matrix": [
-      9,
+      2,
       3
     ],
     "x": 2.5,
@@ -3519,8 +4437,8 @@ export const LAYOUT_65_ANSI = [
     "id": "SPC",
     "label": "Space",
     "matrix": [
-      9,
-      4
+      3,
+      1
     ],
     "x": 3.75,
     "y": 4,
@@ -3537,8 +4455,8 @@ export const LAYOUT_65_ANSI = [
     "id": "RALT",
     "label": "Alt",
     "matrix": [
-      9,
-      5
+      3,
+      6
     ],
     "x": 10,
     "y": 4,
@@ -3551,8 +4469,8 @@ export const LAYOUT_65_ANSI = [
     "id": "FN",
     "label": "Fn",
     "matrix": [
-      9,
-      2
+      3,
+      3
     ],
     "x": 11.25,
     "y": 4,
@@ -7224,7 +8142,7 @@ export const LAYOUT_REGISTRY: Record<string, KeyLayoutItem[]> = {
   'gmmk3-75-ansi': LAYOUT_75_ANSI,
   'gmmk3-65-ansi': LAYOUT_65_ANSI,
   'gmmk2-96-ansi': LAYOUT_96_ANSI,
-  'gmmk2-65-ansi': LAYOUT_65_ANSI,
+  'gmmk2-65-ansi': LAYOUT_GMMK2_65_ANSI,
   'generic-tkl': LAYOUT_TKL_ANSI,
   'generic-60': LAYOUT_60_ANSI,
   'generic-via': LAYOUT_100_ANSI,
@@ -7232,4 +8150,78 @@ export const LAYOUT_REGISTRY: Record<string, KeyLayoutItem[]> = {
 
 export function getLayoutForPreset(presetId: string): KeyLayoutItem[] {
   return LAYOUT_REGISTRY[presetId] || LAYOUT_100_ANSI;
+}
+
+export interface SideLedItem {
+  id: string;
+  side: 'left' | 'right';
+  index: number;
+  top: number;
+  height: number;
+}
+
+export interface SideLedsLayout {
+  left: SideLedItem[];
+  right: SideLedItem[];
+}
+
+/**
+ * Resolves whether a keyboard descriptor / preset ID supports hardware sidelight diffusers.
+ */
+export function isSidelightSupported(presetId: string, desc?: { capabilities?: { hasSidelights?: boolean } } | null): boolean {
+  if (desc && desc.capabilities && typeof desc.capabilities.hasSidelights === 'boolean') {
+    return desc.capabilities.hasSidelights;
+  }
+  return presetId.startsWith('gmmk3') || presetId.startsWith('gmmk2');
+}
+
+/**
+ * Calculates dynamically scaled and evenly spaced side LED diffusers for any keyboard size.
+ * Prevents side LEDs from overflowing beyond the chassis on 60%, 65%, and 75% form factors.
+ */
+export function getSideLedSegments(
+  presetId: string,
+  canvasHeight: number,
+  desc?: { capabilities?: { hasSidelights?: boolean; sidelightCount?: number } } | null
+): SideLedsLayout | null {
+  if (!isSidelightSupported(presetId, desc)) {
+    return null;
+  }
+
+  // GMMK 3 has 20 side LEDs (10 per side); GMMK 2 65% has 16 (8 per side); GMMK 2 96% has 20 (10 per side)
+  const totalSideLeds = desc?.capabilities?.sidelightCount || (presetId.startsWith('gmmk2-65') ? 16 : 20);
+  const countPerSide = Math.max(1, Math.floor(totalSideLeds / 2));
+
+  const topPadding = 18;
+  const bottomPadding = 18;
+  const segmentHeight = 14;
+  const usableHeight = Math.max(20, canvasHeight - topPadding - bottomPadding - segmentHeight);
+
+  const left: SideLedItem[] = [];
+  for (let i = 0; i < countPerSide; i++) {
+    const fraction = countPerSide > 1 ? i / (countPerSide - 1) : 0.5;
+    const top = Math.round(topPadding + fraction * usableHeight);
+    left.push({
+      id: `SLED_L_${i + 1}`,
+      side: 'left',
+      index: i,
+      top,
+      height: segmentHeight,
+    });
+  }
+
+  const right: SideLedItem[] = [];
+  for (let i = 0; i < countPerSide; i++) {
+    const fraction = countPerSide > 1 ? i / (countPerSide - 1) : 0.5;
+    const top = Math.round(topPadding + fraction * usableHeight);
+    right.push({
+      id: `SLED_R_${i + 1}`,
+      side: 'right',
+      index: i,
+      top,
+      height: segmentHeight,
+    });
+  }
+
+  return { left, right };
 }

@@ -10,7 +10,7 @@ interface I18nState {
 function getInitialLanguage(): Language {
   if (typeof window === 'undefined') return 'en';
   try {
-    const saved = localStorage.getItem('luxqmk_lang') || localStorage.getItem('gmmk_studio_lang');
+    const saved = localStorage.getItem('luxqmk_lang');
     if (saved === 'pl' || saved === 'en') return saved;
     const sysLang = (navigator.language || (navigator.languages && navigator.languages[0]) || '').toLowerCase();
     if (sysLang.startsWith('pl')) return 'pl';
@@ -28,7 +28,6 @@ export const useI18n = create<I18nState>((set, get) => ({
   setLanguage: (lang: Language) => {
     try {
       localStorage.setItem('luxqmk_lang', lang);
-      localStorage.setItem('gmmk_studio_lang', lang);
       if (typeof document !== 'undefined') {
         document.documentElement.lang = lang;
       }

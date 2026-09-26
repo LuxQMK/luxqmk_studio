@@ -241,6 +241,7 @@ export const useDeviceStore = create<DeviceState>((set, get) => ({
     }
     hidProtocol.setDevice(null);
     set({ isConnected: false, connectedDevice: null, activeDescriptor: null, firmwareInfo: null });
+    useKeymapStore.setState({ layerKeymaps: { 0: {}, 1: {}, 2: {} }, selectedKey: null });
     useUIStore.getState().showToast(useI18n.getState().t('toastDeviceDisconnected'), 'info');
   },
 

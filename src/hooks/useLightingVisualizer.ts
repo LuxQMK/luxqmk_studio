@@ -6,7 +6,6 @@ import { useUIStore } from '../store/useUIStore';
 import { hidProtocol } from '../core/hid-protocol';
 import { CODE_TO_KEY_ID } from '../views/TesterView';
 import { KeyLayoutItem } from '../types/keyboard';
-import { GMMK3_SIDE_LEDS } from '../data/layouts';
 import { SidelightConfig } from '../types/lighting';
 
 export interface VisualizerKey {
@@ -482,39 +481,25 @@ export function useLightingVisualizer(
     });
 
     const sideDiffusers: SideDiffuser[] = [];
-
-    GMMK3_SIDE_LEDS.left.forEach((sled) => {
-      const qmkX = sled.qmkPoint ? sled.qmkPoint[0] : 0;
-      const qmkY = sled.qmkPoint ? sled.qmkPoint[1] : Math.round((sled.y / boundsH) * 64);
+    const sideEls = container.querySelectorAll<HTMLElement>('.side-diffuser-segment');
+    const cRect = container.getBoundingClientRect();
+    sideEls.forEach((el) => {
+      const id = el.getAttribute('data-key-id') || '';
+      const isLeft = el.classList.contains('side-diffuser-left');
+      const rect = el.getBoundingClientRect();
+      const relY = cRect.height > 0 ? (rect.top + rect.height / 2 - cRect.top) / cRect.height : 0.5;
+      const qmkX = isLeft ? 0 : 224;
+      const qmkY = Math.round(relY * 64);
       const dx = qmkX - centerX;
       const dy = qmkY - centerY;
-      const el = container.querySelector<HTMLElement>(`[data-key-id="${sled.id}"]`);
       sideDiffusers.push({
-        id: sled.id,
+        id,
         qmkX,
         qmkY,
         dx,
         dy,
         dist: Math.sqrt(dx * dx + dy * dy),
-        isLeft: true,
-        el,
-      });
-    });
-
-    GMMK3_SIDE_LEDS.right.forEach((sled) => {
-      const qmkX = sled.qmkPoint ? sled.qmkPoint[0] : 224;
-      const qmkY = sled.qmkPoint ? sled.qmkPoint[1] : Math.round((sled.y / boundsH) * 64);
-      const dx = qmkX - centerX;
-      const dy = qmkY - centerY;
-      const el = container.querySelector<HTMLElement>(`[data-key-id="${sled.id}"]`);
-      sideDiffusers.push({
-        id: sled.id,
-        qmkX,
-        qmkY,
-        dx,
-        dy,
-        dist: Math.sqrt(dx * dx + dy * dy),
-        isLeft: false,
+        isLeft,
         el,
       });
     });
@@ -817,7 +802,7 @@ export function useLightingVisualizer(
           }
         }
 
-        // Logo LED Lock Indicator (1:1 QMK luxqmk.c & v1.3.0 parity)
+        // Logo LED Lock Indicator (1:1 QMK luxqmk.c parity)
         if (k.isLogo) {
           const { logoLocks } = store;
           const currentSubTab = useUIStore.getState().lightingSubTab;

@@ -3,7 +3,7 @@ import { useLightingStore, ALL_RGB_EFFECTS, HARDWARE_GRADIENTS, COLOR_SWATCHES }
 import { useKeymapStore } from '../store/useKeymapStore';
 import { useDeviceStore } from '../store/useDeviceStore';
 import { useUIStore, LightingSubTab } from '../store/useUIStore';
-import { getLayoutForPreset, GMMK3_SIDE_LEDS } from '../data/layouts';
+import { getLayoutForPreset, getSideLedSegments, isSidelightSupported } from '../data/layouts';
 import { ALL_DEVICE_DESCRIPTORS } from '../data/devices';
 import { getKeycodeInfo } from '../data/keycodes';
 import { useI18n } from '../i18n';
@@ -59,8 +59,8 @@ export const LightingView: React.FC = () => {
   const layoutKeys = getLayoutForPreset(presetLayoutId);
 
   const activeDescriptor = useDeviceStore((s) => s.activeDescriptor);
-  const desc = activeDescriptor || ALL_DEVICE_DESCRIPTORS.find((d) => d.id === presetLayoutId) || ALL_DEVICE_DESCRIPTORS[0];
-  const hasSidelights = desc?.capabilities?.hasSidelights ?? (presetLayoutId.includes('gmmk') || presetLayoutId.includes('100') || presetLayoutId.includes('75') || presetLayoutId.includes('65') || presetLayoutId.includes('96'));
+  const desc = activeDescriptor || ALL_DEVICE_DESCRIPTORS.find((d) => d.id === presetLayoutId) || null;
+  const hasSidelights = isSidelightSupported(presetLayoutId, desc);
 
   // Compute bounding box
   let maxX = 0;
@@ -153,24 +153,27 @@ export const LightingView: React.FC = () => {
 
       // Intersect left & right sidelights
       if (hasSidelights) {
-        GMMK3_SIDE_LEDS.left.forEach((sled, sIdx) => {
-          const sL = 6;
-          const sT = sled.y * unitSize + 18;
-          const sR = 30;
-          const sB = sT + 24;
-          if (sL < mRight && sR > mLeft && sT < mBottom && sB > mTop) {
-            nextSelection.add(layoutKeys.length + sIdx);
-          }
-        });
-        GMMK3_SIDE_LEDS.right.forEach((sled, sIdx) => {
-          const sL = canvasWidth - 30;
-          const sT = sled.y * unitSize + 18;
-          const sR = canvasWidth - 6;
-          const sB = sT + 24;
-          if (sL < mRight && sR > mLeft && sT < mBottom && sB > mTop) {
-            nextSelection.add(layoutKeys.length + GMMK3_SIDE_LEDS.left.length + sIdx);
-          }
-        });
+        const sideLeds = getSideLedSegments(presetLayoutId, canvasHeight, desc);
+        if (sideLeds) {
+          sideLeds.left.forEach((sled, sIdx) => {
+            const sL = 6;
+            const sT = sled.top;
+            const sR = 30;
+            const sB = sT + sled.height;
+            if (sL < mRight && sR > mLeft && sT < mBottom && sB > mTop) {
+              nextSelection.add(layoutKeys.length + sIdx);
+            }
+          });
+          sideLeds.right.forEach((sled, sIdx) => {
+            const sL = canvasWidth - 30;
+            const sT = sled.top;
+            const sR = canvasWidth - 6;
+            const sB = sT + sled.height;
+            if (sL < mRight && sR > mLeft && sT < mBottom && sB > mTop) {
+              nextSelection.add(layoutKeys.length + sideLeds.left.length + sIdx);
+            }
+          });
+        }
       }
 
       useLightingStore.getState().setSelectedLeds(nextSelection);
@@ -327,44 +330,50 @@ export const LightingView: React.FC = () => {
             style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, position: 'relative' }}
           >
             {/* Left & Right Sidelight LED Diffusers */}
-            {hasSidelights && (
-              <div className="side-diffusers-container">
-                {GMMK3_SIDE_LEDS.left.map((sled, sIdx) => {
-                  const sledIdx = layoutKeys.length + sIdx;
-                  return (
-                    <div
-                      key={sled.id}
-                      data-key-id={sled.id}
-                      className={`side-diffuser-segment side-diffuser-left ${selectedLeds.has(sledIdx) ? 'perkey-selected' : ''}`}
-                      style={{
-                        top: `${sled.y * unitSize + 18}px`,
-                        left: '6px',
-                        cursor: isPerKeyActive ? 'pointer' : 'default',
-                      }}
-                      title={`Side LED Left (${sled.id})`}
-                      onClick={(e) => handleKeycapClick(sledIdx, e)}
-                    />
-                  );
-                })}
-                {GMMK3_SIDE_LEDS.right.map((sled, sIdx) => {
-                  const sledIdx = layoutKeys.length + GMMK3_SIDE_LEDS.left.length + sIdx;
-                  return (
-                    <div
-                      key={sled.id}
-                      data-key-id={sled.id}
-                      className={`side-diffuser-segment side-diffuser-right ${selectedLeds.has(sledIdx) ? 'perkey-selected' : ''}`}
-                      style={{
-                        top: `${sled.y * unitSize + 18}px`,
-                        right: '6px',
-                        cursor: isPerKeyActive ? 'pointer' : 'default',
-                      }}
-                      title={`Side LED Right (${sled.id})`}
-                      onClick={(e) => handleKeycapClick(sledIdx, e)}
-                    />
-                  );
-                })}
-              </div>
-            )}
+            {hasSidelights && (() => {
+              const sideLeds = getSideLedSegments(presetLayoutId, canvasHeight, desc);
+              if (!sideLeds) return null;
+              return (
+                <div className="side-diffusers-container">
+                  {sideLeds.left.map((sled, sIdx) => {
+                    const sledIdx = layoutKeys.length + sIdx;
+                    return (
+                      <div
+                        key={sled.id}
+                        data-key-id={sled.id}
+                        className={`side-diffuser-segment side-diffuser-left ${selectedLeds.has(sledIdx) ? 'perkey-selected' : ''}`}
+                        style={{
+                          top: `${sled.top}px`,
+                          height: `${sled.height}px`,
+                          left: '6px',
+                          cursor: isPerKeyActive ? 'pointer' : 'default',
+                        }}
+                        title={`Side LED Left (${sled.id})`}
+                        onClick={(e) => handleKeycapClick(sledIdx, e)}
+                      />
+                    );
+                  })}
+                  {sideLeds.right.map((sled, sIdx) => {
+                    const sledIdx = layoutKeys.length + sideLeds.left.length + sIdx;
+                    return (
+                      <div
+                        key={sled.id}
+                        data-key-id={sled.id}
+                        className={`side-diffuser-segment side-diffuser-right ${selectedLeds.has(sledIdx) ? 'perkey-selected' : ''}`}
+                        style={{
+                          top: `${sled.top}px`,
+                          height: `${sled.height}px`,
+                          right: '6px',
+                          cursor: isPerKeyActive ? 'pointer' : 'default',
+                        }}
+                        title={`Side LED Right (${sled.id})`}
+                        onClick={(e) => handleKeycapClick(sledIdx, e)}
+                      />
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
             {layoutKeys.map((key, idx) => {
               const w = (key.w || 1) * unitSize - 4;
