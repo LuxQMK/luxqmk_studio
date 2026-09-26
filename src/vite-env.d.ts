@@ -1,0 +1,38 @@
+/// <reference types="vite/client" />
+
+declare module '*.svg' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.png' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.ico' {
+  const content: string;
+  export default content;
+}
+
+interface Window {
+  electronAPI?: {
+    isDesktop: boolean;
+    getAutostart: () => Promise<boolean>;
+    setAutostart: (enable: boolean) => Promise<boolean>;
+    minimizeToTray: () => void;
+    getDesktopSources: () => Promise<Array<{ id: string; name: string }>>;
+    getAppDataPath: () => Promise<string>;
+    openAppDataFolder: () => Promise<string>;
+    saveUserConfig: (cfg: any) => Promise<{ success: boolean; path?: string; error?: string }>;
+    loadUserConfig: () => Promise<any>;
+    onAutostartChanged: (callback: (enabled: boolean) => void) => () => void;
+    getFlasherToolsStatus: () => Promise<{ wb32Available: boolean; wb32Path?: string; dfuUtilAvailable: boolean; dfuUtilPath?: string }>;
+    selectFirmwareFile: () => Promise<{ filePath: string; fileName: string; fileSize: number; extension: string } | null>;
+    savePreflashBackup: (snapshot: any) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+    loadPreflashBackup: () => Promise<any>;
+    flashFirmware: (params: { filePath: string; toolType?: string }) => Promise<{ success: boolean; error?: string; timeout?: boolean }>;
+    cancelFlash: () => Promise<{ success: boolean; error?: string }>;
+    onFlasherProgress: (callback: (data: { percent: number; phase: string; log: string }) => void) => () => void;
+  };
+}

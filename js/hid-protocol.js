@@ -77,6 +77,7 @@
     SIDELIGHT_GRADIENT: 47,
     SIDELIGHT_REVERSE: 48,
     SIDELIGHT_DENSITY: 49,
+    NKRO_STATE: 50,
     BOOTLOADER_JUMP: 0xFE
   };
 
@@ -410,6 +411,37 @@
       const offLo = offset & 0xFF;
       const payload = [VIA_CMD.DYNAMIC_KEYMAP_SET_BUFFER, offHi, offLo, size, ...bytes];
       return await this.sendCommand(payload);
+    }
+
+    async writeFullKeymap(layers, rows = 14, cols = 8, onProgress = null) {
+      const totalLayers = Math.min(layers.length, 3);
+      const totalBytes = totalLayers * rows * cols * 2;
+      const fullBuffer = new Uint8Array(totalBytes);
+      for (let l = 0; l < totalLayers; l++) {
+        const layer = layers[l];
+        if (!layer) continue;
+        for (let r = 0; r < rows && r < layer.length; r++) {
+          const row = layer[r];
+          if (!row) continue;
+          for (let c = 0; c < cols && c < row.length; c++) {
+            const kc = row[c] ?? 0;
+            const byteIdx = (l * rows * cols * 2) + (r * cols * 2) + (c * 2);
+            fullBuffer[byteIdx] = (kc >> 8) & 0xFF;
+            fullBuffer[byteIdx + 1] = kc & 0xFF;
+          }
+        }
+      }
+
+      const CHUNK_SIZE = 28;
+      for (let offset = 0; offset < totalBytes; offset += CHUNK_SIZE) {
+        const size = Math.min(CHUNK_SIZE, totalBytes - offset);
+        const chunk = Array.from(fullBuffer.slice(offset, offset + size));
+        await this.setKeymapBuffer(offset, size, chunk);
+        if (onProgress) {
+          onProgress(Math.round(((offset + size) / totalBytes) * 100));
+        }
+        await this.sleep(2);
+      }
     }
 
     // --- Rotary Knob Encoders ---
@@ -857,6 +889,24 @@
       if (!this.isConnected) return;
       try {
         await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_DENSITY, density || 128]);
+      } catch (e) { }
+    }
+
+    // --- NKRO Runtime Toggle ---
+    async getNkroState() {
+      if (!this.isConnected) return true;
+      try {
+        const res = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.NKRO_STATE);
+        return (res && res[0] !== 0xFF && res[1] === CHANNELS.CUSTOM && res[2] === CUSTOM_VAL.NKRO_STATE) ? (res[3] === 1) : true;
+      } catch (e) {
+        return true;
+      }
+    }
+
+    async setNkroState(enabled) {
+      if (!this.isConnected) return;
+      try {
+        await this.sendCommand([VIA_CMD.CUSTOM_SET_VALUE, CHANNELS.CUSTOM, CUSTOM_VAL.NKRO_STATE, enabled ? 1 : 0]);
       } catch (e) { }
     }
   }

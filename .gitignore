@@ -4,6 +4,7 @@ package-lock.json.bak
 
 # Production & Distribution Builds
 dist/
+release/
 out/
 build/
 *.exe

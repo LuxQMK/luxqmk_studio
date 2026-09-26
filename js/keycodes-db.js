@@ -2612,7 +2612,127 @@
     };
   }
 
+  function getShortKeycodeLabel(info) {
+    if (!info) return '';
+    const name = info.name || '';
+    const label = info.label || '';
+
+    switch (name) {
+      case 'KC_PSCR': return 'PrtSc';
+      case 'KC_SCRL': return 'ScrLk';
+      case 'KC_PAUS': return 'Pause';
+      case 'KC_INS': return 'Ins';
+      case 'KC_DEL': return 'Del';
+      case 'KC_HOME': return 'Home';
+      case 'KC_END': return 'End';
+      case 'KC_PGUP': return 'PgUp';
+      case 'KC_PGDN': return 'PgDn';
+      case 'KC_ESC': return 'Esc';
+      case 'KC_BSPC': return 'Bksp';
+      case 'KC_CAPS': return 'Caps';
+      case 'KC_TAB': return 'Tab';
+      case 'KC_ENT': return 'Enter';
+      case 'KC_SPC': return 'Space';
+      case 'KC_APP': return 'Menu';
+      case 'KC_LCTL': return 'L-Ctrl';
+      case 'KC_RCTL': return 'R-Ctrl';
+      case 'KC_LSFT': return 'L-Shift';
+      case 'KC_RSFT': return 'R-Shift';
+      case 'KC_LALT': return 'L-Alt';
+      case 'KC_RALT': return 'R-Alt';
+      case 'KC_LGUI': return 'L-Win';
+      case 'KC_RGUI': return 'R-Win';
+      case 'KC_NUM': return 'Num';
+      case 'KC_PSLS': return '/';
+      case 'KC_PAST': return '*';
+      case 'KC_PMNS': return '-';
+      case 'KC_PPLS': return '+';
+      case 'KC_PENT': return 'Enter';
+      case 'KC_PDOT': return '.';
+      case 'KC_P0': return '0';
+      case 'KC_P1': return '1';
+      case 'KC_P2': return '2';
+      case 'KC_P3': return '3';
+      case 'KC_P4': return '4';
+      case 'KC_P5': return '5';
+      case 'KC_P6': return '6';
+      case 'KC_P7': return '7';
+      case 'KC_P8': return '8';
+      case 'KC_P9': return '9';
+      case 'KC_MUTE': return 'Mute';
+      case 'KC_VOLU': return 'Vol +';
+      case 'KC_VOLD': return 'Vol -';
+      case 'KC_MNXT': return 'Next';
+      case 'KC_MPRV': return 'Prev';
+      case 'KC_MPLY': return 'Play';
+      case 'KC_MSTP': return 'Stop';
+    }
+
+    const verboseMap = {
+      'Print Screen': 'PrtSc',
+      'Scroll Lock': 'ScrLk',
+      'Pause': 'Pause',
+      'Insert': 'Ins',
+      'Delete': 'Del',
+      'Page Up': 'PgUp',
+      'Page Down': 'PgDn',
+      'Escape': 'Esc',
+      'Backspace': 'Bksp',
+      'Caps Lock': 'Caps',
+      'Num Lock': 'Num',
+      'Num Enter': 'Enter',
+      'Num /': '/',
+      'Num *': '*',
+      'Num -': '-',
+      'Num +': '+',
+      'Num .': '.',
+      'Num 0': '0',
+      'Num 1': '1',
+      'Num 2': '2',
+      'Num 3': '3',
+      'Num 4': '4',
+      'Num 5': '5',
+      'Num 6': '6',
+      'Num 7': '7',
+      'Num 8': '8',
+      'Num 9': '9',
+      'Menu / App': 'Menu',
+      'Audio Mute': 'Mute',
+      'Audio Vol Up': 'Vol +',
+      'Audio Vol Down': 'Vol -',
+      'RGB Toggle': 'RGB Tog',
+      'RGB Mode+': 'RGB M+',
+      'RGB Mode-': 'RGB M-',
+      'RGB Bright+': 'RGB B+',
+      'RGB Bright-': 'RGB B-',
+      'RGB Speed+': 'RGB S+',
+      'RGB Speed-': 'RGB S-',
+      'RGB Hue+': 'RGB H+',
+      'RGB Hue-': 'RGB H-',
+      'RGB Sat+': 'RGB S+',
+      'RGB Sat-': 'RGB S-',
+      'EEPROM Reset': 'EEP RST',
+      'Bootloader': 'Reset',
+      '▽ (Pass)': '▽',
+      'None': '·'
+    };
+
+    if (verboseMap[label]) return verboseMap[label];
+    return label;
+  }
+
+  function getFontSizeClass(text) {
+    if (!text) return 'font-lg';
+    const len = String(text).length;
+    if (len <= 2) return 'font-lg';
+    if (len <= 4) return 'font-md';
+    if (len <= 6) return 'font-sm';
+    return 'font-xs';
+  }
+
   window.KEYCODES_DB = KEYCODES_DB;
   window.KEYCODE_CATEGORIES = KEYCODE_CATEGORIES;
   window.getKeycodeInfo = getKeycodeInfo;
+  window.getShortKeycodeLabel = getShortKeycodeLabel;
+  window.getFontSizeClass = getFontSizeClass;
 })();

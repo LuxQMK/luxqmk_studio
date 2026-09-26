@@ -305,12 +305,16 @@ function createWindow() {
   ses.on("select-hid-device", (event, details, callback) => {
     event.preventDefault();
     if (details.deviceList && details.deviceList.length > 0) {
-      // Auto-select GMMK 3 / QMK device if found
-      const target = details.deviceList.find((d) =>
-        (d.vendorId === 0x320f || d.vendorId === 0x0c45) ||
+      // Prioritize dedicated Raw HID / VIA interface (usagePage 0xFF60)
+      const rawTarget = details.deviceList.find((d) =>
+        d.collections && d.collections.some((c) => c.usagePage === 0xff60 && (c.usage === 0x61 || c.usage === 0x01))
+      ) || details.deviceList.find((d) =>
+        d.collections && d.collections.some((c) => c.usagePage === 0xff60)
+      ) || details.deviceList.find((d) =>
+        (d.vendorId === 0x504b || d.vendorId === 0x320f || d.vendorId === 0x0c45) ||
         (d.productName && d.productName.toLowerCase().includes("gmmk"))
       );
-      callback(target ? target.deviceId : details.deviceList[0].deviceId);
+      callback(rawTarget ? rawTarget.deviceId : details.deviceList[0].deviceId);
     } else {
       callback("");
     }
@@ -332,7 +336,12 @@ function createWindow() {
     });
   }
 
-  mainWindow.loadFile(path.join(__dirname, "index.html"));
+  const distIndex = path.join(__dirname, "dist", "index.html");
+  if (fs.existsSync(distIndex)) {
+    mainWindow.loadFile(distIndex);
+  } else {
+    mainWindow.loadFile(path.join(__dirname, "index.html"));
+  }
 
   mainWindow.on("close", (event) => {
     if (!isQuitting) {

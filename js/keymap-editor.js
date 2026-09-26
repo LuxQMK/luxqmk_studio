@@ -229,10 +229,20 @@
           currentCode = (this.activeLayer === 0) ? (key.defaultKeycode || 0x0000) : 0x0001;
         }
         const kcMeta = window.getKeycodeInfo ? window.getKeycodeInfo(currentCode) : { label: key.label, name: "" };
+        const isTrns = this.activeLayer > 0 && (currentCode === 0x0001 || currentCode === 1);
+        const shortLabel = isTrns ? "▽" : (window.getShortKeycodeLabel ? window.getShortKeycodeLabel(kcMeta) : (kcMeta.label || key.label));
+        const defaultKc = key.defaultKeycode;
+        const isCustom = this.activeLayer > 0 ? !isTrns : (defaultKc !== undefined && currentCode !== defaultKc && currentCode !== 0x0000);
+        const isSingleLegend = !isCustom && !isTrns;
+        const fontClass = window.getFontSizeClass ? window.getFontSizeClass(shortLabel) : "font-md";
 
-        const primaryLabel = kcMeta.label || key.label;
         const isSelected = this.selectedKey && this.selectedKey.id === key.id;
         if (isSelected) keyEl.classList.add("selected");
+        if (isTrns) keyEl.classList.add("is-trns");
+        if (isCustom) keyEl.classList.add("is-custom-mapped");
+        if (!isSingleLegend) keyEl.classList.add("has-dual-legend");
+
+        keyEl.title = `${key.label || key.id}: ${kcMeta.name || ''} ${kcMeta.label ? `— ${kcMeta.label}` : ''} (0x${currentCode.toString(16).padStart(4, '0').toUpperCase()})`;
 
         if (key.isLogo) {
           keyEl.classList.add("keycap-logo-badge");
@@ -242,10 +252,19 @@
           keyEl.classList.add("keycap-knob");
           keyEl.innerHTML = `<div class="knob-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="3" x2="12" y2="7"></line></svg></div>`;
         } else {
-          keyEl.innerHTML = `
-            <div class="key-secondary">${key.label}</div>
-            <div class="key-primary">${primaryLabel}</div>
-          `;
+          if (isSingleLegend) {
+            keyEl.innerHTML = `<div class="key-primary single-legend ${fontClass}">${shortLabel}</div>`;
+          } else if (isTrns) {
+            keyEl.innerHTML = `
+              <div class="key-secondary">${key.label}</div>
+              <div class="key-primary is-trns">▽</div>
+            `;
+          } else {
+            keyEl.innerHTML = `
+              <div class="key-secondary mod-origin">${key.label}</div>
+              <div class="key-primary is-custom ${fontClass}">${shortLabel}</div>
+            `;
+          }
         }
 
         keyEl.addEventListener("click", () => {

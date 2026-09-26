@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 40 432 432" width="100%" height="100%">
+  <defs>
+    <!-- Czysty cień pod korpusem ikony -->
+    <filter id="flatDrop" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <!-- ==================== KWADRATOWY KORPUS KLAWIATURY ==================== -->
+  <!-- Obudowa urządzenia wycentrowana w osiach X:256, Y:256 -->
+  <rect x="52" y="52" width="408" height="408" rx="68" 
+        fill="#181b24" stroke="#252b3a" stroke-width="3" 
+        filter="url(#flatDrop)"/>
+
+  <!-- Wpuszczona matowa płyta montażowa (Switch Plate: Y=70 do Y=442) -->
+  <rect x="70" y="70" width="372" height="372" rx="46" 
+        fill="#090b10"/>
+
+  <!-- ==================== RZĄD 0: PEŁNY RZĄD FUNKCYJNY (Y = 112) ==================== -->
+  <rect x="79" y="112" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="115" y="112" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="151" y="112" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="187" y="112" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="223" y="112" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="259" y="112" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="295" y="112" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="331" y="112" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="367" y="112" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="403" y="112" width="30" height="30" rx="7" fill="#11141e"/>
+
+
+  <!-- ==================== RZĄD 1: LUX GÓRA (Y = 148) ==================== -->
+  <!-- L (Pion: Laser Cyan) -->
+  <rect x="79" y="148" width="30" height="30" rx="7" fill="#00F5FF"/>
+
+  <rect x="115" y="148" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="151" y="148" width="30" height="30" rx="7" fill="#11141e"/>
+
+  <!-- U (Lewe ramię: Sky Blue | Prawe ramię: Indigo Blue) -->
+  <rect x="187" y="148" width="30" height="30" rx="7" fill="#38BDF8"/>
+  <rect x="223" y="148" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="259" y="148" width="30" height="30" rx="7" fill="#818CF8"/>
+
+  <rect x="295" y="148" width="30" height="30" rx="7" fill="#11141e"/>
+
+  <!-- X (Górne lewe: Purple | Górne prawe: Orchid) -->
+  <rect x="331" y="148" width="30" height="30" rx="7" fill="#A78BFA"/>
+  <rect x="367" y="148" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="403" y="148" width="30" height="30" rx="7" fill="#E879F9"/>
+
+
+  <!-- ==================== RZĄD 2: LUX GÓRNY ŚRODEK (Y = 184) ==================== -->
+  <!-- L (Pion: Laser Cyan) -->
+  <rect x="79" y="184" width="30" height="30" rx="7" fill="#00F5FF"/>
+
+  <rect x="115" y="184" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="151" y="184" width="30" height="30" rx="7" fill="#11141e"/>
+
+  <!-- U (Ramiona) -->
+  <rect x="187" y="184" width="30" height="30" rx="7" fill="#38BDF8"/>
+  <rect x="223" y="184" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="259" y="184" width="30" height="30" rx="7" fill="#818CF8"/>
+
+  <rect x="295" y="184" width="30" height="30" rx="7" fill="#11141e"/>
+
+  <!-- X (Ramiona) -->
+  <rect x="331" y="184" width="30" height="30" rx="7" fill="#A78BFA"/>
+  <rect x="367" y="184" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="403" y="184" width="30" height="30" rx="7" fill="#E879F9"/>
+
+
+  <!-- ==================== RZĄD 3: LUX CENTRUM (Y = 220) ==================== -->
+  <!-- L (Pion: Laser Cyan) -->
+  <rect x="79" y="220" width="30" height="30" rx="7" fill="#00F5FF"/>
+
+  <rect x="115" y="220" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="151" y="220" width="30" height="30" rx="7" fill="#11141e"/>
+
+  <!-- U (Boki) -->
+  <rect x="187" y="220" width="30" height="30" rx="7" fill="#38BDF8"/>
+  <rect x="223" y="220" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="259" y="220" width="30" height="30" rx="7" fill="#818CF8"/>
+
+  <rect x="295" y="220" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="331" y="220" width="30" height="30" rx="7" fill="#11141e"/>
+
+  <!-- X (Centrum skrzyżowania: Violet) -->
+  <rect x="367" y="220" width="30" height="30" rx="7" fill="#C084FC"/>
+
+  <rect x="403" y="220" width="30" height="30" rx="7" fill="#11141e"/>
+
+
+  <!-- ==================== RZĄD 4: LUX DOLNY ŚRODEK (Y = 256) ==================== -->
+  <!-- L (Pion: Laser Cyan) -->
+  <rect x="79" y="256" width="30" height="30" rx="7" fill="#00F5FF"/>
+
+  <rect x="115" y="256" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="151" y="256" width="30" height="30" rx="7" fill="#11141e"/>
+
+  <!-- U (Boki) -->
+  <rect x="187" y="256" width="30" height="30" rx="7" fill="#38BDF8"/>
+  <rect x="223" y="256" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="259" y="256" width="30" height="30" rx="7" fill="#818CF8"/>
+
+  <rect x="295" y="256" width="30" height="30" rx="7" fill="#11141e"/>
+
+  <!-- X (Dolne lewe: Purple | Dolne prawe: Orchid) -->
+  <rect x="331" y="256" width="30" height="30" rx="7" fill="#A78BFA"/>
+  <rect x="367" y="256" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="403" y="256" width="30" height="30" rx="7" fill="#E879F9"/>
+
+
+  <!-- ==================== RZĄD 5: LUX DÓŁ (Y = 292) ==================== -->
+  <!-- L (Trzonek: Laser Cyan | Stopka: Electric Cyan) -->
+  <rect x="79" y="292" width="30" height="30" rx="7" fill="#00F5FF"/>
+  <rect x="115" y="292" width="30" height="30" rx="7" fill="#00E5FF"/>
+
+  <rect x="151" y="292" width="30" height="30" rx="7" fill="#11141e"/>
+
+  <!-- U (Podstawa: lewo Sky Blue | środek Cobalt Blue | prawo Indigo Blue) -->
+  <rect x="187" y="292" width="30" height="30" rx="7" fill="#38BDF8"/>
+  <rect x="223" y="292" width="30" height="30" rx="7" fill="#60A5FA"/>
+  <rect x="259" y="292" width="30" height="30" rx="7" fill="#818CF8"/>
+
+  <rect x="295" y="292" width="30" height="30" rx="7" fill="#11141e"/>
+
+  <!-- X (Dolne lewe: Purple | Dolne prawe: Orchid) -->
+  <rect x="331" y="292" width="30" height="30" rx="7" fill="#A78BFA"/>
+  <rect x="367" y="292" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="403" y="292" width="30" height="30" rx="7" fill="#E879F9"/>
+
+
+  <!-- ==================== RZĄD 6: MODYFIKATORY / ODDECH (Y = 328) ==================== -->
+  <rect x="79" y="328" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="115" y="328" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="151" y="328" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="187" y="328" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="223" y="328" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="259" y="328" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="295" y="328" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="331" y="328" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="367" y="328" width="30" height="30" rx="7" fill="#11141e"/>
+  <rect x="403" y="328" width="30" height="30" rx="7" fill="#11141e"/>
+
+
+  <!-- ==================== RZĄD 7: DOLNY RZĄD ZE SPACJĄ QMK (Y = 364) ==================== -->
+  <!-- Lewy blok klawiszy -->
+  <rect x="79" y="364" width="66" height="36" rx="9" fill="#11141e"/>
+
+  <!-- Wycentrowana spacja QMK (Środek X = 256, Y = 382) -->
+  <g>
+    <rect x="151" y="364" width="210" height="36" rx="10" fill="#1D4ED8"/>
+
+    <!-- Napis wektorowy QMK -->
+    <g fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Q -->
+      <rect x="216" y="374" width="14" height="14" rx="4"/>
+      <path d="M 225,383 L 231,389"/>
+
+      <!-- M -->
+      <path d="M 241,388 V 374 L 249,382 L 257,374 V 388"/>
+
+      <!-- K -->
+      <path d="M 267,374 V 388 M 281,374 L 269,381 L 281,388"/>
+    </g>
+  </g>
+
+  <!-- Prawy blok klawiszy -->
+  <rect x="367" y="364" width="66" height="36" rx="9" fill="#11141e"/>
+</svg>

@@ -3,23 +3,44 @@
 /* Keycap Button on Virtual Keyboard */
 .keycap-btn {
   position: absolute;
-  background: var(--key-bg);
-  border: 1px solid var(--key-border);
-  border-radius: var(--radius-sm);
+  background: var(--key-bg, #111726);
+  border: 1px solid var(--key-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-sm, 6px);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 4px 6px;
+  justify-content: center;
+  align-items: center;
+  padding: 2px 3px;
   cursor: pointer;
   user-select: none;
+  box-sizing: border-box;
+  overflow: hidden;
   transition: transform 0.08s ease, border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.5);
 }
 
+.keycap-btn.has-dual-legend {
+  justify-content: space-between;
+  align-items: stretch;
+  padding: 3px 4px;
+}
+
+.keycap-btn.is-custom-mapped {
+  border-color: rgba(0, 240, 255, 0.35);
+  background: #0f1c2e;
+}
+
+.keycap-btn.is-trns {
+  opacity: 0.75;
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
 .keycap-btn:hover {
-  background: var(--key-bg-hover);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--key-bg-hover, #1a233a);
+  border-color: rgba(255, 255, 255, 0.35);
   transform: translateY(-1px);
+  z-index: 5;
 }
 
 .keycap-btn:active {
@@ -28,45 +49,107 @@
 }
 
 .keycap-btn.selected {
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 14px var(--accent-cyan-glow), inset 0 0 8px rgba(0, 240, 255, 0.2);
+  border-color: var(--accent-cyan, #00f0ff);
+  box-shadow: 0 0 14px var(--accent-cyan-glow, rgba(0, 240, 255, 0.4)), inset 0 0 8px rgba(0, 240, 255, 0.2);
   background: #102436;
   z-index: 10;
 }
 
 .key-secondary {
-  font-size: 0.65rem;
-  color: var(--key-subtext);
-  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--key-subtext, rgba(255, 255, 255, 0.45));
+  font-family: var(--font-mono, monospace);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1;
+  text-align: left;
+  align-self: flex-start;
+}
+
+.key-secondary.mod-origin {
+  opacity: 0.65;
+  font-size: 0.55rem;
 }
 
 .key-primary {
-  font-size: 0.8rem;
   font-weight: 700;
-  color: var(--key-text);
+  color: var(--key-text, #ffffff);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
+  max-width: 100%;
+  line-height: 1.15;
+  transition: color 0.15s ease;
+}
+
+.key-primary.single-legend {
+  margin: auto;
+}
+
+.key-primary.is-custom {
+  color: var(--accent-cyan, #00f0ff);
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.35);
+}
+
+.key-primary.is-trns {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.key-primary.font-lg {
+  font-size: 0.85rem;
+  letter-spacing: 0.01em;
+}
+
+.key-primary.font-md {
+  font-size: 0.72rem;
+  letter-spacing: 0;
+}
+
+.key-primary.font-sm {
+  font-size: 0.60rem;
+  letter-spacing: -0.01em;
+}
+
+.key-primary.font-xs {
+  font-size: 0.50rem;
+  letter-spacing: -0.02em;
 }
 
 /* Knob Specific Keycap */
-.keycap-knob {
-  background: radial-gradient(circle at 35% 35%, #2a3b5c, #131b2e);
-  border-radius: 50%;
-  border: 2px solid var(--secondary);
-  box-shadow: 0 0 12px var(--secondary-glow);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+.keycap-knob,
+.keycap-btn.keycap-knob,
+.lighting-keycap.keycap-knob {
+  background: radial-gradient(circle at 35% 35%, #2a3b5c, #131b2e) !important;
+  border-radius: 50% !important;
+  border: 2px solid var(--secondary, #00f0ff) !important;
+  box-shadow: 0 0 14px var(--secondary-glow, rgba(0, 240, 255, 0.4)), inset 0 0 6px rgba(0, 240, 255, 0.2) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding: 0 !important;
+  cursor: pointer;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+}
+
+.keycap-knob:hover,
+.lighting-keycap.keycap-knob:hover {
+  transform: translateY(-1px) scale(1.05) !important;
+  box-shadow: 0 0 18px var(--secondary-glow, rgba(0, 240, 255, 0.6)), inset 0 0 8px rgba(0, 240, 255, 0.3) !important;
 }
 
 .knob-icon {
   font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary, #00f0ff);
 }
 
 /* Key Group Colors */
@@ -140,7 +223,6 @@
 /* Glorious Logo LED Indicator Jewel on Chassis */
 .lighting-logo-badge {
   border-radius: 9999px !important;
-  border: 1px solid rgba(255, 255, 255, 0.45) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -153,21 +235,19 @@
   will-change: background-color;
 }
 
-.keycap-logo-badge {
+.keycap-logo-badge,
+.lighting-keycap.logo-keycap {
   border-radius: 9999px !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  background: rgba(30, 41, 59, 0.7) !important;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  cursor: default;
   min-height: 0 !important;
   padding: 0 !important;
   box-sizing: border-box !important;
 }
 
 .lighting-logo-badge .l-legend,
+.lighting-keycap.logo-keycap .l-legend,
 .keycap-logo-badge .key-primary,
 .keycap-logo-badge .key-secondary {
   display: none !important;
@@ -181,16 +261,26 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
+  z-index: 4;
 }
 
 .side-diffuser-segment {
   position: absolute;
-  width: 4px;
+  width: 5px;
   height: 18px;
-  border-radius: 2px;
-  pointer-events: none;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  pointer-events: auto;
+  cursor: pointer;
   contain: layout style;
-  will-change: background-color;
+  transition: transform 0.1s ease, box-shadow 0.12s ease;
+  will-change: background-color, box-shadow;
+}
+
+.side-diffuser-segment:hover {
+  transform: scale(1.25);
+  z-index: 10;
 }
 
 .side-diffuser-left {
@@ -827,10 +917,10 @@ input:checked + .slider:before {
    Custom Device Selector & Dropdown Menu
    ========================================================================== */
 .top-bar-center {
-  flex: 0 1 280px;
-  max-width: 320px;
-  min-width: 160px;
-  margin: 0 0.5rem;
+  flex: 1 1 auto;
+  max-width: 440px;
+  min-width: 220px;
+  margin: 0 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -840,8 +930,9 @@ input:checked + .slider:before {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
+  max-width: 440px;
 }
 
 .device-selector-btn {
@@ -1408,19 +1499,27 @@ input:checked + .switch-slider:before {
   width: 100vw;
   height: 100vh;
   background: rgba(8, 12, 22, 0.75);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
+  pointer-events: none;
+  transition: opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              backdrop-filter 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              -webkit-backdrop-filter 0.26s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-overlay.active {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .modal-card {
@@ -1434,11 +1533,14 @@ input:checked + .switch-slider:before {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transform: scale(0.95) translateY(10px);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+  transform: scale(0.92) translateY(14px);
+  transition: opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-overlay.active .modal-card {
+  opacity: 1;
   transform: scale(1) translateY(0);
 }
 

@@ -2,8 +2,8 @@
  * LuxQMK Studio - Device Manager & Adaptive Capability Engine
  */
 (function () {
-  const STUDIO_VERSION = "1.3.0";
-  const REQUIRED_FW_VERSION = { major: 0, minor: 3, patch: 0 };
+  const STUDIO_VERSION = "1.4.0";
+  const REQUIRED_FW_VERSION = { major: 0, minor: 3, patch: 1 };
 
   class DeviceManager {
     constructor() {

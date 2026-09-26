@@ -301,7 +301,26 @@
         }
       }
 
-      if (diffKeys.length > 0) {
+      if (diffKeys.length > 20) {
+        this._log(`Detected ${diffKeys.length} modified keys. Fast writing full keymap buffer to EEPROM...`, "info");
+        try {
+          await this.protocol.writeFullKeymap(backupData.layers, rows, cols, (p) => {
+            if (onProgress) onProgress(Math.round((p / 100) * 40));
+          });
+          this._log(`Wrote ${diffKeys.length} keys to EEPROM memory (Bulk Buffer).`, "success");
+        } catch (err) {
+          this._log("Bulk write fallback to per-key write: " + err.message, "warning");
+          for (let i = 0; i < diffKeys.length; i++) {
+            const { l, r, c, kc } = diffKeys[i];
+            await this.protocol.setKeycode(l, r, c, kc);
+            if (onProgress && i % 3 === 0) {
+              onProgress(Math.round(((i + 1) / diffKeys.length) * 40));
+            }
+            await this.protocol.sleep(2);
+          }
+          this._log(`Wrote ${diffKeys.length} keys to EEPROM memory.`, "success");
+        }
+      } else if (diffKeys.length > 0) {
         this._log(`Detected ${diffKeys.length} modified keys. Writing to EEPROM...`, "info");
         for (let i = 0; i < diffKeys.length; i++) {
           const { l, r, c, kc } = diffKeys[i];
@@ -309,7 +328,7 @@
           if (onProgress && i % 3 === 0) {
             onProgress(Math.round(((i + 1) / diffKeys.length) * 40));
           }
-          await this.protocol.sleep(4);
+          await this.protocol.sleep(2);
         }
         this._log(`Wrote ${diffKeys.length} keys to EEPROM memory.`, "success");
       } else {
