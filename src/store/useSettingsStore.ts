@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { PerformanceConfig, HardwareInfo, FlasherState } from '../types/settings';
 import { hidProtocol } from '../core/hid-protocol';
+import { catalogService, CatalogKeyboardEntry, FirmwareCatalog } from '../services/catalog-service';
 import { useDeviceStore } from './useDeviceStore';
 import { useUIStore } from './useUIStore';
 import { useKeymapStore } from './useKeymapStore';
@@ -26,6 +27,8 @@ interface SettingsState {
   setFlasherFile: (file: (File & { path?: string }) | null) => void;
   startSmartFlash: () => Promise<void>;
   cancelFlash: () => void;
+  checkCloudUpdates: () => Promise<void>;
+  applyCloudFirmware: (entry?: CatalogKeyboardEntry) => Promise<void>;
 }
 
 async function waitForKeyboardReconnect(timeoutMs = 25000): Promise<boolean> {
@@ -80,8 +83,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     progressPercent: 0,
     statusLabel: '',
     isFlashing: false,
+    isCheckingCloud: false,
+    isDownloadingCloud: false,
+    cloudUpdateAvailable: false,
+    cloudEntry: null,
     consoleLogs: [
-      { time: '[Ready]', text: 'Select firmware .bin file and click Start Smart Upgrade.' }
+      { time: '[Ready]', text: 'Select firmware .bin file or use Cloud Update from browse.luxqmk.click.' }
     ],
   },
 
@@ -435,5 +442,94 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       },
     }));
     useUIStore.getState().showToast(useI18n.getState().t('toastUpgradeCancelled'), 'warning');
+  },
+
+  checkCloudUpdates: async () => {
+    set((state) => ({ flasher: { ...state.flasher, isCheckingCloud: true } }));
+    try {
+      const catalog = await catalogService.getCatalog();
+      const devState = useDeviceStore.getState();
+      if (catalog && devState.isConnected && devState.activeDescriptor) {
+        const match = catalogService.findMatchingEntry(
+          catalog,
+          devState.activeDescriptor.vendorId,
+          devState.activeDescriptor.productId,
+          devState.activeDescriptor.name
+        );
+        const hasNewer = match ? catalogService.hasNewerVersion(devState.firmwareInfo, match) : false;
+        set((state) => ({
+          flasher: {
+            ...state.flasher,
+            isCheckingCloud: false,
+            cloudEntry: match,
+            cloudUpdateAvailable: hasNewer,
+          },
+        }));
+      } else {
+        set((state) => ({ flasher: { ...state.flasher, isCheckingCloud: false } }));
+      }
+    } catch (e) {
+      set((state) => ({ flasher: { ...state.flasher, isCheckingCloud: false } }));
+    }
+  },
+
+  applyCloudFirmware: async (targetEntry?: CatalogKeyboardEntry) => {
+    const entry = targetEntry || get().flasher.cloudEntry;
+    if (!entry) return;
+
+    set((state) => ({
+      flasher: {
+        ...state.flasher,
+        isDownloadingCloud: true,
+        consoleLogs: [
+          ...state.flasher.consoleLogs,
+          {
+            time: `[${new Date().toLocaleTimeString()}]`,
+            text: `Pobieranie oficjalnego firmware LuxQMK ${entry.version} z browse.luxqmk.click (${entry.filename})...`,
+          },
+        ],
+      },
+    }));
+
+    try {
+      const file = await catalogService.downloadFirmwareFile(entry);
+      get().setFlasherFile(file);
+      set((state) => ({
+        flasher: {
+          ...state.flasher,
+          isDownloadingCloud: false,
+          consoleLogs: [
+            ...state.flasher.consoleLogs,
+            {
+              time: `[${new Date().toLocaleTimeString()}]`,
+              text: `Pobieranie zakończone pomyślnie. Suma SHA256 zweryfikowana: ${entry.sha256.slice(0, 16)}... Gotowy do wgrania!`,
+            },
+          ],
+        },
+      }));
+      useUIStore.getState().showToast(
+        useI18n.getState().t('toastCloudFirmwareDownloaded', 'Pobrano najnowszy firmware z chmury!'),
+        'success'
+      );
+    } catch (err: any) {
+      set((state) => ({
+        flasher: {
+          ...state.flasher,
+          isDownloadingCloud: false,
+          consoleLogs: [
+            ...state.flasher.consoleLogs,
+            {
+              time: `[${new Date().toLocaleTimeString()}]`,
+              text: `Nie udało się pobrać firmware z chmury: ${err.message}`,
+              isError: true,
+            },
+          ],
+        },
+      }));
+      useUIStore.getState().showToast(
+        `${useI18n.getState().t('toastErrorPrefix')}: ${err.message}`,
+        'error'
+      );
+    }
   },
 }));

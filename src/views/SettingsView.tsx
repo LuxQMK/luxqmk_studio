@@ -19,6 +19,8 @@ export const SettingsView: React.FC = () => {
     setFlasherFile,
     startSmartFlash,
     cancelFlash,
+    checkCloudUpdates,
+    applyCloudFirmware,
   } = useSettingsStore();
 
   const { isConnected, activeDescriptor, firmwareInfo, dirtyModules } = useDeviceStore();
@@ -60,6 +62,12 @@ export const SettingsView: React.FC = () => {
       consoleLogRef.current.scrollTop = consoleLogRef.current.scrollHeight;
     }
   }, [flasher.consoleLogs]);
+
+  useEffect(() => {
+    if (isConnected) {
+      checkCloudUpdates();
+    }
+  }, [isConnected, activeDescriptor, checkCloudUpdates]);
 
   const handleSelectFirmware = async () => {
     if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.selectFirmwareFile === 'function') {
@@ -448,6 +456,73 @@ export const SettingsView: React.FC = () => {
               if (file) setFlasherFile(file);
             }}
           />
+
+          {/* Cloud Catalog Detection Banner */}
+          {flasher.cloudEntry && (
+            <div
+              className="cloud-firmware-banner"
+              style={{
+                background: flasher.cloudUpdateAvailable ? 'rgba(0, 240, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                border: `1px solid ${flasher.cloudUpdateAvailable ? 'rgba(0, 240, 255, 0.3)' : 'var(--border-color)'}`,
+                borderRadius: '12px',
+                padding: '0.9rem 1.1rem',
+                marginBottom: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.8rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span style={{ color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+                  </svg>
+                </span>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <strong style={{ fontSize: '0.9rem' }}>{flasher.cloudEntry.name}</strong>
+                    <span className={`badge-pill ${flasher.cloudUpdateAvailable ? 'badge-warning' : 'badge-success'}`}>
+                      {flasher.cloudUpdateAvailable ? `Update: v${flasher.cloudEntry.version}` : `Cloud: v${flasher.cloudEntry.version}`}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                    {t('lblCloudCatalogDesc', 'Official verified LuxQMK build from browse.luxqmk.click')}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <a
+                  href="https://browse.luxqmk.click"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-sm btn-secondary"
+                  style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <span>browse.luxqmk.click</span>
+                </a>
+                <button
+                  type="button"
+                  className={`btn btn-sm ${flasher.cloudUpdateAvailable ? 'btn-primary' : 'btn-secondary'}`}
+                  disabled={flasher.isDownloadingCloud || flasher.isFlashing}
+                  onClick={() => applyCloudFirmware()}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>{flasher.isDownloadingCloud ? 'Pobieranie...' : t('btnCloudUpdate', '1-Click Cloud Load')}</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Flasher Dropzone */}
           <div

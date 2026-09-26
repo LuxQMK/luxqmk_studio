@@ -28,5 +28,9 @@ export interface FlasherState {
   progressPercent: number;
   statusLabel: string;
   isFlashing: boolean;
+  isCheckingCloud: boolean;
+  isDownloadingCloud: boolean;
+  cloudUpdateAvailable: boolean;
+  cloudEntry: any | null;
   consoleLogs: Array<{ time: string; text: string; isError?: boolean }>;
 }

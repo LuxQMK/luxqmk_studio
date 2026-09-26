@@ -635,7 +635,13 @@ export const translations = {
     "toastNkroSet": "NKRO mode updated: {mode}",
     "toastPollingSet": "USB Polling Rate set to: {hz}",
     "toastResetEepromSuccess": "EEPROM reset successfully! Restored factory defaults.",
-    "toastBootloaderSuccess": "Keyboard rebooted into DFU Bootloader mode."
+    "toastBootloaderSuccess": "Keyboard rebooted into DFU Bootloader mode.",
+    "lblCloudCatalogTitle": "Official Cloud Firmware (browse.luxqmk.click)",
+    "lblCloudCatalogDesc": "Official verified LuxQMK build from browse.luxqmk.click",
+    "btnCloudUpdate": "1-Click Cloud Load",
+    "btnBrowseCatalog": "Browse All Keyboards",
+    "toastCloudFirmwareAvailable": "New LuxQMK firmware v{version} available for {model} in Cloud Catalog!",
+    "toastCloudFirmwareDownloaded": "Firmware v{version} downloaded from browse.luxqmk.click and loaded into Flasher!"
   },
   "pl": {
     "appName": "LuxQMK Studio",
@@ -1273,7 +1279,13 @@ export const translations = {
     "toastNkroSet": "Zaktualizowano tryb NKRO: {mode}",
     "toastPollingSet": "Ustawiono częstotliwość próbkowania USB: {hz}",
     "toastResetEepromSuccess": "Pamięć EEPROM została pomyślnie zresetowana do ustawień fabrycznych!",
-    "toastBootloaderSuccess": "Klawiatura została zrestartowana w tryb DFU Bootloader."
+    "toastBootloaderSuccess": "Klawiatura została zrestartowana w tryb DFU Bootloader.",
+    "lblCloudCatalogTitle": "Oficjalny firmware w chmurze (browse.luxqmk.click)",
+    "lblCloudCatalogDesc": "Oficjalne zweryfikowane wydanie LuxQMK z browse.luxqmk.click",
+    "btnCloudUpdate": "Wgraj z chmury (1-Click)",
+    "btnBrowseCatalog": "Przeglądaj katalog klawiatur",
+    "toastCloudFirmwareAvailable": "Dostępny nowy firmware LuxQMK v{version} dla {model} w chmurze!",
+    "toastCloudFirmwareDownloaded": "Firmware v{version} pobrany z browse.luxqmk.click i załadowany do programatora!"
   }
 } as const;
 
