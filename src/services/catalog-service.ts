@@ -1,6 +1,8 @@
+import { ALL_DEVICE_DESCRIPTORS } from '../data/devices';
+
 /**
  * LuxQMK Cloud Firmware Catalog Service
- * Connects to browse.luxqmk.click / GitHub Releases API to fetch firmware catalogs,
+ * Connects to GitHub Releases API (and optionally browse.luxqmk.click) to fetch firmware releases,
  * match connected keyboard profiles, detect available OTA updates, and download binaries.
  */
 
@@ -43,7 +45,7 @@ class CatalogService {
   private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache
 
   /**
-   * Fetches the global firmware catalog from browse.luxqmk.click or fallback.
+   * Fetches the global firmware catalog from GitHub Releases API or primary catalog.
    */
   async getCatalog(forceRefresh = false): Promise<FirmwareCatalog | null> {
     const now = Date.now();
@@ -52,7 +54,7 @@ class CatalogService {
     }
 
     try {
-      // 1. Try primary browse.luxqmk.click catalog endpoint
+      // 1. Try primary browse.luxqmk.click catalog endpoint if available
       const res = await fetch(PRIMARY_CATALOG_URL, { cache: 'no-cache' });
       if (res.ok) {
         const data: FirmwareCatalog = await res.json();
@@ -60,32 +62,107 @@ class CatalogService {
         this.lastFetchTime = now;
         return data;
       }
-    } catch (err) {
-      console.warn('Could not load primary catalog from browse.luxqmk.click, trying GitHub fallback...', err);
+    } catch {
+      // Standalone website not yet deployed or unreachable — use GitHub Releases API
     }
 
     try {
-      // 2. Try fallback GitHub Releases API
+      // 2. Fetch directly from GitHub Releases API
       const res = await fetch(FALLBACK_GITHUB_API);
       if (res.ok) {
         const release = await res.json();
-        const tag = release.tag_name || 'v0.3.1';
+
+        // Check if catalog.json was explicitly attached
         const catalogAsset = release.assets?.find((a: any) => a.name === 'catalog.json');
         if (catalogAsset?.browser_download_url) {
-          const catRes = await fetch(catalogAsset.browser_download_url);
-          if (catRes.ok) {
-            const data: FirmwareCatalog = await catRes.json();
-            this.cachedCatalog = data;
-            this.lastFetchTime = now;
-            return data;
+          try {
+            const catRes = await fetch(catalogAsset.browser_download_url);
+            if (catRes.ok) {
+              const data: FirmwareCatalog = await catRes.json();
+              this.cachedCatalog = data;
+              this.lastFetchTime = now;
+              return data;
+            }
+          } catch {
+            // fallback to asset synthesizing
           }
+        }
+
+        // Synthesize catalog directly from GitHub Release binary assets
+        if (release.assets && Array.isArray(release.assets)) {
+          const synthesized = this.synthesizeCatalogFromRelease(release);
+          this.cachedCatalog = synthesized;
+          this.lastFetchTime = now;
+          return synthesized;
         }
       }
     } catch (e) {
-      console.error('Failed to fetch cloud firmware catalog:', e);
+      console.error('Failed to fetch cloud firmware catalog from GitHub Releases:', e);
     }
 
     return this.cachedCatalog;
+  }
+
+  /**
+   * Synthesizes a structured firmware catalog directly from GitHub Release assets.
+   */
+  private synthesizeCatalogFromRelease(release: any): FirmwareCatalog {
+    const tag = release.tag_name || 'v0.3.1';
+    const binaryAssets = (release.assets || []).filter((a: any) => {
+      const name = (a.name || '').toLowerCase();
+      return name.endsWith('.bin') || name.endsWith('.hex') || name.endsWith('.uf2');
+    });
+
+    const keyboards: CatalogKeyboardEntry[] = binaryAssets.map((asset: any) => {
+      const fn = asset.name.toLowerCase();
+
+      // Find matching device descriptor from built-in database
+      const matchedDesc = ALL_DEVICE_DESCRIPTORS.find((d) => {
+        if (fn.includes('gmmk3') && fn.includes('100') && d.id.includes('gmmk3-100')) return true;
+        if (fn.includes('gmmk3') && fn.includes('75') && d.id.includes('gmmk3-75')) return true;
+        if (fn.includes('gmmk3') && fn.includes('65') && d.id.includes('gmmk3-65')) return true;
+        if (fn.includes('gmmk2') && fn.includes('96') && d.id.includes('gmmk2-96')) return true;
+        if (fn.includes('gmmk2') && fn.includes('65') && d.id.includes('gmmk2-65')) return true;
+        return false;
+      });
+
+      const id = matchedDesc?.id || asset.name.replace(/\.(bin|hex|uf2)$/i, '');
+      const name = matchedDesc?.name || asset.name.replace(/_via\.(bin|hex|uf2)$/i, '').replace(/_/g, ' ').toUpperCase();
+      const mcu = matchedDesc?.mcu || (fn.endsWith('.hex') ? 'ATmega32U4' : 'ARM Cortex-M4');
+      const flasher = fn.includes('gmmk') ? 'wb32-dfu-updater_cli' : 'dfu-util';
+      const vidHex = matchedDesc?.vendorId ? `0x${matchedDesc.vendorId.toString(16).toUpperCase()}` : undefined;
+      const pidHex = matchedDesc?.productId ? `0x${matchedDesc.productId.toString(16).toUpperCase()}` : undefined;
+
+      return {
+        id,
+        name,
+        filename: asset.name,
+        version: tag,
+        release_tag: tag,
+        vendor_id: vidHex,
+        product_id: pidHex,
+        mcu,
+        flasher,
+        layout: matchedDesc?.layout || 'ANSI',
+        tier: 'LuxQMK Dual-Layer Reactive',
+        features: ['RGB Matrix', 'Reactive Lighting', 'WebHID VIA', 'Full NKRO', 'Hardware Debounce'],
+        file_size_bytes: asset.size || 0,
+        sha256: '',
+        download_url: asset.browser_download_url,
+        studio_url: `https://studio.luxqmk.click/#/settings?flash=${encodeURIComponent(asset.name)}`,
+      };
+    });
+
+    return {
+      version: tag,
+      release_tag: tag,
+      updated_at: release.published_at || new Date().toISOString(),
+      portal_url: 'https://browse.luxqmk.click',
+      api_url: FALLBACK_GITHUB_API,
+      github_repo: 'LuxQMK/qmk_firmware',
+      total_keyboards: keyboards.length,
+      keyboards,
+    };
   }
 
   /**
@@ -161,3 +238,4 @@ class CatalogService {
 }
 
 export const catalogService = new CatalogService();
+
