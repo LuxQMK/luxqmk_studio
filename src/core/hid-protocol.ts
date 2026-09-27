@@ -81,7 +81,24 @@ export const CUSTOM_VAL = {
   SIDELIGHT_REVERSE: 48,
   SIDELIGHT_DENSITY: 49,
   NKRO_STATE: 50,
+  DIP_SWITCH_COUNT: 51,
+  DIP_SWITCH_STATE: 52,
+  DIP_SWITCH_GET_POS: 53,
+  DIP_SWITCH_SET_POS: 54,
+  DIP_SWITCH_SAVE_EEPROM: 55,
 } as const;
+
+export interface DipSwitchPosConfig {
+  targetLayer: number; // 0..3, 0xFF = no change
+  swapGuiAlt: number; // 0 = standard (Win), 1 = swapped (Mac), 0xFF = no change
+  perkeyProfile: number; // 0..2, 0xFF = no change
+  winLockState: number; // 0 = unlock, 1 = lock, 0xFF = no change
+}
+
+export interface DipSwitchConfig {
+  posA: DipSwitchPosConfig; // active = false / 0 (Position 1 / Win)
+  posB: DipSwitchPosConfig; // active = true / 1 (Position 2 / Mac)
+}
 
 export const RGB_MATRIX_VAL = {
   BRIGHTNESS: 1,
@@ -542,6 +559,70 @@ export class HidProtocol {
 
   public async setDebounceTime(timeMs: number): Promise<void> {
     await this.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DEBOUNCE_TIME, [timeMs]);
+  }
+
+  public async getDipSwitchCount(): Promise<number> {
+    try {
+      const res = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_COUNT);
+      return res && res.length > 0 ? res[0] : 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  public async getDipSwitchState(switchIdx = 0): Promise<boolean> {
+    try {
+      const res = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_STATE, switchIdx);
+      return res && res.length >= 2 ? res[1] === 1 : false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  public async getDipSwitchConfig(switchIdx = 0): Promise<DipSwitchConfig | null> {
+    try {
+      // Position A (0)
+      const resA = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_GET_POS, switchIdx, 0);
+      // Position B (1)
+      const resB = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_GET_POS, switchIdx, 1);
+
+      const posA: DipSwitchPosConfig = {
+        targetLayer: resA && resA.length >= 6 ? resA[2] : 0xFF,
+        swapGuiAlt: resA && resA.length >= 6 ? resA[3] : 0xFF,
+        perkeyProfile: resA && resA.length >= 6 ? resA[4] : 0xFF,
+        winLockState: resA && resA.length >= 6 ? resA[5] : 0xFF,
+      };
+
+      const posB: DipSwitchPosConfig = {
+        targetLayer: resB && resB.length >= 6 ? resB[2] : 0xFF,
+        swapGuiAlt: resB && resB.length >= 6 ? resB[3] : 0xFF,
+        perkeyProfile: resB && resB.length >= 6 ? resB[4] : 0xFF,
+        winLockState: resB && resB.length >= 6 ? resB[5] : 0xFF,
+      };
+
+      return { posA, posB };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  public async setDipSwitchPosConfig(
+    switchIdx: number,
+    posIdx: number,
+    config: DipSwitchPosConfig
+  ): Promise<void> {
+    await this.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_SET_POS, [
+      switchIdx,
+      posIdx,
+      config.targetLayer ?? 0xFF,
+      config.swapGuiAlt ?? 0xFF,
+      config.perkeyProfile ?? 0xFF,
+      config.winLockState ?? 0xFF,
+    ]);
+  }
+
+  public async saveDipSwitchesToEEPROM(): Promise<void> {
+    await this.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_SAVE_EEPROM, [1]);
   }
 
   public async getMacroBufferSize(): Promise<number> {

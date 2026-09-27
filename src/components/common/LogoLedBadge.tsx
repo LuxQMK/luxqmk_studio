@@ -6,7 +6,7 @@ interface LogoLedBadgeProps {
   top: number;
   width: number;
   height: number;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent) => void;
   className?: string;
 }
 

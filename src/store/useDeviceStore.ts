@@ -135,6 +135,45 @@ if (typeof window !== 'undefined') {
   }, opts);
 }
 
+let hwPollInterval: any = null;
+
+export const startHardwarePolling = () => {
+  if (hwPollInterval) clearInterval(hwPollInterval);
+  let isPolling = false;
+
+  hwPollInterval = setInterval(async () => {
+    if (!hidProtocol.isConnected() || isPolling) return;
+    isPolling = true;
+    try {
+      // 1. Poll Active Layer from QMK MCU
+      const layer = await hidProtocol.getActiveLayer();
+      if (layer !== undefined && layer !== useDeviceStore.getState().activeLayer) {
+        useDeviceStore.setState({ activeLayer: layer });
+      }
+
+      // 2. Poll Host Lock LEDs (Caps, Num, Scroll)
+      const leds = await hidProtocol.getHostLeds();
+      if (leds) {
+        const curLeds = useDeviceStore.getState().hostLeds;
+        if (leds.caps !== curLeds.caps || leds.num !== curLeds.num || leds.scroll !== curLeds.scroll) {
+          useDeviceStore.setState({ hostLeds: leds });
+        }
+      }
+    } catch (e) {
+      // Silent catch on polling
+    } finally {
+      isPolling = false;
+    }
+  }, 90);
+};
+
+export const stopHardwarePolling = () => {
+  if (hwPollInterval) {
+    clearInterval(hwPollInterval);
+    hwPollInterval = null;
+  }
+};
+
 const syncConnectedDeviceState = (desc: DeviceDescriptor) => {
   if (desc && desc.id) {
     useKeymapStore.getState().setPresetLayoutId(desc.id);
@@ -172,7 +211,7 @@ const syncConnectedDeviceState = (desc: DeviceDescriptor) => {
       if (desc.capabilities?.hasLighting !== false) {
         await useLightingStore.getState().loadFromHardware();
       }
-      // 3. Sync full 3-layer keymap from hardware ONLY if VIA is supported
+      // 3. Sync full 4-layer keymap from hardware ONLY if VIA is supported
       if (isVia) {
         await useKeymapStore.getState().readAllLayersFromKeyboard();
       }
@@ -180,6 +219,9 @@ const syncConnectedDeviceState = (desc: DeviceDescriptor) => {
       await useSettingsStore.getState().loadFromHardware();
       // 5. Check for cloud firmware & studio updates
       useSettingsStore.getState().checkCloudUpdates();
+
+      // 6. Start continuous live hardware polling for active layer & host LEDs
+      startHardwarePolling();
     } catch (e) {
       console.warn('Failed to sync connected device state from hardware:', e);
     }
@@ -289,6 +331,7 @@ export const useDeviceStore = create<DeviceState>((set, get) => ({
   },
 
   disconnectDevice: async () => {
+    stopHardwarePolling();
     const dev = get().connectedDevice;
     if (dev && dev.opened) {
       try {
@@ -296,8 +339,8 @@ export const useDeviceStore = create<DeviceState>((set, get) => ({
       } catch (e) {}
     }
     hidProtocol.setDevice(null);
-    set({ isConnected: false, connectedDevice: null, activeDescriptor: null, firmwareInfo: null, isViaSupported: true });
-    useKeymapStore.setState({ layerKeymaps: { 0: {}, 1: {}, 2: {} }, selectedKey: null });
+    set({ isConnected: false, connectedDevice: null, activeDescriptor: null, firmwareInfo: null, isViaSupported: true, activeLayer: 0 });
+    useKeymapStore.setState({ layerKeymaps: { 0: {}, 1: {}, 2: {}, 3: {} }, selectedKey: null });
     useUIStore.getState().showToast(useI18n.getState().t('toastDeviceDisconnected'), 'info');
   },
 

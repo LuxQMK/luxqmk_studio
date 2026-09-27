@@ -8,6 +8,7 @@ import { useI18n } from '../i18n';
 import { useKeyboardFit } from '../hooks/useKeyboardFit';
 import { useUIStore } from '../store/useUIStore';
 import { LogoLedBadge } from '../components/common/LogoLedBadge';
+import { HardwareSwitchStudio } from '../components/common/HardwareSwitchStudio';
 
 export const KeymapView: React.FC = () => {
   const {
@@ -151,6 +152,13 @@ export const KeymapView: React.FC = () => {
                 onClick={() => setActiveLayer(2)}
               >
                 {t('layer2')}
+              </button>
+              <button
+                type="button"
+                className={`layer-btn ${activeLayer === 3 ? 'active' : ''}`}
+                onClick={() => setActiveLayer(3)}
+              >
+                {t('layer3')}
               </button>
             </div>
 
@@ -319,19 +327,28 @@ export const KeymapView: React.FC = () => {
         </div>
 
         {/* Interactive Keyboard Canvas */}
-        <div className="keyboard-scroll-wrapper" ref={wrapperRef}>
+        <div
+          className="keyboard-scroll-wrapper"
+          ref={wrapperRef}
+          onClick={() => setSelectedKey(null)}
+        >
           <div
             className={`keyboard-canvas ${hasSidelights ? 'has-sidelights' : ''}`}
             id="keyboardCanvas"
             ref={canvasRef}
             style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, position: 'relative' }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setSelectedKey(null);
+              }
+            }}
           >
             {/* Left & Right Sidelight LED Diffusers */}
             {hasSidelights && (() => {
               const sideLeds = getSideLedSegments(presetLayoutId, canvasHeight, desc);
               if (!sideLeds) return null;
               return (
-                <div className="side-diffusers-container">
+                <div className="side-diffusers-container" onClick={(e) => e.stopPropagation()}>
                   {sideLeds.left.map((sled) => (
                     <div
                       key={sled.id}
@@ -382,7 +399,8 @@ export const KeymapView: React.FC = () => {
                     top={top}
                     width={w}
                     height={h}
-                    onClick={() => {
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
                       useUIStore.getState().setActiveView('lighting');
                       useUIStore.getState().setLightingSubTab('logo');
                     }}
@@ -405,7 +423,8 @@ export const KeymapView: React.FC = () => {
                       height: `${knobSize}px`,
                       borderRadius: '50%',
                     }}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       useUIStore.getState().setActiveView('encoder');
                     }}
                     title={t('navEncoder', 'Rotary Knob')}
@@ -434,7 +453,14 @@ export const KeymapView: React.FC = () => {
                     width: `${w}px`,
                     height: `${h}px`,
                   }}
-                  onClick={() => setSelectedKey(key)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isSelected) {
+                      setSelectedKey(null);
+                    } else {
+                      setSelectedKey(key);
+                    }
+                  }}
                   title={`${key.label || key.id}: ${info.name || ''} ${info.label ? `— ${info.label}` : ''} (0x${kc.toString(16).padStart(4, '0').toUpperCase()})`}
                 >
                   {isSingleLegend ? (
@@ -496,6 +522,11 @@ export const KeymapView: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Hardware Switches (DIP / Rear slider) - Only rendered for keyboards with physical switches */}
+      {(desc?.capabilities?.hasDipSwitches || (desc?.capabilities?.dipSwitchCount && desc.capabilities.dipSwitchCount > 0)) && (
+        <HardwareSwitchStudio switchIndex={0} />
+      )}
     </section>
   );
 };

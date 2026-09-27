@@ -1384,6 +1384,58 @@ export const LightingView: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {/* Live Hardware Layer Status & Simulate Fn Button */}
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                    {t('lblLiveLayerIndicator')}
+                  </span>
+                  <span
+                    className="badge-pill"
+                    style={{
+                      fontSize: '0.75rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
+                      background: (hwActiveLayer > 0 || isSimulatingFn) ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                      border: (hwActiveLayer > 0 || isSimulatingFn) ? '1px solid rgba(0, 240, 255, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                      color: (hwActiveLayer > 0 || isSimulatingFn) ? 'var(--accent-cyan)' : 'var(--text-muted)',
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        background: (hwActiveLayer > 0 || isSimulatingFn) ? 'var(--accent-cyan)' : '#666',
+                        boxShadow: (hwActiveLayer > 0 || isSimulatingFn) ? '0 0 6px var(--accent-cyan)' : 'none',
+                      }}
+                    ></span>
+                    <strong>
+                      {isSimulatingFn
+                        ? 'Layer 1 (Simulated Fn)'
+                        : `Layer ${hwActiveLayer} ${hwActiveLayer === 1 ? '(Win Fn)' : hwActiveLayer === 2 ? '(Mac)' : hwActiveLayer === 3 ? '(Mac Fn)' : '(Base)'}`}
+                    </strong>
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    className={`btn ${isSimulatingFn ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                    style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
+                    onClick={() => setSimulatingFn(!isSimulatingFn)}
+                    onMouseDown={() => setSimulatingFn(true)}
+                    onMouseUp={() => setSimulatingFn(false)}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    <span>{isSimulatingFn ? t('btnSimulatingFnActive') : t('btnSimulateFn')}</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="palette-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>

@@ -78,7 +78,7 @@ export async function createFullBackup(
 
   log('Starting full keyboard memory backup...', 'info');
 
-  const totalLayers = 3;
+  const totalLayers = 4;
   let rows = 14;
   let cols = 8;
   if (descriptor?.matrix && descriptor.matrix.includes('x')) {
@@ -339,7 +339,7 @@ export async function restoreFullBackup(
     rows = parseInt(parts[0], 10) || 14;
     cols = parseInt(parts[1], 10) || 8;
   }
-  const totalLayers = Math.min(3, backupData.layers.length);
+  const totalLayers = Math.min(4, backupData.layers.length);
 
   log('Starting restore to keyboard EEPROM memory...', 'info');
 

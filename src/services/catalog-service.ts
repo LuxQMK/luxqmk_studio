@@ -193,7 +193,7 @@ class CatalogService {
             release_tag: gh.tag_name,
             release_name: gh.name || `LuxQMK Studio ${gh.tag_name}`,
             release_date: gh.published_at || new Date().toISOString(),
-            min_compatible_firmware: '0.3.2',
+            min_compatible_firmware: '0.3.3',
             changelog: changelogLines,
             downloads: {
               windows_installer:
