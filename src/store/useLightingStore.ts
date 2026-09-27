@@ -175,6 +175,37 @@ function queuePerKeyBlock(profIdx: number, ledIndex: number) {
   }, 40);
 }
 
+const hardwareGradientPendingProfiles = new Set<number>();
+let hardwareGradientThrottleTimer: any = null;
+
+function queueHardwareGradientUpdate(prof: number) {
+  if (!useDeviceStore.getState().isConnected) return;
+  hardwareGradientPendingProfiles.add(prof);
+
+  if (hardwareGradientThrottleTimer) clearTimeout(hardwareGradientThrottleTimer);
+  hardwareGradientThrottleTimer = setTimeout(async () => {
+    if (!useDeviceStore.getState().isConnected) return;
+    const profiles = Array.from(hardwareGradientPendingProfiles);
+    hardwareGradientPendingProfiles.clear();
+
+    for (const p of profiles) {
+      const stops = useLightingStore.getState().hardwareGradients[p] || [];
+      if (stops.length < 2) continue;
+      try {
+        await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.GRADIENT_CUSTOM_COUNT, [p, stops.length]);
+        for (let i = 0; i < stops.length; i++) {
+          const s = stops[i];
+          const rgb = hexToRgb(s.color);
+          const posByte = Math.max(0, Math.min(255, Math.round(s.pos * 255)));
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.GRADIENT_CUSTOM_STOP, [p, i, posByte, rgb.r, rgb.g, rgb.b]);
+        }
+      } catch (e) {
+        // Live streaming error suppressed
+      }
+    }
+  }, 40);
+}
+
 export const useLightingStore = create<LightingState>((set, get) => ({
   savedSnapshot: null as any,
   backlight: {
@@ -281,6 +312,9 @@ export const useLightingStore = create<LightingState>((set, get) => ({
       }
       if (patch.gradientPreset !== undefined) {
         hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.GRADIENT_PRESET, [b.gradientPreset]);
+        if (b.gradientPreset >= 8) {
+          queueHardwareGradientUpdate(b.gradientPreset - 8);
+        }
       }
     }
   },
@@ -315,6 +349,9 @@ export const useLightingStore = create<LightingState>((set, get) => ({
       }
       if (patch.gradientPreset !== undefined) {
         hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_GRADIENT, [s.gradientPreset]);
+        if (s.gradientPreset >= 8) {
+          queueHardwareGradientUpdate(s.gradientPreset - 8);
+        }
       }
       if (patch.reverse !== undefined) {
         hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_REVERSE, [s.reverse ? 1 : 0]);
@@ -558,7 +595,10 @@ export const useLightingStore = create<LightingState>((set, get) => ({
     useUIStore.getState().showToast(`${useI18n.getState().t('toastSelectedGroup')}: ${groupName.toUpperCase()} (${newSelected.size} keys)`, 'info');
   },
 
-  setActiveHardwareGradientProfile: (prof) => set({ activeHardwareGradientProfile: prof }),
+  setActiveHardwareGradientProfile: (prof) => {
+    set({ activeHardwareGradientProfile: prof });
+    queueHardwareGradientUpdate(prof);
+  },
 
   setHardwareGradientStop: (prof, index, patch) => {
     const current = get().hardwareGradients[prof] || [];
@@ -570,6 +610,7 @@ export const useLightingStore = create<LightingState>((set, get) => ({
       }
     }));
     useDeviceStore.getState().markDirty('lighting');
+    queueHardwareGradientUpdate(prof);
   },
 
   addHardwareGradientStop: (prof, pos, color) => {
@@ -585,6 +626,7 @@ export const useLightingStore = create<LightingState>((set, get) => ({
       }
     }));
     useDeviceStore.getState().markDirty('lighting');
+    queueHardwareGradientUpdate(prof);
   },
 
   deleteHardwareGradientStop: (prof, index) => {
@@ -598,6 +640,7 @@ export const useLightingStore = create<LightingState>((set, get) => ({
       }
     }));
     useDeviceStore.getState().markDirty('lighting');
+    queueHardwareGradientUpdate(prof);
   },
 
   distributeHardwareGradientStops: (prof, mode) => {
@@ -621,6 +664,7 @@ export const useLightingStore = create<LightingState>((set, get) => ({
       }
     }));
     useDeviceStore.getState().markDirty('lighting');
+    queueHardwareGradientUpdate(prof);
   },
 
   applyHardwareGradientTemplate: (prof, stops) => {
@@ -631,6 +675,7 @@ export const useLightingStore = create<LightingState>((set, get) => ({
       }
     }));
     useDeviceStore.getState().markDirty('lighting');
+    queueHardwareGradientUpdate(prof);
   },
 
   saveHardwareGradientToEEPROM: async (prof) => {
@@ -974,6 +1019,10 @@ export const useLightingStore = create<LightingState>((set, get) => ({
       const isPerKey = get().backlight.effect >= 39 && get().backlight.effect <= 41;
       if (isPerKey) {
         await hidProtocol.savePerKeyProfileToEEPROM(get().activeProfileIndex);
+      }
+      const activeProf = get().activeHardwareGradientProfile;
+      if (activeProf !== undefined && (get().backlight.gradientPreset >= 8 || get().sidelight.gradientPreset >= 8)) {
+        await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.GRADIENT_SAVE_EEPROM, [activeProf]);
       }
       const snapshot = {
         backlight: JSON.parse(JSON.stringify(get().backlight)),
