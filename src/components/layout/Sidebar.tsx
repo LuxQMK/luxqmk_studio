@@ -16,7 +16,7 @@ interface NavItem {
 
 export const Sidebar: React.FC = () => {
   const { activeView, setActiveView, setAppSettingsOpen, setAboutOpen, showToast } = useUIStore();
-  const { isConnected, isViaSupported } = useDeviceStore();
+  const { isConnected, isViaSupported, activeDescriptor } = useDeviceStore();
   const { checkCloudUpdates } = useSettingsStore();
   const { t } = useI18n();
 
@@ -35,6 +35,9 @@ export const Sidebar: React.FC = () => {
   };
 
   const isKeymapDisabled = isConnected && !isViaSupported;
+  const isMacroDisabled = isConnected && !isViaSupported;
+  const isEncoderDisabled = isConnected && activeDescriptor?.capabilities?.hasRotaryEncoder === false;
+  const isLightingDisabled = isConnected && activeDescriptor?.capabilities?.hasLighting === false;
 
   const navItems: NavItem[] = [
     {
@@ -53,6 +56,9 @@ export const Sidebar: React.FC = () => {
     {
       id: 'macro',
       labelKey: 'navMacro',
+      disabled: isMacroDisabled,
+      tooltip: isMacroDisabled ? t('lblMacroDisabledTooltip') : undefined,
+      badge: isMacroDisabled ? 'NO VIA' : undefined,
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
@@ -62,6 +68,9 @@ export const Sidebar: React.FC = () => {
     {
       id: 'encoder',
       labelKey: 'navEncoder',
+      disabled: isEncoderDisabled,
+      tooltip: isEncoderDisabled ? t('lblEncoderDisabledTooltip') : undefined,
+      badge: isEncoderDisabled ? 'NO KNOB' : undefined,
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="9"></circle>
@@ -83,6 +92,9 @@ export const Sidebar: React.FC = () => {
     {
       id: 'lighting',
       labelKey: 'navLighting',
+      disabled: isLightingDisabled,
+      tooltip: isLightingDisabled ? t('lblLightingDisabledTooltip') : undefined,
+      badge: isLightingDisabled ? 'NO RGB' : undefined,
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M9 18h6"></path>
@@ -94,6 +106,9 @@ export const Sidebar: React.FC = () => {
     ...(isDesktop ? [{
       id: 'studio_lighting' as ViewTab,
       labelKey: 'navStudioLighting',
+      disabled: isLightingDisabled,
+      tooltip: isLightingDisabled ? t('lblLightingDisabledTooltip') : undefined,
+      badge: isLightingDisabled ? 'NO RGB' : undefined,
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>

@@ -4,7 +4,7 @@ import { useDeviceStore } from '../store/useDeviceStore';
 import { useI18n } from '../i18n';
 
 export const MacroView: React.FC = () => {
-  const dirtyModules = useDeviceStore((s) => s.dirtyModules);
+  const { dirtyModules, isConnected, isViaSupported } = useDeviceStore();
   const {
     activeSlotId,
     setActiveSlotId,
@@ -26,6 +26,37 @@ export const MacroView: React.FC = () => {
 
   return (
     <section className="view-container active" id="view-macro">
+      {/* VIA Not Supported Banner */}
+      {isConnected && !isViaSupported && (
+        <div
+          style={{
+            marginBottom: '1rem',
+            padding: '0.85rem 1.15rem',
+            borderRadius: 'var(--radius-md)',
+            background: 'rgba(239, 68, 68, 0.12)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.85rem',
+            color: '#fca5a5',
+          }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: '#ef4444' }}>
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: '0.92rem', color: '#ffffff' }}>
+              {t('lblViaNotSupported')}
+            </div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+              {t('lblViaNotSupportedDesc')}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="macro-editor-layout">
         {/* Left Column: Macro Slot List (M0 - M15) */}
         <div className="macro-sidebar-card">

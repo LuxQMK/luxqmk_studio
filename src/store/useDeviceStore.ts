@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { hidProtocol } from '../core/hid-protocol';
-import { ALL_DEVICE_DESCRIPTORS, DeviceDescriptor, findDeviceDescriptor } from '../data/devices';
+import { ALL_DEVICE_DESCRIPTORS, DeviceDescriptor, findDeviceDescriptor, createDynamicDescriptor } from '../data/devices';
+import { catalogService } from '../services/catalog-service';
 import { useUIStore } from './useUIStore';
 import { useKeymapStore } from './useKeymapStore';
 import { useLightingStore } from './useLightingStore';
@@ -32,6 +33,32 @@ interface DeviceState {
   clearDirty: (moduleId?: string) => void;
   saveAllToEeprom: () => Promise<void>;
   discardAllChanges: () => Promise<void>;
+}
+
+async function resolveDeviceDescriptor(target: HIDDevice): Promise<DeviceDescriptor> {
+  const hardcoded = findDeviceDescriptor(target.vendorId, target.productId);
+  if (hardcoded) return hardcoded;
+
+  try {
+    const catalog = await catalogService.getCatalog();
+    if (catalog) {
+      const entry = catalogService.findMatchingEntry(
+        catalog,
+        target.vendorId,
+        target.productId,
+        (target as any).productName
+      );
+      if (entry) {
+        return createDynamicDescriptor(target.vendorId, target.productId, (target as any).productName, entry);
+      }
+    }
+  } catch (e) {}
+
+  return createDynamicDescriptor(
+    target.vendorId,
+    target.productId,
+    (target as any).productName || `Universal QMK Device`
+  );
 }
 
 function isRawHID(d: HIDDevice): boolean {
@@ -126,9 +153,15 @@ const syncConnectedDeviceState = (desc: DeviceDescriptor) => {
       }
       useDeviceStore.setState({ isViaSupported: isVia });
 
-      if (!isVia && useUIStore.getState().activeView === 'keymap') {
-        const fallbackView = (desc.capabilities?.hasLighting ?? true) ? 'lighting' : 'tester';
+      const currentView = useUIStore.getState().activeView;
+      if (!isVia && (currentView === 'keymap' || currentView === 'macro')) {
+        const fallbackView = (desc.capabilities?.hasLighting !== false) ? 'lighting' : 'tester';
         useUIStore.getState().setActiveView(fallbackView);
+      } else if (desc.capabilities?.hasRotaryEncoder === false && currentView === 'encoder') {
+        const fallbackView = (desc.capabilities?.hasLighting !== false) ? 'lighting' : 'tester';
+        useUIStore.getState().setActiveView(fallbackView);
+      } else if (desc.capabilities?.hasLighting === false && (currentView === 'lighting' || currentView === 'studio_lighting')) {
+        useUIStore.getState().setActiveView('tester');
       }
 
       const fw = await hidProtocol.getFirmwareVersion();
@@ -200,7 +233,7 @@ export const useDeviceStore = create<DeviceState>((set, get) => ({
           await target.open();
         }
         hidProtocol.setDevice(target);
-        const desc = findDeviceDescriptor(target.vendorId, target.productId) || ALL_DEVICE_DESCRIPTORS[0];
+        const desc = await resolveDeviceDescriptor(target);
         set({ isConnected: true, connectedDevice: target, activeDescriptor: desc });
         syncConnectedDeviceState(desc);
       }
@@ -240,7 +273,7 @@ export const useDeviceStore = create<DeviceState>((set, get) => ({
           await target.open();
         }
         hidProtocol.setDevice(target);
-        const desc = findDeviceDescriptor(target.vendorId, target.productId) || ALL_DEVICE_DESCRIPTORS[0];
+        const desc = await resolveDeviceDescriptor(target);
         
         await get().refreshAuthorizedDevices();
         set({ isConnected: true, connectedDevice: target, activeDescriptor: desc });
@@ -284,7 +317,7 @@ export const useDeviceStore = create<DeviceState>((set, get) => ({
         await target.open();
       }
       hidProtocol.setDevice(target);
-      const desc = findDeviceDescriptor(target.vendorId, target.productId) || ALL_DEVICE_DESCRIPTORS[0];
+      const desc = await resolveDeviceDescriptor(target);
       set({ isConnected: true, connectedDevice: target, activeDescriptor: desc });
       syncConnectedDeviceState(desc);
       useUIStore.getState().showToast(`${useI18n.getState().t('toastSwitchedTo')}: ${desc.name}`, 'success');

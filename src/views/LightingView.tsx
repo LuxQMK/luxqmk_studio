@@ -279,10 +279,44 @@ export const LightingView: React.FC = () => {
     },
   ];
 
+  const isConnected = useDeviceStore((s) => s.isConnected);
+  const hasLighting = desc ? (desc.capabilities?.hasLighting !== false) : true;
+
   const currentEff = ALL_RGB_EFFECTS.find((e) => e.id === backlight.effect) || ALL_RGB_EFFECTS[13];
 
   return (
     <section className="view-container active" id="view-lighting">
+      {/* Lighting Not Supported Banner */}
+      {isConnected && !hasLighting && (
+        <div
+          style={{
+            marginBottom: '1rem',
+            padding: '0.85rem 1.15rem',
+            borderRadius: 'var(--radius-md)',
+            background: 'rgba(239, 68, 68, 0.12)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.85rem',
+            color: '#fca5a5',
+          }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: '#ef4444' }}>
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: '0.92rem', color: '#ffffff' }}>
+              {t('lblLightingNotSupported')}
+            </div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+              {t('lblLightingNotSupportedDesc')}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Live RGB Visualizer Virtual Keyboard */}
       <div className="keyboard-canvas-card" style={{ marginBottom: '1.5rem' }}>
         <div className="keyboard-canvas-header">

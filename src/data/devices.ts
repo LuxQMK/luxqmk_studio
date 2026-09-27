@@ -278,3 +278,56 @@ export function findDeviceDescriptor(vendorId: number, productId: number): Devic
     (d.vendorId === productId && d.productId === vendorId) // handle swapped endianness
   );
 }
+
+export function createDynamicDescriptor(
+  vendorId: number,
+  productId: number,
+  productName?: string,
+  catalogEntry?: {
+    id?: string;
+    name?: string;
+    features?: string[];
+    mcu?: string;
+    layout?: string;
+  } | null
+): DeviceDescriptor {
+  const hasRgb = catalogEntry?.features?.includes('rgb') || catalogEntry?.features?.includes('rgb_matrix') || false;
+  const hasMonochrome = catalogEntry?.features?.includes('backlight') || catalogEntry?.features?.includes('monochrome') || false;
+  const hasLighting = hasRgb || hasMonochrome;
+  const hasEncoder = catalogEntry?.features?.includes('encoder') || false;
+  const hasVia = catalogEntry?.features ? catalogEntry.features.includes('via') : true;
+  const layout = catalogEntry?.layout?.toUpperCase() || 'ANSI';
+
+  const name = catalogEntry?.name || productName || `QMK Keyboard (0x${vendorId.toString(16).toUpperCase().padStart(4, '0')}:0x${productId.toString(16).toUpperCase().padStart(4, '0')})`;
+
+  return {
+    id: catalogEntry?.id || 'generic-via',
+    name,
+    family: 'Generic QMK',
+    formFactor: catalogEntry?.layout || '100%',
+    layout: layout.includes('ISO') ? 'ISO' : 'ANSI',
+    vendorId,
+    productId,
+    mcu: catalogEntry?.mcu || 'QMK Microcontroller',
+    matrix: 'Universal Dynamic Matrix',
+    ledTotal: hasRgb ? 87 : (hasMonochrome ? 87 : 0),
+    lightingType: hasRgb ? 'rgb_matrix' : (hasMonochrome ? 'monochrome' : 'none'),
+    capabilities: {
+      hasVia,
+      hasLighting,
+      hasRgbMatrix: hasRgb,
+      hasMonochromeBacklight: hasMonochrome,
+      hasRotaryEncoder: hasEncoder,
+      hasLogoBadgeLed: false,
+      logoLedIndex: null,
+      hasSidelights: false,
+      sidelightCount: 0,
+      hasWinLock: true,
+      winLockLedIndex: null,
+      hasDualLayerReactive: hasRgb,
+      hasPerLayerLighting: hasRgb,
+      hasDebounceControl: true,
+      hasNkroToggle: true,
+    },
+  };
+}
