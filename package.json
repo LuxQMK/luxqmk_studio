@@ -24,8 +24,9 @@
     "productName": "LuxQMK Studio",
     "publish": [
       {
-        "provider": "generic",
-        "url": "https://files.luxqmk.click/studio/"
+        "provider": "github",
+        "owner": "LuxQMK",
+        "repo": "luxqmk_studio"
       }
     ],
     "files": [

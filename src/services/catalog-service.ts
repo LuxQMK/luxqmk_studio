@@ -59,6 +59,8 @@ const FIRMWARE_CATALOG_URLS = [
   'https://luxqmk-files.pages.dev/catalog.json',
 ];
 
+const STUDIO_GITHUB_API_URL = 'https://api.github.com/repos/LuxQMK/luxqmk_studio/releases/latest';
+
 const STUDIO_VERSION_URLS = [
   'https://files.luxqmk.click/studio/version.json',
   'https://files.luxqmk.click/studio/latest.json',
@@ -157,7 +159,7 @@ class CatalogService {
   }
 
   /**
-   * Fetches the latest LuxQMK Studio version manifest from files.luxqmk.click or fallbacks.
+   * Fetches the latest LuxQMK Studio version manifest from GitHub Releases API or files.luxqmk.click.
    */
   async getStudioVersion(forceRefresh = false): Promise<StudioVersionInfo | null> {
     const now = Date.now();
@@ -165,6 +167,52 @@ class CatalogService {
       return this.cachedStudioVersion;
     }
 
+    // 1. Try official GitHub Releases API (Instant synchronization upon tag push)
+    try {
+      const res = await fetch(STUDIO_GITHUB_API_URL, {
+        headers: { Accept: 'application/vnd.github.v3+json' },
+      });
+      if (res.ok) {
+        const gh = await res.json();
+        if (gh && gh.tag_name) {
+          const cleanVersion = gh.tag_name.replace(/^v/i, '').trim();
+          const installerAsset = gh.assets?.find((a: any) =>
+            a.name && (a.name.endsWith('.exe') || a.name.includes('Setup'))
+          );
+
+          const changelogLines: string[] = gh.body
+            ? gh.body
+                .split('\n')
+                .map((l: string) => l.trim())
+                .filter((l: string) => l.startsWith('-') || l.startsWith('*'))
+                .map((l: string) => l.replace(/^[-*]\s*/, '').trim())
+            : [];
+
+          const info: StudioVersionInfo = {
+            version: cleanVersion,
+            release_tag: gh.tag_name,
+            release_name: gh.name || `LuxQMK Studio ${gh.tag_name}`,
+            release_date: gh.published_at || new Date().toISOString(),
+            min_compatible_firmware: '0.3.2',
+            changelog: changelogLines,
+            downloads: {
+              windows_installer:
+                installerAsset?.browser_download_url ||
+                `https://github.com/LuxQMK/luxqmk_studio/releases/download/${gh.tag_name}/LuxQMK-Studio-Setup-${cleanVersion}.exe`,
+              web_app: 'https://studio.luxqmk.click',
+            },
+          };
+
+          this.cachedStudioVersion = info;
+          this.lastStudioFetchTime = now;
+          return info;
+        }
+      }
+    } catch (e) {
+      // Fallback to CDN feeds
+    }
+
+    // 2. Fallback to CDN static feeds
     for (const url of STUDIO_VERSION_URLS) {
       try {
         const res = await fetch(url, { cache: 'no-cache' });
