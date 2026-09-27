@@ -25,6 +25,37 @@ function getGitBranch() {
   }
 }
 
+function getVersionInfo(pkg) {
+  const isTag = process.env.GITHUB_REF_TYPE === 'tag' || (process.env.GITHUB_REF_NAME && /^v\d+\.\d+\.\d+/.test(process.env.GITHUB_REF_NAME));
+  const tagRef = process.env.GITHUB_REF_NAME;
+
+  if (isTag && tagRef) {
+    const cleanTag = tagRef.replace(/^v/, '');
+    const isPrerelease = cleanTag.includes('-');
+    const baseVer = cleanTag.split('-')[0];
+    return {
+      targetVersion: cleanTag,
+      baseVersion: baseVer,
+      branch: tagRef,
+      isDevBuild: isPrerelease,
+    };
+  }
+
+  const rawVersion = pkg.version || '1.4.3';
+  const baseVersion = rawVersion.replace(/-(dev|beta|rc|alpha)(\.\d+)?$/, '');
+
+  const branch = getGitBranch();
+  const isMaster = branch === 'master';
+  const targetVersion = isMaster ? baseVersion : `${baseVersion}-dev`;
+
+  return {
+    targetVersion,
+    baseVersion,
+    branch,
+    isDevBuild: !isMaster,
+  };
+}
+
 function syncVersion() {
   const pkgPath = path.resolve(__dirname, '../package.json');
   const versionTsPath = path.resolve(__dirname, '../src/version.ts');
@@ -34,21 +65,15 @@ function syncVersion() {
   const pkgRaw = fs.readFileSync(pkgPath, 'utf8');
   const pkg = JSON.parse(pkgRaw);
 
-  const rawVersion = pkg.version || '1.4.1';
-  // Strip any existing -dev suffix to obtain pristine base version
-  const baseVersion = rawVersion.replace(/-dev(\.\d+)?$/, '');
-
-  const branch = getGitBranch();
-  const isMaster = branch === 'master';
-  const targetVersion = isMaster ? baseVersion : `${baseVersion}-dev`;
+  const { targetVersion, baseVersion, branch, isDevBuild } = getVersionInfo(pkg);
 
   // 1. Update package.json if needed
   if (pkg.version !== targetVersion) {
     pkg.version = targetVersion;
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
-    console.log(`[version-sync] Synchronized package.json version: ${targetVersion} (branch: ${branch})`);
+    console.log(`[version-sync] Synchronized package.json version: ${targetVersion} (ref: ${branch})`);
   } else {
-    console.log(`[version-sync] package.json version is up to date: ${targetVersion} (branch: ${branch})`);
+    console.log(`[version-sync] package.json version is up to date: ${targetVersion} (ref: ${branch})`);
   }
 
   // 2. Generate/Update src/version.ts
@@ -60,7 +85,7 @@ function syncVersion() {
 
 export const BASE_VERSION = '${baseVersion}';
 export const GIT_BRANCH = '${branch}';
-export const IS_DEV_BUILD = ${!isMaster};
+export const IS_DEV_BUILD = ${isDevBuild};
 export const APP_VERSION = '${targetVersion}';
 
 export default APP_VERSION;
