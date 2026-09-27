@@ -1596,9 +1596,9 @@ input:checked + .switch-slider:before {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(8, 12, 22, 0.75);
-  backdrop-filter: blur(0px);
-  -webkit-backdrop-filter: blur(0px);
+  background: rgba(4, 7, 14, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1606,25 +1606,22 @@ input:checked + .switch-slider:before {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1),
-              visibility 0.26s cubic-bezier(0.16, 1, 0.3, 1),
-              backdrop-filter 0.26s cubic-bezier(0.16, 1, 0.3, 1),
-              -webkit-backdrop-filter 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-overlay.active {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .modal-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px var(--primary-glow);
+  background: #0f1523;
+  background: linear-gradient(180deg, #131b2e 0%, #0c111c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.85), 0 0 1px rgba(255, 255, 255, 0.2) inset, 0 0 35px rgba(99, 102, 241, 0.2);
   width: 92%;
   max-width: 580px;
   max-height: 88vh;
@@ -1632,7 +1629,7 @@ input:checked + .switch-slider:before {
   flex-direction: column;
   overflow: hidden;
   opacity: 0;
-  transform: scale(0.92) translateY(14px);
+  transform: scale(0.94) translateY(12px);
   transition: opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1),
               transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -1644,11 +1641,11 @@ input:checked + .switch-slider:before {
 
 .modal-header {
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .modal-title-wrap {
@@ -1697,8 +1694,8 @@ input:checked + .switch-slider:before {
 }
 
 .modal-section {
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid var(--border-color);
+  background: rgba(20, 28, 46, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: var(--radius-md);
   padding: 1rem 1.25rem;
 }
@@ -1721,10 +1718,10 @@ input:checked + .switch-slider:before {
 
 .modal-footer {
   padding: 1rem 1.5rem;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: flex-end;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.025);
 }
 
 /* Studio Lighting Sub-Tabs Header & Controls */
