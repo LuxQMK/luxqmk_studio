@@ -129,7 +129,7 @@ export const MacroView: React.FC = () => {
                 type="text"
                 id="macroNameInput"
                 className="macro-name-input"
-                placeholder="Macro Name"
+                placeholder={t('placeholderMacroName')}
                 maxLength={32}
                 value={activeSlot.name}
                 onChange={(e) => updateActiveMacro({ name: e.target.value })}

@@ -5,7 +5,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { useI18n } from '../../i18n';
 
 export const TopBar: React.FC = () => {
-  const { activeView, setActiveView } = useUIStore();
+  const { activeView, setActiveView, setAppSettingsOpen } = useUIStore();
   const { flasher, studioUpdate } = useSettingsStore();
   const {
     isConnected,
@@ -254,7 +254,7 @@ export const TopBar: React.FC = () => {
             className="btn btn-secondary"
             id="btnTopBarStudioUpdate"
             title={t('tooltipStudioUpdateAvailable', 'New LuxQMK Studio version available!')}
-            onClick={() => setActiveView('settings')}
+            onClick={() => setAppSettingsOpen(true)}
             style={{
               borderColor: 'rgba(189, 0, 255, 0.4)',
               background: 'rgba(189, 0, 255, 0.1)',

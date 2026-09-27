@@ -125,10 +125,10 @@ export const EncoderView: React.FC = () => {
                 <polyline points="1 4 1 10 7 10"></polyline>
                 <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
               </svg>
-              <strong style={{ fontSize: '0.9rem' }}>Rotate Counter-Clockwise</strong>
+              <strong style={{ fontSize: '0.9rem' }}>{t('encoderCCW')}</strong>
             </div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.75rem' }}>
-              Action triggered when turning knob left
+              {t('encoderCCWDesc')}
             </span>
             <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.5rem 0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)', fontWeight: 600, color: '#fff', fontSize: '0.85rem' }}>
               {getKeycodeInfo(currentLayerConfig.ccw).label} ({getKeycodeInfo(currentLayerConfig.ccw).name})
@@ -153,10 +153,10 @@ export const EncoderView: React.FC = () => {
                 <polyline points="23 4 23 10 17 10"></polyline>
                 <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
               </svg>
-              <strong style={{ fontSize: '0.9rem' }}>Rotate Clockwise</strong>
+              <strong style={{ fontSize: '0.9rem' }}>{t('encoderCW')}</strong>
             </div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.75rem' }}>
-              Action triggered when turning knob right
+              {t('encoderCWDesc')}
             </span>
             <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.5rem 0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)', fontWeight: 600, color: '#fff', fontSize: '0.85rem' }}>
               {getKeycodeInfo(currentLayerConfig.cw).label} ({getKeycodeInfo(currentLayerConfig.cw).name})
@@ -181,10 +181,10 @@ export const EncoderView: React.FC = () => {
                 <circle cx="12" cy="12" r="10"></circle>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
-              <strong style={{ fontSize: '0.9rem' }}>Knob Center Press</strong>
+              <strong style={{ fontSize: '0.9rem' }}>{t('encoderPress')}</strong>
             </div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.75rem' }}>
-              Action triggered when pushing knob down
+              {t('encoderPressDesc')}
             </span>
             <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.5rem 0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)', fontWeight: 600, color: '#fff', fontSize: '0.85rem' }}>
               {getKeycodeInfo(currentLayerConfig.press).label} ({getKeycodeInfo(currentLayerConfig.press).name})

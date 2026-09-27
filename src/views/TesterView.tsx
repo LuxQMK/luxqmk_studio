@@ -312,7 +312,7 @@ export const TesterView: React.FC = () => {
                         ? '0 0 8px rgba(0, 255, 136, 0.4)'
                         : undefined,
                     }}
-                    title="Rotary Encoder Knob"
+                    title={t('tooltipEncoderKnob')}
                   />
                 );
               }
