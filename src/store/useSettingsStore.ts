@@ -445,14 +445,33 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         });
       }
 
-      const filePath = flasher.filePath || (flasher.file as any)?.path;
+      let resolvedFilePath = flasher.filePath || (flasher.file as any)?.path;
+
+      // Ensure file is physically saved to disk cache if it is an in-memory File/Blob
+      if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.saveTempFirmware === 'function') {
+        if (flasher.file && (typeof flasher.file.arrayBuffer === 'function' || flasher.file instanceof Blob)) {
+          try {
+            const buf = await flasher.file.arrayBuffer();
+            const fileName = flasher.fileName || flasher.file.name || 'firmware.bin';
+            const saveRes = await window.electronAPI.saveTempFirmware({
+              fileName,
+              buffer: new Uint8Array(buf),
+            });
+            if (saveRes && saveRes.success && saveRes.filePath) {
+              resolvedFilePath = saveRes.filePath;
+            }
+          } catch (err: any) {
+            console.warn('Could not cache firmware binary before flash:', err);
+          }
+        }
+      }
 
       if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.flashFirmware === 'function') {
-        if (!filePath) {
+        if (!resolvedFilePath) {
           throw new Error('Firmware file path is required for flashing. Please re-select the .bin file.');
         }
         const flashResult = await window.electronAPI.flashFirmware({
-          filePath,
+          filePath: resolvedFilePath,
           toolType: 'wb32',
         });
 
@@ -669,7 +688,29 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
     try {
       const { file, sha256, verified } = await catalogService.downloadFirmwareFile(entry);
-      get().setFlasherFile(file);
+      let diskPath = (file as any).path || '';
+
+      if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.saveTempFirmware === 'function') {
+        try {
+          const buf = await file.arrayBuffer();
+          const saveRes = await window.electronAPI.saveTempFirmware({
+            fileName: entry.filename,
+            buffer: new Uint8Array(buf),
+          });
+          if (saveRes && saveRes.success && saveRes.filePath) {
+            diskPath = saveRes.filePath;
+          }
+        } catch (e) {
+          console.warn('Failed to save cloud firmware to disk cache:', e);
+        }
+      }
+
+      get().setFlasherFile({
+        ...file,
+        name: entry.filename,
+        size: file.size,
+        path: diskPath || entry.filename,
+      } as any);
 
       const verificationText = verified
         ? (isPolish ? `Suma SHA-256 zweryfikowana pomyślnie (${sha256.slice(0, 16)}...)` : `SHA-256 checksum verified successfully (${sha256.slice(0, 16)}...)`)

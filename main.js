@@ -619,6 +619,24 @@ ipcMain.handle("flasher:load-preflash-backup", async () => {
   return null;
 });
 
+ipcMain.handle("flasher:save-temp-firmware", async (event, { fileName, buffer }) => {
+  try {
+    const userPath = app.getPath("userData");
+    const cacheDir = path.join(userPath, "firmware_cache");
+    if (!fs.existsSync(cacheDir)) {
+      fs.mkdirSync(cacheDir, { recursive: true });
+    }
+    const safeName = (fileName || "firmware.bin").replace(/[^a-zA-Z0-9._-]/g, "_");
+    const filePath = path.join(cacheDir, safeName);
+    const nodeBuf = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+    fs.writeFileSync(filePath, nodeBuf);
+    return { success: true, filePath };
+  } catch (err) {
+    console.error("Failed to save temp firmware binary:", err);
+    return { success: false, error: err.message };
+  }
+});
+
 let currentFlasherProcess = null;
 
 ipcMain.handle("flasher:cancel-flash", () => {
@@ -635,9 +653,16 @@ ipcMain.handle("flasher:cancel-flash", () => {
 });
 
 ipcMain.handle("flasher:flash-firmware", async (event, { filePath, toolType = "wb32" }) => {
-  if (!fs.existsSync(filePath)) {
-    return { success: false, error: "Plik firmware nie istnieje: " + filePath };
+  let targetPath = filePath;
+  if (!fs.existsSync(targetPath)) {
+    const fallbackInCache = path.join(app.getPath("userData"), "firmware_cache", path.basename(filePath));
+    if (fs.existsSync(fallbackInCache)) {
+      targetPath = fallbackInCache;
+    } else {
+      return { success: false, error: "Plik firmware nie istnieje: " + filePath };
+    }
   }
+  filePath = targetPath;
 
   const toolExe = getFlasherToolPath(toolType);
   if (!toolExe) {

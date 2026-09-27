@@ -32,6 +32,7 @@ interface Window {
     selectFirmwareFile: () => Promise<{ filePath: string; fileName: string; fileSize: number; extension: string } | null>;
     savePreflashBackup: (snapshot: any) => Promise<{ success: boolean; filePath?: string; error?: string }>;
     loadPreflashBackup: () => Promise<any>;
+    saveTempFirmware: (params: { fileName: string; buffer: ArrayBuffer | Uint8Array }) => Promise<{ success: boolean; filePath?: string; error?: string }>;
     flashFirmware: (params: { filePath: string; toolType?: string }) => Promise<{ success: boolean; error?: string; timeout?: boolean }>;
     cancelFlash: () => Promise<{ success: boolean; error?: string }>;
     onFlasherProgress: (callback: (data: { percent: number; phase: string; log: string }) => void) => () => void;

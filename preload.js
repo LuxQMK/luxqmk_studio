@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   selectFirmwareFile: () => ipcRenderer.invoke("flasher:select-firmware-file"),
   savePreflashBackup: (snapshot) => ipcRenderer.invoke("flasher:save-preflash-backup", snapshot),
   loadPreflashBackup: () => ipcRenderer.invoke("flasher:load-preflash-backup"),
+  saveTempFirmware: (params) => ipcRenderer.invoke("flasher:save-temp-firmware", params),
   flashFirmware: (params) => ipcRenderer.invoke("flasher:flash-firmware", params),
   cancelFlash: () => ipcRenderer.invoke("flasher:cancel-flash"),
   onFlasherProgress: (callback) => {
