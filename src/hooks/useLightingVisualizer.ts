@@ -3,6 +3,7 @@ import { useLightingStore } from '../store/useLightingStore';
 import { useKeymapStore } from '../store/useKeymapStore';
 import { useDeviceStore } from '../store/useDeviceStore';
 import { useUIStore } from '../store/useUIStore';
+import { useVisualizerStore } from '../store/useVisualizerStore';
 import { hidProtocol } from '../core/hid-protocol';
 import { CODE_TO_KEY_ID } from '../views/TesterView';
 import { KeyLayoutItem } from '../types/keyboard';
@@ -166,15 +167,55 @@ export function hsvToRgb(hByte: number, sByte: number, vByte: number): { r: numb
 }
 
 function sampleGradient(
-  presetId: number,
+  presetId: number | string,
   phase: number,
   vScale = 1.0,
   sScale = 1.0
 ): { r: number; g: number; b: number } {
-  if (presetId <= 0 || presetId >= HARDWARE_GRADIENT_PRESETS.length) {
-    return hsvToRgb(phase, Math.round(255 * sScale), Math.round(255 * vScale));
+  let stops: Array<{ pos: number; r: number; g: number; b: number }> | null = null;
+  const numId = typeof presetId === 'number' ? presetId : Number(presetId);
+
+  if (numId === 8 || numId === 9) {
+    const profIdx = numId - 8;
+    const customStops = useLightingStore.getState().hardwareGradients?.[profIdx];
+    if (customStops && customStops.length >= 2) {
+      stops = customStops
+        .slice()
+        .sort((a, b) => a.pos - b.pos)
+        .map((s) => {
+          const rgb = hexToRgb(s.color);
+          const rawPos = Number(s.pos) || 0;
+          const normalizedPos = rawPos > 1 ? rawPos / (rawPos <= 100 ? 100 : 255) : rawPos;
+          return {
+            pos: Math.round(Math.max(0, Math.min(1, normalizedPos)) * 255),
+            r: rgb.r,
+            g: rgb.g,
+            b: rgb.b,
+          };
+        });
+    }
+  } else if (!isNaN(numId) && numId > 0 && numId < HARDWARE_GRADIENT_PRESETS.length) {
+    stops = HARDWARE_GRADIENT_PRESETS[numId];
+  } else if (typeof presetId === 'string' && presetId.length > 0) {
+    const studioGrad = useVisualizerStore.getState().customGradients.find((g) => g.id === presetId);
+    if (studioGrad && studioGrad.stops && studioGrad.stops.length >= 2) {
+      stops = studioGrad.stops
+        .slice()
+        .sort((a, b) => a.pos - b.pos)
+        .map((s) => {
+          const rgb = hexToRgb(s.color);
+          const rawPos = Number(s.pos) || 0;
+          const normalizedPos = rawPos > 1 ? rawPos / (rawPos <= 100 ? 100 : 255) : rawPos;
+          return {
+            pos: Math.round(Math.max(0, Math.min(1, normalizedPos)) * 255),
+            r: rgb.r,
+            g: rgb.g,
+            b: rgb.b,
+          };
+        });
+    }
   }
-  const stops = HARDWARE_GRADIENT_PRESETS[presetId];
+
   if (!stops || stops.length === 0) {
     return hsvToRgb(phase, Math.round(255 * sScale), Math.round(255 * vScale));
   }
@@ -243,9 +284,7 @@ export function evalSidelightEffect(
 ): { r: number; g: number; b: number } {
   const mode = Number(sidelight.effect) || 1;
   const speed = Math.max(10, Number(sidelight.speed) || 128);
-  // Exact 1:1 parity with QMK uint8_t speed_scaled = qadd8(g_sidelight_speed / 4, 1);
   const speedScaled = Math.floor(speed / 4) + 1;
-  // Exact 1:1 parity with QMK scale16by8(g_rgb_timer, speed_scaled) -> (now * speedScaled) / 256
   const t = Math.round((now * speedScaled) / 256) & 0xFF;
 
   const [hue, sat] = hexToHs(sidelight.color || '#00ffff');
@@ -254,7 +293,6 @@ export function evalSidelightEffect(
   const density = Number(sidelight.density) || 128;
   const baseV = 255 * brightness;
 
-  // Board-aware physical optical calibration (GMMK 3 Chassis offset vs GMMK 2 / Generic symmetric)
   let yScaled = 0;
   let distScaled = 0;
   let optStep = 0;
@@ -293,7 +331,7 @@ export function evalSidelightEffect(
     case 1: // SOLID_COLOR
       return hsvToRgb(hue, sat, baseV);
 
-    case 2: // BREATHING (1:1 QMK scale8(abs8(sin8(time)), val))
+    case 2: // BREATHING
       {
         const breathSin = Math.abs(Math.sin((t / 256) * Math.PI * 2));
         return hsvToRgb(hue, sat, baseV * breathSin);
@@ -302,28 +340,37 @@ export function evalSidelightEffect(
     case 3: // CYCLE_RAINBOW
       {
         const phase = (rev ? (255 - t) : t) & 0xFF;
+        if (gradPreset > 0) {
+          return sampleGradient(gradPreset, phase, brightness, 1.0);
+        }
         return hsvToRgb(phase, 255, baseV);
       }
 
-    case 4: // RAINBOW_WAVE (Top to Bottom normal, Bottom to Top reversed)
+    case 4: // RAINBOW_WAVE
       {
         const phase = (t + (rev ? yScaled : (256 - yScaled)) + hue) % 256;
+        if (gradPreset > 0) {
+          return sampleGradient(gradPreset, phase, brightness, 1.0);
+        }
         return hsvToRgb(phase, 255, baseV);
       }
 
-    case 5: // RAINBOW_CENTER_WAVE (Center Outward normal, Outward into Center reversed)
+    case 5: // RAINBOW_CENTER_WAVE
       {
         const phase = (t + (rev ? distScaled : (256 - distScaled)) + hue) % 256;
+        if (gradPreset > 0) {
+          return sampleGradient(gradPreset, phase, brightness, 1.0);
+        }
         return hsvToRgb(phase, 255, baseV);
       }
 
-    case 6: // GRADIENT_WAVE (Top to Bottom normal, Bottom to Top reversed)
+    case 6: // GRADIENT_WAVE
       {
         const phase = (t + (rev ? yScaled : (256 - yScaled))) % 256;
         return sampleGradient(gradPreset, phase, brightness, 1.0);
       }
 
-    case 7: // GRADIENT_CENTER_WAVE (Center Outward normal, Outward into Center reversed)
+    case 7: // GRADIENT_CENTER_WAVE
       {
         const phase = (t + (rev ? distScaled : (256 - distScaled))) % 256;
         return sampleGradient(gradPreset, phase, brightness, 1.0);
@@ -343,7 +390,7 @@ export function evalSidelightEffect(
         return sampleGradient(gradPreset, tGrad, brightness * breathSin, 1.0);
       }
 
-    case 10: // SINGLE_WAVE (1:1 QMK sin8(time + ...))
+    case 10: // SINGLE_WAVE
       {
         const wavePhase = (t + (rev ? yScaled : (256 - yScaled))) & 0xFF;
         const waveSin = 0.5 + 0.5 * Math.sin((wavePhase / 256) * Math.PI * 2);
@@ -354,14 +401,14 @@ export function evalSidelightEffect(
       {
         if (isHidden) return { r: 0, g: 0, b: 0 };
         const diagColors = [
-          { r: 255, g: 0, b: 0 },     // 0: Red (Visible Top on BOTH strips)
-          { r: 255, g: 128, b: 0 },   // 1: Orange
-          { r: 255, g: 255, b: 0 },   // 2: Yellow
-          { r: 0, g: 255, b: 0 },     // 3: Green (Visible Center 1)
-          { r: 0, g: 255, b: 0 },     // 4: Green (Visible Center 2)
-          { r: 0, g: 255, b: 255 },   // 5: Cyan
-          { r: 255, g: 0, b: 255 },   // 6: Magenta
-          { r: 0, g: 0, b: 255 },     // 7: Blue (Visible Bottom on BOTH strips)
+          { r: 255, g: 0, b: 0 },
+          { r: 255, g: 128, b: 0 },
+          { r: 255, g: 255, b: 0 },
+          { r: 0, g: 255, b: 0 },
+          { r: 0, g: 255, b: 0 },
+          { r: 0, g: 255, b: 255 },
+          { r: 255, g: 0, b: 255 },
+          { r: 0, g: 0, b: 255 },
         ];
         const col = diagColors[Math.min(7, Math.max(0, optStep))];
         return {
@@ -621,9 +668,30 @@ export function useLightingVisualizer(
               }
             }
             break;
+          case 15: // RAINBOW_MOVING_CHEVRON
+            {
+              const distChev = Math.abs(k.qmkX - 112) + k.qmkY;
+              const phase = (Math.round(distChev * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+              if (activeGrad > 0) {
+                customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
+              } else {
+                h = phase;
+              }
+            }
+            break;
           case 16: // CYCLE_OUT_IN
             {
               const phase = (Math.round(1.5 * k.dist * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+              if (activeGrad > 0) {
+                customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
+              } else {
+                h = phase;
+              }
+            }
+            break;
+          case 17: // CYCLE_OUT_IN_DUAL
+            {
+              const phase = (Math.round(2 * Math.abs(k.dist - 56) * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
               if (activeGrad > 0) {
                 customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
               } else {
@@ -650,6 +718,61 @@ export function useLightingVisualizer(
                 customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
               } else {
                 h = phase;
+              }
+            }
+            break;
+          case 20: // DUAL_BEACON
+            {
+              const angle = (Math.atan2(k.dy, k.dx) + Math.PI) / (2 * Math.PI) * 255;
+              const phase = (Math.round(angle * 2 * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+              if (activeGrad > 0) {
+                customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
+              } else {
+                h = phase;
+              }
+            }
+            break;
+          case 21: // RAINBOW_BEACON
+            {
+              const angle = (Math.atan2(k.dy, k.dx) + Math.PI) / (2 * Math.PI) * 255;
+              const phase = (Math.round(angle * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+              if (activeGrad > 0) {
+                customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
+              } else {
+                h = phase;
+              }
+            }
+            break;
+          case 22: // RAINBOW_PINWHEELS
+            {
+              const phase = (Math.round((k.qmkX + k.qmkY) * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+              if (activeGrad > 0) {
+                customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
+              } else {
+                h = phase;
+              }
+            }
+            break;
+          case 24: // JELLYBEAN_RAINDROPS
+            {
+              const keyHash = Math.abs(Math.sin(i * 12.9898 + Math.floor(now * 0.003 * spdFactor)) * 43758.5453);
+              const dropPhase = Math.floor(keyHash * 255) & 0xFF;
+              if (activeGrad > 0) {
+                customRgb = sampleGradient(activeGrad, dropPhase, baseV / 255, baseS / 255);
+              } else {
+                h = dropPhase;
+              }
+            }
+            break;
+          case 28: // PIXEL_RAIN
+          case 29: // PIXEL_FLOW
+          case 30: // PIXEL_FRACTAL
+            {
+              const pPhase = (Math.round((k.qmkX * 2 + k.qmkY * 3) * density) + (rev ? -tByte : tByte) + baseH) & 0xFF;
+              if (activeGrad > 0) {
+                customRgb = sampleGradient(activeGrad, pPhase, baseV / 255, baseS / 255);
+              } else {
+                h = pPhase;
               }
             }
             break;
@@ -682,6 +805,35 @@ export function useLightingVisualizer(
               }
             }
             break;
+          case 35: // GRADIENT_CYCLE (Multi-Stop)
+            {
+              const x_scaled = Math.round(k.qmkX * density);
+              const phase = ((rev ? (x_scaled - tByte) : (x_scaled + tByte)) + baseH) & 0xFF;
+              customRgb = sampleGradient(activeGrad, phase, baseV / 255);
+            }
+            break;
+          case 36: // GRADIENT_WAVE (Multi-Stop)
+            {
+              const x_scaled = Math.round((k.qmkX / 2) * density);
+              const phase = (x_scaled + (rev ? -tByte : tByte) + baseH) & 0xFF;
+              customRgb = sampleGradient(activeGrad, phase, baseV / 255);
+            }
+            break;
+          case 37: // GRADIENT_SPIRAL (Multi-Stop)
+            {
+              const angle = (Math.atan2(k.dy, k.dx) + Math.PI) / (2 * Math.PI) * 255;
+              const phase = (Math.round((k.dist - angle) * density) + (rev ? tByte : (255 - tByte)) + baseH) & 0xFF;
+              customRgb = sampleGradient(activeGrad, phase, baseV / 255);
+            }
+            break;
+          case 38: // GRADIENT_BREATHE (Multi-Stop)
+            {
+              const gradSpeedScaled = Math.floor(speed / 16) + 1;
+              const tGrad = Math.round((now * gradSpeedScaled) / 256) & 0xFF;
+              const breathSin = Math.abs(Math.sin((tByte / 256) * Math.PI * 2));
+              customRgb = sampleGradient(activeGrad, tGrad, (baseV / 255) * (0.15 + 0.85 * breathSin));
+            }
+            break;
           case 39: // CUSTOM_PER_KEY_PROFILE_1
           case 40: // CUSTOM_PER_KEY_PROFILE_2
           case 41: // CUSTOM_PER_KEY_PROFILE_3
@@ -706,7 +858,11 @@ export function useLightingVisualizer(
             {
               const spatialX = Math.round(k.qmkX * density);
               const phase = (spatialX + (rev ? tByte : (255 - tByte)) + baseH) & 0xFF;
-              h = phase;
+              if (activeGrad > 0) {
+                customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
+              } else {
+                h = phase;
+              }
             }
             break;
         }
@@ -990,9 +1146,30 @@ export function useLightingVisualizer(
                 }
               }
               break;
+            case 15: // RAINBOW_MOVING_CHEVRON
+              {
+                const distChev = Math.abs(sd.qmkX - 112) + sd.qmkY;
+                const phase = (Math.round(distChev * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+                if (activeGrad > 0) {
+                  customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
+                } else {
+                  h = phase;
+                }
+              }
+              break;
             case 16: // CYCLE_OUT_IN
               {
                 const phase = (Math.round(1.5 * sd.dist * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+                if (activeGrad > 0) {
+                  customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
+                } else {
+                  h = phase;
+                }
+              }
+              break;
+            case 17: // CYCLE_OUT_IN_DUAL
+              {
+                const phase = (Math.round(2 * Math.abs(sd.dist - 56) * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
                 if (activeGrad > 0) {
                   customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
                 } else {
@@ -1022,6 +1199,61 @@ export function useLightingVisualizer(
                 }
               }
               break;
+            case 20: // DUAL_BEACON
+              {
+                const angle = (Math.atan2(sd.dy, sd.dx) + Math.PI) / (2 * Math.PI) * 255;
+                const phase = (Math.round(angle * 2 * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+                if (activeGrad > 0) {
+                  customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
+                } else {
+                  h = phase;
+                }
+              }
+              break;
+            case 21: // RAINBOW_BEACON
+              {
+                const angle = (Math.atan2(sd.dy, sd.dx) + Math.PI) / (2 * Math.PI) * 255;
+                const phase = (Math.round(angle * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+                if (activeGrad > 0) {
+                  customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
+                } else {
+                  h = phase;
+                }
+              }
+              break;
+            case 22: // RAINBOW_PINWHEELS
+              {
+                const phase = (Math.round((sd.qmkX + sd.qmkY) * density) + (rev ? (255 - tByte) : tByte) + baseH) & 0xFF;
+                if (activeGrad > 0) {
+                  customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
+                } else {
+                  h = phase;
+                }
+              }
+              break;
+            case 24: // JELLYBEAN_RAINDROPS
+              {
+                const keyHash = Math.abs(Math.sin(sIdx * 12.9898 + Math.floor(now * 0.003 * spdFactor)) * 43758.5453);
+                const dropPhase = Math.floor(keyHash * 255) & 0xFF;
+                if (activeGrad > 0) {
+                  customRgb = sampleGradient(activeGrad, dropPhase, baseV / 255, baseS / 255);
+                } else {
+                  h = dropPhase;
+                }
+              }
+              break;
+            case 28: // PIXEL_RAIN
+            case 29: // PIXEL_FLOW
+            case 30: // PIXEL_FRACTAL
+              {
+                const pPhase = (Math.round((sd.qmkX * 2 + sd.qmkY * 3) * density) + (rev ? -tByte : tByte) + baseH) & 0xFF;
+                if (activeGrad > 0) {
+                  customRgb = sampleGradient(activeGrad, pPhase, baseV / 255, baseS / 255);
+                } else {
+                  h = pPhase;
+                }
+              }
+              break;
             case 33: // LUXQMK_WAVE
               {
                 const phase = (Math.round((sd.qmkX / 2) * density) + (rev ? -tByte : tByte) + baseH) & 0xFF;
@@ -1042,11 +1274,44 @@ export function useLightingVisualizer(
                 }
               }
               break;
+            case 35: // GRADIENT_CYCLE (Multi-Stop)
+              {
+                const x_scaled = Math.round(sd.qmkX * density);
+                const phase = ((rev ? (x_scaled - tByte) : (x_scaled + tByte)) + baseH) & 0xFF;
+                customRgb = sampleGradient(activeGrad, phase, baseV / 255);
+              }
+              break;
+            case 36: // GRADIENT_WAVE (Multi-Stop)
+              {
+                const x_scaled = Math.round((sd.qmkX / 2) * density);
+                const phase = (x_scaled + (rev ? -tByte : tByte) + baseH) & 0xFF;
+                customRgb = sampleGradient(activeGrad, phase, baseV / 255);
+              }
+              break;
+            case 37: // GRADIENT_SPIRAL (Multi-Stop)
+              {
+                const angle = (Math.atan2(sd.dy, sd.dx) + Math.PI) / (2 * Math.PI) * 255;
+                const phase = (Math.round((sd.dist - angle) * density) + (rev ? tByte : (255 - tByte)) + baseH) & 0xFF;
+                customRgb = sampleGradient(activeGrad, phase, baseV / 255);
+              }
+              break;
+            case 38: // GRADIENT_BREATHE (Multi-Stop)
+              {
+                const gradSpeedScaled = Math.floor(speed / 16) + 1;
+                const tGrad = Math.round((now * gradSpeedScaled) / 256) & 0xFF;
+                const breathSin = Math.abs(Math.sin((tByte / 256) * Math.PI * 2));
+                customRgb = sampleGradient(activeGrad, tGrad, (baseV / 255) * (0.15 + 0.85 * breathSin));
+              }
+              break;
             default:
               {
                 const spatialX = Math.round(sd.qmkX * density);
                 const phase = (spatialX + (rev ? tByte : (255 - tByte)) + baseH) & 0xFF;
-                h = phase;
+                if (activeGrad > 0) {
+                  customRgb = sampleGradient(activeGrad, phase, baseV / 255, baseS / 255);
+                } else {
+                  h = phase;
+                }
               }
               break;
           }

@@ -62,6 +62,17 @@ export interface MonochromeConfig {
   tint: string;
 }
 
+export interface GradientStopItem {
+  pos: number; // 0.0 to 1.0
+  color: string; // hex #RRGGBB
+}
+
+export interface CustomGradientPreset {
+  id: string;
+  name: string;
+  stops: GradientStopItem[];
+}
+
 export interface PerKeyProfileData {
   [profileIndex: number]: Record<number, string>; // ledIndex -> hex color
 }

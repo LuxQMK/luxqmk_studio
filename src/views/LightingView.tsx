@@ -9,6 +9,7 @@ import { getKeycodeInfo } from '../data/keycodes';
 import { useI18n } from '../i18n';
 import { useKeyboardFit } from '../hooks/useKeyboardFit';
 import { useLightingVisualizer } from '../hooks/useLightingVisualizer';
+import { HardwareGradientStudio } from '../components/common/HardwareGradientStudio';
 
 export const LightingView: React.FC = () => {
   const {
@@ -45,6 +46,12 @@ export const LightingView: React.FC = () => {
   const { t } = useI18n();
 
   const effectiveFnActive = isSimulatingFn || (hwActiveLayer !== undefined && hwActiveLayer > 0) || lightingSubTab === 'layers';
+
+  const isPerKeyActive = backlight.effect >= 39 && backlight.effect <= 41;
+  const isHardwareGradientActive = !isPerKeyActive && (
+    backlight.gradientPreset >= 8 ||
+    (sidelight.customEnable && sidelight.gradientPreset >= 8)
+  );
 
   const [isTemplatesOpen, setTemplatesOpen] = useState(false);
   const [isHelpOpen, setHelpOpen] = useState(false);
@@ -95,8 +102,6 @@ export const LightingView: React.FC = () => {
     didDrag: boolean;
     initialSelection: Set<number>;
   } | null>(null);
-
-  const isPerKeyActive = backlight.effect >= 39 && backlight.effect <= 41;
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (!isPerKeyActive) return;
@@ -581,7 +586,7 @@ export const LightingView: React.FC = () => {
       {/* 1. Sub-Tab: Main Backlight & Per-Key Dock */}
       {lightingSubTab === 'backlight' && (
         <div className="lighting-subview active" id="lighting-tab-backlight">
-          <div className={`backlight-layout-grid ${isPerKeyActive ? 'perkey-active' : ''}`} id="backlightLayoutGrid">
+          <div className={`backlight-layout-grid ${isPerKeyActive || isHardwareGradientActive ? 'perkey-active' : ''}`} id="backlightLayoutGrid">
             {/* Left Column: Master Backlight Parameters */}
             <div className="palette-card backlight-settings-card">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
@@ -706,7 +711,13 @@ export const LightingView: React.FC = () => {
                   <select
                     className="form-control"
                     value={backlight.gradientPreset}
-                    onChange={(e) => setBacklight({ gradientPreset: Number(e.target.value) })}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setBacklight({ gradientPreset: val });
+                      if (val >= 8) {
+                        useLightingStore.getState().setActiveHardwareGradientProfile(val - 8);
+                      }
+                    }}
                   >
                     {HARDWARE_GRADIENTS.map((g) => (
                       <option key={g.id} value={g.id}>
@@ -793,7 +804,13 @@ export const LightingView: React.FC = () => {
                       <select
                         className="form-control"
                         value={sidelight.gradientPreset}
-                        onChange={(e) => setSidelight({ gradientPreset: Number(e.target.value) })}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setSidelight({ gradientPreset: val });
+                          if (val >= 8) {
+                            useLightingStore.getState().setActiveHardwareGradientProfile(val - 8);
+                          }
+                        }}
                       >
                         {HARDWARE_GRADIENTS.map((g) => (
                           <option key={g.id} value={g.id}>
@@ -1126,6 +1143,11 @@ export const LightingView: React.FC = () => {
                   )}
                 </div>
               </div>
+            )}
+
+            {/* Right Column: Hardware Multi-Stop Gradient Studio Dock (when Profile 1 or Profile 2 gradient is selected) */}
+            {isHardwareGradientActive && (
+              <HardwareGradientStudio />
             )}
           </div>
         </div>

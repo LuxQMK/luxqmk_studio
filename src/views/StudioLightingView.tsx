@@ -9,6 +9,7 @@ import { ALL_DEVICE_DESCRIPTORS } from '../data/devices';
 import { useI18n } from '../i18n';
 import { useKeyboardFit } from '../hooks/useKeyboardFit';
 import { LogoLedBadge } from '../components/common/LogoLedBadge';
+import { CustomGradientStudio } from '../components/common/CustomGradientStudio';
 import { visualizerService } from '../core/visualizer-service';
 
 const EFFECT_DIRECTION_OPTIONS: Record<string, Array<{ value: string; labelKey: string }>> = {
@@ -98,7 +99,7 @@ const EFFECT_TO_DIR_CATEGORY: Record<string, string> = {
 export const StudioLightingView: React.FC = () => {
   const isDesktop = typeof window !== 'undefined' && !!window.electronAPI && !!window.electronAPI.isDesktop;
 
-  const { config, setConfig, toggleStudioLighting } = useVisualizerStore();
+  const { config, setConfig, toggleStudioLighting, customGradients } = useVisualizerStore();
   const { presetLayoutId } = useKeymapStore();
   const { studioSubTab, setStudioSubTab } = useUIStore();
   const { t } = useI18n();
@@ -457,16 +458,27 @@ export const StudioLightingView: React.FC = () => {
                   value={config.audioColorMode}
                   onChange={(e) => setConfig({ audioColorMode: e.target.value })}
                 >
-                  <option value="rainbow">{t('optPaletteRainbow')}</option>
-                  <option value="cyberpunk">{t('optPaletteCyberpunk')}</option>
-                  <option value="vaporwave">{t('optPaletteVaporwave')}</option>
-                  <option value="fire_ember">{t('optPaletteFireEmber')}</option>
-                  <option value="ocean_abyss">{t('optPaletteOceanAbyss')}</option>
-                  <option value="matrix_code">{t('optPaletteMatrixCode')}</option>
-                  <option value="synthwave">{t('optPaletteSynthwave')}</option>
-                  <option value="ice_glacier">{t('optPaletteIceGlacier')}</option>
-                  <option value="toxic_radiation">{t('optPaletteToxic')}</option>
-                  <option value="singleColor">{t('optPaletteSingle')}</option>
+                  <optgroup label={t('optGroupCuratedPalettes', '🎨 Curated Palettes')}>
+                    <option value="rainbow">{t('optPaletteRainbow')}</option>
+                    <option value="cyberpunk">{t('optPaletteCyberpunk')}</option>
+                    <option value="vaporwave">{t('optPaletteVaporwave')}</option>
+                    <option value="synthwave">{t('optPaletteSynthwave')}</option>
+                    <option value="fire_ember">{t('optPaletteFireEmber')}</option>
+                    <option value="ocean_abyss">{t('optPaletteOceanAbyss')}</option>
+                    <option value="matrix_code">{t('optPaletteMatrixCode')}</option>
+                    <option value="ice_glacier">{t('optPaletteIceGlacier')}</option>
+                    <option value="toxic_radiation">{t('optPaletteToxic')}</option>
+                    <option value="singleColor">{t('optPaletteSingle')}</option>
+                  </optgroup>
+                  {customGradients && customGradients.length > 0 && (
+                    <optgroup label={t('optGroupCustomGradients', '✨ Custom Gradients (Multi-Stop)')}>
+                      {customGradients.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
 
@@ -486,6 +498,14 @@ export const StudioLightingView: React.FC = () => {
                 </select>
               </div>
             </div>
+
+            {/* Custom Multi-Stop Gradient Studio (when custom gradient is chosen) */}
+            {(config.audioColorMode.startsWith('custom_grad_') || config.audioColorMode === 'custom_gradient') && (
+              <CustomGradientStudio
+                currentPaletteId={config.audioColorMode}
+                onSelectPalette={(id) => setConfig({ audioColorMode: id })}
+              />
+            )}
 
             {/* Custom Single Color Picker (when singleColor is chosen) */}
             {config.audioColorMode === 'singleColor' && (
@@ -672,16 +692,27 @@ export const StudioLightingView: React.FC = () => {
                   value={config.softwarePalette}
                   onChange={(e) => setConfig({ softwarePalette: e.target.value })}
                 >
-                  <option value="rainbow">{t('optPaletteRainbow')}</option>
-                  <option value="cyberpunk">{t('optPaletteCyberpunk')}</option>
-                  <option value="vaporwave">{t('optPaletteVaporwave')}</option>
-                  <option value="synthwave">{t('optPaletteSynthwave')}</option>
-                  <option value="fire_ember">{t('optPaletteFireEmber')}</option>
-                  <option value="ocean_abyss">{t('optPaletteOceanAbyss')}</option>
-                  <option value="matrix_code">{t('optPaletteMatrixCode')}</option>
-                  <option value="ice_glacier">{t('optPaletteIceGlacier')}</option>
-                  <option value="toxic_radiation">{t('optPaletteToxic')}</option>
-                  <option value="singleColor">{t('optPaletteSingle')}</option>
+                  <optgroup label={t('optGroupCuratedPalettes', '🎨 Curated Palettes')}>
+                    <option value="rainbow">{t('optPaletteRainbow')}</option>
+                    <option value="cyberpunk">{t('optPaletteCyberpunk')}</option>
+                    <option value="vaporwave">{t('optPaletteVaporwave')}</option>
+                    <option value="synthwave">{t('optPaletteSynthwave')}</option>
+                    <option value="fire_ember">{t('optPaletteFireEmber')}</option>
+                    <option value="ocean_abyss">{t('optPaletteOceanAbyss')}</option>
+                    <option value="matrix_code">{t('optPaletteMatrixCode')}</option>
+                    <option value="ice_glacier">{t('optPaletteIceGlacier')}</option>
+                    <option value="toxic_radiation">{t('optPaletteToxic')}</option>
+                    <option value="singleColor">{t('optPaletteSingle')}</option>
+                  </optgroup>
+                  {customGradients && customGradients.length > 0 && (
+                    <optgroup label={t('optGroupCustomGradients', '✨ Custom Gradients (Multi-Stop)')}>
+                      {customGradients.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
 
@@ -700,6 +731,14 @@ export const StudioLightingView: React.FC = () => {
                 </select>
               </div>
             </div>
+
+            {/* Custom Multi-Stop Gradient Studio (when custom gradient is chosen) */}
+            {(config.softwarePalette.startsWith('custom_grad_') || config.softwarePalette === 'custom_gradient') && (
+              <CustomGradientStudio
+                currentPaletteId={config.softwarePalette}
+                onSelectPalette={(id) => setConfig({ softwarePalette: id })}
+              />
+            )}
 
             {/* Custom Single Color Picker (when singleColor is chosen) */}
             {config.softwarePalette === 'singleColor' && (
@@ -823,16 +862,27 @@ export const StudioLightingView: React.FC = () => {
                   value={config.sidelightPalette || 'rainbow'}
                   onChange={(e) => setConfig({ sidelightPalette: e.target.value })}
                 >
-                  <option value="rainbow">{t('optPaletteRainbow')}</option>
-                  <option value="cyberpunk">{t('optPaletteCyberpunk')}</option>
-                  <option value="vaporwave">{t('optPaletteVaporwave')}</option>
-                  <option value="synthwave">{t('optPaletteSynthwave')}</option>
-                  <option value="fire_ember">{t('optPaletteFireEmber')}</option>
-                  <option value="ocean_abyss">{t('optPaletteOceanAbyss')}</option>
-                  <option value="matrix_code">{t('optPaletteMatrixCode')}</option>
-                  <option value="ice_glacier">{t('optPaletteIceGlacier')}</option>
-                  <option value="toxic_radiation">{t('optPaletteToxic')}</option>
-                  <option value="singleColor">{t('optPaletteSingle')}</option>
+                  <optgroup label={t('optGroupCuratedPalettes', '🎨 Curated Palettes')}>
+                    <option value="rainbow">{t('optPaletteRainbow')}</option>
+                    <option value="cyberpunk">{t('optPaletteCyberpunk')}</option>
+                    <option value="vaporwave">{t('optPaletteVaporwave')}</option>
+                    <option value="synthwave">{t('optPaletteSynthwave')}</option>
+                    <option value="fire_ember">{t('optPaletteFireEmber')}</option>
+                    <option value="ocean_abyss">{t('optPaletteOceanAbyss')}</option>
+                    <option value="matrix_code">{t('optPaletteMatrixCode')}</option>
+                    <option value="ice_glacier">{t('optPaletteIceGlacier')}</option>
+                    <option value="toxic_radiation">{t('optPaletteToxic')}</option>
+                    <option value="singleColor">{t('optPaletteSingle')}</option>
+                  </optgroup>
+                  {customGradients && customGradients.length > 0 && (
+                    <optgroup label={t('optGroupCustomGradients', '✨ Custom Gradients (Multi-Stop)')}>
+                      {customGradients.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
 
@@ -851,6 +901,14 @@ export const StudioLightingView: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Custom Multi-Stop Gradient Studio (when sidelight uses custom gradient) */}
+            {((config.sidelightPalette || '').startsWith('custom_grad_') || config.sidelightPalette === 'custom_gradient') && (
+              <CustomGradientStudio
+                currentPaletteId={config.sidelightPalette}
+                onSelectPalette={(id) => setConfig({ sidelightPalette: id })}
+              />
+            )}
 
             <div className="grid-2" style={{ gap: '1.25rem' }}>
               <div className="form-group">

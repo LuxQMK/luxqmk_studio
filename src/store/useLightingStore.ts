@@ -7,6 +7,7 @@ import {
   LayerLightingConfig,
   LogoLocksConfig,
   MonochromeConfig,
+  GradientStopItem,
 } from '../types/lighting';
 import { hidProtocol, CHANNELS, CUSTOM_VAL, RGB_MATRIX_VAL } from '../core/hid-protocol';
 import { useDeviceStore } from './useDeviceStore';
@@ -115,6 +116,19 @@ interface LightingState {
   selectKeyGroup: (groupName: string) => void;
   applyTemplate: (templateId: string) => void;
   setSimulatingFn: (sim: boolean) => void;
+
+  // Hardware Multi-Stop Gradient Studio
+  hardwareGradients: Record<number, GradientStopItem[]>;
+  activeHardwareGradientProfile: number; // 0 or 1
+
+  setActiveHardwareGradientProfile: (prof: number) => void;
+  setHardwareGradientStop: (prof: number, index: number, patch: Partial<GradientStopItem>) => void;
+  addHardwareGradientStop: (prof: number, pos?: number, color?: string) => void;
+  deleteHardwareGradientStop: (prof: number, index: number) => void;
+  distributeHardwareGradientStops: (prof: number, mode: 'qmk' | 'linear') => void;
+  applyHardwareGradientTemplate: (prof: number, stops: GradientStopItem[]) => void;
+  saveHardwareGradientToEEPROM: (prof: number) => Promise<void>;
+  loadHardwareGradientsFromHardware: () => Promise<void>;
 
   loadFromHardware: () => Promise<void>;
   saveLightingToHardware: () => Promise<void>;
@@ -225,6 +239,19 @@ export const useLightingStore = create<LightingState>((set, get) => ({
     1: {},
     2: {},
   },
+  hardwareGradients: {
+    0: [
+      { pos: 0.0, color: '#00f0ff' },
+      { pos: 0.333, color: '#ff0080' },
+      { pos: 0.667, color: '#ffd000' }
+    ],
+    1: [
+      { pos: 0.0, color: '#00f260' },
+      { pos: 0.333, color: '#0575e6' },
+      { pos: 0.667, color: '#00f2fe' }
+    ]
+  },
+  activeHardwareGradientProfile: 0,
   isSimulatingFn: false,
 
   setBacklight: (patch) => {
@@ -531,6 +558,131 @@ export const useLightingStore = create<LightingState>((set, get) => ({
     useUIStore.getState().showToast(`${useI18n.getState().t('toastSelectedGroup')}: ${groupName.toUpperCase()} (${newSelected.size} keys)`, 'info');
   },
 
+  setActiveHardwareGradientProfile: (prof) => set({ activeHardwareGradientProfile: prof }),
+
+  setHardwareGradientStop: (prof, index, patch) => {
+    const current = get().hardwareGradients[prof] || [];
+    const updated = current.map((s, i) => (i === index ? { ...s, ...patch } : s));
+    set((state) => ({
+      hardwareGradients: {
+        ...state.hardwareGradients,
+        [prof]: updated
+      }
+    }));
+    useDeviceStore.getState().markDirty('lighting');
+  },
+
+  addHardwareGradientStop: (prof, pos, color) => {
+    const current = get().hardwareGradients[prof] || [];
+    if (current.length >= 8) return;
+    const newPos = pos !== undefined ? pos : 0.5;
+    const newColor = color || '#00ffff';
+    const updated = [...current, { pos: newPos, color: newColor }];
+    set((state) => ({
+      hardwareGradients: {
+        ...state.hardwareGradients,
+        [prof]: updated
+      }
+    }));
+    useDeviceStore.getState().markDirty('lighting');
+  },
+
+  deleteHardwareGradientStop: (prof, index) => {
+    const current = get().hardwareGradients[prof] || [];
+    if (current.length <= 2) return;
+    const updated = current.filter((_, i) => i !== index);
+    set((state) => ({
+      hardwareGradients: {
+        ...state.hardwareGradients,
+        [prof]: updated
+      }
+    }));
+    useDeviceStore.getState().markDirty('lighting');
+  },
+
+  distributeHardwareGradientStops: (prof, mode) => {
+    const current = get().hardwareGradients[prof] || [];
+    if (current.length < 2) return;
+    const n = current.length;
+    const sorted = [...current].sort((a, b) => a.pos - b.pos);
+    const updated = sorted.map((s, idx) => {
+      let newPos = 0;
+      if (mode === 'qmk') {
+        newPos = Math.round((idx / n) * 1000) / 1000;
+      } else {
+        newPos = Math.round((idx / (n - 1)) * 1000) / 1000;
+      }
+      return { ...s, pos: Math.max(0, Math.min(1, newPos)) };
+    });
+    set((state) => ({
+      hardwareGradients: {
+        ...state.hardwareGradients,
+        [prof]: updated
+      }
+    }));
+    useDeviceStore.getState().markDirty('lighting');
+  },
+
+  applyHardwareGradientTemplate: (prof, stops) => {
+    set((state) => ({
+      hardwareGradients: {
+        ...state.hardwareGradients,
+        [prof]: JSON.parse(JSON.stringify(stops))
+      }
+    }));
+    useDeviceStore.getState().markDirty('lighting');
+  },
+
+  saveHardwareGradientToEEPROM: async (prof) => {
+    if (!useDeviceStore.getState().isConnected) {
+      useUIStore.getState().showToast('Keyboard not connected!', 'error');
+      return;
+    }
+    const stops = get().hardwareGradients[prof] || [];
+    if (stops.length < 2) return;
+    try {
+      await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.GRADIENT_CUSTOM_COUNT, [prof, stops.length]);
+      for (let i = 0; i < stops.length; i++) {
+        const s = stops[i];
+        const rgb = hexToRgb(s.color);
+        const posByte = Math.max(0, Math.min(255, Math.round(s.pos * 255)));
+        await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.GRADIENT_CUSTOM_STOP, [prof, i, posByte, rgb.r, rgb.g, rgb.b]);
+      }
+      await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.GRADIENT_SAVE_EEPROM, [prof]);
+      useUIStore.getState().showToast(useI18n.getState().t('toastGradientSavedToEeprom'), 'success');
+    } catch (e: any) {
+      useUIStore.getState().showToast(`Error saving gradient: ${e.message}`, 'error');
+    }
+  },
+
+  loadHardwareGradientsFromHardware: async () => {
+    if (!useDeviceStore.getState().isConnected) return;
+    try {
+      const gradMap: Record<number, GradientStopItem[]> = {};
+      for (let prof = 0; prof < 2; prof++) {
+        const countRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.GRADIENT_CUSTOM_COUNT, prof);
+        const count = countRes && countRes.length >= 2 ? countRes[1] : 3;
+        const safeCount = Math.max(2, Math.min(8, count));
+        const stops: GradientStopItem[] = [];
+        for (let s = 0; s < safeCount; s++) {
+          const stopRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.GRADIENT_CUSTOM_STOP, prof, s);
+          if (stopRes && stopRes.length >= 6) {
+            const pos = stopRes[2] / 255;
+            const r = stopRes[3];
+            const g = stopRes[4];
+            const b = stopRes[5];
+            const hex = '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
+            stops.push({ pos: Math.round(pos * 1000) / 1000, color: hex });
+          } else {
+            stops.push({ pos: Math.round((s / safeCount) * 1000) / 1000, color: '#00ffff' });
+          }
+        }
+        gradMap[prof] = stops;
+      }
+      set({ hardwareGradients: gradMap });
+    } catch (e) {}
+  },
+
   applyTemplate: (templateId) => {
     const layout = getLayoutForPreset(useKeymapStore.getState().presetLayoutId);
     const { activeProfileIndex } = get();
@@ -793,6 +945,11 @@ export const useLightingStore = create<LightingState>((set, get) => ({
           }
         } catch (e) {}
       }
+
+      // Hardware Gradients (Profile 1 & 2)
+      try {
+        await get().loadHardwareGradientsFromHardware();
+      } catch (e) {}
 
       console.log('Successfully synced hardware lighting config.');
       const snapshot = {

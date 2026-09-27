@@ -104,32 +104,56 @@ export function samplePaletteRgb(
   if (paletteName === 'singleColor' && customSingleRgb) {
     return customSingleRgb;
   }
-  const f = ((factor % 1) + 1) % 1;
-  if (paletteName === 'rainbow' || !PALETTES[paletteName]) {
+  const safeFactor = Number.isFinite(factor) ? factor : 0;
+  const f = ((safeFactor % 1) + 1) % 1;
+
+  let stops: PaletteStop[] | null = null;
+
+  if (paletteName.startsWith('custom_grad_') || paletteName === 'custom_gradient') {
+    const customList = useVisualizerStore.getState().customGradients || [];
+    let customPreset = customList.find((g) => g.id === paletteName);
+    if (!customPreset && paletteName === 'custom_gradient') {
+      const activeId = useVisualizerStore.getState().activeCustomGradientId;
+      customPreset = customList.find((g) => g.id === activeId) || customList[0];
+    }
+    if (customPreset && customPreset.stops && customPreset.stops.length > 0) {
+      stops = customPreset.stops
+        .slice()
+        .sort((a, b) => a.pos - b.pos)
+        .map((s) => ({
+          pos: Math.max(0, Math.min(1, s.pos)),
+          rgb: hexToRgbList(s.color)
+        }));
+    }
+  } else if (PALETTES[paletteName]) {
+    stops = PALETTES[paletteName];
+  }
+
+  if (paletteName === 'rainbow' || !stops || stops.length === 0) {
     return hsvToRgb(Math.round(f * 255), 255, 255);
   }
-  const stops = PALETTES[paletteName]!;
+
   const s0 = stops[0];
   const sLast = stops[stops.length - 1];
 
   if (f <= s0.pos) {
     const wrapSpan = (1.0 - sLast.pos) + s0.pos;
     if (wrapSpan === 0) return s0.rgb;
-    const progress = (f + (1.0 - sLast.pos)) / wrapSpan;
+    const progress = Math.max(0, Math.min(1, (f + (1.0 - sLast.pos)) / wrapSpan));
     return [
-      Math.round(sLast.rgb[0] + (s0.rgb[0] - sLast.rgb[0]) * progress),
-      Math.round(sLast.rgb[1] + (s0.rgb[1] - sLast.rgb[1]) * progress),
-      Math.round(sLast.rgb[2] + (s0.rgb[2] - sLast.rgb[2]) * progress)
+      Math.max(0, Math.min(255, Math.round(sLast.rgb[0] + (s0.rgb[0] - sLast.rgb[0]) * progress))),
+      Math.max(0, Math.min(255, Math.round(sLast.rgb[1] + (s0.rgb[1] - sLast.rgb[1]) * progress))),
+      Math.max(0, Math.min(255, Math.round(sLast.rgb[2] + (s0.rgb[2] - sLast.rgb[2]) * progress)))
     ];
   }
   if (f >= sLast.pos) {
     const wrapSpan = (1.0 - sLast.pos) + s0.pos;
     if (wrapSpan === 0) return sLast.rgb;
-    const progress = (f - sLast.pos) / wrapSpan;
+    const progress = Math.max(0, Math.min(1, (f - sLast.pos) / wrapSpan));
     return [
-      Math.round(sLast.rgb[0] + (s0.rgb[0] - sLast.rgb[0]) * progress),
-      Math.round(sLast.rgb[1] + (s0.rgb[1] - sLast.rgb[1]) * progress),
-      Math.round(sLast.rgb[2] + (s0.rgb[2] - sLast.rgb[2]) * progress)
+      Math.max(0, Math.min(255, Math.round(sLast.rgb[0] + (s0.rgb[0] - sLast.rgb[0]) * progress))),
+      Math.max(0, Math.min(255, Math.round(sLast.rgb[1] + (s0.rgb[1] - sLast.rgb[1]) * progress))),
+      Math.max(0, Math.min(255, Math.round(sLast.rgb[2] + (s0.rgb[2] - sLast.rgb[2]) * progress)))
     ];
   }
 
@@ -137,7 +161,8 @@ export function samplePaletteRgb(
     const s1 = stops[i];
     const s2 = stops[i + 1];
     if (f >= s1.pos && f <= s2.pos) {
-      const t = (f - s1.pos) / (s2.pos - s1.pos);
+      const span = s2.pos - s1.pos || 1;
+      const t = Math.max(0, Math.min(1, (f - s1.pos) / span));
       return [
         Math.max(0, Math.min(255, Math.round(s1.rgb[0] + (s2.rgb[0] - s1.rgb[0]) * t))),
         Math.max(0, Math.min(255, Math.round(s1.rgb[1] + (s2.rgb[1] - s1.rgb[1]) * t))),
@@ -568,15 +593,19 @@ class VisualizerEngineService {
   private _tick(now: number): void {
     if (!this.isRunning) return;
 
-    const activeTab = useUIStore.getState().studioSubTab;
-    if (activeTab === 'audio' && this.analyser) {
-      this._processAudioAnalysis();
-      this._renderAudioFrame(now);
-    } else {
-      this._renderSoftwareFxFrame(now);
-    }
+    try {
+      const activeTab = useUIStore.getState().studioSubTab;
+      if (activeTab === 'audio' && this.analyser) {
+        this._processAudioAnalysis();
+        this._renderAudioFrame(now);
+      } else {
+        this._renderSoftwareFxFrame(now);
+      }
 
-    this._streamToHardware(now);
+      this._streamToHardware(now);
+    } catch (err) {
+      console.error('Error during studio lighting frame render:', err);
+    }
 
     if (this.isRunning && !document.hidden && typeof requestAnimationFrame !== 'undefined') {
       this.animFrameId = requestAnimationFrame((t) => this._tick(t));
@@ -675,7 +704,7 @@ class VisualizerEngineService {
 
         case 'vuMeter': {
           const isRight = k.centerX > (this.maxX / 2);
-          const halfW = this.maxX / 2;
+          const halfW = (this.maxX / 2) || 1;
           const band = isRight ? this.frequencyBands[12] : this.frequencyBands[3];
           const xNorm = isRight ? ((k.centerX - halfW) / halfW) : ((halfW - k.centerX) / halfW);
           if (band > 12 && (xNorm * 255) <= band) {
@@ -689,7 +718,7 @@ class VisualizerEngineService {
         }
 
         case 'audioWave': {
-          const waveProg = (now * 0.0006 * speed) % 1.0;
+          const waveProg = ((now * 0.0006 * speed) % 1.0 + 1.0) % 1.0;
           const diff = Math.abs(dirCoord.primary - waveProg);
           const wrappedDiff = Math.min(diff, 1 - diff);
           if (wrappedDiff < 0.12 && this.bassEnergy > 10) {
@@ -715,7 +744,7 @@ class VisualizerEngineService {
 
         case 'starfieldBeats': {
           const beatBoost = 1 + (this.bassEnergy / 255);
-          const starPhase = (now * 0.0005 * speed * beatBoost + dirCoord.dist * 0.5) % 1.0;
+          const starPhase = ((now * 0.0005 * speed * beatBoost + dirCoord.dist * 0.5) % 1.0 + 1.0) % 1.0;
           brightFactor = (floor + (1 - floor) * (this.bassEnergy / 255)) * intensity;
           rgb = samplePaletteRgb(palette, starPhase, customRgb);
           break;
@@ -730,7 +759,7 @@ class VisualizerEngineService {
         }
 
         default: {
-          const phase = (dirCoord.primary + now * 0.0008 * speed) % 1.0;
+          const phase = ((dirCoord.primary + now * 0.0008 * speed) % 1.0 + 1.0) % 1.0;
           brightFactor = (floor + (1 - floor) * (this.bassEnergy / 255)) * intensity;
           rgb = samplePaletteRgb(palette, phase, customRgb);
           break;
@@ -765,7 +794,7 @@ class VisualizerEngineService {
       switch (preset) {
         // --- Signature PC Effects ---
         case 'neonWave': {
-          const phase = (dirCoord.primary - now * 0.0008 * speed + 1000) % 1.0;
+          const phase = ((dirCoord.primary - now * 0.0008 * speed) % 1.0 + 1.0) % 1.0;
           const waveSin = 0.5 + 0.5 * Math.sin(phase * Math.PI * 2);
           brightFactor = (floor + (1 - floor) * waveSin) * intensity;
           rgb = samplePaletteRgb(palette, phase, customRgb);
@@ -775,15 +804,15 @@ class VisualizerEngineService {
         case 'matrixRain': {
           const colIdx = Math.floor(k.centerX) % 24;
           const drop = this.matrixDrops[colIdx] || { y: 0, speed: 0.1, length: 4 };
-          const curY = (drop.y + now * 0.008 * speed * drop.speed * 8) % 18;
+          const curY = (drop.y + now * 0.008 * speed * drop.speed * 8) % (this.maxY + 8);
           const distFromDrop = k.centerY - curY;
           if (distFromDrop >= 0 && distFromDrop < drop.length) {
             const headGlow = distFromDrop === 0 ? 1.0 : (1.0 - distFromDrop / drop.length);
             brightFactor = (floor + (1 - floor) * headGlow) * intensity;
-            rgb = distFromDrop === 0 ? [220, 255, 220] : samplePaletteRgb('matrix_code', 0.3, customRgb);
+            rgb = distFromDrop === 0 ? [220, 255, 220] : samplePaletteRgb(palette === 'rainbow' ? 'matrix_code' : palette, 0.3, customRgb);
           } else {
             brightFactor = floor * intensity;
-            rgb = [0, 60, 20];
+            rgb = palette === 'rainbow' ? [0, 60, 20] : samplePaletteRgb(palette, 0.05, customRgb);
           }
           break;
         }
@@ -793,8 +822,8 @@ class VisualizerEngineService {
           let particleHue = 0;
           for (let p = 0; p < this.particles.length; p++) {
             const pt = this.particles[p];
-            const pX = (pt.x + pt.vx * now * 0.05 * speed) % 24;
-            const pY = (pt.y + pt.vy * now * 0.05 * speed) % 6;
+            const pX = ((pt.x + pt.vx * now * 0.05 * speed) % 24 + 24) % 24;
+            const pY = ((pt.y + pt.vy * now * 0.05 * speed) % 6 + 6) % 6;
             const d = Math.sqrt(Math.pow(k.centerX - pX, 2) + Math.pow(k.centerY - pY, 2));
             if (d < nearestDist) {
               nearestDist = d;
@@ -822,7 +851,7 @@ class VisualizerEngineService {
         }
 
         case 'pulseBloom': {
-          const pulsePhase = (now * 0.0015 * speed) % 1.0;
+          const pulsePhase = ((now * 0.0015 * speed) % 1.0 + 1.0) % 1.0;
           const wave = Math.max(0, Math.sin((dirCoord.dist * 6) - (now * 0.006 * speed)));
           brightFactor = (floor + (1 - floor) * Math.pow(wave, 2)) * intensity;
           rgb = samplePaletteRgb(palette, pulsePhase + dirCoord.dist * 0.5, customRgb);
@@ -830,37 +859,69 @@ class VisualizerEngineService {
         }
 
         case 'fireEmber': {
-          const flicker = 0.6 + 0.4 * Math.sin(k.centerX * 3.5 + now * 0.008 * speed) * Math.cos(k.centerY * 2.5 + now * 0.006 * speed);
-          brightFactor = (floor + (1 - floor) * Math.max(0, flicker)) * intensity;
-          rgb = samplePaletteRgb('fire_ember', (1 - dirCoord.primary) * 0.8, customRgb);
+          // Dynamic upward-rising turbulent flame & ember simulation
+          const flameProgress = now * 0.0025 * speed;
+          const flameY = k.centerY / (this.maxY || 1);
+          const flameX = k.centerX / (this.maxX || 1);
+
+          // Multi-frequency flame turbulence
+          const wave1 = Math.sin(flameX * 7.0 + flameProgress * 2.5);
+          const wave2 = Math.cos(flameX * 4.0 - flameProgress * 3.2 + flameY * 3.5);
+          const sparkNoise = Math.sin(k.centerX * 11.0 + now * 0.012 * speed) * Math.cos(k.centerY * 7.5 - now * 0.014 * speed);
+
+          const heat = Math.max(0, (1.0 - flameY * 0.85) + (wave1 * 0.18 + wave2 * 0.18) + (sparkNoise * 0.12));
+          const clampedHeat = Math.max(0, Math.min(1.0, heat));
+
+          brightFactor = (floor + (1 - floor) * Math.pow(clampedHeat, 1.3)) * intensity;
+          const targetPal = (palette === 'rainbow' || !PALETTES[palette]) ? 'fire_ember' : palette;
+          const flameColorPos = ((1.0 - clampedHeat * 0.85) + flameProgress * 0.08) % 1.0;
+          rgb = samplePaletteRgb(targetPal, flameColorPos, customRgb);
           break;
         }
 
         case 'hyperspaceWarp': {
-          const angle = Math.atan2(k.centerY - (this.maxY / 2), k.centerX - (this.maxX / 2));
-          const warpPhase = (dirCoord.dist * 4.0 - now * 0.004 * speed) % 1.0;
-          brightFactor = (floor + (1 - floor) * Math.pow((warpPhase + 1) % 1, 2)) * intensity;
-          rgb = samplePaletteRgb(palette, (angle + Math.PI) / (Math.PI * 2), customRgb);
+          const centerX = this.maxX / 2;
+          const centerY = this.maxY / 2;
+          const dx = k.centerX - centerX;
+          const dy = k.centerY - centerY;
+          const distFromCenter = Math.sqrt(dx * dx + dy * dy);
+          const maxRadius = Math.sqrt(centerX * centerX + centerY * centerY) || 1;
+          const normDist = distFromCenter / maxRadius;
+          const angle = Math.atan2(dy, dx); // -PI..PI
+          const normAngle = (angle + Math.PI) / (Math.PI * 2);
+
+          // Hyper-speed warp rings flying outward from the center
+          const warpSpeed = now * 0.004 * speed;
+          const warpRings = ((normDist * 3.5 - warpSpeed) % 1.0 + 1.0) % 1.0;
+          const streak = Math.pow(Math.sin(warpRings * Math.PI), 4);
+
+          // Rotating stellar streaks
+          const starStreak = 0.5 + 0.5 * Math.sin(angle * 6 + warpSpeed * 1.5);
+          const combinedGlow = Math.max(0, Math.min(1.0, streak * 0.8 + starStreak * 0.35 * normDist));
+
+          brightFactor = (floor + (1 - floor) * combinedGlow) * intensity;
+          const colorPhase = ((normAngle + normDist * 0.5 + now * 0.0008 * speed) % 1.0 + 1.0) % 1.0;
+          rgb = samplePaletteRgb(palette, colorPhase, customRgb);
           break;
         }
 
         // --- QMK Cycling & Radial ---
         case 'qmk_cycle_all': {
-          const phase = (now * 0.0004 * speed) % 1.0;
+          const phase = ((now * 0.0004 * speed) % 1.0 + 1.0) % 1.0;
           brightFactor = intensity;
           rgb = samplePaletteRgb(palette, phase, customRgb);
           break;
         }
 
         case 'qmk_cycle_left_right': {
-          const phase = (dirCoord.primary + now * 0.0006 * speed) % 1.0;
+          const phase = ((dirCoord.primary + now * 0.0006 * speed) % 1.0 + 1.0) % 1.0;
           brightFactor = intensity;
           rgb = samplePaletteRgb(palette, phase, customRgb);
           break;
         }
 
         case 'qmk_cycle_up_down': {
-          const phase = (dirCoord.primary + now * 0.0006 * speed) % 1.0;
+          const phase = ((dirCoord.primary + now * 0.0006 * speed) % 1.0 + 1.0) % 1.0;
           brightFactor = intensity;
           rgb = samplePaletteRgb(palette, phase, customRgb);
           break;
@@ -868,14 +929,14 @@ class VisualizerEngineService {
 
         case 'qmk_rainbow_chevron': {
           const chevron = Math.abs(k.centerY - (this.maxY / 2)) * 0.5 + k.centerX * 0.1;
-          const phase = (chevron - now * 0.0006 * speed) % 1.0;
+          const phase = ((chevron - now * 0.0006 * speed) % 1.0 + 1.0) % 1.0;
           brightFactor = intensity;
           rgb = samplePaletteRgb(palette, phase, customRgb);
           break;
         }
 
         case 'qmk_cycle_out_in': {
-          const phase = (dirCoord.dist * 1.5 - now * 0.0008 * speed) % 1.0;
+          const phase = ((dirCoord.dist * 1.5 - now * 0.0008 * speed) % 1.0 + 1.0) % 1.0;
           brightFactor = intensity;
           rgb = samplePaletteRgb(palette, phase, customRgb);
           break;
@@ -885,7 +946,7 @@ class VisualizerEngineService {
           const dxDual = (this.maxX / 4) - Math.abs(k.centerX - (this.maxX / 2));
           const dyDual = k.centerY - (this.maxY / 2);
           const distDual = Math.sqrt(dxDual * dxDual + dyDual * dyDual);
-          const phase = (distDual * 0.4 - now * 0.0008 * speed) % 1.0;
+          const phase = ((distDual * 0.4 - now * 0.0008 * speed) % 1.0 + 1.0) % 1.0;
           brightFactor = intensity;
           rgb = samplePaletteRgb(palette, phase, customRgb);
           break;
@@ -893,7 +954,7 @@ class VisualizerEngineService {
 
         case 'qmk_cycle_pinwheel': {
           const angle = Math.atan2(k.centerY - (this.maxY / 2), k.centerX - (this.maxX / 2));
-          const phase = ((angle + Math.PI) / (Math.PI * 2) + now * 0.0006 * speed) % 1.0;
+          const phase = (((angle + Math.PI) / (Math.PI * 2) + now * 0.0006 * speed) % 1.0 + 1.0) % 1.0;
           brightFactor = intensity;
           rgb = samplePaletteRgb(palette, phase, customRgb);
           break;
@@ -901,7 +962,7 @@ class VisualizerEngineService {
 
         case 'qmk_cycle_spiral': {
           const angle = Math.atan2(k.centerY - (this.maxY / 2), k.centerX - (this.maxX / 2));
-          const phase = (dirCoord.dist * 1.2 + (angle / (Math.PI * 2)) - now * 0.0008 * speed) % 1.0;
+          const phase = ((dirCoord.dist * 1.2 + (angle / (Math.PI * 2)) - now * 0.0008 * speed) % 1.0 + 1.0) % 1.0;
           brightFactor = intensity;
           rgb = samplePaletteRgb(palette, phase, customRgb);
           break;
@@ -911,7 +972,8 @@ class VisualizerEngineService {
           const angleBeam = now * 0.001 * speed;
           const dx = k.centerX - (this.maxX / 2);
           const dy = k.centerY - (this.maxY / 2);
-          const proj = (dy * Math.cos(angleBeam) + dx * Math.sin(angleBeam)) / (this.maxX / 2);
+          const halfX = (this.maxX / 2) || 1;
+          const proj = (dy * Math.cos(angleBeam) + dx * Math.sin(angleBeam)) / halfX;
           const phase = ((proj % 1.0) + 1.0) % 1.0;
           brightFactor = intensity;
           rgb = samplePaletteRgb(palette, phase, customRgb);
@@ -922,7 +984,8 @@ class VisualizerEngineService {
           const angleBeam = now * 0.001 * speed;
           const dx = k.centerX - (this.maxX / 2);
           const dy = k.centerY - (this.maxY / 2);
-          const proj = (dy * 2 * Math.cos(angleBeam) + dx * 2 * Math.sin(angleBeam)) / (this.maxX / 2);
+          const halfX = (this.maxX / 2) || 1;
+          const proj = (dy * 2 * Math.cos(angleBeam) + dx * 2 * Math.sin(angleBeam)) / halfX;
           const phase = ((proj % 1.0) + 1.0) % 1.0;
           brightFactor = intensity;
           rgb = samplePaletteRgb(palette, phase, customRgb);
@@ -931,9 +994,11 @@ class VisualizerEngineService {
 
         case 'qmk_rainbow_pinwheels': {
           const angleBeam = now * 0.001 * speed;
-          const quadX = (k.centerX % (this.maxX / 2)) - (this.maxX / 4);
-          const quadY = (k.centerY % (this.maxY / 2)) - (this.maxY / 4);
-          const proj = (quadY * Math.cos(angleBeam) + quadX * Math.sin(angleBeam)) / (this.maxX / 4);
+          const halfX = (this.maxX / 2) || 1;
+          const halfY = (this.maxY / 2) || 1;
+          const quadX = (k.centerX % halfX) - (halfX / 2);
+          const quadY = (k.centerY % halfY) - (halfY / 2);
+          const proj = (quadY * Math.cos(angleBeam) + quadX * Math.sin(angleBeam)) / (halfX / 2 || 1);
           const phase = ((proj % 1.0) + 1.0) % 1.0;
           brightFactor = intensity;
           rgb = samplePaletteRgb(palette, phase, customRgb);
@@ -952,7 +1017,7 @@ class VisualizerEngineService {
           const swing = Math.sin(now * 0.002 * speed) * (this.maxX / 2);
           const diff = Math.abs(k.centerX - ((this.maxX / 2) + swing));
           brightFactor = intensity;
-          rgb = samplePaletteRgb(palette, 0.5 + (diff / this.maxX) * 0.5, customRgb);
+          rgb = samplePaletteRgb(palette, 0.5 + (diff / (this.maxX || 1)) * 0.5, customRgb);
           break;
         }
 
@@ -966,14 +1031,14 @@ class VisualizerEngineService {
         case 'qmk_hue_breathing': {
           const breath = Math.abs(Math.sin(now * 0.0015 * speed));
           brightFactor = intensity;
-          rgb = samplePaletteRgb(palette, (now * 0.0003 * speed + breath * 0.2) % 1.0, customRgb);
+          rgb = samplePaletteRgb(palette, ((now * 0.0003 * speed + breath * 0.2) % 1.0 + 1.0) % 1.0, customRgb);
           break;
         }
 
         case 'qmk_flower_blooming': {
           const angle = Math.atan2(k.centerY - (this.maxY / 2), k.centerX - (this.maxX / 2));
           const petal = Math.sin(angle * 6 + now * 0.002 * speed);
-          const bloom = (dirCoord.dist * 2.0 - petal * 0.5 - now * 0.001 * speed) % 1.0;
+          const bloom = ((dirCoord.dist * 2.0 - petal * 0.5 - now * 0.001 * speed) % 1.0 + 1.0) % 1.0;
           brightFactor = intensity;
           rgb = samplePaletteRgb(palette, bloom, customRgb);
           break;
@@ -982,7 +1047,7 @@ class VisualizerEngineService {
         case 'qmk_riverflow': {
           const flow = Math.sin(k.centerX * 0.6 + k.centerY * 0.3 + now * 0.003 * speed);
           brightFactor = (floor + (1 - floor) * (0.5 + 0.5 * flow)) * intensity;
-          rgb = samplePaletteRgb(palette, (k.centerX * 0.05 + now * 0.0005 * speed) % 1.0, customRgb);
+          rgb = samplePaletteRgb(palette, ((k.centerX * 0.05 + now * 0.0005 * speed) % 1.0 + 1.0) % 1.0, customRgb);
           break;
         }
 
@@ -1031,7 +1096,7 @@ class VisualizerEngineService {
           const wave = Math.sin(k.centerX * 0.8 - now * 0.004 * speed) * Math.cos(k.centerY * 0.6 - now * 0.003 * speed);
           const normWave = 0.5 + 0.5 * wave;
           brightFactor = (floor + (1 - floor) * normWave) * intensity;
-          rgb = samplePaletteRgb(palette, (k.centerX * 0.05 + normWave * 0.3) % 1.0, customRgb);
+          rgb = samplePaletteRgb(palette, ((k.centerX * 0.05 + normWave * 0.3) % 1.0 + 1.0) % 1.0, customRgb);
           break;
         }
 
@@ -1039,7 +1104,7 @@ class VisualizerEngineService {
           const fx = Math.floor(k.centerX * 2);
           const fy = Math.floor(k.centerY * 2);
           const ft = Math.floor(now * 0.004 * speed);
-          const frac = ((fx ^ fy ^ ft) % 8) / 8;
+          const frac = Math.abs(((fx ^ fy ^ ft) % 8) / 8);
           brightFactor = (floor + (1 - floor) * frac) * intensity;
           rgb = samplePaletteRgb(palette, frac, customRgb);
           break;
@@ -1058,43 +1123,43 @@ class VisualizerEngineService {
 
         // --- QMK Bands & Gradients ---
         case 'qmk_gradient_up_down': {
-          const pos = (k.centerY / this.maxY) * (speed * 0.8);
+          const pos = ((k.centerY / (this.maxY || 1)) * (speed * 0.8)) % 1.0;
           brightFactor = intensity;
           rgb = samplePaletteRgb(palette, pos, customRgb);
           break;
         }
 
         case 'qmk_gradient_left_right': {
-          const pos = (k.centerX / this.maxX) * (speed * 0.8);
+          const pos = ((k.centerX / (this.maxX || 1)) * (speed * 0.8)) % 1.0;
           brightFactor = intensity;
           rgb = samplePaletteRgb(palette, pos, customRgb);
           break;
         }
 
         case 'qmk_colorband_sat': {
-          const t = (now * 0.00035 * speed * 256) % 256;
+          const t = ((now * 0.00035 * speed * 256) % 256 + 256) % 256;
           const x255 = (k.qmkX * 228 / 224) + 28;
           const diff = Math.abs(x255 - t);
           const satVal = Math.max(0, 1.0 - (diff * 8.0 / 255.0));
-          const baseRgb = samplePaletteRgb(palette, k.centerX / this.maxX, customRgb);
+          const baseRgb = samplePaletteRgb(palette, k.centerX / (this.maxX || 1), customRgb);
           brightFactor = intensity;
           rgb = lerpColor([255, 255, 255], baseRgb, satVal);
           break;
         }
 
         case 'qmk_colorband_val': {
-          const t = (now * 0.00035 * speed * 256) % 256;
+          const t = ((now * 0.00035 * speed * 256) % 256 + 256) % 256;
           const x255 = (k.qmkX * 228 / 224) + 28;
           const diff = Math.abs(x255 - t);
           const val = Math.max(0, 1.0 - (diff * 8.0 / 255.0));
           brightFactor = (floor + (1 - floor) * val) * intensity;
-          rgb = samplePaletteRgb(palette, k.centerX / this.maxX, customRgb);
+          rgb = samplePaletteRgb(palette, k.centerX / (this.maxX || 1), customRgb);
           break;
         }
 
         case 'qmk_colorband_pinwheel_sat': {
           const angle = Math.atan2(k.centerY - (this.maxY / 2), k.centerX - (this.maxX / 2));
-          const normAngle = (angle + Math.PI) / (Math.PI * 2);
+          const normAngle = (((angle + Math.PI) / (Math.PI * 2)) % 1.0 + 1.0) % 1.0;
           const wave = 0.5 + 0.5 * Math.sin(angle * 3 - now * 0.004 * speed);
           const baseRgb = samplePaletteRgb(palette, normAngle, customRgb);
           brightFactor = intensity;
@@ -1104,7 +1169,7 @@ class VisualizerEngineService {
 
         case 'qmk_colorband_pinwheel_val': {
           const angle = Math.atan2(k.centerY - (this.maxY / 2), k.centerX - (this.maxX / 2));
-          const normAngle = (angle + Math.PI) / (Math.PI * 2);
+          const normAngle = (((angle + Math.PI) / (Math.PI * 2)) % 1.0 + 1.0) % 1.0;
           const wave = 0.5 + 0.5 * Math.sin(angle * 3 - now * 0.004 * speed);
           brightFactor = (floor + (1 - floor) * wave) * intensity;
           rgb = samplePaletteRgb(palette, normAngle, customRgb);
@@ -1145,7 +1210,7 @@ class VisualizerEngineService {
         }
 
         default: {
-          const phase = (dirCoord.primary + now * 0.0006 * speed) % 1.0;
+          const phase = ((dirCoord.primary + now * 0.0006 * speed) % 1.0 + 1.0) % 1.0;
           brightFactor = (floor + (1 - floor)) * intensity;
           rgb = samplePaletteRgb(palette, phase, customRgb);
           break;
@@ -1161,10 +1226,14 @@ class VisualizerEngineService {
   private _applyKeyStyle(k: KeyGeometry, r: number, g: number, b: number, bright: number): void {
     if (k.isKnob) return; // Rotary knob is a mechanical encoder without matrix RGB LED
 
-    const clampedBright = Math.max(0, Math.min(1.5, bright));
-    const finalR = Math.max(0, Math.min(255, Math.round(r * clampedBright)));
-    const finalG = Math.max(0, Math.min(255, Math.round(g * clampedBright)));
-    const finalB = Math.max(0, Math.min(255, Math.round(b * clampedBright)));
+    const safeBright = Number.isFinite(bright) ? Math.max(0, Math.min(1.5, bright)) : 0;
+    const safeR = Number.isFinite(r) ? r : 0;
+    const safeG = Number.isFinite(g) ? g : 0;
+    const safeB = Number.isFinite(b) ? b : 0;
+
+    const finalR = Math.max(0, Math.min(255, Math.round(safeR * safeBright)));
+    const finalG = Math.max(0, Math.min(255, Math.round(safeG * safeBright)));
+    const finalB = Math.max(0, Math.min(255, Math.round(safeB * safeBright)));
 
     k.curRgb = { r: finalR, g: finalG, b: finalB };
 
@@ -1177,10 +1246,10 @@ class VisualizerEngineService {
       return;
     }
 
-    const alpha = Math.max(0.2, Math.min(0.95, clampedBright));
+    const alpha = Math.max(0.2, Math.min(0.95, safeBright));
     k.el.style.backgroundColor = `rgba(${finalR}, ${finalG}, ${finalB}, ${alpha})`;
     k.el.style.borderColor = `rgba(${Math.min(255, finalR + 40)}, ${Math.min(255, finalG + 40)}, ${Math.min(255, finalB + 40)}, 0.85)`;
-    k.el.style.boxShadow = `0 0 ${Math.round(4 + clampedBright * 10)}px rgba(${finalR}, ${finalG}, ${finalB}, ${Math.min(1.0, clampedBright)})`;
+    k.el.style.boxShadow = `0 0 ${Math.round(4 + safeBright * 10)}px rgba(${finalR}, ${finalG}, ${finalB}, ${Math.min(1.0, safeBright)})`;
   }
 
   private _renderSidelightDom(now: number, config: any): void {
@@ -1237,16 +1306,17 @@ class VisualizerEngineService {
         const customRgb = hexToRgbList(config.audioSingleColor || '#00ffff');
         const dirCoord = getDirectedCoordinate(posX, posY, direction, this.maxX, this.maxY);
 
-        const phase = (dirCoord.primary - now * 0.0006 * speed + 1000) % 1.0;
+        const phase = ((dirCoord.primary - now * 0.0006 * speed) % 1.0 + 1.0) % 1.0;
         const bandVal = (this.frequencyBands[Math.min(15, Math.floor(normY * 16))] || 0) / 255;
         const bright = (floor + (1 - floor) * bandVal) * intensity;
         const rgb = samplePaletteRgb(palette, phase, customRgb);
         return {
-          r: Math.min(255, Math.round(rgb[0] * bright)),
-          g: Math.min(255, Math.round(rgb[1] * bright)),
-          b: Math.min(255, Math.round(rgb[2] * bright))
+          r: Math.max(0, Math.min(255, Math.round(rgb[0] * bright))),
+          g: Math.max(0, Math.min(255, Math.round(rgb[1] * bright))),
+          b: Math.max(0, Math.min(255, Math.round(rgb[2] * bright)))
         };
       } else {
+        const preset = config.softwareEffect || 'neonWave';
         const palette = config.softwarePalette || 'rainbow';
         const direction = config.softwareDirection || 'left_to_right';
         const speed = config.softwareSpeed || 1.0;
@@ -1255,14 +1325,38 @@ class VisualizerEngineService {
         const customRgb = hexToRgbList(config.softwareSingleColor || '#00ffff');
         const dirCoord = getDirectedCoordinate(posX, posY, direction, this.maxX, this.maxY);
 
-        const phase = (dirCoord.primary - now * 0.0008 * speed + 1000) % 1.0;
-        const waveSin = 0.5 + 0.5 * Math.sin(phase * Math.PI * 2);
-        const bright = (floor + (1 - floor) * waveSin) * intensity;
-        const rgb = samplePaletteRgb(palette, phase, customRgb);
+        let rgb: [number, number, number] = [0, 0, 0];
+        let brightFactor = intensity;
+
+        switch (preset) {
+          case 'fireEmber': {
+            const targetPal = (palette === 'rainbow' || !PALETTES[palette]) ? 'fire_ember' : palette;
+            const flicker = 0.6 + 0.4 * Math.sin(normY * 6.0 + now * 0.008 * speed);
+            brightFactor = (floor + (1 - floor) * Math.max(0, flicker)) * intensity;
+            const flamePhase = ((1.0 - normY * 0.8) + now * 0.002 * speed) % 1.0;
+            rgb = samplePaletteRgb(targetPal, flamePhase, customRgb);
+            break;
+          }
+          case 'hyperspaceWarp': {
+            const warpRings = (((normY * 3.0 - now * 0.004 * speed) % 1.0) + 1.0) % 1.0;
+            const streak = Math.pow(Math.sin(warpRings * Math.PI), 3);
+            brightFactor = (floor + (1 - floor) * streak) * intensity;
+            rgb = samplePaletteRgb(palette, ((normY + now * 0.001 * speed) % 1.0 + 1.0) % 1.0, customRgb);
+            break;
+          }
+          default: {
+            const phase = ((dirCoord.primary - now * 0.0008 * speed) % 1.0 + 1.0) % 1.0;
+            const waveSin = 0.5 + 0.5 * Math.sin(phase * Math.PI * 2);
+            brightFactor = (floor + (1 - floor) * waveSin) * intensity;
+            rgb = samplePaletteRgb(palette, phase, customRgb);
+            break;
+          }
+        }
+
         return {
-          r: Math.min(255, Math.round(rgb[0] * bright)),
-          g: Math.min(255, Math.round(rgb[1] * bright)),
-          b: Math.min(255, Math.round(rgb[2] * bright))
+          r: Math.max(0, Math.min(255, Math.round(rgb[0] * brightFactor))),
+          g: Math.max(0, Math.min(255, Math.round(rgb[1] * brightFactor))),
+          b: Math.max(0, Math.min(255, Math.round(rgb[2] * brightFactor)))
         };
       }
     }
@@ -1300,7 +1394,7 @@ class VisualizerEngineService {
     }
 
     if (mode === 'waveFlow') {
-      const phase = (normY - now * 0.001 * speed + 1000) % 1.0;
+      const phase = ((normY - now * 0.001 * speed) % 1.0 + 1.0) % 1.0;
       const rgb = samplePaletteRgb(palette, phase, customRgb);
       return {
         r: Math.min(255, Math.round(rgb[0] * intensity)),
@@ -1311,7 +1405,7 @@ class VisualizerEngineService {
 
     if (mode === 'waveCenter') {
       const distFromCenter = Math.abs(normY - 0.5) * 2;
-      const phase = (distFromCenter - now * 0.0012 * speed + 1000) % 1.0;
+      const phase = ((distFromCenter - now * 0.0012 * speed) % 1.0 + 1.0) % 1.0;
       const rgb = samplePaletteRgb(palette, phase, customRgb);
       return {
         r: Math.min(255, Math.round(rgb[0] * intensity)),
@@ -1322,7 +1416,7 @@ class VisualizerEngineService {
 
     if (mode === 'rhythmicPulse') {
       const pulseNorm = Math.max(0.1, this.beatDecay / 255);
-      const phase = (now * 0.0005 * speed) % 1.0;
+      const phase = ((now * 0.0005 * speed) % 1.0 + 1.0) % 1.0;
       const rgb = samplePaletteRgb(palette, phase, customRgb);
       return {
         r: Math.min(255, Math.round(rgb[0] * pulseNorm * intensity)),
@@ -1332,7 +1426,7 @@ class VisualizerEngineService {
     }
 
     // Default fallback
-    const phase = (normY - now * 0.0008 * speed + 1000) % 1.0;
+    const phase = ((normY - now * 0.0008 * speed) % 1.0 + 1.0) % 1.0;
     const rgb = samplePaletteRgb(palette, phase, customRgb);
     return {
       r: Math.min(255, Math.round(rgb[0] * intensity)),
