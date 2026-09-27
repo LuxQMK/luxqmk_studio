@@ -48,6 +48,11 @@ export const LightingView: React.FC = () => {
 
   const [isTemplatesOpen, setTemplatesOpen] = useState(false);
   const [isHelpOpen, setHelpOpen] = useState(false);
+  const isConnected = useDeviceStore((s) => s.isConnected);
+  const activeDescriptor = useDeviceStore((s) => s.activeDescriptor);
+  const desc = activeDescriptor || ALL_DEVICE_DESCRIPTORS.find((d) => d.id === presetLayoutId) || null;
+  const hasLighting = desc ? (desc.capabilities?.hasLighting !== false) : true;
+  const hasLogoBadge = isConnected ? (desc?.capabilities?.hasLogoBadgeLed === true) : true;
 
   // Synchronize lighting parameters directly from keyboard hardware on mount
   useEffect(() => {
@@ -56,10 +61,13 @@ export const LightingView: React.FC = () => {
     }
   }, []);
 
-  const layoutKeys = getLayoutForPreset(presetLayoutId);
+  useEffect(() => {
+    if (lightingSubTab === 'logo' && isConnected && desc && !desc.capabilities?.hasLogoBadgeLed) {
+      setLightingSubTab('backlight');
+    }
+  }, [lightingSubTab, isConnected, desc, setLightingSubTab]);
 
-  const activeDescriptor = useDeviceStore((s) => s.activeDescriptor);
-  const desc = activeDescriptor || ALL_DEVICE_DESCRIPTORS.find((d) => d.id === presetLayoutId) || null;
+  const layoutKeys = getLayoutForPreset(presetLayoutId);
   const hasSidelights = isSidelightSupported(presetLayoutId, desc);
 
   // Compute bounding box
@@ -266,8 +274,8 @@ export const LightingView: React.FC = () => {
         </svg>
       ),
     },
-    {
-      id: 'logo',
+    ...(hasLogoBadge ? [{
+      id: 'logo' as LightingSubTab,
       labelKey: 'tabLogo',
       icon: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -276,11 +284,8 @@ export const LightingView: React.FC = () => {
           <path d="M2 9h20"></path>
         </svg>
       ),
-    },
+    }] : []),
   ];
-
-  const isConnected = useDeviceStore((s) => s.isConnected);
-  const hasLighting = desc ? (desc.capabilities?.hasLighting !== false) : true;
 
   const currentEff = ALL_RGB_EFFECTS.find((e) => e.id === backlight.effect) || ALL_RGB_EFFECTS[13];
 
