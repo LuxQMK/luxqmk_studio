@@ -26,6 +26,10 @@ export interface VisualizerKey {
   isKnob?: boolean;
   isLogo?: boolean;
   el: HTMLElement | null;
+  lastR?: number;
+  lastG?: number;
+  lastB?: number;
+  lastTextColor?: string;
 }
 
 export interface SideDiffuser {
@@ -37,6 +41,9 @@ export interface SideDiffuser {
   dist: number;
   isLeft: boolean;
   el: HTMLElement | null;
+  lastR?: number;
+  lastG?: number;
+  lastB?: number;
 }
 
 const HARDWARE_GRADIENT_PRESETS: Array<Array<{ pos: number; r: number; g: number; b: number }> | null> = [
@@ -82,21 +89,34 @@ const HARDWARE_GRADIENT_PRESETS: Array<Array<{ pos: number; r: number; g: number
   ],
 ];
 
+const hexRgbCache = new Map<string, { r: number; g: number; b: number }>();
 export function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  let c = (hex || '#ffffff').replace('#', '');
+  if (!hex) return { r: 255, g: 255, b: 255 };
+  const cached = hexRgbCache.get(hex);
+  if (cached) return cached;
+
+  let c = hex.replace('#', '');
   if (c.length === 3) c = c.split('').map((x) => x + x).join('');
   const r = parseInt(c.substring(0, 2), 16);
   const g = parseInt(c.substring(2, 4), 16);
   const b = parseInt(c.substring(4, 6), 16);
-  return {
+  const res = {
     r: isNaN(r) ? 255 : Math.max(0, Math.min(255, r)),
     g: isNaN(g) ? 255 : Math.max(0, Math.min(255, g)),
     b: isNaN(b) ? 255 : Math.max(0, Math.min(255, b)),
   };
+  if (hexRgbCache.size > 200) hexRgbCache.clear();
+  hexRgbCache.set(hex, res);
+  return res;
 }
 
+const hexHsCache = new Map<string, [number, number]>();
 export function hexToHs(hex: string): [number, number] {
-  let c = (hex || '#ffffff').replace('#', '');
+  if (!hex) return [0, 255];
+  const cached = hexHsCache.get(hex);
+  if (cached) return cached;
+
+  let c = hex.replace('#', '');
   if (c.length === 3) c = c.split('').map((x) => x + x).join('');
   const r = parseInt(c.substring(0, 2), 16) / 255;
   const g = parseInt(c.substring(2, 4), 16) / 255;
@@ -117,7 +137,10 @@ export function hexToHs(hex: string): [number, number] {
     if (h < 0) h += 360;
   }
 
-  return [Math.round((h / 360) * 255), Math.round(s * 255)];
+  const res: [number, number] = [Math.round((h / 360) * 255), Math.round(s * 255)];
+  if (hexHsCache.size > 200) hexHsCache.clear();
+  hexHsCache.set(hex, res);
+  return res;
 }
 
 export function hsvToRgb(hByte: number, sByte: number, vByte: number): { r: number; g: number; b: number } {
@@ -166,6 +189,31 @@ export function hsvToRgb(hByte: number, sByte: number, vByte: number): { r: numb
   };
 }
 
+const parsedStopsCache = new WeakMap<any[], Array<{ pos: number; r: number; g: number; b: number }>>();
+
+function parseAndCacheStops(rawStops: any[]): Array<{ pos: number; r: number; g: number; b: number }> {
+  let cached = parsedStopsCache.get(rawStops);
+  if (cached) return cached;
+
+  cached = rawStops
+    .slice()
+    .sort((a, b) => (Number(a.pos) || 0) - (Number(b.pos) || 0))
+    .map((s) => {
+      const rgb = hexToRgb(s.color || '#ffffff');
+      const rawPos = Number(s.pos) || 0;
+      const normalizedPos = rawPos > 1 ? rawPos / (rawPos <= 100 ? 100 : 255) : rawPos;
+      return {
+        pos: Math.round(Math.max(0, Math.min(1, normalizedPos)) * 255),
+        r: rgb.r,
+        g: rgb.g,
+        b: rgb.b,
+      };
+    });
+
+  parsedStopsCache.set(rawStops, cached);
+  return cached;
+}
+
 function sampleGradient(
   presetId: number | string,
   phase: number,
@@ -179,40 +227,14 @@ function sampleGradient(
     const profIdx = numId - 8;
     const customStops = useLightingStore.getState().hardwareGradients?.[profIdx];
     if (customStops && customStops.length >= 2) {
-      stops = customStops
-        .slice()
-        .sort((a, b) => a.pos - b.pos)
-        .map((s) => {
-          const rgb = hexToRgb(s.color);
-          const rawPos = Number(s.pos) || 0;
-          const normalizedPos = rawPos > 1 ? rawPos / (rawPos <= 100 ? 100 : 255) : rawPos;
-          return {
-            pos: Math.round(Math.max(0, Math.min(1, normalizedPos)) * 255),
-            r: rgb.r,
-            g: rgb.g,
-            b: rgb.b,
-          };
-        });
+      stops = parseAndCacheStops(customStops);
     }
   } else if (!isNaN(numId) && numId > 0 && numId < HARDWARE_GRADIENT_PRESETS.length) {
     stops = HARDWARE_GRADIENT_PRESETS[numId];
   } else if (typeof presetId === 'string' && presetId.length > 0) {
     const studioGrad = useVisualizerStore.getState().customGradients.find((g) => g.id === presetId);
     if (studioGrad && studioGrad.stops && studioGrad.stops.length >= 2) {
-      stops = studioGrad.stops
-        .slice()
-        .sort((a, b) => a.pos - b.pos)
-        .map((s) => {
-          const rgb = hexToRgb(s.color);
-          const rawPos = Number(s.pos) || 0;
-          const normalizedPos = rawPos > 1 ? rawPos / (rawPos <= 100 ? 100 : 255) : rawPos;
-          return {
-            pos: Math.round(Math.max(0, Math.min(1, normalizedPos)) * 255),
-            r: rgb.r,
-            g: rgb.g,
-            b: rgb.b,
-          };
-        });
+      stops = parseAndCacheStops(studioGrad.stops);
     }
   }
 
@@ -546,11 +568,21 @@ export function useLightingVisualizer(
       });
     });
 
+    let lastFrameTime = 0;
+    const targetInterval = 1000 / 60; // 60 FPS cap (~16.6ms)
+
     const renderLoop = (timestamp: number) => {
       if (!isRunning) return;
 
+      const elapsed = timestamp - lastFrameTime;
+      if (elapsed < targetInterval - 1) {
+        animFrameRef.current = requestAnimationFrame(renderLoop);
+        return;
+      }
+      lastFrameTime = timestamp - (elapsed % targetInterval);
+
       const store = useLightingStore.getState();
-      const { backlight, reactive, isSimulatingFn, winLock, layerLighting } = store;
+      const { backlight, reactive, isSimulatingFn, winLock, layerLighting, logoLocks, sidelight } = store;
 
       const now = timestamp;
       const speed = Math.max(10, backlight.speed || 128);
@@ -564,8 +596,40 @@ export function useLightingVisualizer(
       const activeGrad = backlight.gradientPreset || 0;
       const spdFactor = Math.max(0.1, speed / 128);
 
-      // Filter expired hits (> 2.5s)
-      hitsRef.current = hitsRef.current.filter((h) => h && Number.isFinite(h.time) && (now - h.time) < 2500);
+      // In-place filter expired hits (> 2.5s) without array allocation
+      if (hitsRef.current.length > 0) {
+        let writeIdx = 0;
+        for (let hIdx = 0; hIdx < hitsRef.current.length; hIdx++) {
+          const h = hitsRef.current[hIdx];
+          if (h && Number.isFinite(h.time) && (now - h.time) < 2500) {
+            hitsRef.current[writeIdx++] = h;
+          }
+        }
+        hitsRef.current.length = writeIdx;
+      }
+
+      // Pre-compute state snapshots outside the key loop for maximum speed
+      const devStore = useDeviceStore.getState();
+      const uiStore = useUIStore.getState();
+      const keymapStore = useKeymapStore.getState();
+
+      const hwActiveLayer = devStore.activeLayer || 0;
+      const isLayersTab = uiStore.activeView === 'lighting' && uiStore.lightingSubTab === 'layers';
+      const activeLyr = isSimulatingFn ? 1 : (hwActiveLayer > 0 ? hwActiveLayer : (isLayersTab ? 1 : 0));
+      const isLayerActive = activeLyr > 0 && layerLighting.enable;
+
+      let layerTargetColorHex = '#ffffff';
+      if (activeLyr === 2) layerTargetColorHex = layerLighting.layer2Color || '#00ffff';
+      else if (activeLyr === 3) layerTargetColorHex = layerLighting.layer3Color || '#b400ff';
+      else layerTargetColorHex = layerLighting.layer1Color || '#ffffff';
+      const layerTargetRgb = hexToRgb(layerTargetColorHex);
+      const layerDimFactor = (layerLighting.dimLevel !== undefined ? layerLighting.dimLevel : 100) / 255;
+
+      const winLockColorRgb = hexToRgb(winLock.color || '#ff0000');
+      const hostLeds = devStore.hostLeds || { caps: false, num: false, scroll: false };
+      const currentSubTab = uiStore.lightingSubTab;
+      const activeView = uiStore.activeView;
+      const isLogoSubTab = activeView === 'lighting' && currentSubTab === 'logo';
 
       // Render each key
       for (let i = 0; i < visualizerKeys.length; i++) {
@@ -909,15 +973,10 @@ export function useLightingVisualizer(
         }
 
         // Layer simulation & hardware layer highlighting and dimming (1:1 QMK luxqmk.c parity)
-        const hwActiveLayer = useDeviceStore.getState().activeLayer || 0;
-        const isLayersTab = useUIStore.getState().activeView === 'lighting' && useUIStore.getState().lightingSubTab === 'layers';
-        const activeLyr = isSimulatingFn ? 1 : (hwActiveLayer > 0 ? hwActiveLayer : (isLayersTab ? 1 : 0));
-        const isLayerActive = activeLyr > 0 && layerLighting.enable;
-
         if (isLayerActive) {
           let isKeyProgrammed = false;
           if (k.matrix) {
-            const kc = useKeymapStore.getState().getKeycode(activeLyr, k.matrix[0], k.matrix[1]);
+            const kc = keymapStore.getKeycode(activeLyr, k.matrix[0], k.matrix[1]);
             if (kc !== 0x0000 && kc !== 0x0001) {
               isKeyProgrammed = true;
             }
@@ -928,18 +987,13 @@ export function useLightingVisualizer(
             }
           }
 
-          let layerTargetColor = layerLighting.layer1Color || '#ffffff';
-          if (activeLyr === 2) layerTargetColor = layerLighting.layer2Color || '#00ffff';
-          else if (activeLyr === 3) layerTargetColor = layerLighting.layer3Color || '#b400ff';
-
           if (isKeyProgrammed) {
-            rgb = hexToRgb(layerTargetColor);
+            rgb = layerTargetRgb;
           } else {
-            const dim = (layerLighting.dimLevel !== undefined ? layerLighting.dimLevel : 100) / 255;
             rgb = {
-              r: Math.round(rgb.r * dim),
-              g: Math.round(rgb.g * dim),
-              b: Math.round(rgb.b * dim),
+              r: Math.round(rgb.r * layerDimFactor),
+              g: Math.round(rgb.g * layerDimFactor),
+              b: Math.round(rgb.b * layerDimFactor),
             };
           }
         }
@@ -949,24 +1003,17 @@ export function useLightingVisualizer(
           if (winLock.mode === 1) {
             rgb = { r: 0, g: 0, b: 0 };
           } else if (winLock.mode === 2) {
-            rgb = hexToRgb(winLock.color || '#ff0000');
+            rgb = winLockColorRgb;
           }
         }
 
         // Logo LED Lock Indicator (1:1 QMK luxqmk.c parity)
         if (k.isLogo) {
-          const { logoLocks } = store;
-          const currentSubTab = useUIStore.getState().lightingSubTab;
-          const activeView = useUIStore.getState().activeView;
-          const mode = logoLocks?.mode ?? 1; // 0: RGB, 1: Indicator (RGB idle), 2: Indicator (Off idle)
-          const hostLeds = useDeviceStore.getState().hostLeds;
+          const mode = logoLocks?.mode ?? 1;
           const lockSum = (hostLeds.caps ? 1 : 0) | (hostLeds.num ? 2 : 0) | (hostLeds.scroll ? 4 : 0);
 
-          if (mode === 0) {
-            // Mode 0: Main RGB animation flows through Logo LED
-          } else if (mode === 1) {
-            // Mode 1: Lock Indicator with RGB idle
-            if (lockSum > 0 || (activeView === 'lighting' && currentSubTab === 'logo')) {
+          if (mode === 1) {
+            if (lockSum > 0 || isLogoSubTab) {
               const lockKeys = [
                 'colorCaps',
                 'colorCaps',
@@ -984,8 +1031,7 @@ export function useLightingVisualizer(
               rgb = hsvToRgb(lh, ls, lv);
             }
           } else if (mode === 2) {
-            // Mode 2: Lock Indicator with Off idle
-            if (lockSum > 0 || (activeView === 'lighting' && currentSubTab === 'logo')) {
+            if (lockSum > 0 || isLogoSubTab) {
               const lockKeys = [
                 'colorCaps',
                 'colorCaps',
@@ -1007,61 +1053,51 @@ export function useLightingVisualizer(
           }
         }
 
-        // Apply styles directly to element
+        // Apply styles directly to element with dirty check
         if (k.isLogo) {
           if (rgb.r === 0 && rgb.g === 0 && rgb.b === 0) {
-            k.el.style.backgroundColor = 'rgba(15, 20, 32, 0.9)';
-            k.el.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-            k.el.style.boxShadow = 'inset 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 0, 0, 0.5)';
+            if (k.lastR !== 0 || k.lastG !== 0 || k.lastB !== 0) {
+              k.lastR = 0;
+              k.lastG = 0;
+              k.lastB = 0;
+              k.el.style.backgroundColor = 'rgba(15, 20, 32, 0.9)';
+              k.el.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+              k.el.style.boxShadow = 'inset 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 0, 0, 0.5)';
+            }
           } else {
-            k.el.style.backgroundColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-            k.el.style.borderColor = `rgba(${Math.min(255, rgb.r + 60)}, ${Math.min(255, rgb.g + 60)}, ${Math.min(255, rgb.b + 60)}, 0.9)`;
-            k.el.style.boxShadow = `0 0 16px rgb(${rgb.r}, ${rgb.g}, ${rgb.b}), 0 0 28px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.55), inset 0 1px 2px rgba(255, 255, 255, 0.6)`;
+            if (k.lastR !== rgb.r || k.lastG !== rgb.g || k.lastB !== rgb.b) {
+              k.lastR = rgb.r;
+              k.lastG = rgb.g;
+              k.lastB = rgb.b;
+              k.el.style.backgroundColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+              k.el.style.borderColor = `rgba(${Math.min(255, rgb.r + 60)}, ${Math.min(255, rgb.g + 60)}, ${Math.min(255, rgb.b + 60)}, 0.9)`;
+              k.el.style.boxShadow = `0 0 16px rgb(${rgb.r}, ${rgb.g}, ${rgb.b}), 0 0 28px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.55), inset 0 1px 2px rgba(255, 255, 255, 0.6)`;
+            }
           }
         } else {
-          const avgBri = (rgb.r + rgb.g + rgb.b) / 3;
-          const glowAlpha = Math.min(0.85, (avgBri / 255) * 0.75);
-          const textColor = (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114) > 140 ? '#111827' : '#ffffff';
+          if (k.lastR !== rgb.r || k.lastG !== rgb.g || k.lastB !== rgb.b) {
+            k.lastR = rgb.r;
+            k.lastG = rgb.g;
+            k.lastB = rgb.b;
 
-          k.el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.85)`;
-          k.el.style.borderColor = `rgba(${Math.min(255, rgb.r + 40)}, ${Math.min(255, rgb.g + 40)}, ${Math.min(255, rgb.b + 40)}, 0.5)`;
-          k.el.style.boxShadow = `0 0 10px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${glowAlpha}), inset 0 1px 0 rgba(255, 255, 255, 0.2)`;
-          k.el.style.color = textColor;
+            const avgBri = (rgb.r + rgb.g + rgb.b) / 3;
+            const glowAlpha = Math.min(0.85, (avgBri / 255) * 0.75);
+            const textColor = (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114) > 140 ? '#111827' : '#ffffff';
+
+            k.el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.85)`;
+            k.el.style.borderColor = `rgba(${Math.min(255, rgb.r + 40)}, ${Math.min(255, rgb.g + 40)}, ${Math.min(255, rgb.b + 40)}, 0.5)`;
+            k.el.style.boxShadow = `0 0 10px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${glowAlpha}), inset 0 1px 0 rgba(255, 255, 255, 0.2)`;
+            if (k.lastTextColor !== textColor) {
+              k.lastTextColor = textColor;
+              k.el.style.color = textColor;
+            }
+          }
         }
       }
 
       // Render Left & Right Side Diffuser Lightbars
-      const { sidelight } = store;
       const isCustomSidelight = Boolean(sidelight?.customEnable);
-      const currentDeviceFamily = useDeviceStore.getState().activeDescriptor?.family;
-
-      if (sideDiffusers.length === 0) {
-        const sideEls = container.querySelectorAll<HTMLElement>('.side-diffuser-segment');
-        if (sideEls.length > 0) {
-          const cRect = container.getBoundingClientRect();
-          sideEls.forEach((el) => {
-            const id = el.getAttribute('data-key-id') || '';
-            const isLeft = el.classList.contains('side-diffuser-left');
-            const rect = el.getBoundingClientRect();
-            const relY = cRect.height > 0 ? (rect.top + rect.height / 2 - cRect.top) / cRect.height : 0.5;
-            const qmkX = isLeft ? 0 : 224;
-            const qmkY = Math.round(relY * 64);
-            const dx = qmkX - centerX;
-            const dy = qmkY - centerY;
-            sideDiffusers.push({
-              id,
-              qmkX,
-              qmkY,
-              dx,
-              dy,
-              dist: Math.sqrt(dx * dx + dy * dy),
-              isLeft,
-              el,
-            });
-          });
-        }
-      }
-
+      const currentDeviceFamily = devStore.activeDescriptor?.family;
       const leftCount = sideDiffusers.filter((d) => d.isLeft).length || 10;
       const rightCount = sideDiffusers.filter((d) => !d.isLeft).length || 10;
 
@@ -1319,14 +1355,19 @@ export function useLightingVisualizer(
           rgb = customRgb || hsvToRgb(h, sVal, v);
         }
 
-        if (rgb.r === 0 && rgb.g === 0 && rgb.b === 0) {
-          sd.el.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-          sd.el.style.boxShadow = 'none';
-          sd.el.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-        } else {
-          sd.el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.92)`;
-          sd.el.style.borderColor = `rgba(${Math.min(255, rgb.r + 50)}, ${Math.min(255, rgb.g + 50)}, ${Math.min(255, rgb.b + 50)}, 0.6)`;
-          sd.el.style.boxShadow = `0 0 10px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.85), 0 0 18px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.4)`;
+        if (sd.lastR !== rgb.r || sd.lastG !== rgb.g || sd.lastB !== rgb.b) {
+          sd.lastR = rgb.r;
+          sd.lastG = rgb.g;
+          sd.lastB = rgb.b;
+          if (rgb.r === 0 && rgb.g === 0 && rgb.b === 0) {
+            sd.el.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+            sd.el.style.boxShadow = 'none';
+            sd.el.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+          } else {
+            sd.el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.92)`;
+            sd.el.style.borderColor = `rgba(${Math.min(255, rgb.r + 50)}, ${Math.min(255, rgb.g + 50)}, ${Math.min(255, rgb.b + 50)}, 0.6)`;
+            sd.el.style.boxShadow = `0 0 10px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.85), 0 0 18px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.4)`;
+          }
         }
       }
 

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { useKeymapStore } from '../store/useKeymapStore';
 import { useDeviceStore } from '../store/useDeviceStore';
 import { getLayoutForPreset, getSideLedSegments, isSidelightSupported } from '../data/layouts';
@@ -29,10 +29,10 @@ export const KeymapView: React.FC = () => {
   const { t } = useI18n();
 
   const desc = activeDescriptor || ALL_DEVICE_DESCRIPTORS.find((d) => d.id === presetLayoutId) || null;
-  const hasSidelights = isSidelightSupported(presetLayoutId, desc);
+  const hasSidelights = useMemo(() => isSidelightSupported(presetLayoutId, desc), [presetLayoutId, desc]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const layoutKeys = getLayoutForPreset(presetLayoutId);
+  const layoutKeys = useMemo(() => getLayoutForPreset(presetLayoutId), [presetLayoutId]);
 
   useEffect(() => {
     if (useDeviceStore.getState().isConnected && useDeviceStore.getState().isViaSupported) {
@@ -40,19 +40,21 @@ export const KeymapView: React.FC = () => {
     }
   }, []);
 
-  // Compute bounding box
-  let maxX = 0;
-  let maxY = 0;
-  layoutKeys.forEach((k) => {
-    const rX = k.x + (k.w || 1);
-    const rY = k.y + (k.h || 1);
-    if (rX > maxX) maxX = rX;
-    if (rY > maxY) maxY = rY;
-  });
-
   const unitSize = 46;
-  const canvasWidth = Math.ceil(maxX * unitSize) + 36;
-  const canvasHeight = Math.ceil(maxY * unitSize) + 36;
+  const { canvasWidth, canvasHeight } = useMemo(() => {
+    let maxX = 0;
+    let maxY = 0;
+    layoutKeys.forEach((k) => {
+      const rX = k.x + (k.w || 1);
+      const rY = k.y + (k.h || 1);
+      if (rX > maxX) maxX = rX;
+      if (rY > maxY) maxY = rY;
+    });
+    return {
+      canvasWidth: Math.ceil(maxX * unitSize) + 36,
+      canvasHeight: Math.ceil(maxY * unitSize) + 36,
+    };
+  }, [layoutKeys]);
 
   const { wrapperRef, canvasRef } = useKeyboardFit(canvasWidth, canvasHeight);
 
