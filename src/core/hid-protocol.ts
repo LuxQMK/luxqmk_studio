@@ -96,8 +96,8 @@ export interface DipSwitchPosConfig {
 }
 
 export interface DipSwitchConfig {
-  posA: DipSwitchPosConfig; // active = false / 0 (Position 1 / Win)
-  posB: DipSwitchPosConfig; // active = true / 1 (Position 2 / Mac)
+  posA: DipSwitchPosConfig; // active = false / 0 (Position 1 / Left / Mac)
+  posB: DipSwitchPosConfig; // active = true / 1 (Position 2 / Right / Win)
 }
 
 export const RGB_MATRIX_VAL = {

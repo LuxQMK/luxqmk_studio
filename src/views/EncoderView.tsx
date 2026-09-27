@@ -103,6 +103,13 @@ export const EncoderView: React.FC = () => {
           >
             {t('layer2')}
           </button>
+          <button
+            type="button"
+            className={`layer-btn ${activeLayer === 3 ? 'active' : ''}`}
+            onClick={() => setActiveLayer(3)}
+          >
+            {t('layer3')}
+          </button>
         </div>
 
         {/* Encoder 3-Slot Configuration Widget */}

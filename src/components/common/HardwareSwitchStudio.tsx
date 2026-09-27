@@ -10,14 +10,14 @@ interface HardwareSwitchStudioProps {
 
 const DEFAULT_CONFIG: DipSwitchConfig = {
   posA: {
-    targetLayer: 0,
-    swapGuiAlt: 0,
+    targetLayer: 2,
+    swapGuiAlt: 1,
     perkeyProfile: 0xFF,
     winLockState: 0xFF,
   },
   posB: {
-    targetLayer: 0xFF,
-    swapGuiAlt: 1,
+    targetLayer: 0,
+    swapGuiAlt: 0,
     perkeyProfile: 0xFF,
     winLockState: 0xFF,
   },
@@ -177,14 +177,14 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
               padding: '0.4rem 0.85rem',
               borderRadius: '8px',
               background: liveState
-                ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.18), rgba(147, 51, 234, 0.1))'
-                : 'linear-gradient(135deg, rgba(0, 240, 255, 0.18), rgba(0, 150, 255, 0.1))',
+                ? 'linear-gradient(135deg, rgba(0, 240, 255, 0.18), rgba(0, 150, 255, 0.1))'
+                : 'linear-gradient(135deg, rgba(168, 85, 247, 0.18), rgba(147, 51, 234, 0.1))',
               border: liveState
-                ? '1px solid rgba(168, 85, 247, 0.4)'
-                : '1px solid rgba(0, 240, 255, 0.4)',
+                ? '1px solid rgba(0, 240, 255, 0.4)'
+                : '1px solid rgba(168, 85, 247, 0.4)',
               boxShadow: liveState
-                ? '0 0 12px rgba(168, 85, 247, 0.2)'
-                : '0 0 12px rgba(0, 240, 255, 0.2)',
+                ? '0 0 12px rgba(0, 240, 255, 0.2)'
+                : '0 0 12px rgba(168, 85, 247, 0.2)',
             }}
           >
             <span
@@ -192,14 +192,14 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
                 width: '8px',
                 height: '8px',
                 borderRadius: '50%',
-                background: liveState ? '#a855f7' : '#00f0ff',
-                boxShadow: liveState ? '0 0 8px #a855f7' : '0 0 8px #00f0ff',
+                background: liveState ? '#00f0ff' : '#a855f7',
+                boxShadow: liveState ? '0 0 8px #00f0ff' : '0 0 8px #a855f7',
                 animation: 'pulse 2s infinite',
               }}
             ></span>
             <span style={{ fontSize: '0.8rem', color: '#ffffff', fontWeight: 600 }}>
               {t('lblSwitchLiveState')}:{' '}
-              <strong style={{ color: liveState ? '#d8b4fe' : '#67e8f9' }}>
+              <strong style={{ color: liveState ? '#67e8f9' : '#d8b4fe' }}>
                 {liveState ? t('lblSwitchPosB') : t('lblSwitchPosA')}
               </strong>
             </span>
@@ -229,7 +229,7 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
         </div>
       </div>
 
-      {/* Two Columns: Position A (Win / Off) vs Position B (Mac / On) */}
+      {/* Two Columns: Position A (Mac / Left) vs Position B (Win / Right) */}
       <div
         style={{
           display: 'grid',
@@ -238,16 +238,16 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
           marginTop: '1.25rem',
         }}
       >
-        {/* Position A Card */}
+        {/* Position A Card (Left / Mac) */}
         <div
           style={{
             padding: '1.15rem',
             borderRadius: '10px',
             background: !liveState
-              ? 'rgba(0, 240, 255, 0.05)'
+              ? 'rgba(168, 85, 247, 0.06)'
               : 'rgba(255, 255, 255, 0.02)',
             border: !liveState
-              ? '1px solid rgba(0, 240, 255, 0.35)'
+              ? '1px solid rgba(168, 85, 247, 0.35)'
               : '1px solid rgba(255, 255, 255, 0.08)',
             position: 'relative',
             transition: 'all 0.25s ease',
@@ -257,15 +257,15 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span
                 style={{
-                  background: 'rgba(0, 240, 255, 0.2)',
-                  color: 'var(--accent-cyan, #00f0ff)',
+                  background: 'rgba(168, 85, 247, 0.2)',
+                  color: '#d8b4fe',
                   padding: '0.2rem 0.55rem',
                   borderRadius: '6px',
                   fontWeight: 700,
                   fontSize: '0.8rem',
                 }}
               >
-                POS 1
+                POS 1 (LEWA)
               </span>
               <div>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#ffffff' }}>
@@ -281,9 +281,9 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
                 style={{
                   fontSize: '0.7rem',
                   fontWeight: 700,
-                  background: 'rgba(0, 240, 255, 0.15)',
-                  color: 'var(--accent-cyan)',
-                  border: '1px solid rgba(0, 240, 255, 0.3)',
+                  background: 'rgba(168, 85, 247, 0.15)',
+                  color: '#d8b4fe',
+                  border: '1px solid rgba(168, 85, 247, 0.3)',
                   padding: '0.15rem 0.45rem',
                   borderRadius: '4px',
                   letterSpacing: '0.04em',
@@ -306,10 +306,10 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
                 onChange={(e) => handleUpdatePos('posA', 'targetLayer', parseInt(e.target.value, 10))}
                 style={{ width: '100%', padding: '0.45rem 0.65rem', fontSize: '0.85rem' }}
               >
+                <option value={2}>{t('layer2')}</option>
                 <option value={0}>{t('layer0')}</option>
                 <option value={1}>{t('layer1')}</option>
-                <option value={2}>{t('layer2')}</option>
-                <option value={3}>Layer 3</option>
+                <option value={3}>{t('layer3')}</option>
                 <option value={0xFF}>{t('optNoChange')}</option>
               </select>
             </div>
@@ -325,8 +325,8 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
                 onChange={(e) => handleUpdatePos('posA', 'swapGuiAlt', parseInt(e.target.value, 10))}
                 style={{ width: '100%', padding: '0.45rem 0.65rem', fontSize: '0.85rem' }}
               >
-                <option value={0}>{t('optModNormal')}</option>
                 <option value={1}>{t('optModMac')}</option>
+                <option value={0}>{t('optModNormal')}</option>
                 <option value={0xFF}>{t('optNoChange')}</option>
               </select>
             </div>
@@ -368,16 +368,16 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
           </div>
         </div>
 
-        {/* Position B Card */}
+        {/* Position B Card (Right / Win) */}
         <div
           style={{
             padding: '1.15rem',
             borderRadius: '10px',
             background: liveState
-              ? 'rgba(168, 85, 247, 0.06)'
+              ? 'rgba(0, 240, 255, 0.05)'
               : 'rgba(255, 255, 255, 0.02)',
             border: liveState
-              ? '1px solid rgba(168, 85, 247, 0.35)'
+              ? '1px solid rgba(0, 240, 255, 0.35)'
               : '1px solid rgba(255, 255, 255, 0.08)',
             position: 'relative',
             transition: 'all 0.25s ease',
@@ -387,15 +387,15 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span
                 style={{
-                  background: 'rgba(168, 85, 247, 0.2)',
-                  color: '#d8b4fe',
+                  background: 'rgba(0, 240, 255, 0.2)',
+                  color: 'var(--accent-cyan, #00f0ff)',
                   padding: '0.2rem 0.55rem',
                   borderRadius: '6px',
                   fontWeight: 700,
                   fontSize: '0.8rem',
                 }}
               >
-                POS 2
+                POS 2 (PRAWA)
               </span>
               <div>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#ffffff' }}>
@@ -411,9 +411,9 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
                 style={{
                   fontSize: '0.7rem',
                   fontWeight: 700,
-                  background: 'rgba(168, 85, 247, 0.15)',
-                  color: '#d8b4fe',
-                  border: '1px solid rgba(168, 85, 247, 0.3)',
+                  background: 'rgba(0, 240, 255, 0.15)',
+                  color: 'var(--accent-cyan)',
+                  border: '1px solid rgba(0, 240, 255, 0.3)',
                   padding: '0.15rem 0.45rem',
                   borderRadius: '4px',
                   letterSpacing: '0.04em',
@@ -436,11 +436,11 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
                 onChange={(e) => handleUpdatePos('posB', 'targetLayer', parseInt(e.target.value, 10))}
                 style={{ width: '100%', padding: '0.45rem 0.65rem', fontSize: '0.85rem' }}
               >
-                <option value={0xFF}>{t('optNoChange')}</option>
                 <option value={0}>{t('layer0')}</option>
-                <option value={1}>{t('layer1')}</option>
                 <option value={2}>{t('layer2')}</option>
-                <option value={3}>Layer 3</option>
+                <option value={1}>{t('layer1')}</option>
+                <option value={3}>{t('layer3')}</option>
+                <option value={0xFF}>{t('optNoChange')}</option>
               </select>
             </div>
 
@@ -455,8 +455,8 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
                 onChange={(e) => handleUpdatePos('posB', 'swapGuiAlt', parseInt(e.target.value, 10))}
                 style={{ width: '100%', padding: '0.45rem 0.65rem', fontSize: '0.85rem' }}
               >
-                <option value={1}>{t('optModMac')}</option>
                 <option value={0}>{t('optModNormal')}</option>
+                <option value={1}>{t('optModMac')}</option>
                 <option value={0xFF}>{t('optNoChange')}</option>
               </select>
             </div>
