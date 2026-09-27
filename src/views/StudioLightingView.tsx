@@ -300,8 +300,12 @@ export const StudioLightingView: React.FC = () => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      cursor: 'pointer',
                     }}
-                    title="Rotary Encoder Knob"
+                    onClick={() => {
+                      useUIStore.getState().setActiveView('encoder');
+                    }}
+                    title={t('navEncoder', 'Rotary Knob')}
                   />
                 );
               }

@@ -394,7 +394,7 @@ export const KeymapView: React.FC = () => {
                   <button
                     key={idx}
                     type="button"
-                    className={`keycap-btn keycap-knob ${isSelected ? 'selected' : ''}`}
+                    className="keycap-btn keycap-knob"
                     style={{
                       position: 'absolute',
                       left: `${left + (w - knobSize) / 2}px`,
@@ -403,8 +403,10 @@ export const KeymapView: React.FC = () => {
                       height: `${knobSize}px`,
                       borderRadius: '50%',
                     }}
-                    onClick={() => setSelectedKey(key)}
-                    title={info.name || 'Rotary Encoder Knob'}
+                    onClick={() => {
+                      useUIStore.getState().setActiveView('encoder');
+                    }}
+                    title={t('navEncoder', 'Rotary Knob')}
                   />
                 );
               }
