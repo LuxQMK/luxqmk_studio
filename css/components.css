@@ -124,10 +124,10 @@
 .keycap-knob,
 .keycap-btn.keycap-knob,
 .lighting-keycap.keycap-knob {
-  background: radial-gradient(circle at 35% 35%, #2a3b5c, #131b2e) !important;
+  background: radial-gradient(circle at 40% 35%, #3d4452, #21252d 80%) !important;
   border-radius: 50% !important;
-  border: 2px solid var(--secondary, #00f0ff) !important;
-  box-shadow: 0 0 14px var(--secondary-glow, rgba(0, 240, 255, 0.4)), inset 0 0 6px rgba(0, 240, 255, 0.2) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.15), inset 0 -1px 2px rgba(0, 0, 0, 0.4) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -136,20 +136,24 @@
   cursor: pointer;
   overflow: hidden;
   aspect-ratio: 1 / 1;
+  transition: transform 0.1s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
 .keycap-knob:hover,
 .lighting-keycap.keycap-knob:hover {
-  transform: translateY(-1px) scale(1.05) !important;
-  box-shadow: 0 0 18px var(--secondary-glow, rgba(0, 240, 255, 0.6)), inset 0 0 8px rgba(0, 240, 255, 0.3) !important;
+  transform: translateY(-1px) scale(1.03) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+}
+
+.keycap-knob.selected,
+.keycap-btn.keycap-knob.selected {
+  border-color: var(--accent-cyan, #00f0ff) !important;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
 }
 
 .knob-icon {
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--secondary, #00f0ff);
+  display: none !important;
 }
 
 /* Key Group Colors */

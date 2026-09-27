@@ -457,15 +457,7 @@ export const LightingView: React.FC = () => {
                       justifyContent: 'center',
                     }}
                     title="Rotary Encoder Knob"
-                  >
-                    <span className="knob-icon">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="9"></circle>
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <line x1="12" y1="3" x2="12" y2="7"></line>
-                      </svg>
-                    </span>
-                  </div>
+                  />
                 );
               }
 
