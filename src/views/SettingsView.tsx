@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useDeviceStore } from '../store/useDeviceStore';
 import { useI18n } from '../i18n';
+import { APP_VERSION } from '../version';
 
 export const SettingsView: React.FC = () => {
   const {
@@ -112,7 +113,7 @@ export const SettingsView: React.FC = () => {
       };
     }
     const REQUIRED_FW = { major: 0, minor: 3, patch: 2 };
-    const STUDIO_VERSION = '1.4.1';
+    const STUDIO_VERSION = APP_VERSION;
 
     if (!firmwareInfo) {
       return {
@@ -720,7 +721,7 @@ export const SettingsView: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
                   <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
-                    LuxQMK Studio {isDesktop ? `v${studioUpdate.currentVersion}` : `Desktop v${studioUpdate.latestVersion || '1.4.1'}`}
+                    LuxQMK Studio {isDesktop ? `v${studioUpdate.currentVersion}` : `Desktop v${studioUpdate.latestVersion || APP_VERSION}`}
                   </strong>
                   <span className={`badge-pill ${studioUpdate.isDownloaded ? 'badge-success' : isDesktop && studioUpdate.available ? 'badge-warning' : 'badge-success'}`}>
                     {isDesktop
@@ -795,11 +796,11 @@ export const SettingsView: React.FC = () => {
 
                 {!isDesktop && (
                   <a
-                    href={studioUpdate.downloadUrl || 'https://files.luxqmk.click/studio/v1.4.1/LuxQMK-Studio-Setup-1.4.1.exe'}
+                    href={studioUpdate.downloadUrl || `https://files.luxqmk.click/studio/v${APP_VERSION}/LuxQMK-Studio-Setup-${APP_VERSION}.exe`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn btn-primary"
-                    onClick={(e) => openExternalUrl(studioUpdate.downloadUrl || 'https://files.luxqmk.click/studio/v1.4.1/LuxQMK-Studio-Setup-1.4.1.exe', e)}
+                    onClick={(e) => openExternalUrl(studioUpdate.downloadUrl || `https://files.luxqmk.click/studio/v${APP_VERSION}/LuxQMK-Studio-Setup-${APP_VERSION}.exe`, e)}
                     style={{ textDecoration: 'none', padding: '0.55rem 1rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

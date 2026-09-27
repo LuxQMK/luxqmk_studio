@@ -1,6 +1,7 @@
 import React from 'react';
 import { useUIStore } from '../../store/useUIStore';
 import { useI18n } from '../../i18n';
+import { APP_VERSION } from '../../version';
 import logoSvg from '../../../assets/logo.svg';
 
 export const AboutModal: React.FC = () => {
@@ -24,7 +25,7 @@ export const AboutModal: React.FC = () => {
             </div>
             <div>
               <h3 className="modal-title">{t('modalAboutTitle')}</h3>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Version 1.4.1</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Version {APP_VERSION}</span>
             </div>
           </div>
           <button className="modal-close-btn" id="btnCloseAboutModal" onClick={() => setAboutOpen(false)}>

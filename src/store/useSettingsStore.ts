@@ -7,8 +7,9 @@ import { useUIStore } from './useUIStore';
 import { useKeymapStore } from './useKeymapStore';
 import { useLightingStore } from './useLightingStore';
 import { useI18n } from '../i18n';
+import { APP_VERSION } from '../version';
 
-const CURRENT_STUDIO_VERSION = '1.4.1';
+const CURRENT_STUDIO_VERSION = APP_VERSION;
 
 interface SettingsState {
   performance: PerformanceConfig;
@@ -150,10 +151,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     keyboardModel: 'Glorious GMMK 3 100% ANSI',
     mcuChip: 'WB32FQ95 (ARM Cortex-M4)',
     usbVidPid: 'VID: 0x504B | PID: 0x320F',
-    protocolVersion: 'LuxQMK v1.4.1 (VIA v12 / Raw HID)',
+    protocolVersion: `LuxQMK v${APP_VERSION} (VIA v12 / Raw HID)`,
     matrixLayout: '14 Rows × 8 Cols (112 Key Positions)',
     eepromSize: '1408 Bytes Dedicated Storage',
-    compatibilityStatus: 'Fully Compatible (LuxQMK Studio v1.4.1)',
+    compatibilityStatus: `Fully Compatible (LuxQMK Studio v${APP_VERSION})`,
   },
   flasher: {
     file: null,

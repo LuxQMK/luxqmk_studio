@@ -1,16 +1,22 @@
 {
   "name": "luxqmk-studio",
   "productName": "LuxQMK Studio",
-  "version": "1.4.1",
+  "version": "1.4.1-dev",
   "description": "LuxQMK Studio - Professional Keyboard Configuration, Audio Visualizer & RGB Suite",
   "main": "main.js",
   "scripts": {
+    "version:sync": "node scripts/sync-version.js",
+    "predev": "node scripts/sync-version.js",
     "dev": "vite",
+    "prebuild": "node scripts/sync-version.js",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "prestart": "node scripts/sync-version.js",
     "start": "electron .",
     "test": "node test_suite.js",
+    "predist": "node scripts/sync-version.js",
     "dist": "npm run build && electron-builder --win nsis --publish never",
+    "predist:installer": "node scripts/sync-version.js",
     "dist:installer": "npm run build && electron-builder --win nsis --publish never"
   },
   "build": {
