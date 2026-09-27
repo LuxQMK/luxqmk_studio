@@ -33,6 +33,7 @@ interface SettingsState {
   cancelFlash: () => void;
   checkCloudUpdates: () => Promise<void>;
   checkStudioUpdates: () => Promise<void>;
+  setIncludeBeta: (enabled: boolean) => Promise<void>;
   startStudioDownload: () => Promise<void>;
   applyStudioUpdate: () => Promise<void>;
   applyCloudFirmware: (entry?: CatalogKeyboardEntry) => Promise<void>;
@@ -44,6 +45,19 @@ function setupUpdaterListener(set: any) {
   if (isUpdaterListenerAttached) return;
   if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.onUpdateStatus === 'function') {
     isUpdaterListenerAttached = true;
+
+    // Sync initial prerelease setting from Electron main process
+    if (typeof window.electronAPI.getAllowPrerelease === 'function') {
+      window.electronAPI.getAllowPrerelease().then((isAllowed) => {
+        if (typeof isAllowed === 'boolean') {
+          set((state: any) => ({ studioUpdate: { ...state.studioUpdate, includeBeta: isAllowed } }));
+          try {
+            localStorage.setItem('luxqmk_include_beta', isAllowed ? '1' : '0');
+          } catch (e) {}
+        }
+      }).catch(() => {});
+    }
+
     window.electronAPI.onUpdateStatus((data: any) => {
       console.log('[Updater Status Event]:', data);
       if (data.status === 'checking') {
@@ -111,6 +125,14 @@ function setupUpdaterListener(set: any) {
       }
     });
   }
+}
+
+function getInitialIncludeBeta(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem('luxqmk_include_beta') === '1';
+  } catch (e) {}
+  return false;
 }
 
 async function waitForKeyboardReconnect(timeoutMs = 25000): Promise<boolean> {
@@ -181,6 +203,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     downloadSpeedText: '',
     isDownloaded: false,
     error: null,
+    includeBeta: getInitialIncludeBeta(),
+    isPrerelease: false,
     currentVersion: CURRENT_STUDIO_VERSION,
     latestVersion: CURRENT_STUDIO_VERSION,
     releaseTag: `v${CURRENT_STUDIO_VERSION}`,
@@ -561,8 +585,25 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     useUIStore.getState().showToast(useI18n.getState().t('toastUpgradeCancelled'), 'warning');
   },
 
+  setIncludeBeta: async (enabled: boolean) => {
+    try {
+      localStorage.setItem('luxqmk_include_beta', enabled ? '1' : '0');
+    } catch (e) {}
+    set((state) => ({ studioUpdate: { ...state.studioUpdate, includeBeta: enabled } }));
+    if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.setAllowPrerelease === 'function') {
+      try {
+        await window.electronAPI.setAllowPrerelease(enabled);
+      } catch (e) {
+        console.warn('Failed to set allowPrerelease in Electron:', e);
+      }
+    }
+    // Re-check studio updates immediately with new channel preference
+    get().checkStudioUpdates();
+  },
+
   checkStudioUpdates: async () => {
     setupUpdaterListener(set);
+    const { includeBeta } = get().studioUpdate;
     set((state) => ({ studioUpdate: { ...state.studioUpdate, isChecking: true, error: null } }));
 
     if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.checkForStudioUpdates === 'function') {
@@ -577,7 +618,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     }
 
     try {
-      const info = await catalogService.getStudioVersion();
+      const info = await catalogService.getStudioVersion(true, includeBeta);
       if (info) {
         const isNewer = catalogService.hasNewerStudioVersion(CURRENT_STUDIO_VERSION, info);
         set((state) => ({
@@ -588,6 +629,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
             latestVersion: info.version || state.studioUpdate.latestVersion,
             releaseTag: info.release_tag || `v${info.version}`,
             releaseDate: info.release_date || state.studioUpdate.releaseDate,
+            isPrerelease: Boolean(info.is_prerelease),
             downloadUrl: info.downloads?.windows_installer || `https://files.luxqmk.click/studio/${info.release_tag}/LuxQMK-Studio-Setup-${info.version}.exe`,
             webAppUrl: info.downloads?.web_app || 'https://studio.luxqmk.click',
             changelog: info.changelog || [],

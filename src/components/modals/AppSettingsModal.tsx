@@ -6,7 +6,7 @@ import { APP_VERSION } from '../../version';
 
 export const AppSettingsModal: React.FC = () => {
   const { isAppSettingsOpen, setAppSettingsOpen, showToast } = useUIStore();
-  const { studioUpdate, checkCloudUpdates, startStudioDownload, applyStudioUpdate } = useSettingsStore();
+  const { studioUpdate, checkCloudUpdates, startStudioDownload, applyStudioUpdate, setIncludeBeta } = useSettingsStore();
   const { language, setLanguage, t } = useI18n();
 
   const isDesktop = typeof window !== 'undefined' && !!window.electronAPI && !!window.electronAPI.isDesktop;
@@ -28,6 +28,17 @@ export const AppSettingsModal: React.FC = () => {
         console.error('Failed to set autostart:', err);
       }
     }
+  };
+
+  const handleToggleIncludeBeta = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextVal = e.target.checked;
+    await setIncludeBeta(nextVal);
+    showToast(
+      nextVal
+        ? (language === 'pl' ? 'Włączono kanał testowy Beta. Sprawdzanie wydań...' : 'Beta channel enabled. Checking preview builds...')
+        : (language === 'pl' ? 'Przełączono na kanał stabilny.' : 'Switched to stable channel.'),
+      'info'
+    );
   };
 
   const handleOpenAppData = async () => {
@@ -191,7 +202,42 @@ export const AppSettingsModal: React.FC = () => {
             </>
           )}
 
-          {/* 3. Studio App Updates & Environment Section */}
+          {/* 3. Beta / Prerelease Channel Toggle */}
+          <div className="modal-section" id="appBetaUpdatesModalSection">
+            <div className="modal-section-title">
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10 2v7.31"></path>
+                  <path d="M14 9.3V1.99"></path>
+                  <path d="M8.5 2h7"></path>
+                  <path d="M14 9.3a6.5 6.5 0 1 1-4 0"></path>
+                  <path d="M5.52 16h12.96"></path>
+                </svg>
+              </span>
+              <span>{t('lblIncludeBetaUpdates')}</span>
+            </div>
+            <div className="modal-section-content">
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '0.6rem' }}>
+                {t('lblIncludeBetaUpdatesDesc')}
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                <label className="switch" style={{ margin: 0 }}>
+                  <input
+                    type="checkbox"
+                    id="chkAppIncludeBetaModal"
+                    checked={studioUpdate.includeBeta}
+                    onChange={handleToggleIncludeBeta}
+                  />
+                  <span className="slider"></span>
+                </label>
+                <span id="lblAppBetaChannelStatus" style={{ fontSize: '0.85rem', fontWeight: 500, color: studioUpdate.includeBeta ? 'var(--accent-purple, #bd00ff)' : 'var(--text-muted)' }}>
+                  {studioUpdate.includeBeta ? t('lblChannelBeta') : t('lblChannelStable')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Studio App Updates & Environment Section */}
           <div className="modal-section">
             <div className="modal-section-title">
               <span>
@@ -225,23 +271,30 @@ export const AppSettingsModal: React.FC = () => {
                       <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)' }}>
                         LuxQMK Studio {isDesktop ? `v${studioUpdate.currentVersion || APP_VERSION}` : `Web (v${APP_VERSION})`}
                       </strong>
-                      <span className={`badge-pill ${studioUpdate.isDownloaded ? 'badge-success' : isDesktop && studioUpdate.available ? 'badge-warning' : 'badge-success'}`}>
+                      <span className={`badge-pill ${studioUpdate.isDownloaded ? 'badge-success' : isDesktop && studioUpdate.available ? (studioUpdate.isPrerelease ? 'badge-warning' : 'badge-warning') : 'badge-success'}`}>
                         {isDesktop
                           ? (studioUpdate.isDownloaded
                               ? t('lblDownloadedBadge', 'Ready to Install')
                               : studioUpdate.available
-                                ? `New: v${studioUpdate.latestVersion}`
+                                ? `${studioUpdate.isPrerelease ? 'Beta: ' : 'New: '}v${studioUpdate.latestVersion}`
                                 : t('lblStudioUpToDate'))
                           : t('lblAppWebModeBadge')}
                       </span>
+                      {studioUpdate.includeBeta && (
+                        <span className="badge-pill badge-neutral" style={{ fontSize: '0.7rem', borderColor: 'rgba(189, 0, 255, 0.4)', color: '#d066ff' }}>
+                          {t('lblChannelBeta')}
+                        </span>
+                      )}
                     </div>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
                       {isDesktop
                         ? (studioUpdate.isDownloaded
                             ? t('lblUpdateReadyToInstall', 'Update downloaded! Restart to apply changes.')
                             : studioUpdate.available
-                              ? t('lblStudioUpdateAvailable')
-                              : `Latest cloud manifest from files.luxqmk.click (${studioUpdate.releaseTag || `v${APP_VERSION}`})`)
+                              ? (studioUpdate.isPrerelease
+                                  ? (language === 'pl' ? `Dostępne nowe wydanie testowe (${studioUpdate.releaseTag || `v${studioUpdate.latestVersion}`})` : `New preview release available (${studioUpdate.releaseTag || `v${studioUpdate.latestVersion}`})`)
+                                  : t('lblStudioUpdateAvailable'))
+                              : `${language === 'pl' ? 'Oficjalny rejestr wydań' : 'Official release manifest'} (${studioUpdate.releaseTag || `v${APP_VERSION}`})`)
                         : t('lblAppWebModeDesc')}
                     </span>
                   </div>

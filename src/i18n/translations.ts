@@ -748,7 +748,12 @@ export const translations = {
     "lblCurrentVersion": "Current Version",
     "lblNewVersion": "New Version",
     "lblChangelog": "What's new in this release:",
-    "btnLater": "Later"
+    "btnLater": "Later",
+    "lblIncludeBetaUpdates": "Receive Beta & Preview Updates",
+    "lblIncludeBetaUpdatesDesc": "Enable early access to experimental preview builds, new features, and bug fixes before official stable releases.",
+    "lblChannelBeta": "Beta Channel",
+    "lblChannelStable": "Stable Channel",
+    "lblPrereleaseBadge": "Pre-release / Beta"
   },
   "pl": {
     "appName": "LuxQMK Studio",
@@ -1498,7 +1503,12 @@ export const translations = {
     "lblCurrentVersion": "Bieżąca wersja",
     "lblNewVersion": "Nowa wersja",
     "lblChangelog": "Co nowego w tej wersji:",
-    "btnLater": "Później"
+    "btnLater": "Później",
+    "lblIncludeBetaUpdates": "Otrzymuj wersje testowe (Beta)",
+    "lblIncludeBetaUpdatesDesc": "Włącz dostęp do wczesnych wersji testowych, nowych eksperymentalnych funkcji i poprawek przed oficjalnymi wydaniami stabilnymi.",
+    "lblChannelBeta": "Kanał Beta",
+    "lblChannelStable": "Kanał Stabilny",
+    "lblPrereleaseBadge": "Wersja testowa / Beta"
   }
 } as const;
 

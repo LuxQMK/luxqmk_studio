@@ -43,6 +43,7 @@ export interface StudioVersionInfo {
   release_tag: string;
   release_name?: string;
   release_date?: string;
+  is_prerelease?: boolean;
   min_compatible_firmware?: string;
   changelog?: string[];
   downloads?: {
@@ -59,7 +60,8 @@ const FIRMWARE_CATALOG_URLS = [
   'https://luxqmk-files.pages.dev/catalog.json',
 ];
 
-const STUDIO_GITHUB_API_URL = 'https://api.github.com/repos/LuxQMK/luxqmk_studio/releases/latest';
+const STUDIO_GITHUB_RELEASES_URL = 'https://api.github.com/repos/LuxQMK/luxqmk_studio/releases?per_page=10';
+const STUDIO_GITHUB_LATEST_URL = 'https://api.github.com/repos/LuxQMK/luxqmk_studio/releases/latest';
 
 const STUDIO_VERSION_URLS = [
   'https://files.luxqmk.click/studio/version.json',
@@ -128,6 +130,7 @@ class CatalogService {
   private lastCatalogFetchTime = 0;
   private cachedStudioVersion: StudioVersionInfo | null = null;
   private lastStudioFetchTime = 0;
+  private lastIncludeBeta = false;
   private readonly CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes cache
 
   /**
@@ -160,52 +163,63 @@ class CatalogService {
 
   /**
    * Fetches the latest LuxQMK Studio version manifest from GitHub Releases API or files.luxqmk.click.
+   * If includeBeta is true, checks prereleases and beta versions as well as stable releases.
    */
-  async getStudioVersion(forceRefresh = false): Promise<StudioVersionInfo | null> {
+  async getStudioVersion(forceRefresh = false, includeBeta = false): Promise<StudioVersionInfo | null> {
     const now = Date.now();
-    if (!forceRefresh && this.cachedStudioVersion && now - this.lastStudioFetchTime < this.CACHE_TTL_MS) {
+    if (!forceRefresh && this.cachedStudioVersion && this.lastIncludeBeta === includeBeta && now - this.lastStudioFetchTime < this.CACHE_TTL_MS) {
       return this.cachedStudioVersion;
     }
 
-    // 1. Try official GitHub Releases API (Instant synchronization upon tag push)
+    // 1. Try official GitHub Releases API
     try {
-      const res = await fetch(STUDIO_GITHUB_API_URL, {
+      // If includeBeta is enabled, fetch release list and pick the newest release (including prerelease)
+      // If includeBeta is false, fetch release list and pick the newest stable release (prerelease: false)
+      const res = await fetch(STUDIO_GITHUB_RELEASES_URL, {
         headers: { Accept: 'application/vnd.github.v3+json' },
       });
       if (res.ok) {
-        const gh = await res.json();
-        if (gh && gh.tag_name) {
-          const cleanVersion = gh.tag_name.replace(/^v/i, '').trim();
-          const installerAsset = gh.assets?.find((a: any) =>
-            a.name && (a.name.endsWith('.exe') || a.name.includes('Setup'))
-          );
+        const releases = await res.json();
+        if (Array.isArray(releases) && releases.length > 0) {
+          const targetRelease = includeBeta
+            ? releases.find((r: any) => !r.draft)
+            : releases.find((r: any) => !r.draft && !r.prerelease);
 
-          const changelogLines: string[] = gh.body
-            ? gh.body
-                .split('\n')
-                .map((l: string) => l.trim())
-                .filter((l: string) => l.startsWith('-') || l.startsWith('*'))
-                .map((l: string) => l.replace(/^[-*]\s*/, '').trim())
-            : [];
+          if (targetRelease && targetRelease.tag_name) {
+            const cleanVersion = targetRelease.tag_name.replace(/^v/i, '').trim();
+            const installerAsset = targetRelease.assets?.find((a: any) =>
+              a.name && (a.name.endsWith('.exe') || a.name.includes('Setup'))
+            );
 
-          const info: StudioVersionInfo = {
-            version: cleanVersion,
-            release_tag: gh.tag_name,
-            release_name: gh.name || `LuxQMK Studio ${gh.tag_name}`,
-            release_date: gh.published_at || new Date().toISOString(),
-            min_compatible_firmware: '0.3.3',
-            changelog: changelogLines,
-            downloads: {
-              windows_installer:
-                installerAsset?.browser_download_url ||
-                `https://github.com/LuxQMK/luxqmk_studio/releases/download/${gh.tag_name}/LuxQMK-Studio-Setup-${cleanVersion}.exe`,
-              web_app: 'https://studio.luxqmk.click',
-            },
-          };
+            const changelogLines: string[] = targetRelease.body
+              ? targetRelease.body
+                  .split('\n')
+                  .map((l: string) => l.trim())
+                  .filter((l: string) => l.startsWith('-') || l.startsWith('*'))
+                  .map((l: string) => l.replace(/^[-*]\s*/, '').trim())
+              : [];
 
-          this.cachedStudioVersion = info;
-          this.lastStudioFetchTime = now;
-          return info;
+            const info: StudioVersionInfo = {
+              version: cleanVersion,
+              release_tag: targetRelease.tag_name,
+              release_name: targetRelease.name || `LuxQMK Studio ${targetRelease.tag_name}`,
+              release_date: targetRelease.published_at || new Date().toISOString(),
+              is_prerelease: Boolean(targetRelease.prerelease),
+              min_compatible_firmware: '0.3.3',
+              changelog: changelogLines,
+              downloads: {
+                windows_installer:
+                  installerAsset?.browser_download_url ||
+                  `https://github.com/LuxQMK/luxqmk_studio/releases/download/${targetRelease.tag_name}/LuxQMK-Studio-Setup-${cleanVersion}.exe`,
+                web_app: 'https://studio.luxqmk.click',
+              },
+            };
+
+            this.cachedStudioVersion = info;
+            this.lastStudioFetchTime = now;
+            this.lastIncludeBeta = includeBeta;
+            return info;
+          }
         }
       }
     } catch (e) {
@@ -221,6 +235,7 @@ class CatalogService {
           if (data && data.version) {
             this.cachedStudioVersion = data;
             this.lastStudioFetchTime = now;
+            this.lastIncludeBeta = includeBeta;
             return data;
           }
         }

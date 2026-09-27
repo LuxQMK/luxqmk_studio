@@ -39,6 +39,8 @@ interface Window {
     checkForStudioUpdates: () => Promise<{ success: boolean; updateInfo?: any; error?: string }>;
     downloadStudioUpdate: () => Promise<{ success: boolean; error?: string }>;
     quitAndInstallStudioUpdate: () => Promise<{ success: boolean }>;
+    setAllowPrerelease: (enabled: boolean) => Promise<{ success: boolean; allowPrerelease: boolean }>;
+    getAllowPrerelease: () => Promise<boolean>;
     onUpdateStatus: (callback: (data: { status: string; percent?: number; bytesPerSecond?: number; transferred?: number; total?: number; version?: string; releaseDate?: string; releaseNotes?: any; error?: string }) => void) => () => void;
   };
 }
