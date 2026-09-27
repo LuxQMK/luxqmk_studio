@@ -432,12 +432,15 @@ export const KeymapView: React.FC = () => {
                 );
               }
 
-              const isTrns = activeLayer > 0 && (kc === 0x0001 || kc === 1);
+              const isBaseLayer = activeLayer === 0 || activeLayer === 2;
+              const isTrns = kc === 0x0001 || kc === 1;
               const shortLabel = isTrns ? '▽' : getShortKeycodeLabel(info);
               const defaultKc = (key as any).defaultKeycode;
 
               // Determine if this key on activeLayer is custom-mapped away from default
-              const isCustom = activeLayer > 0 ? !isTrns : (defaultKc !== undefined && kc !== defaultKc && kc !== 0x0000);
+              const isCustom = isBaseLayer
+                ? (defaultKc !== undefined && kc !== defaultKc && kc !== 0x0000 && !isTrns)
+                : !isTrns;
               const isSingleLegend = !isCustom && !isTrns;
               const fontClass = getFontSizeClass(shortLabel);
 
