@@ -112,7 +112,7 @@ export const SettingsView: React.FC = () => {
       };
     }
     const REQUIRED_FW = { major: 0, minor: 3, patch: 2 };
-    const STUDIO_VERSION = '1.4.1';
+    const STUDIO_VERSION = '1.4.1-dev';
 
     if (!firmwareInfo) {
       return {

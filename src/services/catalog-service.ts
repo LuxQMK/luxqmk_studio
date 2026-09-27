@@ -65,28 +65,51 @@ const STUDIO_VERSION_URLS = [
   'https://luxqmk-files.pages.dev/studio/version.json',
 ];
 
-export function parseSemVer(v: string | number | null | undefined): [number, number, number] {
-  if (v === null || v === undefined) return [0, 0, 0];
+export interface ParsedSemVer {
+  major: number;
+  minor: number;
+  patch: number;
+  prerelease?: string;
+}
+
+export function parseSemVer(v: string | number | null | undefined): ParsedSemVer {
+  if (v === null || v === undefined) return { major: 0, minor: 0, patch: 0 };
   const clean = String(v).replace(/^v/i, '').trim();
-  const parts = clean.split('.').map((p) => parseInt(p, 10) || 0);
-  return [parts[0] || 0, parts[1] || 0, parts[2] || 0];
+  const [versionCore, ...prereleaseParts] = clean.split('-');
+  const prerelease = prereleaseParts.join('-');
+  const parts = versionCore.split('.').map((p) => parseInt(p, 10) || 0);
+  return {
+    major: parts[0] || 0,
+    minor: parts[1] || 0,
+    patch: parts[2] || 0,
+    prerelease: prerelease || undefined,
+  };
 }
 
 export function compareSemVer(
-  v1: string | { major: number; minor: number; patch: number } | null | undefined,
-  v2: string | { major: number; minor: number; patch: number } | null | undefined
+  v1: string | { major: number; minor: number; patch: number; prerelease?: string } | null | undefined,
+  v2: string | { major: number; minor: number; patch: number; prerelease?: string } | null | undefined
 ): number {
-  const [maj1, min1, pat1] = typeof v1 === 'object' && v1 !== null
-    ? [v1.major || 0, v1.minor || 0, v1.patch || 0]
+  const p1 = typeof v1 === 'object' && v1 !== null && 'major' in v1
+    ? { major: v1.major || 0, minor: v1.minor || 0, patch: v1.patch || 0, prerelease: (v1 as any).prerelease }
     : parseSemVer(v1);
 
-  const [maj2, min2, pat2] = typeof v2 === 'object' && v2 !== null
-    ? [v2.major || 0, v2.minor || 0, v2.patch || 0]
+  const p2 = typeof v2 === 'object' && v2 !== null && 'major' in v2
+    ? { major: v2.major || 0, minor: v2.minor || 0, patch: v2.patch || 0, prerelease: (v2 as any).prerelease }
     : parseSemVer(v2);
 
-  if (maj1 !== maj2) return maj1 - maj2;
-  if (min1 !== min2) return min1 - min2;
-  return pat1 - pat2;
+  if (p1.major !== p2.major) return p1.major - p2.major;
+  if (p1.minor !== p2.minor) return p1.minor - p2.minor;
+  if (p1.patch !== p2.patch) return p1.patch - p2.patch;
+
+  // SemVer Rule: No prerelease (e.g. 1.4.1) is GREATER than a prerelease (e.g. 1.4.1-dev)
+  if (!p1.prerelease && p2.prerelease) return 1;
+  if (p1.prerelease && !p2.prerelease) return -1;
+  if (p1.prerelease && p2.prerelease) {
+    return p1.prerelease.localeCompare(p2.prerelease);
+  }
+
+  return 0;
 }
 
 export async function computeSha256(buffer: ArrayBuffer): Promise<string> {
