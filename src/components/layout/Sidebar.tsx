@@ -28,9 +28,10 @@ export const Sidebar: React.FC = () => {
     const store = useSettingsStore.getState();
     if (store.studioUpdate.available) {
       showToast(t('lblStudioUpdateAvailable'), 'warning');
-      setActiveView('settings');
+      setAppSettingsOpen(true);
     } else {
       showToast(t('lblStudioUpToDate'), 'success');
+      setAppSettingsOpen(true);
     }
   };
 

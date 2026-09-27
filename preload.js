@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   // Interactive Auto-Updater APIs
   checkForStudioUpdates: () => ipcRenderer.invoke("updater:check-for-updates"),
+  checkStudioUpdates: () => ipcRenderer.invoke("updater:check-for-updates"),
   downloadStudioUpdate: () => ipcRenderer.invoke("updater:download-update"),
   quitAndInstallStudioUpdate: () => ipcRenderer.invoke("updater:quit-and-install"),
   onUpdateStatus: (callback) => {

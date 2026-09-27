@@ -817,6 +817,7 @@ try {
   autoUpdater = au;
   autoUpdater.autoDownload = false; // User must explicitly confirm update download
   autoUpdater.autoInstallOnAppQuit = false;
+  autoUpdater.allowPrerelease = true; // Support prereleases and dev-channel semver updates
 
   autoUpdater.on("checking-for-update", () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -877,17 +878,30 @@ ipcMain.handle("updater:check-for-updates", async () => {
     const res = await autoUpdater.checkForUpdates();
     return { success: true, updateInfo: res?.updateInfo };
   } catch (err) {
-    return { success: false, error: err.message };
+    console.warn("[autoUpdater] Check error:", err);
+    return { success: false, error: err.message || String(err) };
   }
 });
 
 ipcMain.handle("updater:download-update", async () => {
   if (!autoUpdater) return { success: false, error: "Auto-updater not available" };
   try {
-    await autoUpdater.downloadUpdate();
+    // If updateInfo is not yet available on autoUpdater, trigger a pre-check first
+    if (!autoUpdater.updateInfo) {
+      try {
+        await autoUpdater.checkForUpdates();
+      } catch (checkErr) {
+        console.warn("[autoUpdater] Pre-check notice:", checkErr);
+      }
+    }
+    const downloadPromise = autoUpdater.downloadUpdate();
+    if (downloadPromise) {
+      await downloadPromise;
+    }
     return { success: true };
   } catch (err) {
-    return { success: false, error: err.message };
+    console.warn("[autoUpdater] Download error:", err);
+    return { success: false, error: err.message || String(err) };
   }
 });
 

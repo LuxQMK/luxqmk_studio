@@ -602,27 +602,80 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 
   startStudioDownload: async () => {
+    const isPolish = useI18n.getState().language === 'pl';
+    const state = get().studioUpdate;
+    const downloadUrl = state.downloadUrl || `https://files.luxqmk.click/studio/${state.releaseTag || `v${APP_VERSION}`}/LuxQMK-Studio-Setup-${state.latestVersion || APP_VERSION}.exe`;
+
     if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.downloadStudioUpdate === 'function') {
-      set((state) => ({
+      set((s) => ({
         studioUpdate: {
-          ...state.studioUpdate,
+          ...s.studioUpdate,
           isDownloading: true,
           downloadPercent: 0,
           downloadSpeedText: '',
           error: null,
         },
       }));
-      const res = await window.electronAPI.downloadStudioUpdate();
-      if (!res.success && res.error) {
-        set((state) => ({
+      try {
+        const res = await window.electronAPI.downloadStudioUpdate();
+        if (!res.success) {
+          const rawErr = res.error || '';
+          let localizedErr = rawErr;
+          if (rawErr.includes('Please check update first')) {
+            localizedErr = isPolish
+              ? 'Wymagane sprawdzenie aktualizacji. Uruchamianie pobierania instalatora...'
+              : 'Update check required. Launching installer download...';
+          }
+
+          set((s) => ({
+            studioUpdate: {
+              ...s.studioUpdate,
+              isDownloading: false,
+              error: localizedErr,
+            },
+          }));
+
+          // Direct browser fallback so the user is never blocked
+          if (typeof window.electronAPI.openExternal === 'function') {
+            window.electronAPI.openExternal(downloadUrl);
+            useUIStore.getState().showToast(
+              isPolish
+                ? 'Pobieranie najnowszego instalatora w przeglądarce...'
+                : 'Downloading latest installer in browser...',
+              'info'
+            );
+          } else {
+            useUIStore.getState().showToast(
+              isPolish ? `Błąd aktualizacji: ${localizedErr}` : `Update error: ${localizedErr}`,
+              'error'
+            );
+          }
+        }
+      } catch (err: any) {
+        set((s) => ({
           studioUpdate: {
-            ...state.studioUpdate,
+            ...s.studioUpdate,
             isDownloading: false,
-            error: res.error || null,
+            error: err.message,
           },
         }));
-        useUIStore.getState().showToast(`Update error: ${res.error}`, 'error');
+        if (typeof window.electronAPI.openExternal === 'function') {
+          window.electronAPI.openExternal(downloadUrl);
+          useUIStore.getState().showToast(
+            isPolish
+              ? 'Otwarto stronę pobierania instalatora LuxQMK Studio.'
+              : 'Opened LuxQMK Studio installer download page.',
+            'info'
+          );
+        } else {
+          useUIStore.getState().showToast(
+            isPolish ? `Błąd aktualizacji: ${err.message}` : `Update error: ${err.message}`,
+            'error'
+          );
+        }
       }
+    } else {
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
     }
   },
 
