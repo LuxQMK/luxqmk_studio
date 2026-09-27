@@ -11,6 +11,7 @@ export interface HIDDeviceDescriptor {
 }
 
 export interface DeviceCapability {
+  hasVia?: boolean;
   hasRgbMatrix: boolean;
   hasSidelights: boolean;
   hasLogoLed: boolean;

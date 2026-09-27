@@ -11,6 +11,7 @@ export interface DeviceDescriptor {
   ledTotal: number;
   lightingType: string;
   capabilities: {
+    hasVia?: boolean;
     hasLighting: boolean;
     hasRgbMatrix: boolean;
     hasMonochromeBacklight: boolean;
@@ -42,6 +43,7 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
     "ledTotal": 125,
     "lightingType": "rgb_matrix",
     "capabilities": {
+      "hasVia": true,
       "hasLighting": true,
       "hasRgbMatrix": true,
       "hasMonochromeBacklight": false,
@@ -71,6 +73,7 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
     "ledTotal": 101,
     "lightingType": "rgb_matrix",
     "capabilities": {
+      "hasVia": true,
       "hasLighting": true,
       "hasRgbMatrix": true,
       "hasMonochromeBacklight": false,
@@ -100,6 +103,7 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
     "ledTotal": 85,
     "lightingType": "rgb_matrix",
     "capabilities": {
+      "hasVia": true,
       "hasLighting": true,
       "hasRgbMatrix": true,
       "hasMonochromeBacklight": false,
@@ -129,6 +133,7 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
     "ledTotal": 119,
     "lightingType": "rgb_matrix",
     "capabilities": {
+      "hasVia": true,
       "hasLighting": true,
       "hasRgbMatrix": true,
       "hasMonochromeBacklight": false,
@@ -158,6 +163,7 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
     "ledTotal": 87,
     "lightingType": "rgb_matrix",
     "capabilities": {
+      "hasVia": true,
       "hasLighting": true,
       "hasRgbMatrix": true,
       "hasMonochromeBacklight": false,
@@ -187,6 +193,7 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
     "ledTotal": 104,
     "lightingType": "rgb_matrix",
     "capabilities": {
+      "hasVia": true,
       "hasLighting": true,
       "hasRgbMatrix": true,
       "hasMonochromeBacklight": false,
@@ -216,6 +223,7 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
     "ledTotal": 87,
     "lightingType": "monochrome",
     "capabilities": {
+      "hasVia": true,
       "hasLighting": true,
       "hasRgbMatrix": false,
       "hasMonochromeBacklight": true,
@@ -245,6 +253,7 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
     "ledTotal": 0,
     "lightingType": "none",
     "capabilities": {
+      "hasVia": true,
       "hasLighting": false,
       "hasRgbMatrix": false,
       "hasMonochromeBacklight": false,

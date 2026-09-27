@@ -1,6 +1,7 @@
 import React from 'react';
 import { useUIStore, ViewTab } from '../../store/useUIStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { useDeviceStore } from '../../store/useDeviceStore';
 import { useI18n } from '../../i18n';
 import logoSvg from '../../../assets/logo.svg';
 
@@ -8,10 +9,14 @@ interface NavItem {
   id: ViewTab;
   labelKey: string;
   icon: React.ReactNode;
+  disabled?: boolean;
+  tooltip?: string;
+  badge?: string;
 }
 
 export const Sidebar: React.FC = () => {
   const { activeView, setActiveView, setAppSettingsOpen, setAboutOpen, showToast } = useUIStore();
+  const { isConnected, isViaSupported } = useDeviceStore();
   const { checkCloudUpdates } = useSettingsStore();
   const { t } = useI18n();
 
@@ -29,10 +34,15 @@ export const Sidebar: React.FC = () => {
     }
   };
 
+  const isKeymapDisabled = isConnected && !isViaSupported;
+
   const navItems: NavItem[] = [
     {
       id: 'keymap',
       labelKey: 'navKeymap',
+      disabled: isKeymapDisabled,
+      tooltip: isKeymapDisabled ? t('lblViaDisabledTooltip') : undefined,
+      badge: isKeymapDisabled ? 'NO VIA' : undefined,
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="2" y="4" width="20" height="16" rx="2"></rect>
@@ -134,11 +144,36 @@ export const Sidebar: React.FC = () => {
           <button
             key={item.id}
             type="button"
-            className={`nav-item-btn ${activeView === item.id ? 'active' : ''}`}
-            onClick={() => setActiveView(item.id)}
+            id={`nav-btn-${item.id}`}
+            className={`nav-item-btn ${activeView === item.id ? 'active' : ''} ${item.disabled ? 'disabled' : ''}`}
+            disabled={item.disabled}
+            title={item.tooltip}
+            onClick={() => {
+              if (!item.disabled) {
+                setActiveView(item.id);
+              }
+            }}
           >
             <span className="nav-icon">{item.icon}</span>
             <span>{t(item.labelKey)}</span>
+            {item.badge && (
+              <span
+                className="nav-disabled-badge"
+                style={{
+                  marginLeft: 'auto',
+                  fontSize: '0.65rem',
+                  padding: '2px 5px',
+                  borderRadius: '4px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  color: '#ef4444',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                {item.badge}
+              </span>
+            )}
           </button>
         ))}
       </nav>

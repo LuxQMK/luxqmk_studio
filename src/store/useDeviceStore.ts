@@ -10,6 +10,7 @@ import { useI18n } from '../i18n';
 interface DeviceState {
   isConnected: boolean;
   isConnecting: boolean;
+  isViaSupported: boolean;
   connectedDevice: HIDDevice | null;
   activeDescriptor: DeviceDescriptor | null;
   firmwareInfo: { major: number; minor: number; patch: number; versionString: string } | null;
@@ -113,17 +114,38 @@ const syncConnectedDeviceState = (desc: DeviceDescriptor) => {
   }
   setTimeout(async () => {
     try {
+      // 1. Probe VIA protocol support
+      let isVia = desc.capabilities?.hasVia !== false;
+      if (hidProtocol.isConnected()) {
+        const viaVer = await hidProtocol.getViaProtocolVersion();
+        if (desc.capabilities?.hasVia === false || viaVer === null || viaVer === 0) {
+          isVia = false;
+        } else {
+          isVia = true;
+        }
+      }
+      useDeviceStore.setState({ isViaSupported: isVia });
+
+      if (!isVia && useUIStore.getState().activeView === 'keymap') {
+        const fallbackView = (desc.capabilities?.hasLighting ?? true) ? 'lighting' : 'tester';
+        useUIStore.getState().setActiveView(fallbackView);
+      }
+
       const fw = await hidProtocol.getFirmwareVersion();
       if (fw) {
         useDeviceStore.setState({ firmwareInfo: fw });
       }
-      // 1. Sync full lighting state (RGB matrix effect, speed, color, brightness, sidelights, reactive, locks) from hardware
-      await useLightingStore.getState().loadFromHardware();
-      // 2. Sync full 3-layer keymap from hardware
-      await useKeymapStore.getState().readAllLayersFromKeyboard();
-      // 3. Sync performance & NKRO settings from hardware
+      // 2. Sync full lighting state (RGB matrix effect, speed, color, brightness, sidelights, reactive, locks) from hardware
+      if (desc.capabilities?.hasLighting !== false) {
+        await useLightingStore.getState().loadFromHardware();
+      }
+      // 3. Sync full 3-layer keymap from hardware ONLY if VIA is supported
+      if (isVia) {
+        await useKeymapStore.getState().readAllLayersFromKeyboard();
+      }
+      // 4. Sync performance & NKRO settings from hardware
       await useSettingsStore.getState().loadFromHardware();
-      // 4. Check for cloud firmware & studio updates
+      // 5. Check for cloud firmware & studio updates
       useSettingsStore.getState().checkCloudUpdates();
     } catch (e) {
       console.warn('Failed to sync connected device state from hardware:', e);
@@ -134,6 +156,7 @@ const syncConnectedDeviceState = (desc: DeviceDescriptor) => {
 export const useDeviceStore = create<DeviceState>((set, get) => ({
   isConnected: false,
   isConnecting: false,
+  isViaSupported: true,
   connectedDevice: null,
   activeDescriptor: null,
   firmwareInfo: null,
@@ -240,7 +263,7 @@ export const useDeviceStore = create<DeviceState>((set, get) => ({
       } catch (e) {}
     }
     hidProtocol.setDevice(null);
-    set({ isConnected: false, connectedDevice: null, activeDescriptor: null, firmwareInfo: null });
+    set({ isConnected: false, connectedDevice: null, activeDescriptor: null, firmwareInfo: null, isViaSupported: true });
     useKeymapStore.setState({ layerKeymaps: { 0: {}, 1: {}, 2: {} }, selectedKey: null });
     useUIStore.getState().showToast(useI18n.getState().t('toastDeviceDisconnected'), 'info');
   },

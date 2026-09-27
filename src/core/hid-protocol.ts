@@ -233,6 +233,24 @@ export class HidProtocol {
     return nextPromise;
   }
 
+  public async getViaProtocolVersion(): Promise<number | null> {
+    try {
+      const res = await this.sendCommand(
+        [VIA_CMD.GET_PROTOCOL_VERSION],
+        500,
+        1,
+        (data) => data[0] === VIA_CMD.GET_PROTOCOL_VERSION
+      );
+      if (res && res[0] === VIA_CMD.GET_PROTOCOL_VERSION) {
+        const ver = (res[1] << 8) | res[2];
+        return ver > 0 ? ver : null;
+      }
+    } catch (e) {
+      return null;
+    }
+    return null;
+  }
+
   // Keymap methods
   public async getKeycode(layer: number, row: number, col: number): Promise<number> {
     const res = await this.sendCommand([VIA_CMD.DYNAMIC_KEYMAP_GET_KEYCODE, layer, row, col]);

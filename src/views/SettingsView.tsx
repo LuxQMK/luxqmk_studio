@@ -109,8 +109,8 @@ export const SettingsView: React.FC = () => {
         color: 'var(--text-muted, #888888)',
       };
     }
-    const REQUIRED_FW = { major: 0, minor: 3, patch: 1 };
-    const STUDIO_VERSION = '1.4.0';
+    const REQUIRED_FW = { major: 0, minor: 3, patch: 2 };
+    const STUDIO_VERSION = '1.4.1';
 
     if (!firmwareInfo) {
       return {
@@ -500,7 +500,7 @@ export const SettingsView: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <strong style={{ fontSize: '0.95rem', color: 'var(--text-primary)' }}>{flasher.cloudEntry.name}</strong>
                     <span className={`badge-pill ${flasher.cloudUpdateAvailable ? 'badge-warning' : 'badge-success'}`}>
-                      {flasher.cloudUpdateAvailable ? `${t('lblCloudFirmwareUpdateAvailable', { current: firmwareInfo ? `v${firmwareInfo.major}.${firmwareInfo.minor}.${firmwareInfo.patch}` : 'v1.4.0', latest: `v${flasher.cloudEntry.version}` })}` : `Cloud: v${flasher.cloudEntry.version} (${t('lblCloudFirmwareUpToDate')})`}
+                      {flasher.cloudUpdateAvailable ? `${t('lblCloudFirmwareUpdateAvailable', { current: firmwareInfo ? `v${firmwareInfo.major}.${firmwareInfo.minor}.${firmwareInfo.patch}` : 'v1.4.1', latest: `v${flasher.cloudEntry.version}` })}` : `Cloud: v${flasher.cloudEntry.version} (${t('lblCloudFirmwareUpToDate')})`}
                     </span>
                   </div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
@@ -713,7 +713,7 @@ export const SettingsView: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
                 <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
-                  LuxQMK Studio {isDesktop ? `v${studioUpdate.currentVersion}` : `Desktop v${studioUpdate.latestVersion || '1.4.0'}`}
+                  LuxQMK Studio {isDesktop ? `v${studioUpdate.currentVersion}` : `Desktop v${studioUpdate.latestVersion || '1.4.1'}`}
                 </strong>
                 <span className={`badge-pill ${isDesktop && studioUpdate.available ? 'badge-warning' : 'badge-success'}`}>
                   {isDesktop ? (studioUpdate.available ? `New: v${studioUpdate.latestVersion}` : t('lblStudioUpToDate')) : 'Windows 64-bit'}
@@ -746,11 +746,11 @@ export const SettingsView: React.FC = () => {
 
               {(!isDesktop || studioUpdate.available) && (
                 <a
-                  href={studioUpdate.downloadUrl || 'https://files.luxqmk.click/studio/v1.4.0/LuxQMK-Studio-Setup-1.4.0.exe'}
+                  href={studioUpdate.downloadUrl || 'https://files.luxqmk.click/studio/v1.4.1/LuxQMK-Studio-Setup-1.4.1.exe'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-primary"
-                  onClick={(e) => openExternalUrl(studioUpdate.downloadUrl || 'https://files.luxqmk.click/studio/v1.4.0/LuxQMK-Studio-Setup-1.4.0.exe', e)}
+                  onClick={(e) => openExternalUrl(studioUpdate.downloadUrl || 'https://files.luxqmk.click/studio/v1.4.1/LuxQMK-Studio-Setup-1.4.1.exe', e)}
                   style={{ textDecoration: 'none', padding: '0.55rem 1rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

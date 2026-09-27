@@ -106,6 +106,30 @@
   box-shadow: inset 3px 0 0 var(--primary);
 }
 
+.nav-item-btn:disabled,
+.nav-item-btn.disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  pointer-events: auto;
+  background: transparent !important;
+  color: var(--text-dim) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.nav-item-btn:disabled:hover,
+.nav-item-btn.disabled:hover {
+  background: transparent !important;
+  color: var(--text-dim) !important;
+  border-color: transparent !important;
+}
+
+.nav-item-btn:disabled .nav-icon svg,
+.nav-item-btn.disabled .nav-icon svg {
+  stroke: var(--text-dim) !important;
+  filter: none !important;
+}
+
 .nav-icon {
   display: flex;
   align-items: center;

@@ -24,7 +24,7 @@ export const AboutModal: React.FC = () => {
             </div>
             <div>
               <h3 className="modal-title">{t('modalAboutTitle')}</h3>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Version 1.4.0</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Version 1.4.1</span>
             </div>
           </div>
           <button className="modal-close-btn" id="btnCloseAboutModal" onClick={() => setAboutOpen(false)}>
