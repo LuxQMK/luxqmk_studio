@@ -353,6 +353,15 @@ app.whenReady().then(async () => {
         const main = document.querySelector('.main-content');
         if (main) main.scrollTop = 0;
       `
+    },
+    {
+      name: 'Keymap - Hardware Switch Studio',
+      file: 'studio-hardware-switches.png',
+      setup: `
+        window.__stores.useUIStore.getState().setActiveView('keymap');
+        const main = document.querySelector('.main-content');
+        if (main) main.scrollTop = 480;
+      `
     }
   ];
 
