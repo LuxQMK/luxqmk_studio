@@ -90,6 +90,20 @@ export function parseSemVer(v: string | number | null | undefined): ParsedSemVer
   };
 }
 
+function getPrereleaseRank(prerelease?: string): { rank: number; num: number; raw: string } {
+  if (!prerelease) return { rank: 99, num: 0, raw: '' };
+  const lower = prerelease.toLowerCase();
+  const match = lower.match(/\.(\d+)$/);
+  const num = match ? parseInt(match[1], 10) : 0;
+
+  // Development lifecycle ranking: dev (1) < alpha (2) < beta (3) < rc (4) < stable (99)
+  if (lower.startsWith('dev')) return { rank: 1, num, raw: lower };
+  if (lower.startsWith('alpha')) return { rank: 2, num, raw: lower };
+  if (lower.startsWith('beta')) return { rank: 3, num, raw: lower };
+  if (lower.startsWith('rc')) return { rank: 4, num, raw: lower };
+  return { rank: 2, num, raw: lower };
+}
+
 export function compareSemVer(
   v1: string | { major: number; minor: number; patch: number; prerelease?: string } | null | undefined,
   v2: string | { major: number; minor: number; patch: number; prerelease?: string } | null | undefined
@@ -106,11 +120,15 @@ export function compareSemVer(
   if (p1.minor !== p2.minor) return p1.minor - p2.minor;
   if (p1.patch !== p2.patch) return p1.patch - p2.patch;
 
-  // SemVer Rule: No prerelease (e.g. 1.4.1) is GREATER than a prerelease (e.g. 1.4.1-dev)
+  // SemVer Rule: No prerelease (e.g. 1.4.3) is GREATER than a prerelease (e.g. 1.4.3-dev or 1.4.3-beta.1)
   if (!p1.prerelease && p2.prerelease) return 1;
   if (p1.prerelease && !p2.prerelease) return -1;
   if (p1.prerelease && p2.prerelease) {
-    return p1.prerelease.localeCompare(p2.prerelease);
+    const r1 = getPrereleaseRank(p1.prerelease);
+    const r2 = getPrereleaseRank(p2.prerelease);
+    if (r1.rank !== r2.rank) return r1.rank - r2.rank;
+    if (r1.num !== r2.num) return r1.num - r2.num;
+    return r1.raw.localeCompare(r2.raw);
   }
 
   return 0;
