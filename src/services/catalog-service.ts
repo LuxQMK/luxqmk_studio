@@ -55,14 +55,14 @@ export interface StudioVersionInfo {
 const FIRMWARE_CATALOG_URLS = [
   'https://files.luxqmk.click/firmware/catalog.json',
   'https://files.luxqmk.click/catalog.json',
-  'https://luxqmk-firmware.pages.dev/firmware/catalog.json',
-  'https://luxqmk-firmware.pages.dev/catalog.json',
+  'https://luxqmk-files.pages.dev/firmware/catalog.json',
+  'https://luxqmk-files.pages.dev/catalog.json',
 ];
 
 const STUDIO_VERSION_URLS = [
   'https://files.luxqmk.click/studio/version.json',
   'https://files.luxqmk.click/studio/latest.json',
-  'https://luxqmk-firmware.pages.dev/studio/version.json',
+  'https://luxqmk-files.pages.dev/studio/version.json',
 ];
 
 export function parseSemVer(v: string | number | null | undefined): [number, number, number] {
