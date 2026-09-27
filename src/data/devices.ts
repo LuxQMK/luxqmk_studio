@@ -61,7 +61,7 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
       "hasDebounceControl": true,
       "hasNkroToggle": true,
       "hasDipSwitches": true,
-      "dipSwitchCount": 1
+      "dipSwitchCount": 2
     }
   },
   {
@@ -93,7 +93,7 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
       "hasDebounceControl": true,
       "hasNkroToggle": true,
       "hasDipSwitches": true,
-      "dipSwitchCount": 1
+      "dipSwitchCount": 2
     }
   },
   {
@@ -125,7 +125,7 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
       "hasDebounceControl": true,
       "hasNkroToggle": true,
       "hasDipSwitches": true,
-      "dipSwitchCount": 1
+      "dipSwitchCount": 2
     }
   },
   {

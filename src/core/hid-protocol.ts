@@ -96,8 +96,9 @@ export interface DipSwitchPosConfig {
 }
 
 export interface DipSwitchConfig {
-  posA: DipSwitchPosConfig; // active = false / 0 (Position 1 / Left / Mac)
-  posB: DipSwitchPosConfig; // active = true / 1 (Position 2 / Right / Win)
+  posA: DipSwitchPosConfig; // Position 1 (Mac / Profile 1)
+  posB: DipSwitchPosConfig; // Position 2 (Win / Profile 2)
+  posC?: DipSwitchPosConfig; // Position 3 (Profile 3 / 2.4G)
 }
 
 export const RGB_MATRIX_VAL = {
@@ -570,12 +571,12 @@ export class HidProtocol {
     }
   }
 
-  public async getDipSwitchState(switchIdx = 0): Promise<boolean> {
+  public async getDipSwitchState(switchIdx = 0): Promise<number> {
     try {
       const res = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_STATE, switchIdx);
-      return res && res.length >= 2 ? res[1] === 1 : false;
+      return res && res.length >= 2 ? res[1] : 0;
     } catch (e) {
-      return false;
+      return 0;
     }
   }
 
@@ -585,6 +586,8 @@ export class HidProtocol {
       const resA = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_GET_POS, switchIdx, 0);
       // Position B (1)
       const resB = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_GET_POS, switchIdx, 1);
+      // Position C (2)
+      const resC = await this.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_GET_POS, switchIdx, 2);
 
       const posA: DipSwitchPosConfig = {
         targetLayer: resA && resA.length >= 6 ? resA[2] : 0xFF,
@@ -600,7 +603,14 @@ export class HidProtocol {
         winLockState: resB && resB.length >= 6 ? resB[5] : 0xFF,
       };
 
-      return { posA, posB };
+      const posC: DipSwitchPosConfig = {
+        targetLayer: resC && resC.length >= 6 ? resC[2] : 0xFF,
+        swapGuiAlt: resC && resC.length >= 6 ? resC[3] : 0xFF,
+        perkeyProfile: resC && resC.length >= 6 ? resC[4] : 0xFF,
+        winLockState: resC && resC.length >= 6 ? resC[5] : 0xFF,
+      };
+
+      return { posA, posB, posC };
     } catch (e) {
       return null;
     }
