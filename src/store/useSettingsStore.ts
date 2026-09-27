@@ -8,7 +8,7 @@ import { useKeymapStore } from './useKeymapStore';
 import { useLightingStore } from './useLightingStore';
 import { useI18n } from '../i18n';
 
-const CURRENT_STUDIO_VERSION = '1.4.1-dev';
+const CURRENT_STUDIO_VERSION = '1.4.1';
 
 interface SettingsState {
   performance: PerformanceConfig;
