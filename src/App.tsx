@@ -9,6 +9,7 @@ import { TopBar } from './components/layout/TopBar';
 // Modals & Overlays
 import { AppSettingsModal } from './components/modals/AppSettingsModal';
 import { AboutModal } from './components/modals/AboutModal';
+import { UpdateModal } from './components/modals/UpdateModal';
 import { AppToast } from './components/modals/AppToast';
 
 // 8 Primary Views (1:1 with legacy_index.html)
@@ -56,6 +57,7 @@ export const App: React.FC = () => {
       {/* 3. Global Modals & Notifications */}
       <AppSettingsModal />
       <AboutModal />
+      <UpdateModal />
       <AppToast />
     </div>
   );

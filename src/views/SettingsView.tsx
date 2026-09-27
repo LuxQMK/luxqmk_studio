@@ -22,6 +22,8 @@ export const SettingsView: React.FC = () => {
     cancelFlash,
     checkCloudUpdates,
     checkStudioUpdates,
+    startStudioDownload,
+    applyStudioUpdate,
     applyCloudFirmware,
   } = useSettingsStore();
 
@@ -700,68 +702,137 @@ export const SettingsView: React.FC = () => {
           </div>
 
           <div style={{
-            background: isDesktop && studioUpdate.available ? 'rgba(189, 0, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-            border: `1px solid ${isDesktop && studioUpdate.available ? 'rgba(189, 0, 255, 0.35)' : 'var(--border-color)'}`,
+            background: isDesktop && (studioUpdate.available || studioUpdate.isDownloaded) ? 'rgba(189, 0, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+            border: `1px solid ${isDesktop && (studioUpdate.available || studioUpdate.isDownloaded) ? 'rgba(189, 0, 255, 0.35)' : 'var(--border-color)'}`,
             borderRadius: '12px',
             padding: '1.25rem',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
+            flexDirection: 'column',
             gap: '1rem',
           }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-                <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
-                  LuxQMK Studio {isDesktop ? `v${studioUpdate.currentVersion}` : `Desktop v${studioUpdate.latestVersion || '1.4.1'}`}
-                </strong>
-                <span className={`badge-pill ${isDesktop && studioUpdate.available ? 'badge-warning' : 'badge-success'}`}>
-                  {isDesktop ? (studioUpdate.available ? `New: v${studioUpdate.latestVersion}` : t('lblStudioUpToDate')) : 'Windows 64-bit'}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1rem',
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                  <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
+                    LuxQMK Studio {isDesktop ? `v${studioUpdate.currentVersion}` : `Desktop v${studioUpdate.latestVersion || '1.4.1'}`}
+                  </strong>
+                  <span className={`badge-pill ${studioUpdate.isDownloaded ? 'badge-success' : isDesktop && studioUpdate.available ? 'badge-warning' : 'badge-success'}`}>
+                    {isDesktop
+                      ? (studioUpdate.isDownloaded
+                          ? t('lblDownloadedBadge', 'Ready to Install')
+                          : studioUpdate.available
+                            ? `New: v${studioUpdate.latestVersion}`
+                            : t('lblStudioUpToDate'))
+                      : 'Windows 64-bit'}
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
+                  {isDesktop
+                    ? (studioUpdate.isDownloaded
+                        ? t('lblUpdateReadyToInstall', 'Update downloaded! Restart to apply changes.')
+                        : studioUpdate.available
+                          ? t('lblStudioUpdateAvailable')
+                          : `Latest cloud manifest from files.luxqmk.click (${studioUpdate.releaseTag})`)
+                    : 'Oficjalny pakiet instalacyjny z files.luxqmk.click'}
                 </span>
               </div>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-                {isDesktop
-                  ? (studioUpdate.available ? t('lblStudioUpdateAvailable') : `Latest cloud manifest from files.luxqmk.click (${studioUpdate.releaseTag})`)
-                  : 'Oficjalny pakiet instalacyjny z files.luxqmk.click'}
-              </span>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                {isDesktop && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    disabled={studioUpdate.isChecking || studioUpdate.isDownloading || flasher.isCheckingCloud}
+                    onClick={() => checkCloudUpdates()}
+                    style={{ padding: '0.55rem 0.9rem', fontSize: '0.85rem' }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={studioUpdate.isChecking ? 'spin' : ''}>
+                      <polyline points="23 4 23 10 17 10"></polyline>
+                      <polyline points="1 20 1 14 7 14"></polyline>
+                      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                    <span>{studioUpdate.isChecking ? t('btnCheckingUpdates') : t('btnCheckAllUpdates')}</span>
+                  </button>
+                )}
+
+                {isDesktop && studioUpdate.isDownloaded && (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={applyStudioUpdate}
+                    style={{ padding: '0.55rem 1rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="23 4 23 10 17 10"></polyline>
+                      <polyline points="1 20 1 14 7 14"></polyline>
+                      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                    <span>{t('btnRestartAndInstall', 'Restart & Install')}</span>
+                  </button>
+                )}
+
+                {isDesktop && studioUpdate.available && !studioUpdate.isDownloaded && !studioUpdate.isDownloading && (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={startStudioDownload}
+                    style={{ padding: '0.55rem 1rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>{t('btnDownloadUpdate', 'Download & Update')}</span>
+                  </button>
+                )}
+
+                {!isDesktop && (
+                  <a
+                    href={studioUpdate.downloadUrl || 'https://files.luxqmk.click/studio/v1.4.1/LuxQMK-Studio-Setup-1.4.1.exe'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary"
+                    onClick={(e) => openExternalUrl(studioUpdate.downloadUrl || 'https://files.luxqmk.click/studio/v1.4.1/LuxQMK-Studio-Setup-1.4.1.exe', e)}
+                    style={{ textDecoration: 'none', padding: '0.55rem 1rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>{t('btnDownloadStudioInstaller')}</span>
+                  </a>
+                )}
+              </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
-              {isDesktop && (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  disabled={studioUpdate.isChecking || flasher.isCheckingCloud}
-                  onClick={() => checkCloudUpdates()}
-                  style={{ padding: '0.55rem 0.9rem', fontSize: '0.85rem' }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={studioUpdate.isChecking ? 'spin' : ''}>
-                    <polyline points="23 4 23 10 17 10"></polyline>
-                    <polyline points="1 20 1 14 7 14"></polyline>
-                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                  </svg>
-                  <span>{studioUpdate.isChecking ? t('btnCheckingUpdates') : t('btnCheckAllUpdates')}</span>
-                </button>
-              )}
-
-              {(!isDesktop || studioUpdate.available) && (
-                <a
-                  href={studioUpdate.downloadUrl || 'https://files.luxqmk.click/studio/v1.4.1/LuxQMK-Studio-Setup-1.4.1.exe'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary"
-                  onClick={(e) => openExternalUrl(studioUpdate.downloadUrl || 'https://files.luxqmk.click/studio/v1.4.1/LuxQMK-Studio-Setup-1.4.1.exe', e)}
-                  style={{ textDecoration: 'none', padding: '0.55rem 1rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                  <span>{t('btnDownloadStudioInstaller')}</span>
-                </a>
-              )}
-            </div>
+            {/* Download Progress Bar if in progress */}
+            {isDesktop && studioUpdate.isDownloading && (
+              <div style={{ marginTop: '0.25rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '0.4rem' }}>
+                  <span>{t('lblDownloadingUpdate', 'Downloading update...')}</span>
+                  <span>{studioUpdate.downloadPercent}% {studioUpdate.downloadSpeedText ? `(${studioUpdate.downloadSpeedText})` : ''}</span>
+                </div>
+                <div style={{ height: '8px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${studioUpdate.downloadPercent}%`,
+                      background: 'linear-gradient(90deg, var(--accent-cyan, #00f0ff), var(--accent-purple, #bd00ff))',
+                      borderRadius: '4px',
+                      transition: 'width 0.2s ease',
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

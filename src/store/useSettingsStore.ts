@@ -32,7 +32,84 @@ interface SettingsState {
   cancelFlash: () => void;
   checkCloudUpdates: () => Promise<void>;
   checkStudioUpdates: () => Promise<void>;
+  startStudioDownload: () => Promise<void>;
+  applyStudioUpdate: () => Promise<void>;
   applyCloudFirmware: (entry?: CatalogKeyboardEntry) => Promise<void>;
+}
+
+let isUpdaterListenerAttached = false;
+
+function setupUpdaterListener(set: any) {
+  if (isUpdaterListenerAttached) return;
+  if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.onUpdateStatus === 'function') {
+    isUpdaterListenerAttached = true;
+    window.electronAPI.onUpdateStatus((data: any) => {
+      console.log('[Updater Status Event]:', data);
+      if (data.status === 'checking') {
+        set((state: any) => ({ studioUpdate: { ...state.studioUpdate, isChecking: true, error: null } }));
+      } else if (data.status === 'available') {
+        set((state: any) => ({
+          studioUpdate: {
+            ...state.studioUpdate,
+            isChecking: false,
+            available: true,
+            latestVersion: data.version || state.studioUpdate.latestVersion,
+            releaseDate: data.releaseDate || state.studioUpdate.releaseDate,
+            releaseTag: data.version ? `v${data.version}` : state.studioUpdate.releaseTag,
+          },
+        }));
+        useUIStore.getState().setUpdateModalOpen(true);
+      } else if (data.status === 'not-available') {
+        set((state: any) => ({
+          studioUpdate: {
+            ...state.studioUpdate,
+            isChecking: false,
+            available: false,
+          },
+        }));
+      } else if (data.status === 'downloading') {
+        const speed = data.bytesPerSecond
+          ? (data.bytesPerSecond > 1024 * 1024
+              ? `${(data.bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`
+              : `${(data.bytesPerSecond / 1024).toFixed(0)} KB/s`)
+          : '';
+        set((state: any) => ({
+          studioUpdate: {
+            ...state.studioUpdate,
+            isChecking: false,
+            isDownloading: true,
+            downloadPercent: data.percent ?? 0,
+            downloadSpeedText: speed,
+            error: null,
+          },
+        }));
+      } else if (data.status === 'downloaded') {
+        set((state: any) => ({
+          studioUpdate: {
+            ...state.studioUpdate,
+            isDownloading: false,
+            isDownloaded: true,
+            downloadPercent: 100,
+            downloadSpeedText: '',
+            error: null,
+          },
+        }));
+        useUIStore.getState().showToast(
+          useI18n.getState().t('lblUpdateReadyToInstall', 'Update is ready to install! Restart the app to apply.'),
+          'success'
+        );
+      } else if (data.status === 'error') {
+        set((state: any) => ({
+          studioUpdate: {
+            ...state.studioUpdate,
+            isChecking: false,
+            isDownloading: false,
+            error: data.error || 'Update failed',
+          },
+        }));
+      }
+    });
+  }
 }
 
 async function waitForKeyboardReconnect(timeoutMs = 25000): Promise<boolean> {
@@ -98,6 +175,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   studioUpdate: {
     isChecking: false,
     available: false,
+    isDownloading: false,
+    downloadPercent: 0,
+    downloadSpeedText: '',
+    isDownloaded: false,
+    error: null,
     currentVersion: CURRENT_STUDIO_VERSION,
     latestVersion: CURRENT_STUDIO_VERSION,
     releaseTag: `v${CURRENT_STUDIO_VERSION}`,
@@ -460,7 +542,20 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 
   checkStudioUpdates: async () => {
-    set((state) => ({ studioUpdate: { ...state.studioUpdate, isChecking: true } }));
+    setupUpdaterListener(set);
+    set((state) => ({ studioUpdate: { ...state.studioUpdate, isChecking: true, error: null } }));
+
+    if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.checkForStudioUpdates === 'function') {
+      try {
+        const res = await window.electronAPI.checkForStudioUpdates();
+        if (!res.success && res.error) {
+          console.warn('Electron checkForStudioUpdates note:', res.error);
+        }
+      } catch (e) {
+        console.warn('Failed to invoke electron checkForStudioUpdates:', e);
+      }
+    }
+
     try {
       const info = await catalogService.getStudioVersion();
       if (info) {
@@ -469,10 +564,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
           studioUpdate: {
             ...state.studioUpdate,
             isChecking: false,
-            available: isNewer,
-            latestVersion: info.version || CURRENT_STUDIO_VERSION,
+            available: state.studioUpdate.available || isNewer,
+            latestVersion: info.version || state.studioUpdate.latestVersion,
             releaseTag: info.release_tag || `v${info.version}`,
-            releaseDate: info.release_date || '',
+            releaseDate: info.release_date || state.studioUpdate.releaseDate,
             downloadUrl: info.downloads?.windows_installer || `https://files.luxqmk.click/studio/${info.release_tag}/LuxQMK-Studio-Setup-${info.version}.exe`,
             webAppUrl: info.downloads?.web_app || 'https://studio.luxqmk.click',
             changelog: info.changelog || [],
@@ -483,6 +578,37 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       }
     } catch (e) {
       set((state) => ({ studioUpdate: { ...state.studioUpdate, isChecking: false } }));
+    }
+  },
+
+  startStudioDownload: async () => {
+    if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.downloadStudioUpdate === 'function') {
+      set((state) => ({
+        studioUpdate: {
+          ...state.studioUpdate,
+          isDownloading: true,
+          downloadPercent: 0,
+          downloadSpeedText: '',
+          error: null,
+        },
+      }));
+      const res = await window.electronAPI.downloadStudioUpdate();
+      if (!res.success && res.error) {
+        set((state) => ({
+          studioUpdate: {
+            ...state.studioUpdate,
+            isDownloading: false,
+            error: res.error || null,
+          },
+        }));
+        useUIStore.getState().showToast(`Update error: ${res.error}`, 'error');
+      }
+    }
+  },
+
+  applyStudioUpdate: async () => {
+    if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.quitAndInstallStudioUpdate === 'function') {
+      await window.electronAPI.quitAndInstallStudioUpdate();
     }
   },
 

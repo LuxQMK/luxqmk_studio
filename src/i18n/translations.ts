@@ -672,7 +672,18 @@ export const translations = {
     "lblCloudFirmwareUpToDate": "Your keyboard is running the latest firmware version.",
     "lblCloudFirmwareUpdateAvailable": "New firmware update available ({current} → {latest})",
     "lblStudioDesktopAppTitle": "LuxQMK Studio Desktop App (Windows)",
-    "lblStudioDesktopAppDesc": "Download the official standalone Windows installer (.exe) with WASAPI Audio Visualizer and background RGB streaming support."
+    "lblStudioDesktopAppDesc": "Download the official standalone Windows installer (.exe) with WASAPI Audio Visualizer and background RGB streaming support.",
+    "btnDownloadUpdate": "Download & Update",
+    "btnRestartAndInstall": "Restart & Install",
+    "lblDownloadingUpdate": "Downloading Update...",
+    "lblUpdateReadyToInstall": "Update is ready to install! Restart the app to apply.",
+    "lblDownloadedBadge": "Ready to Install",
+    "modalUpdateTitle": "LuxQMK Studio Update Available",
+    "modalUpdatePrompt": "A new version of LuxQMK Studio (v{version}) is available. Would you like to download and install it?",
+    "lblCurrentVersion": "Current Version",
+    "lblNewVersion": "New Version",
+    "lblChangelog": "What's new in this release:",
+    "btnLater": "Later"
   },
   "pl": {
     "appName": "LuxQMK Studio",
@@ -1347,7 +1358,18 @@ export const translations = {
     "lblCloudFirmwareUpToDate": "Oprogramowanie układowe klawiatury jest w najnowszej wersji.",
     "lblCloudFirmwareUpdateAvailable": "Dostępna nowa wersja firmware ({current} → {latest})",
     "lblStudioDesktopAppTitle": "Aplikacja desktopowa LuxQMK Studio (Windows)",
-    "lblStudioDesktopAppDesc": "Pobierz oficjalny instalator desktopowy (.exe) z obsługą Audio Visualizera WASAPI oraz bezpośredniego streamingu RGB w tle."
+    "lblStudioDesktopAppDesc": "Pobierz oficjalny instalator desktopowy (.exe) z obsługą Audio Visualizera WASAPI oraz bezpośredniego streamingu RGB w tle.",
+    "btnDownloadUpdate": "Pobierz i zaktualizuj",
+    "btnRestartAndInstall": "Zrestartuj i zainstaluj",
+    "lblDownloadingUpdate": "Pobieranie aktualizacji...",
+    "lblUpdateReadyToInstall": "Aktualizacja jest gotowa do instalacji! Zrestartuj aplikację, aby zastosować.",
+    "lblDownloadedBadge": "Gotowa do instalacji",
+    "modalUpdateTitle": "Dostępna nowa aktualizacja LuxQMK Studio",
+    "modalUpdatePrompt": "Dostępna jest nowa wersja programu LuxQMK Studio (v{version}). Czy chcesz ją pobrać i zainstalować?",
+    "lblCurrentVersion": "Bieżąca wersja",
+    "lblNewVersion": "Nowa wersja",
+    "lblChangelog": "Co nowego w tej wersji:",
+    "btnLater": "Później"
   }
 } as const;
 

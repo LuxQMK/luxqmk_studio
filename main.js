@@ -783,6 +783,98 @@ ipcMain.handle("open-external", async (_, url) => {
   return false;
 });
 
+// -----------------------------------------------------------------------------
+// Interactive Auto-Updater Configuration (electron-updater)
+// -----------------------------------------------------------------------------
+let autoUpdater = null;
+try {
+  const { autoUpdater: au } = require("electron-updater");
+  autoUpdater = au;
+  autoUpdater.autoDownload = false; // User must explicitly confirm update download
+  autoUpdater.autoInstallOnAppQuit = false;
+
+  autoUpdater.on("checking-for-update", () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("updater:status", { status: "checking" });
+    }
+  });
+
+  autoUpdater.on("update-available", (info) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("updater:status", {
+        status: "available",
+        version: info.version,
+        releaseDate: info.releaseDate,
+        releaseNotes: info.releaseNotes,
+      });
+    }
+  });
+
+  autoUpdater.on("update-not-available", (info) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("updater:status", { status: "not-available", version: info?.version });
+    }
+  });
+
+  autoUpdater.on("error", (err) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("updater:status", { status: "error", error: err?.message || String(err) });
+    }
+  });
+
+  autoUpdater.on("download-progress", (progressObj) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("updater:status", {
+        status: "downloading",
+        percent: Math.round(progressObj.percent),
+        bytesPerSecond: progressObj.bytesPerSecond,
+        transferred: progressObj.transferred,
+        total: progressObj.total,
+      });
+    }
+  });
+
+  autoUpdater.on("update-downloaded", (info) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("updater:status", {
+        status: "downloaded",
+        version: info.version,
+      });
+    }
+  });
+} catch (e) {
+  console.warn("electron-updater initialization notice:", e);
+}
+
+ipcMain.handle("updater:check-for-updates", async () => {
+  if (!autoUpdater) return { success: false, error: "Auto-updater not available" };
+  try {
+    const res = await autoUpdater.checkForUpdates();
+    return { success: true, updateInfo: res?.updateInfo };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle("updater:download-update", async () => {
+  if (!autoUpdater) return { success: false, error: "Auto-updater not available" };
+  try {
+    await autoUpdater.downloadUpdate();
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle("updater:quit-and-install", () => {
+  if (!autoUpdater) return { success: false, error: "Auto-updater not available" };
+  isQuitting = true;
+  setImmediate(() => {
+    autoUpdater.quitAndInstall(false, true);
+  });
+  return { success: true };
+});
+
 app.whenReady().then(() => {
   ensureAutostartIntegrity();
   createWindow();

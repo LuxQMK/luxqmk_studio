@@ -35,5 +35,9 @@ interface Window {
     flashFirmware: (params: { filePath: string; toolType?: string }) => Promise<{ success: boolean; error?: string; timeout?: boolean }>;
     cancelFlash: () => Promise<{ success: boolean; error?: string }>;
     onFlasherProgress: (callback: (data: { percent: number; phase: string; log: string }) => void) => () => void;
+    checkForStudioUpdates: () => Promise<{ success: boolean; updateInfo?: any; error?: string }>;
+    downloadStudioUpdate: () => Promise<{ success: boolean; error?: string }>;
+    quitAndInstallStudioUpdate: () => Promise<{ success: boolean }>;
+    onUpdateStatus: (callback: (data: { status: string; percent?: number; bytesPerSecond?: number; transferred?: number; total?: number; version?: string; releaseDate?: string; releaseNotes?: any; error?: string }) => void) => () => void;
   };
 }

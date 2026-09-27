@@ -29,5 +29,15 @@ contextBridge.exposeInMainWorld("electronAPI", {
     const handler = (event, data) => callback(data);
     ipcRenderer.on("flasher:progress", handler);
     return () => ipcRenderer.removeListener("flasher:progress", handler);
+  },
+
+  // Interactive Auto-Updater APIs
+  checkForStudioUpdates: () => ipcRenderer.invoke("updater:check-for-updates"),
+  downloadStudioUpdate: () => ipcRenderer.invoke("updater:download-update"),
+  quitAndInstallStudioUpdate: () => ipcRenderer.invoke("updater:quit-and-install"),
+  onUpdateStatus: (callback) => {
+    const handler = (event, data) => callback(data);
+    ipcRenderer.on("updater:status", handler);
+    return () => ipcRenderer.removeListener("updater:status", handler);
   }
 });

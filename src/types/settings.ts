@@ -22,6 +22,11 @@ export interface HardwareInfo {
 export interface StudioUpdateState {
   isChecking: boolean;
   available: boolean;
+  isDownloading: boolean;
+  downloadPercent: number;
+  downloadSpeedText: string;
+  isDownloaded: boolean;
+  error: string | null;
   currentVersion: string;
   latestVersion: string;
   releaseTag: string;
