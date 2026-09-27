@@ -256,22 +256,29 @@ export const SettingsView: React.FC = () => {
           <div className="settings-group">
             <div className="settings-label-row">
               <span className="settings-item-title">{t('lblPollingRate')}</span>
+              <span className="settings-badge" style={{ color: 'var(--accent-cyan)' }}>1000 Hz (1.0 ms)</span>
             </div>
             <p className="settings-item-desc">{t('descPollingRate')}</p>
-            <select
-              className="form-control"
-              id="selectPollingRate"
-              style={{ maxWidth: '320px', marginTop: '0.5rem' }}
-              value={performance.pollingRateHz}
-              onChange={(e) => setPollingRate(Number(e.target.value))}
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                marginTop: '0.5rem',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '6px',
+                background: 'rgba(0, 240, 255, 0.08)',
+                border: '1px solid rgba(0, 240, 255, 0.25)',
+                color: 'var(--text-main)',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+              }}
             >
-              <option value={1000}>{t('polling1000', '1000 Hz (1.0 ms) - Default')}</option>
-              <option value={2000}>{t('polling2000', '2000 Hz (0.5 ms)')}</option>
-              <option value={4000}>{t('polling4000', '4000 Hz (0.25 ms)')}</option>
-              <option value={8000}>{t('polling8000', '8000 Hz (0.125 ms)')}</option>
-              <option value={500}>{t('polling500', '500 Hz (2.0 ms)')}</option>
-              <option value={125}>{t('polling125', '125 Hz (8.0 ms)')}</option>
-            </select>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              <span>1000 Hz (1.0 ms) — {t('lblMaxQmkPerformance')}</span>
+            </div>
           </div>
 
           {/* Save Action */}
