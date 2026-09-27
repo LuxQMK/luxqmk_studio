@@ -84,7 +84,7 @@ export const AppSettingsModal: React.FC = () => {
             </div>
             <div>
               <h3 className="modal-title">{t('modalAppSettingsTitle')}</h3>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>LuxQMK Studio Preferences & Environment</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{t('modalAppSettingsSubtitle')}</span>
             </div>
           </div>
           <button className="modal-close-btn" id="btnCloseAppSettingsModal" onClick={() => setAppSettingsOpen(false)}>
