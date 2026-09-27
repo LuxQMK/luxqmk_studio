@@ -167,7 +167,7 @@ export const HardwareGradientStudio: React.FC = () => {
     { pos: 0.667, color: '#ffd000' }
   ];
 
-  const [selectedStopIndex, setSelectedStopIndex] = useState<number>(0);
+  const [selectedStopIndex, setSelectedStopIndex] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const isDraggingRef = useRef<boolean>(false);
@@ -187,14 +187,14 @@ export const HardwareGradientStudio: React.FC = () => {
   }
 
   useEffect(() => {
-    if (selectedStopIndex >= currentStops.length) {
-      setSelectedStopIndex(Math.max(0, currentStops.length - 1));
+    if (selectedStopIndex !== null && selectedStopIndex >= currentStops.length) {
+      setSelectedStopIndex(null);
     }
   }, [currentStops.length, selectedStopIndex]);
 
   const handleSelectProfile = (prof: number) => {
     setActiveHardwareGradientProfile(prof);
-    setSelectedStopIndex(0);
+    setSelectedStopIndex(null);
     setBacklight({ gradientPreset: prof === 0 ? 8 : 9 });
   };
 
@@ -232,7 +232,11 @@ export const HardwareGradientStudio: React.FC = () => {
   const handleDeleteStop = (index: number) => {
     if (currentStops.length <= 2) return;
     deleteHardwareGradientStop(activeProf, index);
-    setSelectedStopIndex(Math.max(0, index - 1));
+    if (selectedStopIndex === index) {
+      setSelectedStopIndex(null);
+    } else if (selectedStopIndex !== null && selectedStopIndex > index) {
+      setSelectedStopIndex(selectedStopIndex - 1);
+    }
   };
 
   const handleDistribute = (mode: 'qmk' | 'linear') => {
@@ -242,7 +246,7 @@ export const HardwareGradientStudio: React.FC = () => {
 
   const handleApplyTemplate = (tpl: { name: string; stops: GradientStopItem[] }) => {
     applyHardwareGradientTemplate(activeProf, tpl.stops);
-    setSelectedStopIndex(0);
+    setSelectedStopIndex(null);
   };
 
   const handleSaveToEEPROM = async () => {
@@ -295,6 +299,7 @@ export const HardwareGradientStudio: React.FC = () => {
   };
 
   const handleTrackClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (isDraggingRef.current) return;
     const track = trackRef.current;
     if (!track) return;
@@ -303,7 +308,7 @@ export const HardwareGradientStudio: React.FC = () => {
 
     if (currentStops.length < 8) {
       handleAddStopAtPos(clickedPos);
-    } else {
+    } else if (selectedStopIndex !== null) {
       handleUpdateStop(selectedStopIndex, { pos: clickedPos });
     }
   };
@@ -311,7 +316,11 @@ export const HardwareGradientStudio: React.FC = () => {
   const studioCustomGradients = useVisualizerStore((s) => s.customGradients);
 
   return (
-    <div className="palette-card perkey-studio-card" style={{ display: 'block' }}>
+    <div
+      className="palette-card perkey-studio-card"
+      onClick={() => setSelectedStopIndex(null)}
+      style={{ display: 'block', cursor: 'default' }}
+    >
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -334,14 +343,20 @@ export const HardwareGradientStudio: React.FC = () => {
         <button
           type="button"
           className={`perkey-prof-tab-btn ${activeProf === 0 ? 'active' : ''}`}
-          onClick={() => handleSelectProfile(0)}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSelectProfile(0);
+          }}
         >
           <span>Profile 1 (Hardware EEPROM)</span>
         </button>
         <button
           type="button"
           className={`perkey-prof-tab-btn ${activeProf === 1 ? 'active' : ''}`}
-          onClick={() => handleSelectProfile(1)}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSelectProfile(1);
+          }}
         >
           <span>Profile 2 (Hardware EEPROM)</span>
         </button>
@@ -358,7 +373,10 @@ export const HardwareGradientStudio: React.FC = () => {
               type="button"
               className="btn btn-secondary btn-sm"
               style={{ padding: '0.2rem 0.55rem', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-              onClick={() => handleDistribute('qmk')}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDistribute('qmk');
+              }}
               title="Evenly distribute stops for seamless circular loop cycling (QMK style)"
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -370,7 +388,10 @@ export const HardwareGradientStudio: React.FC = () => {
               type="button"
               className="btn btn-secondary btn-sm"
               style={{ padding: '0.2rem 0.55rem', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-              onClick={() => handleDistribute('linear')}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDistribute('linear');
+              }}
               title="Evenly distribute stops from edge to edge (0% to 100%)"
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -513,7 +534,10 @@ export const HardwareGradientStudio: React.FC = () => {
               type="button"
               className="btn btn-secondary"
               style={{ padding: '0.25rem 0.65rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-              onClick={handleAddStop}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddStop();
+              }}
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -530,7 +554,10 @@ export const HardwareGradientStudio: React.FC = () => {
             return (
               <div
                 key={`stop-card-${idx}`}
-                onClick={() => setSelectedStopIndex(idx)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedStopIndex(idx);
+                }}
                 style={{
                   background: isSelected ? 'rgba(30, 58, 138, 0.35)' : 'rgba(30, 41, 59, 0.6)',
                   border: isSelected ? '1px solid var(--accent-cyan)' : '1px solid rgba(255, 255, 255, 0.08)',
@@ -640,7 +667,10 @@ export const HardwareGradientStudio: React.FC = () => {
               type="button"
               className="btn btn-secondary btn-sm"
               style={{ padding: '0.25rem 0.6rem', fontSize: '0.74rem' }}
-              onClick={() => handleApplyTemplate(tpl)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleApplyTemplate(tpl);
+              }}
             >
               <span>{tpl.name}</span>
             </button>
@@ -659,7 +689,10 @@ export const HardwareGradientStudio: React.FC = () => {
                   type="button"
                   className="btn btn-secondary btn-sm"
                   style={{ padding: '0.25rem 0.6rem', fontSize: '0.74rem', border: '1px solid rgba(0, 240, 255, 0.4)' }}
-                  onClick={() => handleApplyTemplate({ name: g.name, stops: g.stops.slice(0, 8) })}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleApplyTemplate({ name: g.name, stops: g.stops.slice(0, 8) });
+                  }}
                 >
                   <span>{g.name}</span>
                 </button>
@@ -676,7 +709,10 @@ export const HardwareGradientStudio: React.FC = () => {
           className="btn btn-primary"
           style={{ padding: '0.55rem 1.25rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700 }}
           disabled={!isConnected || isSaving}
-          onClick={handleSaveToEEPROM}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSaveToEEPROM();
+          }}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>

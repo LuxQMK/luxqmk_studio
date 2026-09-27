@@ -163,7 +163,7 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
   const { t } = useI18n();
   const { showToast } = useUIStore();
 
-  const [selectedStopIndex, setSelectedStopIndex] = useState<number>(0);
+  const [selectedStopIndex, setSelectedStopIndex] = useState<number | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const isDraggingRef = useRef<boolean>(false);
 
@@ -201,14 +201,14 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
 
   // Ensure selected index is always within bounds
   useEffect(() => {
-    if (selectedStopIndex >= activeGradient.stops.length) {
-      setSelectedStopIndex(Math.max(0, activeGradient.stops.length - 1));
+    if (selectedStopIndex !== null && selectedStopIndex >= activeGradient.stops.length) {
+      setSelectedStopIndex(null);
     }
   }, [activeGradient.stops.length, selectedStopIndex]);
 
   const handlePresetChange = (newId: string) => {
     setActiveCustomGradientId(newId);
-    setSelectedStopIndex(0);
+    setSelectedStopIndex(null);
     if (onSelectPalette) {
       onSelectPalette(newId);
     }
@@ -256,7 +256,11 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
     if (activeGradient.stops.length <= 2) return;
     const updated = activeGradient.stops.filter((_, i) => i !== index);
     updateCustomGradient(activeGradient.id, { stops: updated });
-    setSelectedStopIndex(Math.max(0, index - 1));
+    if (selectedStopIndex === index) {
+      setSelectedStopIndex(null);
+    } else if (selectedStopIndex !== null && selectedStopIndex > index) {
+      setSelectedStopIndex(selectedStopIndex - 1);
+    }
   };
 
   const handleDistributeStops = (mode: 'qmk' | 'linear') => {
@@ -267,7 +271,7 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
   const handleCreateNew = () => {
     const newId = addCustomGradient();
     setActiveCustomGradientId(newId);
-    setSelectedStopIndex(0);
+    setSelectedStopIndex(null);
     if (onSelectPalette) onSelectPalette(newId);
     showToast(t('toastCustomGradientCreated'), 'success');
   };
@@ -275,7 +279,7 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
   const handleDuplicate = () => {
     const newId = duplicateCustomGradient(activeGradient.id);
     setActiveCustomGradientId(newId);
-    setSelectedStopIndex(0);
+    setSelectedStopIndex(null);
     if (onSelectPalette) onSelectPalette(newId);
     showToast(t('toastCustomGradientDuplicated'), 'success');
   };
@@ -283,7 +287,7 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
   const handleDeletePreset = () => {
     if (customGradients.length <= 1) return;
     deleteCustomGradient(activeGradient.id);
-    setSelectedStopIndex(0);
+    setSelectedStopIndex(null);
     showToast(t('toastCustomGradientDeleted'), 'info');
   };
 
@@ -292,7 +296,7 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
       name: `${tpl.name}`,
       stops: JSON.parse(JSON.stringify(tpl.stops))
     });
-    setSelectedStopIndex(0);
+    setSelectedStopIndex(null);
   };
 
   // Drag and drop interaction for stop pins
@@ -338,6 +342,7 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
 
   // Click on track directly to add a stop or move selected stop
   const handleTrackClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (isDraggingRef.current) return;
     const track = trackRef.current;
     if (!track) return;
@@ -346,7 +351,7 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
 
     if (activeGradient.stops.length < 8) {
       handleAddStopAtPos(clickedPos);
-    } else {
+    } else if (selectedStopIndex !== null) {
       handleUpdateStop(selectedStopIndex, { pos: clickedPos });
     }
   };
@@ -354,6 +359,7 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
   return (
     <div
       className="custom-gradient-studio-card"
+      onClick={() => setSelectedStopIndex(null)}
       style={{
         marginTop: '1.25rem',
         marginBottom: '1.25rem',
@@ -362,6 +368,7 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
         background: 'rgba(15, 23, 42, 0.85)',
         border: '1px solid rgba(0, 240, 255, 0.3)',
         boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
+        cursor: 'default',
       }}
     >
       {/* Header */}
@@ -394,7 +401,10 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
             type="button"
             className="btn btn-secondary"
             style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-            onClick={handleCreateNew}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCreateNew();
+            }}
             title={t('btnNewGradient')}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -408,10 +418,13 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
             type="button"
             className="btn btn-secondary"
             style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-            onClick={handleDuplicate}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDuplicate();
+            }}
             title={t('btnDuplicateGradient')}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
             </svg>
@@ -423,7 +436,10 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
               type="button"
               className="btn btn-danger"
               style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-              onClick={handleDeletePreset}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeletePreset();
+              }}
               title={t('btnDeleteGradient')}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -443,6 +459,7 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
           <select
             className="form-control"
             value={activeGradient.id}
+            onClick={(e) => e.stopPropagation()}
             onChange={(e) => handlePresetChange(e.target.value)}
             style={{ fontSize: '0.85rem' }}
           >
@@ -460,6 +477,7 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
             type="text"
             className="form-control"
             value={activeGradient.name}
+            onClick={(e) => e.stopPropagation()}
             onChange={(e) => handleNameChange(e.target.value)}
             placeholder="e.g. Neon Sunset"
             style={{ fontSize: '0.85rem' }}
@@ -478,7 +496,10 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
               type="button"
               className="btn btn-secondary btn-sm"
               style={{ padding: '0.2rem 0.55rem', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-              onClick={() => handleDistributeStops('qmk')}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDistributeStops('qmk');
+              }}
               title="Evenly distribute stops for seamless circular loop cycling (QMK style)"
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -490,7 +511,10 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
               type="button"
               className="btn btn-secondary btn-sm"
               style={{ padding: '0.2rem 0.55rem', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-              onClick={() => handleDistributeStops('linear')}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDistributeStops('linear');
+              }}
               title="Evenly distribute stops from edge to edge (0% to 100%)"
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -633,7 +657,10 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
               type="button"
               className="btn btn-secondary"
               style={{ padding: '0.25rem 0.65rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-              onClick={handleAddStop}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddStop();
+              }}
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -650,7 +677,10 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
             return (
               <div
                 key={idx}
-                onClick={() => setSelectedStopIndex(idx)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedStopIndex(idx);
+                }}
                 style={{
                   background: isSelected ? 'rgba(30, 58, 138, 0.35)' : 'rgba(30, 41, 59, 0.6)',
                   border: isSelected ? '1px solid var(--accent-cyan)' : '1px solid rgba(255, 255, 255, 0.08)',
@@ -760,7 +790,10 @@ export const CustomGradientStudio: React.FC<CustomGradientStudioProps> = ({
               type="button"
               className="btn btn-secondary btn-sm"
               style={{ padding: '0.25rem 0.6rem', fontSize: '0.74rem' }}
-              onClick={() => handleApplyTemplate(tpl)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleApplyTemplate(tpl);
+              }}
             >
               <span>{tpl.name}</span>
             </button>
