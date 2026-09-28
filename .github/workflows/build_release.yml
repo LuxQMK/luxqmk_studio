@@ -7,11 +7,16 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release Tag (e.g. v1.4.0)'
+        description: 'Release Tag (e.g. v1.4.3 or v1.4.3-beta.1)'
         required: true
-        default: 'v1.4.0'
+        default: 'v1.4.3'
       is_draft:
         description: 'Publish as draft?'
+        required: false
+        type: boolean
+        default: false
+      is_prerelease:
+        description: 'Force publish as Pre-release (Beta)? (Auto-detected if tag contains -beta/-dev/-rc)'
         required: false
         type: boolean
         default: false
@@ -86,12 +91,14 @@ jobs:
           tag_name: ${{ github.event.inputs.release_tag || github.ref_name }}
           name: LuxQMK Studio ${{ github.event.inputs.release_tag || github.ref_name }}
           draft: ${{ github.event.inputs.is_draft == 'true' || false }}
-          prerelease: false
+          prerelease: ${{ github.event.inputs.is_prerelease == 'true' || contains(github.event.inputs.release_tag || github.ref_name, '-beta') || contains(github.event.inputs.release_tag || github.ref_name, '-dev') || contains(github.event.inputs.release_tag || github.ref_name, '-rc') || contains(github.event.inputs.release_tag || github.ref_name, '-alpha') }}
           generate_release_notes: true
           files: |
             release/LuxQMK-Studio-Setup-*.exe
             release/LuxQMK-Studio-Setup.exe
             release/SHA256SUMS.txt
             release/latest.yml
+            release/dev.yml
+            release/beta.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

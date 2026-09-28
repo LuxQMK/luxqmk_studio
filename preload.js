@@ -34,8 +34,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   // Interactive Auto-Updater APIs
   checkForStudioUpdates: () => ipcRenderer.invoke("updater:check-for-updates"),
+  checkStudioUpdates: () => ipcRenderer.invoke("updater:check-for-updates"),
   downloadStudioUpdate: () => ipcRenderer.invoke("updater:download-update"),
   quitAndInstallStudioUpdate: () => ipcRenderer.invoke("updater:quit-and-install"),
+  setAllowPrerelease: (enabled) => ipcRenderer.invoke("updater:set-allow-prerelease", enabled),
+  getAllowPrerelease: () => ipcRenderer.invoke("updater:get-allow-prerelease"),
   onUpdateStatus: (callback) => {
     const handler = (event, data) => callback(data);
     ipcRenderer.on("updater:status", handler);

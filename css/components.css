@@ -55,6 +55,16 @@
   z-index: 10;
 }
 
+.keycap-btn.is-drag-over {
+  border-color: var(--accent-cyan, #00f0ff) !important;
+  background: #143852 !important;
+  box-shadow: 0 0 20px var(--accent-cyan-glow, rgba(0, 240, 255, 0.75)), inset 0 0 10px rgba(0, 240, 255, 0.4) !important;
+  transform: translateY(-3px) scale(1.08) !important;
+  z-index: 30 !important;
+  outline: 2px dashed rgba(0, 240, 255, 0.9);
+  outline-offset: -2px;
+}
+
 .key-secondary {
   font-size: 0.58rem;
   color: var(--key-subtext, rgba(255, 255, 255, 0.45));
@@ -174,26 +184,27 @@
   justify-content: center;
   user-select: none;
   cursor: pointer;
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition: transform 0.08s ease;
-  contain: layout style;
-  will-change: background-color;
+  contain: strict;
+  will-change: background-color, border-color;
+  transform: translateZ(0);
 }
 
 .lighting-keycap:hover {
-  transform: translateY(-1px) scale(1.02);
+  transform: translateY(-1px) scale(1.02) translateZ(0);
   z-index: 10;
 }
 
 .lighting-keycap:active {
-  transform: translateY(2px) scale(0.97);
+  transform: translateY(2px) scale(0.97) translateZ(0);
 }
 
 .lighting-keycap .l-legend {
   font-size: 0.72rem;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.95);
-  text-shadow: 0 0 8px currentColor;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
   pointer-events: none;
   white-space: nowrap;
   overflow: hidden;
@@ -237,6 +248,7 @@
   transition: transform 0.08s ease !important;
   contain: layout style;
   will-change: background-color;
+  transform: translateZ(0);
 }
 
 .keycap-logo-badge,
@@ -248,6 +260,7 @@
   min-height: 0 !important;
   padding: 0 !important;
   box-sizing: border-box !important;
+  transform: translateZ(0);
 }
 
 .lighting-logo-badge .l-legend,
@@ -277,9 +290,10 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   pointer-events: auto;
   cursor: pointer;
-  contain: layout style;
-  transition: transform 0.1s ease, box-shadow 0.12s ease;
-  will-change: background-color, box-shadow;
+  contain: strict;
+  transition: transform 0.1s ease;
+  will-change: background-color, border-color;
+  transform: translateZ(0);
 }
 
 .side-diffuser-segment:hover {
@@ -337,10 +351,15 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-main);
-  cursor: pointer;
+  cursor: grab;
+  user-select: none;
   transition: var(--transition-fast);
   text-align: center;
   min-height: 52px;
+}
+
+.palette-key-btn:active {
+  cursor: grabbing;
 }
 
 .palette-key-btn:hover {
@@ -348,6 +367,12 @@
   border-color: var(--accent-cyan);
   transform: translateY(-2px);
   box-shadow: 0 0 10px var(--accent-cyan-glow);
+}
+
+.palette-key-btn.is-dragging {
+  opacity: 0.45;
+  border-color: var(--accent-cyan);
+  border-style: dashed;
 }
 
 .pal-label {
@@ -361,6 +386,13 @@
   color: var(--text-muted);
   font-family: var(--font-mono);
   margin-top: 2px;
+}
+
+.encoder-slot-card.is-drag-over {
+  border-color: var(--accent-cyan) !important;
+  background: rgba(0, 240, 255, 0.15) !important;
+  box-shadow: 0 0 16px var(--accent-cyan-glow) !important;
+  transform: translateY(-2px);
 }
 
 /* Encoder Slots Grid */

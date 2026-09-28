@@ -43,6 +43,7 @@ export interface StudioVersionInfo {
   release_tag: string;
   release_name?: string;
   release_date?: string;
+  is_prerelease?: boolean;
   min_compatible_firmware?: string;
   changelog?: string[];
   downloads?: {
@@ -59,7 +60,8 @@ const FIRMWARE_CATALOG_URLS = [
   'https://luxqmk-files.pages.dev/catalog.json',
 ];
 
-const STUDIO_GITHUB_API_URL = 'https://api.github.com/repos/LuxQMK/luxqmk_studio/releases/latest';
+const STUDIO_GITHUB_RELEASES_URL = 'https://api.github.com/repos/LuxQMK/luxqmk_studio/releases?per_page=10';
+const STUDIO_GITHUB_LATEST_URL = 'https://api.github.com/repos/LuxQMK/luxqmk_studio/releases/latest';
 
 const STUDIO_VERSION_URLS = [
   'https://files.luxqmk.click/studio/version.json',
@@ -88,6 +90,20 @@ export function parseSemVer(v: string | number | null | undefined): ParsedSemVer
   };
 }
 
+function getPrereleaseRank(prerelease?: string): { rank: number; num: number; raw: string } {
+  if (!prerelease) return { rank: 99, num: 0, raw: '' };
+  const lower = prerelease.toLowerCase();
+  const match = lower.match(/\.(\d+)$/);
+  const num = match ? parseInt(match[1], 10) : 0;
+
+  // Development lifecycle ranking: dev (1) < alpha (2) < beta (3) < rc (4) < stable (99)
+  if (lower.startsWith('dev')) return { rank: 1, num, raw: lower };
+  if (lower.startsWith('alpha')) return { rank: 2, num, raw: lower };
+  if (lower.startsWith('beta')) return { rank: 3, num, raw: lower };
+  if (lower.startsWith('rc')) return { rank: 4, num, raw: lower };
+  return { rank: 2, num, raw: lower };
+}
+
 export function compareSemVer(
   v1: string | { major: number; minor: number; patch: number; prerelease?: string } | null | undefined,
   v2: string | { major: number; minor: number; patch: number; prerelease?: string } | null | undefined
@@ -104,11 +120,15 @@ export function compareSemVer(
   if (p1.minor !== p2.minor) return p1.minor - p2.minor;
   if (p1.patch !== p2.patch) return p1.patch - p2.patch;
 
-  // SemVer Rule: No prerelease (e.g. 1.4.1) is GREATER than a prerelease (e.g. 1.4.1-dev)
+  // SemVer Rule: No prerelease (e.g. 1.4.3) is GREATER than a prerelease (e.g. 1.4.3-dev or 1.4.3-beta.1)
   if (!p1.prerelease && p2.prerelease) return 1;
   if (p1.prerelease && !p2.prerelease) return -1;
   if (p1.prerelease && p2.prerelease) {
-    return p1.prerelease.localeCompare(p2.prerelease);
+    const r1 = getPrereleaseRank(p1.prerelease);
+    const r2 = getPrereleaseRank(p2.prerelease);
+    if (r1.rank !== r2.rank) return r1.rank - r2.rank;
+    if (r1.num !== r2.num) return r1.num - r2.num;
+    return r1.raw.localeCompare(r2.raw);
   }
 
   return 0;
@@ -128,6 +148,7 @@ class CatalogService {
   private lastCatalogFetchTime = 0;
   private cachedStudioVersion: StudioVersionInfo | null = null;
   private lastStudioFetchTime = 0;
+  private lastIncludeBeta = false;
   private readonly CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes cache
 
   /**
@@ -160,52 +181,63 @@ class CatalogService {
 
   /**
    * Fetches the latest LuxQMK Studio version manifest from GitHub Releases API or files.luxqmk.click.
+   * If includeBeta is true, checks prereleases and beta versions as well as stable releases.
    */
-  async getStudioVersion(forceRefresh = false): Promise<StudioVersionInfo | null> {
+  async getStudioVersion(forceRefresh = false, includeBeta = false): Promise<StudioVersionInfo | null> {
     const now = Date.now();
-    if (!forceRefresh && this.cachedStudioVersion && now - this.lastStudioFetchTime < this.CACHE_TTL_MS) {
+    if (!forceRefresh && this.cachedStudioVersion && this.lastIncludeBeta === includeBeta && now - this.lastStudioFetchTime < this.CACHE_TTL_MS) {
       return this.cachedStudioVersion;
     }
 
-    // 1. Try official GitHub Releases API (Instant synchronization upon tag push)
+    // 1. Try official GitHub Releases API
     try {
-      const res = await fetch(STUDIO_GITHUB_API_URL, {
+      // If includeBeta is enabled, fetch release list and pick the newest release (including prerelease)
+      // If includeBeta is false, fetch release list and pick the newest stable release (prerelease: false)
+      const res = await fetch(STUDIO_GITHUB_RELEASES_URL, {
         headers: { Accept: 'application/vnd.github.v3+json' },
       });
       if (res.ok) {
-        const gh = await res.json();
-        if (gh && gh.tag_name) {
-          const cleanVersion = gh.tag_name.replace(/^v/i, '').trim();
-          const installerAsset = gh.assets?.find((a: any) =>
-            a.name && (a.name.endsWith('.exe') || a.name.includes('Setup'))
-          );
+        const releases = await res.json();
+        if (Array.isArray(releases) && releases.length > 0) {
+          const targetRelease = includeBeta
+            ? releases.find((r: any) => !r.draft)
+            : releases.find((r: any) => !r.draft && !r.prerelease);
 
-          const changelogLines: string[] = gh.body
-            ? gh.body
-                .split('\n')
-                .map((l: string) => l.trim())
-                .filter((l: string) => l.startsWith('-') || l.startsWith('*'))
-                .map((l: string) => l.replace(/^[-*]\s*/, '').trim())
-            : [];
+          if (targetRelease && targetRelease.tag_name) {
+            const cleanVersion = targetRelease.tag_name.replace(/^v/i, '').trim();
+            const installerAsset = targetRelease.assets?.find((a: any) =>
+              a.name && (a.name.endsWith('.exe') || a.name.includes('Setup'))
+            );
 
-          const info: StudioVersionInfo = {
-            version: cleanVersion,
-            release_tag: gh.tag_name,
-            release_name: gh.name || `LuxQMK Studio ${gh.tag_name}`,
-            release_date: gh.published_at || new Date().toISOString(),
-            min_compatible_firmware: '0.3.2',
-            changelog: changelogLines,
-            downloads: {
-              windows_installer:
-                installerAsset?.browser_download_url ||
-                `https://github.com/LuxQMK/luxqmk_studio/releases/download/${gh.tag_name}/LuxQMK-Studio-Setup-${cleanVersion}.exe`,
-              web_app: 'https://studio.luxqmk.click',
-            },
-          };
+            const changelogLines: string[] = targetRelease.body
+              ? targetRelease.body
+                  .split('\n')
+                  .map((l: string) => l.trim())
+                  .filter((l: string) => l.startsWith('-') || l.startsWith('*'))
+                  .map((l: string) => l.replace(/^[-*]\s*/, '').trim())
+              : [];
 
-          this.cachedStudioVersion = info;
-          this.lastStudioFetchTime = now;
-          return info;
+            const info: StudioVersionInfo = {
+              version: cleanVersion,
+              release_tag: targetRelease.tag_name,
+              release_name: targetRelease.name || `LuxQMK Studio ${targetRelease.tag_name}`,
+              release_date: targetRelease.published_at || new Date().toISOString(),
+              is_prerelease: Boolean(targetRelease.prerelease),
+              min_compatible_firmware: '0.3.3',
+              changelog: changelogLines,
+              downloads: {
+                windows_installer:
+                  installerAsset?.browser_download_url ||
+                  `https://github.com/LuxQMK/luxqmk_studio/releases/download/${targetRelease.tag_name}/LuxQMK-Studio-Setup-${cleanVersion}.exe`,
+                web_app: 'https://studio.luxqmk.click',
+              },
+            };
+
+            this.cachedStudioVersion = info;
+            this.lastStudioFetchTime = now;
+            this.lastIncludeBeta = includeBeta;
+            return info;
+          }
         }
       }
     } catch (e) {
@@ -221,6 +253,7 @@ class CatalogService {
           if (data && data.version) {
             this.cachedStudioVersion = data;
             this.lastStudioFetchTime = now;
+            this.lastIncludeBeta = includeBeta;
             return data;
           }
         }

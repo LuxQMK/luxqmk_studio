@@ -2578,6 +2578,117 @@ export const KEYCODES_DB: KeycodeEntry[] = [
     "name": "M15",
     "category": "macro",
     "title": "Execute Macro 15 (QK_MACRO_15)"
+  },
+  {
+    "code": 30784,
+    "label": "RGB Matrix On",
+    "name": "RM_ON",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Turn RGB Matrix On (QK_RGB_MATRIX_ON / 0x7840)"
+  },
+  {
+    "code": 30785,
+    "label": "RGB Matrix Off",
+    "name": "RM_OFF",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Turn RGB Matrix Off (QK_RGB_MATRIX_OFF / 0x7841)"
+  },
+  {
+    "code": 30786,
+    "label": "RGB Matrix Toggle",
+    "name": "RM_TOGG",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Toggle RGB Matrix (QK_RGB_MATRIX_TOGGLE / 0x7842)"
+  },
+  {
+    "code": 30787,
+    "label": "RGB Matrix Mode +",
+    "name": "RM_NEXT",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Next RGB Matrix Effect (QK_RGB_MATRIX_MODE_NEXT / 0x7843)"
+  },
+  {
+    "code": 30788,
+    "label": "RGB Matrix Mode -",
+    "name": "RM_PREV",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Previous RGB Matrix Effect (QK_RGB_MATRIX_MODE_PREVIOUS / 0x7844)"
+  },
+  {
+    "code": 30789,
+    "label": "RGB Matrix Hue +",
+    "name": "RM_HUEU",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Increase RGB Matrix Hue (QK_RGB_MATRIX_HUE_UP / 0x7845)"
+  },
+  {
+    "code": 30790,
+    "label": "RGB Matrix Hue -",
+    "name": "RM_HUED",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Decrease RGB Matrix Hue (QK_RGB_MATRIX_HUE_DOWN / 0x7846)"
+  },
+  {
+    "code": 30791,
+    "label": "RGB Matrix Sat +",
+    "name": "RM_SATU",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Increase RGB Matrix Saturation (QK_RGB_MATRIX_SATURATION_UP / 0x7847)"
+  },
+  {
+    "code": 30792,
+    "label": "RGB Matrix Sat -",
+    "name": "RM_SATD",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Decrease RGB Matrix Saturation (QK_RGB_MATRIX_SATURATION_DOWN / 0x7848)"
+  },
+  {
+    "code": 30793,
+    "label": "RGB Matrix Bright +",
+    "name": "RM_VALU",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Increase RGB Matrix Brightness (QK_RGB_MATRIX_VALUE_UP / 0x7849)"
+  },
+  {
+    "code": 30794,
+    "label": "RGB Matrix Bright -",
+    "name": "RM_VALD",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Decrease RGB Matrix Brightness (QK_RGB_MATRIX_VALUE_DOWN / 0x784A)"
+  },
+  {
+    "code": 30795,
+    "label": "RGB Matrix Speed +",
+    "name": "RM_SPDU",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Increase RGB Matrix Speed (QK_RGB_MATRIX_SPEED_UP / 0x784B)"
+  },
+  {
+    "code": 30796,
+    "label": "RGB Matrix Speed -",
+    "name": "RM_SPDD",
+    "category": "lighting",
+    "lightingType": "rgb_matrix",
+    "title": "Decrease RGB Matrix Speed (QK_RGB_MATRIX_SPEED_DOWN / 0x784C)"
+  },
+  {
+    "code": 31765,
+    "label": "Win Lock",
+    "name": "GU_TOGG",
+    "category": "special",
+    "title": "Toggle GUI/Win Key Lock (0x7C15 / MAGIC_TOGGLE_ALT_GUI)"
   }
 ];
 
@@ -2630,12 +2741,6 @@ export function getKeycodeInfo(code: number): KeycodeEntry {
   const existing = CODE_MAP.get(code);
   if (existing) return existing;
 
-  // Custom LuxQMK keycodes (0x7000 - 0x7FFF)
-  if (code >= 0x7000 && code <= 0x7FFF) {
-    const sub = code & 0x00FF;
-    return { code, label: `LUX_${sub}`, name: `LUXQMK_${sub}`, desc: 'Custom LuxQMK Feature Keycode', category: 'custom' };
-  }
-
   // Layer tap: LT(layer, kc) -> 0x4000 .. 0x4FFF
   if ((code & 0xF000) === 0x4000) {
     const layer = (code >> 8) & 0x0F;
@@ -2667,10 +2772,73 @@ export function getKeycodeInfo(code: number): KeycodeEntry {
     if (type === 6) return { code, label: `TT(${layer})`, name: `TT(${layer})`, desc: `Layer Tap Toggle ${layer}`, category: 'layers' };
   }
 
-  // Dynamic macro decoding (M0 - M15)
+  // Dynamic macro decoding (M0 - M15) -> 0x7700 .. 0x771F
   if (topByte === 0x77) {
-    const macroId = code & 0x0F;
+    const macroId = code & 0x1F;
     return { code, label: `M${macroId}`, name: `M${macroId}`, desc: `Execute Macro ${macroId}`, category: 'macro' };
+  }
+
+  // QMK RGB Matrix fallback decoding (0x7840 - 0x784E)
+  if (code >= 0x7840 && code <= 0x784E) {
+    const rgbMap: Record<number, { label: string; name: string }> = {
+      0x7840: { label: 'RGB On', name: 'RM_ON' },
+      0x7841: { label: 'RGB Off', name: 'RM_OFF' },
+      0x7842: { label: 'RGB Toggle', name: 'RM_TOGG' },
+      0x7843: { label: 'RGB Mode +', name: 'RM_NEXT' },
+      0x7844: { label: 'RGB Mode -', name: 'RM_PREV' },
+      0x7845: { label: 'Hue +', name: 'RM_HUEU' },
+      0x7846: { label: 'Hue -', name: 'RM_HUED' },
+      0x7847: { label: 'Sat +', name: 'RM_SATU' },
+      0x7848: { label: 'Sat -', name: 'RM_SATD' },
+      0x7849: { label: 'Bright +', name: 'RM_VALU' },
+      0x784A: { label: 'Bright -', name: 'RM_VALD' },
+      0x784B: { label: 'Speed +', name: 'RM_SPDU' },
+      0x784C: { label: 'Speed -', name: 'RM_SPDD' },
+      0x784D: { label: 'Flag +', name: 'RM_FLGU' },
+      0x784E: { label: 'Flag -', name: 'RM_FLGD' },
+    };
+    if (rgbMap[code]) {
+      return { code, label: rgbMap[code].label, name: rgbMap[code].name, desc: rgbMap[code].label, category: 'lighting' };
+    }
+  }
+
+  // QMK Underglow RGB fallback decoding (0x7820 - 0x7834)
+  if (code >= 0x7820 && code <= 0x7834) {
+    const ugMap: Record<number, { label: string; name: string }> = {
+      0x7820: { label: 'RGB Toggle', name: 'RGB_TOG' },
+      0x7821: { label: 'RGB Mode +', name: 'RGB_MOD' },
+      0x7822: { label: 'RGB Mode -', name: 'RGB_RMOD' },
+      0x7823: { label: 'Hue +', name: 'RGB_HUI' },
+      0x7824: { label: 'Hue -', name: 'RGB_HUD' },
+      0x7825: { label: 'Sat +', name: 'RGB_SAI' },
+      0x7826: { label: 'Sat -', name: 'RGB_SAD' },
+      0x7827: { label: 'Bright +', name: 'RGB_VAI' },
+      0x7828: { label: 'Bright -', name: 'RGB_VAD' },
+      0x7829: { label: 'Speed +', name: 'RGB_SPI' },
+      0x782A: { label: 'Speed -', name: 'RGB_SPD' },
+    };
+    if (ugMap[code]) {
+      return { code, label: ugMap[code].label, name: ugMap[code].name, desc: ugMap[code].label, category: 'lighting' };
+    }
+  }
+
+  // Custom LuxQMK keys (0x7E00 - 0x7E09)
+  if (code >= 0x7E00 && code <= 0x7E0F) {
+    const luxMap: Record<number, { label: string; name: string }> = {
+      0x7E00: { label: 'RGB Reverse', name: 'RGB_REV' },
+      0x7E01: { label: 'Density +', name: 'RGB_DEN_INC' },
+      0x7E02: { label: 'Density -', name: 'RGB_DEN_DEC' },
+      0x7E03: { label: 'Density Step', name: 'RGB_DEN_STEP' },
+      0x7E04: { label: 'Density Reset', name: 'RGB_DEN_RST' },
+      0x7E05: { label: 'Gradient Step', name: 'RGB_GRAD_STEP' },
+      0x7E06: { label: 'Reactive Step', name: 'RGB_REACT_STEP' },
+      0x7E07: { label: 'React Speed +', name: 'RGB_RSPD_INC' },
+      0x7E08: { label: 'React Speed -', name: 'RGB_RSPD_DEC' },
+      0x7E09: { label: 'React Spd Step', name: 'RGB_RSPD_STEP' },
+    };
+    if (luxMap[code]) {
+      return { code, label: luxMap[code].label, name: luxMap[code].name, desc: luxMap[code].label, category: 'custom' };
+    }
   }
 
   if (code === 0x0001) return { code: 0x0001, label: '▽ (Pass)', name: 'KC_TRNS', desc: 'Transparent (Pass through)', category: 'special' };
@@ -2743,6 +2911,41 @@ export function getShortKeycodeLabel(info: { code?: number | string; label?: str
     case 'KC_MPRV': return 'Prev';
     case 'KC_MPLY': return 'Play';
     case 'KC_MSTP': return 'Stop';
+
+    // Lighting & RGB Matrix
+    case 'RGB_TOG':
+    case 'RM_TOGG': return 'RGB Tog';
+    case 'RGB_MOD':
+    case 'RM_NEXT': return 'RGB M+';
+    case 'RGB_RMOD':
+    case 'RM_PREV': return 'RGB M-';
+    case 'RGB_HUI':
+    case 'RM_HUEU': return 'Hue +';
+    case 'RGB_HUD':
+    case 'RM_HUED': return 'Hue -';
+    case 'RGB_SAI':
+    case 'RM_SATU': return 'Sat +';
+    case 'RGB_SAD':
+    case 'RM_SATD': return 'Sat -';
+    case 'RGB_VAI':
+    case 'RM_VALU': return 'Brt +';
+    case 'RGB_VAD':
+    case 'RM_VALD': return 'Brt -';
+    case 'RGB_SPI':
+    case 'RM_SPDU': return 'Spd +';
+    case 'RGB_SPD':
+    case 'RM_SPDD': return 'Spd -';
+    case 'RGB_REV': return 'RGB Rev';
+    case 'RGB_DEN_INC': return 'Dens +';
+    case 'RGB_DEN_DEC': return 'Dens -';
+    case 'RGB_DEN_STEP': return 'Dens ↻';
+    case 'RGB_DEN_RST': return 'Dens Rst';
+    case 'RGB_GRAD_STEP': return 'Grad ↻';
+    case 'RGB_REACT_STEP': return 'React ↻';
+    case 'RGB_RSPD_INC': return 'RSpd +';
+    case 'RGB_RSPD_DEC': return 'RSpd -';
+    case 'RGB_RSPD_STEP': return 'RSpd ↻';
+    case 'GU_TOGG': return 'Win Lock';
   }
 
   // Common verbose label dictionary
@@ -2779,16 +2982,38 @@ export function getShortKeycodeLabel(info: { code?: number | string; label?: str
     'Audio Vol Up': 'Vol +',
     'Audio Vol Down': 'Vol -',
     'RGB Toggle': 'RGB Tog',
-    'RGB Mode+': 'RGB M+',
-    'RGB Mode-': 'RGB M-',
-    'RGB Bright+': 'RGB B+',
-    'RGB Bright-': 'RGB B-',
-    'RGB Speed+': 'RGB S+',
-    'RGB Speed-': 'RGB S-',
-    'RGB Hue+': 'RGB H+',
-    'RGB Hue-': 'RGB H-',
-    'RGB Sat+': 'RGB S+',
-    'RGB Sat-': 'RGB S-',
+    'RGB Mode +': 'RGB M+',
+    'RGB Mode -': 'RGB M-',
+    'RGB Matrix Toggle': 'RGB Tog',
+    'RGB Matrix Mode +': 'RGB M+',
+    'RGB Matrix Mode -': 'RGB M-',
+    'RGB Matrix Bright +': 'Brt +',
+    'RGB Matrix Bright -': 'Brt -',
+    'RGB Matrix Speed +': 'Spd +',
+    'RGB Matrix Speed -': 'Spd -',
+    'RGB Matrix Hue +': 'Hue +',
+    'RGB Matrix Hue -': 'Hue -',
+    'RGB Matrix Sat +': 'Sat +',
+    'RGB Matrix Sat -': 'Sat -',
+    'Bright +': 'Brt +',
+    'Bright -': 'Brt -',
+    'Speed +': 'Spd +',
+    'Speed -': 'Spd -',
+    'Hue +': 'Hue +',
+    'Hue -': 'Hue -',
+    'Sat +': 'Sat +',
+    'Sat -': 'Sat -',
+    'Density +': 'Dens +',
+    'Density -': 'Dens -',
+    'Density Step': 'Dens ↻',
+    'Density Reset': 'Dens Rst',
+    'Gradient Step': 'Grad ↻',
+    'Reactive Step': 'React ↻',
+    'React Speed +': 'RSpd +',
+    'React Speed -': 'RSpd -',
+    'React Spd Step': 'RSpd ↻',
+    'RGB Reverse': 'RGB Rev',
+    'Win Lock': 'Win Lk',
     'EEPROM Reset': 'EEP RST',
     'Bootloader': 'Reset',
     '▽ (Pass)': '▽',

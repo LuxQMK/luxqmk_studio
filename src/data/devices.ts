@@ -26,6 +26,8 @@ export interface DeviceDescriptor {
     hasPerLayerLighting: boolean;
     hasDebounceControl: boolean;
     hasNkroToggle: boolean;
+    hasDipSwitches?: boolean;
+    dipSwitchCount?: number;
   };
 }
 
@@ -57,7 +59,9 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
       "hasDualLayerReactive": true,
       "hasPerLayerLighting": true,
       "hasDebounceControl": true,
-      "hasNkroToggle": true
+      "hasNkroToggle": true,
+      "hasDipSwitches": true,
+      "dipSwitchCount": 1
     }
   },
   {
@@ -87,7 +91,9 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
       "hasDualLayerReactive": true,
       "hasPerLayerLighting": true,
       "hasDebounceControl": true,
-      "hasNkroToggle": true
+      "hasNkroToggle": true,
+      "hasDipSwitches": true,
+      "dipSwitchCount": 1
     }
   },
   {
@@ -117,7 +123,9 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
       "hasDualLayerReactive": true,
       "hasPerLayerLighting": true,
       "hasDebounceControl": true,
-      "hasNkroToggle": true
+      "hasNkroToggle": true,
+      "hasDipSwitches": true,
+      "dipSwitchCount": 1
     }
   },
   {
@@ -147,7 +155,9 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
       "hasDualLayerReactive": true,
       "hasPerLayerLighting": true,
       "hasDebounceControl": true,
-      "hasNkroToggle": true
+      "hasNkroToggle": true,
+      "hasDipSwitches": false,
+      "dipSwitchCount": 0
     }
   },
   {
@@ -177,7 +187,9 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
       "hasDualLayerReactive": true,
       "hasPerLayerLighting": true,
       "hasDebounceControl": true,
-      "hasNkroToggle": true
+      "hasNkroToggle": true,
+      "hasDipSwitches": false,
+      "dipSwitchCount": 0
     }
   },
   {
@@ -207,7 +219,9 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
       "hasDualLayerReactive": true,
       "hasPerLayerLighting": true,
       "hasDebounceControl": true,
-      "hasNkroToggle": true
+      "hasNkroToggle": true,
+      "hasDipSwitches": false,
+      "dipSwitchCount": 0
     }
   },
   {
@@ -237,7 +251,9 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
       "hasDualLayerReactive": false,
       "hasPerLayerLighting": false,
       "hasDebounceControl": true,
-      "hasNkroToggle": true
+      "hasNkroToggle": true,
+      "hasDipSwitches": false,
+      "dipSwitchCount": 0
     }
   },
   {
@@ -267,7 +283,9 @@ export const ALL_DEVICE_DESCRIPTORS: DeviceDescriptor[] = [
       "hasDualLayerReactive": false,
       "hasPerLayerLighting": false,
       "hasDebounceControl": true,
-      "hasNkroToggle": true
+      "hasNkroToggle": true,
+      "hasDipSwitches": false,
+      "dipSwitchCount": 0
     }
   }
 ];
@@ -328,6 +346,8 @@ export function createDynamicDescriptor(
       hasPerLayerLighting: hasRgb,
       hasDebounceControl: true,
       hasNkroToggle: true,
+      hasDipSwitches: false,
+      dipSwitchCount: 0,
     },
   };
 }

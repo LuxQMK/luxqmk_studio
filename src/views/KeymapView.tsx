@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { useKeymapStore } from '../store/useKeymapStore';
 import { useDeviceStore } from '../store/useDeviceStore';
 import { getLayoutForPreset, getSideLedSegments, isSidelightSupported } from '../data/layouts';
@@ -8,6 +8,7 @@ import { useI18n } from '../i18n';
 import { useKeyboardFit } from '../hooks/useKeyboardFit';
 import { useUIStore } from '../store/useUIStore';
 import { LogoLedBadge } from '../components/common/LogoLedBadge';
+import { HardwareSwitchStudio } from '../components/common/HardwareSwitchStudio';
 
 export const KeymapView: React.FC = () => {
   const {
@@ -20,19 +21,24 @@ export const KeymapView: React.FC = () => {
     activeCategory,
     setActiveCategory,
     assignKeycodeToSelected,
+    assignKeycodeToKey,
     getKeycode,
     readAllLayersFromKeyboard,
     loadViaJson,
   } = useKeymapStore();
 
+  const [dragOverKey, setDragOverKey] = React.useState<{ row: number; col: number } | null>(null);
+  const [isDragging, setIsDragging] = React.useState<boolean>(false);
+  const [draggingKeycode, setDraggingKeycode] = React.useState<number | null>(null);
+
   const { isConnected, activeDescriptor, isViaSupported } = useDeviceStore();
   const { t } = useI18n();
 
   const desc = activeDescriptor || ALL_DEVICE_DESCRIPTORS.find((d) => d.id === presetLayoutId) || null;
-  const hasSidelights = isSidelightSupported(presetLayoutId, desc);
+  const hasSidelights = useMemo(() => isSidelightSupported(presetLayoutId, desc), [presetLayoutId, desc]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const layoutKeys = getLayoutForPreset(presetLayoutId);
+  const layoutKeys = useMemo(() => getLayoutForPreset(presetLayoutId), [presetLayoutId]);
 
   useEffect(() => {
     if (useDeviceStore.getState().isConnected && useDeviceStore.getState().isViaSupported) {
@@ -40,19 +46,21 @@ export const KeymapView: React.FC = () => {
     }
   }, []);
 
-  // Compute bounding box
-  let maxX = 0;
-  let maxY = 0;
-  layoutKeys.forEach((k) => {
-    const rX = k.x + (k.w || 1);
-    const rY = k.y + (k.h || 1);
-    if (rX > maxX) maxX = rX;
-    if (rY > maxY) maxY = rY;
-  });
-
   const unitSize = 46;
-  const canvasWidth = Math.ceil(maxX * unitSize) + 36;
-  const canvasHeight = Math.ceil(maxY * unitSize) + 36;
+  const { canvasWidth, canvasHeight } = useMemo(() => {
+    let maxX = 0;
+    let maxY = 0;
+    layoutKeys.forEach((k) => {
+      const rX = k.x + (k.w || 1);
+      const rY = k.y + (k.h || 1);
+      if (rX > maxX) maxX = rX;
+      if (rY > maxY) maxY = rY;
+    });
+    return {
+      canvasWidth: Math.ceil(maxX * unitSize) + 36,
+      canvasHeight: Math.ceil(maxY * unitSize) + 36,
+    };
+  }, [layoutKeys]);
 
   const { wrapperRef, canvasRef } = useKeyboardFit(canvasWidth, canvasHeight);
 
@@ -149,6 +157,13 @@ export const KeymapView: React.FC = () => {
                 onClick={() => setActiveLayer(2)}
               >
                 {t('layer2')}
+              </button>
+              <button
+                type="button"
+                className={`layer-btn ${activeLayer === 3 ? 'active' : ''}`}
+                onClick={() => setActiveLayer(3)}
+              >
+                {t('layer3')}
               </button>
             </div>
 
@@ -317,19 +332,28 @@ export const KeymapView: React.FC = () => {
         </div>
 
         {/* Interactive Keyboard Canvas */}
-        <div className="keyboard-scroll-wrapper" ref={wrapperRef}>
+        <div
+          className="keyboard-scroll-wrapper"
+          ref={wrapperRef}
+          onClick={() => setSelectedKey(null)}
+        >
           <div
             className={`keyboard-canvas ${hasSidelights ? 'has-sidelights' : ''}`}
             id="keyboardCanvas"
             ref={canvasRef}
             style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, position: 'relative' }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setSelectedKey(null);
+              }
+            }}
           >
             {/* Left & Right Sidelight LED Diffusers */}
             {hasSidelights && (() => {
               const sideLeds = getSideLedSegments(presetLayoutId, canvasHeight, desc);
               if (!sideLeds) return null;
               return (
-                <div className="side-diffusers-container">
+                <div className="side-diffusers-container" onClick={(e) => e.stopPropagation()}>
                   {sideLeds.left.map((sled) => (
                     <div
                       key={sled.id}
@@ -380,7 +404,8 @@ export const KeymapView: React.FC = () => {
                     top={top}
                     width={w}
                     height={h}
-                    onClick={() => {
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
                       useUIStore.getState().setActiveView('lighting');
                       useUIStore.getState().setLightingSubTab('logo');
                     }}
@@ -403,7 +428,8 @@ export const KeymapView: React.FC = () => {
                       height: `${knobSize}px`,
                       borderRadius: '50%',
                     }}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       useUIStore.getState().setActiveView('encoder');
                     }}
                     title={t('navEncoder', 'Rotary Knob')}
@@ -411,12 +437,16 @@ export const KeymapView: React.FC = () => {
                 );
               }
 
-              const isTrns = activeLayer > 0 && (kc === 0x0001 || kc === 1);
+              const isBaseLayer = activeLayer === 0 || activeLayer === 2;
+              const isTrns = kc === 0x0001 || kc === 1;
               const shortLabel = isTrns ? '▽' : getShortKeycodeLabel(info);
               const defaultKc = (key as any).defaultKeycode;
+              const isDragOver = dragOverKey?.row === row && dragOverKey?.col === col;
 
               // Determine if this key on activeLayer is custom-mapped away from default
-              const isCustom = activeLayer > 0 ? !isTrns : (defaultKc !== undefined && kc !== defaultKc && kc !== 0x0000);
+              const isCustom = isBaseLayer
+                ? (defaultKc !== undefined && kc !== defaultKc && kc !== 0x0000 && !isTrns)
+                : !isTrns;
               const isSingleLegend = !isCustom && !isTrns;
               const fontClass = getFontSizeClass(shortLabel);
 
@@ -424,7 +454,46 @@ export const KeymapView: React.FC = () => {
                 <button
                   key={`${activeLayer}-${row}-${col}-${idx}`}
                   type="button"
-                  className={`keycap-btn ${isSelected ? 'selected' : ''} ${isTrns ? 'is-trns' : ''} ${isCustom ? 'is-custom-mapped' : ''} ${!isSingleLegend ? 'has-dual-legend' : ''} key-group-${key.group || 'alpha'}`}
+                  draggable={row >= 0 && col >= 0}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('text/plain', String(kc));
+                    e.dataTransfer.setData('application/json', JSON.stringify({ code: kc, label: shortLabel, originKey: key.id }));
+                    e.dataTransfer.effectAllowed = 'copy';
+                    setIsDragging(true);
+                    setDraggingKeycode(kc);
+                  }}
+                  onDragEnd={() => {
+                    setIsDragging(false);
+                    setDraggingKeycode(null);
+                    setDragOverKey(null);
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                  }}
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    setDragOverKey({ row, col });
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    if (dragOverKey?.row === row && dragOverKey?.col === col) {
+                      setDragOverKey(null);
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOverKey(null);
+                    setIsDragging(false);
+                    setDraggingKeycode(null);
+                    const raw = e.dataTransfer.getData('text/plain');
+                    const code = parseInt(raw, 10);
+                    if (!isNaN(code)) {
+                      assignKeycodeToKey(activeLayer, row, col, code);
+                      setSelectedKey(key);
+                    }
+                  }}
+                  className={`keycap-btn ${isSelected ? 'selected' : ''} ${isDragOver ? 'is-drag-over' : ''} ${isTrns ? 'is-trns' : ''} ${isCustom ? 'is-custom-mapped' : ''} ${!isSingleLegend ? 'has-dual-legend' : ''} key-group-${key.group || 'alpha'}`}
                   style={{
                     position: 'absolute',
                     left: `${left}px`,
@@ -432,7 +501,14 @@ export const KeymapView: React.FC = () => {
                     width: `${w}px`,
                     height: `${h}px`,
                   }}
-                  onClick={() => setSelectedKey(key)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isSelected) {
+                      setSelectedKey(null);
+                    } else {
+                      setSelectedKey(key);
+                    }
+                  }}
                   title={`${key.label || key.id}: ${info.name || ''} ${info.label ? `— ${info.label}` : ''} (0x${kc.toString(16).padStart(4, '0').toUpperCase()})`}
                 >
                   {isSingleLegend ? (
@@ -478,7 +554,22 @@ export const KeymapView: React.FC = () => {
             <button
               key={idx}
               type="button"
-              className="palette-key-btn"
+              className={`palette-key-btn ${draggingKeycode === kc.code ? 'is-dragging' : ''}`}
+              draggable={typeof kc.code === 'number'}
+              onDragStart={(e) => {
+                if (typeof kc.code === 'number') {
+                  e.dataTransfer.setData('text/plain', String(kc.code));
+                  e.dataTransfer.setData('application/json', JSON.stringify({ code: kc.code, label: kc.label, name: kc.name }));
+                  e.dataTransfer.effectAllowed = 'copy';
+                  setIsDragging(true);
+                  setDraggingKeycode(kc.code);
+                }
+              }}
+              onDragEnd={() => {
+                setIsDragging(false);
+                setDraggingKeycode(null);
+                setDragOverKey(null);
+              }}
               title={`${kc.name}: ${kc.desc || kc.title || ''}`}
               onClick={() => {
                 if (typeof kc.code === 'number') {
@@ -494,6 +585,11 @@ export const KeymapView: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Hardware Switches (DIP / Rear slider) - Only rendered for keyboards with physical switches */}
+      {(desc?.capabilities?.hasDipSwitches || (desc?.capabilities?.dipSwitchCount && desc.capabilities.dipSwitchCount > 0)) && (
+        <HardwareSwitchStudio switchIndex={0} />
+      )}
     </section>
   );
 };

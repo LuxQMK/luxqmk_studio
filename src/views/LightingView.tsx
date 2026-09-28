@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLightingStore, ALL_RGB_EFFECTS, HARDWARE_GRADIENTS, COLOR_SWATCHES } from '../store/useLightingStore';
 import { useKeymapStore } from '../store/useKeymapStore';
 import { useDeviceStore } from '../store/useDeviceStore';
@@ -74,22 +74,29 @@ export const LightingView: React.FC = () => {
     }
   }, [lightingSubTab, isConnected, desc, setLightingSubTab]);
 
-  const layoutKeys = getLayoutForPreset(presetLayoutId);
-  const hasSidelights = isSidelightSupported(presetLayoutId, desc);
-
-  // Compute bounding box
-  let maxX = 0;
-  let maxY = 0;
-  layoutKeys.forEach((k) => {
-    const rX = k.x + (k.w || 1);
-    const rY = k.y + (k.h || 1);
-    if (rX > maxX) maxX = rX;
-    if (rY > maxY) maxY = rY;
-  });
+  const layoutKeys = useMemo(() => getLayoutForPreset(presetLayoutId), [presetLayoutId]);
+  const hasSidelights = useMemo(() => isSidelightSupported(presetLayoutId, desc), [presetLayoutId, desc]);
 
   const unitSize = 46;
-  const canvasWidth = Math.ceil(maxX * unitSize) + 36;
-  const canvasHeight = Math.ceil(maxY * unitSize) + 36;
+  const { canvasWidth, canvasHeight } = useMemo(() => {
+    let maxX = 0;
+    let maxY = 0;
+    layoutKeys.forEach((k) => {
+      const rX = k.x + (k.w || 1);
+      const rY = k.y + (k.h || 1);
+      if (rX > maxX) maxX = rX;
+      if (rY > maxY) maxY = rY;
+    });
+    return {
+      canvasWidth: Math.ceil(maxX * unitSize) + 36,
+      canvasHeight: Math.ceil(maxY * unitSize) + 36,
+    };
+  }, [layoutKeys]);
+
+  const sideLeds = useMemo(() => {
+    if (!hasSidelights) return null;
+    return getSideLedSegments(presetLayoutId, canvasHeight, desc);
+  }, [hasSidelights, presetLayoutId, canvasHeight, desc]);
 
   const { wrapperRef, canvasRef } = useKeyboardFit(canvasWidth, canvasHeight);
   const { registerKeyHit } = useLightingVisualizer(canvasRef, layoutKeys);
@@ -165,28 +172,25 @@ export const LightingView: React.FC = () => {
       });
 
       // Intersect left & right sidelights
-      if (hasSidelights) {
-        const sideLeds = getSideLedSegments(presetLayoutId, canvasHeight, desc);
-        if (sideLeds) {
-          sideLeds.left.forEach((sled, sIdx) => {
-            const sL = 6;
-            const sT = sled.top;
-            const sR = 30;
-            const sB = sT + sled.height;
-            if (sL < mRight && sR > mLeft && sT < mBottom && sB > mTop) {
-              nextSelection.add(layoutKeys.length + sIdx);
-            }
-          });
-          sideLeds.right.forEach((sled, sIdx) => {
-            const sL = canvasWidth - 30;
-            const sT = sled.top;
-            const sR = canvasWidth - 6;
-            const sB = sT + sled.height;
-            if (sL < mRight && sR > mLeft && sT < mBottom && sB > mTop) {
-              nextSelection.add(layoutKeys.length + sideLeds.left.length + sIdx);
-            }
-          });
-        }
+      if (hasSidelights && sideLeds) {
+        sideLeds.left.forEach((sled, sIdx) => {
+          const sL = 6;
+          const sT = sled.top;
+          const sR = 30;
+          const sB = sT + sled.height;
+          if (sL < mRight && sR > mLeft && sT < mBottom && sB > mTop) {
+            nextSelection.add(layoutKeys.length + sIdx);
+          }
+        });
+        sideLeds.right.forEach((sled, sIdx) => {
+          const sL = canvasWidth - 30;
+          const sT = sled.top;
+          const sR = canvasWidth - 6;
+          const sB = sT + sled.height;
+          if (sL < mRight && sR > mLeft && sT < mBottom && sB > mTop) {
+            nextSelection.add(layoutKeys.length + sideLeds.left.length + sIdx);
+          }
+        });
       }
 
       useLightingStore.getState().setSelectedLeds(nextSelection);
@@ -374,50 +378,46 @@ export const LightingView: React.FC = () => {
             style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, position: 'relative' }}
           >
             {/* Left & Right Sidelight LED Diffusers */}
-            {hasSidelights && (() => {
-              const sideLeds = getSideLedSegments(presetLayoutId, canvasHeight, desc);
-              if (!sideLeds) return null;
-              return (
-                <div className="side-diffusers-container">
-                  {sideLeds.left.map((sled, sIdx) => {
-                    const sledIdx = layoutKeys.length + sIdx;
-                    return (
-                      <div
-                        key={sled.id}
-                        data-key-id={sled.id}
-                        className={`side-diffuser-segment side-diffuser-left ${selectedLeds.has(sledIdx) ? 'perkey-selected' : ''}`}
-                        style={{
-                          top: `${sled.top}px`,
-                          height: `${sled.height}px`,
-                          left: '6px',
-                          cursor: isPerKeyActive ? 'pointer' : 'default',
-                        }}
-                        title={`Side LED Left (${sled.id})`}
-                        onClick={(e) => handleKeycapClick(sledIdx, e)}
-                      />
-                    );
-                  })}
-                  {sideLeds.right.map((sled, sIdx) => {
-                    const sledIdx = layoutKeys.length + sideLeds.left.length + sIdx;
-                    return (
-                      <div
-                        key={sled.id}
-                        data-key-id={sled.id}
-                        className={`side-diffuser-segment side-diffuser-right ${selectedLeds.has(sledIdx) ? 'perkey-selected' : ''}`}
-                        style={{
-                          top: `${sled.top}px`,
-                          height: `${sled.height}px`,
-                          right: '6px',
-                          cursor: isPerKeyActive ? 'pointer' : 'default',
-                        }}
-                        title={`Side LED Right (${sled.id})`}
-                        onClick={(e) => handleKeycapClick(sledIdx, e)}
-                      />
-                    );
-                  })}
-                </div>
-              );
-            })()}
+            {hasSidelights && sideLeds && (
+              <div className="side-diffusers-container">
+                {sideLeds.left.map((sled, sIdx) => {
+                  const sledIdx = layoutKeys.length + sIdx;
+                  return (
+                    <div
+                      key={sled.id}
+                      data-key-id={sled.id}
+                      className={`side-diffuser-segment side-diffuser-left ${selectedLeds.has(sledIdx) ? 'perkey-selected' : ''}`}
+                      style={{
+                        top: `${sled.top}px`,
+                        height: `${sled.height}px`,
+                        left: '6px',
+                        cursor: isPerKeyActive ? 'pointer' : 'default',
+                      }}
+                      title={`Side LED Left (${sled.id})`}
+                      onClick={(e) => handleKeycapClick(sledIdx, e)}
+                    />
+                  );
+                })}
+                {sideLeds.right.map((sled, sIdx) => {
+                  const sledIdx = layoutKeys.length + sideLeds.left.length + sIdx;
+                  return (
+                    <div
+                      key={sled.id}
+                      data-key-id={sled.id}
+                      className={`side-diffuser-segment side-diffuser-right ${selectedLeds.has(sledIdx) ? 'perkey-selected' : ''}`}
+                      style={{
+                        top: `${sled.top}px`,
+                        height: `${sled.height}px`,
+                        right: '6px',
+                        cursor: isPerKeyActive ? 'pointer' : 'default',
+                      }}
+                      title={`Side LED Right (${sled.id})`}
+                      onClick={(e) => handleKeycapClick(sledIdx, e)}
+                    />
+                  );
+                })}
+              </div>
+            )}
 
             {layoutKeys.map((key, idx) => {
               const w = (key.w || 1) * unitSize - 4;
@@ -1382,6 +1382,58 @@ export const LightingView: React.FC = () => {
                     value={layerLighting.dimLevel}
                     onChange={(e) => setLayerLighting({ dimLevel: Number(e.target.value) })}
                   />
+                </div>
+              </div>
+
+              {/* Live Hardware Layer Status & Simulate Fn Button */}
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                    {t('lblLiveLayerIndicator')}
+                  </span>
+                  <span
+                    className="badge-pill"
+                    style={{
+                      fontSize: '0.75rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
+                      background: (hwActiveLayer > 0 || isSimulatingFn) ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                      border: (hwActiveLayer > 0 || isSimulatingFn) ? '1px solid rgba(0, 240, 255, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                      color: (hwActiveLayer > 0 || isSimulatingFn) ? 'var(--accent-cyan)' : 'var(--text-muted)',
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        background: (hwActiveLayer > 0 || isSimulatingFn) ? 'var(--accent-cyan)' : '#666',
+                        boxShadow: (hwActiveLayer > 0 || isSimulatingFn) ? '0 0 6px var(--accent-cyan)' : 'none',
+                      }}
+                    ></span>
+                    <strong>
+                      {isSimulatingFn
+                        ? 'Layer 1 (Simulated Fn)'
+                        : `Layer ${hwActiveLayer} ${hwActiveLayer === 1 ? '(Win Fn)' : hwActiveLayer === 2 ? '(Mac)' : hwActiveLayer === 3 ? '(Mac Fn)' : '(Base)'}`}
+                    </strong>
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    className={`btn ${isSimulatingFn ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                    style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
+                    onClick={() => setSimulatingFn(!isSimulatingFn)}
+                    onMouseDown={() => setSimulatingFn(true)}
+                    onMouseUp={() => setSimulatingFn(false)}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    <span>{isSimulatingFn ? t('btnSimulatingFnActive') : t('btnSimulateFn')}</span>
+                  </button>
                 </div>
               </div>
             </div>

@@ -818,6 +818,10 @@ try {
   autoUpdater.autoDownload = false; // User must explicitly confirm update download
   autoUpdater.autoInstallOnAppQuit = false;
 
+  // Initialize allowPrerelease from user config (default to false for stable channel)
+  const initialCfg = getUserConfig();
+  autoUpdater.allowPrerelease = typeof initialCfg.includeBeta === "boolean" ? initialCfg.includeBeta : false;
+
   autoUpdater.on("checking-for-update", () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send("updater:status", { status: "checking" });
@@ -871,23 +875,53 @@ try {
   console.warn("electron-updater initialization notice:", e);
 }
 
+ipcMain.handle("updater:set-allow-prerelease", (event, allow) => {
+  const isAllowed = Boolean(allow);
+  if (autoUpdater) {
+    autoUpdater.allowPrerelease = isAllowed;
+  }
+  persistUserConfigPatch({ includeBeta: isAllowed });
+  return { success: true, allowPrerelease: isAllowed };
+});
+
+ipcMain.handle("updater:get-allow-prerelease", () => {
+  if (autoUpdater) {
+    return autoUpdater.allowPrerelease;
+  }
+  const cfg = getUserConfig();
+  return typeof cfg.includeBeta === "boolean" ? cfg.includeBeta : false;
+});
+
 ipcMain.handle("updater:check-for-updates", async () => {
   if (!autoUpdater) return { success: false, error: "Auto-updater not available" };
   try {
     const res = await autoUpdater.checkForUpdates();
     return { success: true, updateInfo: res?.updateInfo };
   } catch (err) {
-    return { success: false, error: err.message };
+    console.warn("[autoUpdater] Check error:", err);
+    return { success: false, error: err.message || String(err) };
   }
 });
 
 ipcMain.handle("updater:download-update", async () => {
   if (!autoUpdater) return { success: false, error: "Auto-updater not available" };
   try {
-    await autoUpdater.downloadUpdate();
+    // If updateInfo is not yet available on autoUpdater, trigger a pre-check first
+    if (!autoUpdater.updateInfo) {
+      try {
+        await autoUpdater.checkForUpdates();
+      } catch (checkErr) {
+        console.warn("[autoUpdater] Pre-check notice:", checkErr);
+      }
+    }
+    const downloadPromise = autoUpdater.downloadUpdate();
+    if (downloadPromise) {
+      await downloadPromise;
+    }
     return { success: true };
   } catch (err) {
-    return { success: false, error: err.message };
+    console.warn("[autoUpdater] Download error:", err);
+    return { success: false, error: err.message || String(err) };
   }
 });
 

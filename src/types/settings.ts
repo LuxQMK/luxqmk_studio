@@ -31,6 +31,8 @@ export interface StudioUpdateState {
   latestVersion: string;
   releaseTag: string;
   releaseDate: string;
+  isPrerelease?: boolean;
+  includeBeta: boolean;
   downloadUrl: string;
   webAppUrl: string;
   changelog: string[];

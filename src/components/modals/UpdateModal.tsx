@@ -76,8 +76,13 @@ export const UpdateModal: React.FC = () => {
             </div>
 
             <div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', marginBottom: '0.2rem' }}>
-                {t('lblNewVersion', 'New Version')}
+              <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <span>{t('lblNewVersion', 'New Version')}</span>
+                {studioUpdate.isPrerelease && (
+                  <span className="badge-pill badge-warning" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>
+                    {t('lblPrereleaseBadge', 'Beta')}
+                  </span>
+                )}
               </div>
               <strong style={{ fontSize: '1.1rem', color: 'var(--accent-cyan)' }}>
                 v{studioUpdate.latestVersion}
