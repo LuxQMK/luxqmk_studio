@@ -49,6 +49,7 @@ interface KeymapState {
   setSelectedKey: (key: KeyLayoutItem | null) => void;
   setPresetLayoutId: (presetId: string) => void;
   setActiveCategory: (cat: 'basic' | 'media' | 'macro' | 'layers' | 'special' | 'lighting' | 'custom') => void;
+  assignKeycodeToKey: (layer: number, row: number, col: number, keycode: number) => Promise<void>;
   assignKeycodeToSelected: (keycode: number) => Promise<void>;
   getKeycode: (layer: number, row: number, col: number) => number;
   readAllLayersFromKeyboard: () => Promise<void>;
@@ -116,20 +117,16 @@ export const useKeymapStore = create<KeymapState>((set, get) => ({
     return val !== undefined ? val : 0x0001;
   },
 
-  assignKeycodeToSelected: async (keycode: number) => {
-    const { selectedKey, activeLayer } = get();
-    if (!selectedKey || selectedKey.matrix[0] < 0) return;
-
-    const row = selectedKey.matrix[0];
-    const col = selectedKey.matrix[1];
+  assignKeycodeToKey: async (layer: number, row: number, col: number, keycode: number) => {
+    if (row < 0 || col < 0) return;
     const keyStr = `${row},${col}`;
 
     // Update in memory
     set((state) => ({
       layerKeymaps: {
         ...state.layerKeymaps,
-        [activeLayer]: {
-          ...state.layerKeymaps[activeLayer],
+        [layer]: {
+          ...state.layerKeymaps[layer],
           [keyStr]: keycode,
         },
       },
@@ -140,11 +137,17 @@ export const useKeymapStore = create<KeymapState>((set, get) => ({
     // Send to hardware if connected
     if (useDeviceStore.getState().isConnected) {
       try {
-        await hidProtocol.setKeycode(activeLayer, row, col, keycode);
+        await hidProtocol.setKeycode(layer, row, col, keycode);
       } catch (e: any) {
         console.error('Failed to set keycode on hardware:', e);
       }
     }
+  },
+
+  assignKeycodeToSelected: async (keycode: number) => {
+    const { selectedKey, activeLayer, assignKeycodeToKey } = get();
+    if (!selectedKey || selectedKey.matrix[0] < 0) return;
+    await assignKeycodeToKey(activeLayer, selectedKey.matrix[0], selectedKey.matrix[1], keycode);
   },
 
   readAllLayersFromKeyboard: async () => {

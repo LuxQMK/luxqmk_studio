@@ -21,10 +21,15 @@ export const KeymapView: React.FC = () => {
     activeCategory,
     setActiveCategory,
     assignKeycodeToSelected,
+    assignKeycodeToKey,
     getKeycode,
     readAllLayersFromKeyboard,
     loadViaJson,
   } = useKeymapStore();
+
+  const [dragOverKey, setDragOverKey] = React.useState<{ row: number; col: number } | null>(null);
+  const [isDragging, setIsDragging] = React.useState<boolean>(false);
+  const [draggingKeycode, setDraggingKeycode] = React.useState<number | null>(null);
 
   const { isConnected, activeDescriptor, isViaSupported } = useDeviceStore();
   const { t } = useI18n();
@@ -436,6 +441,7 @@ export const KeymapView: React.FC = () => {
               const isTrns = kc === 0x0001 || kc === 1;
               const shortLabel = isTrns ? '▽' : getShortKeycodeLabel(info);
               const defaultKc = (key as any).defaultKeycode;
+              const isDragOver = dragOverKey?.row === row && dragOverKey?.col === col;
 
               // Determine if this key on activeLayer is custom-mapped away from default
               const isCustom = isBaseLayer
@@ -448,7 +454,46 @@ export const KeymapView: React.FC = () => {
                 <button
                   key={`${activeLayer}-${row}-${col}-${idx}`}
                   type="button"
-                  className={`keycap-btn ${isSelected ? 'selected' : ''} ${isTrns ? 'is-trns' : ''} ${isCustom ? 'is-custom-mapped' : ''} ${!isSingleLegend ? 'has-dual-legend' : ''} key-group-${key.group || 'alpha'}`}
+                  draggable={row >= 0 && col >= 0}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('text/plain', String(kc));
+                    e.dataTransfer.setData('application/json', JSON.stringify({ code: kc, label: shortLabel, originKey: key.id }));
+                    e.dataTransfer.effectAllowed = 'copy';
+                    setIsDragging(true);
+                    setDraggingKeycode(kc);
+                  }}
+                  onDragEnd={() => {
+                    setIsDragging(false);
+                    setDraggingKeycode(null);
+                    setDragOverKey(null);
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                  }}
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    setDragOverKey({ row, col });
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    if (dragOverKey?.row === row && dragOverKey?.col === col) {
+                      setDragOverKey(null);
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOverKey(null);
+                    setIsDragging(false);
+                    setDraggingKeycode(null);
+                    const raw = e.dataTransfer.getData('text/plain');
+                    const code = parseInt(raw, 10);
+                    if (!isNaN(code)) {
+                      assignKeycodeToKey(activeLayer, row, col, code);
+                      setSelectedKey(key);
+                    }
+                  }}
+                  className={`keycap-btn ${isSelected ? 'selected' : ''} ${isDragOver ? 'is-drag-over' : ''} ${isTrns ? 'is-trns' : ''} ${isCustom ? 'is-custom-mapped' : ''} ${!isSingleLegend ? 'has-dual-legend' : ''} key-group-${key.group || 'alpha'}`}
                   style={{
                     position: 'absolute',
                     left: `${left}px`,
@@ -509,7 +554,22 @@ export const KeymapView: React.FC = () => {
             <button
               key={idx}
               type="button"
-              className="palette-key-btn"
+              className={`palette-key-btn ${draggingKeycode === kc.code ? 'is-dragging' : ''}`}
+              draggable={typeof kc.code === 'number'}
+              onDragStart={(e) => {
+                if (typeof kc.code === 'number') {
+                  e.dataTransfer.setData('text/plain', String(kc.code));
+                  e.dataTransfer.setData('application/json', JSON.stringify({ code: kc.code, label: kc.label, name: kc.name }));
+                  e.dataTransfer.effectAllowed = 'copy';
+                  setIsDragging(true);
+                  setDraggingKeycode(kc.code);
+                }
+              }}
+              onDragEnd={() => {
+                setIsDragging(false);
+                setDraggingKeycode(null);
+                setDragOverKey(null);
+              }}
               title={`${kc.name}: ${kc.desc || kc.title || ''}`}
               onClick={() => {
                 if (typeof kc.code === 'number') {

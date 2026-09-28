@@ -12,6 +12,8 @@ export const EncoderView: React.FC = () => {
   const hasEncoder = activeDescriptor ? (activeDescriptor.capabilities?.hasRotaryEncoder !== false) : true;
 
   const [selectedSlot, setSelectedSlot] = useState<'ccw' | 'cw' | 'press'>('ccw');
+  const [dragOverSlot, setDragOverSlot] = useState<'ccw' | 'cw' | 'press' | null>(null);
+  const [draggingKeycode, setDraggingKeycode] = useState<number | null>(null);
   const [encoderMap, setEncoderMap] = useState<Record<number, { ccw: number; cw: number; press: number }>>({
     0: { ccw: 0x00A9, cw: 0x00A8, press: 0x00A8 }, // Vol Down, Vol Up, Mute
     1: { ccw: 0x00A9, cw: 0x00A8, press: 0x00A8 },
@@ -116,7 +118,7 @@ export const EncoderView: React.FC = () => {
         <div id="encoderConfigWidget" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
           {/* CCW Slot */}
           <div
-            className={`encoder-slot-card ${selectedSlot === 'ccw' ? 'active' : ''}`}
+            className={`encoder-slot-card ${selectedSlot === 'ccw' ? 'active' : ''} ${dragOverSlot === 'ccw' ? 'is-drag-over' : ''}`}
             style={{
               background: selectedSlot === 'ccw' ? 'rgba(0, 240, 255, 0.08)' : 'var(--bg-darker)',
               border: `1px solid ${selectedSlot === 'ccw' ? 'var(--accent-cyan)' : 'var(--border-color)'}`,
@@ -126,6 +128,35 @@ export const EncoderView: React.FC = () => {
               transition: 'all 0.2s ease',
             }}
             onClick={() => setSelectedSlot('ccw')}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'copy';
+            }}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              setDragOverSlot('ccw');
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              if (dragOverSlot === 'ccw') setDragOverSlot(null);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOverSlot(null);
+              setDraggingKeycode(null);
+              const raw = e.dataTransfer.getData('text/plain');
+              const code = parseInt(raw, 10);
+              if (!isNaN(code)) {
+                setEncoderMap((prev) => ({
+                  ...prev,
+                  [activeLayer]: {
+                    ...prev[activeLayer],
+                    ccw: code,
+                  },
+                }));
+                setSelectedSlot('ccw');
+              }
+            }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-cyan)' }}>
@@ -144,7 +175,7 @@ export const EncoderView: React.FC = () => {
 
           {/* CW Slot */}
           <div
-            className={`encoder-slot-card ${selectedSlot === 'cw' ? 'active' : ''}`}
+            className={`encoder-slot-card ${selectedSlot === 'cw' ? 'active' : ''} ${dragOverSlot === 'cw' ? 'is-drag-over' : ''}`}
             style={{
               background: selectedSlot === 'cw' ? 'rgba(0, 240, 255, 0.08)' : 'var(--bg-darker)',
               border: `1px solid ${selectedSlot === 'cw' ? 'var(--accent-cyan)' : 'var(--border-color)'}`,
@@ -154,6 +185,35 @@ export const EncoderView: React.FC = () => {
               transition: 'all 0.2s ease',
             }}
             onClick={() => setSelectedSlot('cw')}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'copy';
+            }}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              setDragOverSlot('cw');
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              if (dragOverSlot === 'cw') setDragOverSlot(null);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOverSlot(null);
+              setDraggingKeycode(null);
+              const raw = e.dataTransfer.getData('text/plain');
+              const code = parseInt(raw, 10);
+              if (!isNaN(code)) {
+                setEncoderMap((prev) => ({
+                  ...prev,
+                  [activeLayer]: {
+                    ...prev[activeLayer],
+                    cw: code,
+                  },
+                }));
+                setSelectedSlot('cw');
+              }
+            }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-cyan)' }}>
@@ -172,7 +232,7 @@ export const EncoderView: React.FC = () => {
 
           {/* Press Slot */}
           <div
-            className={`encoder-slot-card ${selectedSlot === 'press' ? 'active' : ''}`}
+            className={`encoder-slot-card ${selectedSlot === 'press' ? 'active' : ''} ${dragOverSlot === 'press' ? 'is-drag-over' : ''}`}
             style={{
               background: selectedSlot === 'press' ? 'rgba(0, 240, 255, 0.08)' : 'var(--bg-darker)',
               border: `1px solid ${selectedSlot === 'press' ? 'var(--accent-cyan)' : 'var(--border-color)'}`,
@@ -182,6 +242,35 @@ export const EncoderView: React.FC = () => {
               transition: 'all 0.2s ease',
             }}
             onClick={() => setSelectedSlot('press')}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'copy';
+            }}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              setDragOverSlot('press');
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              if (dragOverSlot === 'press') setDragOverSlot(null);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOverSlot(null);
+              setDraggingKeycode(null);
+              const raw = e.dataTransfer.getData('text/plain');
+              const code = parseInt(raw, 10);
+              if (!isNaN(code)) {
+                setEncoderMap((prev) => ({
+                  ...prev,
+                  [activeLayer]: {
+                    ...prev[activeLayer],
+                    press: code,
+                  },
+                }));
+                setSelectedSlot('press');
+              }
+            }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-cyan)' }}>
@@ -221,7 +310,20 @@ export const EncoderView: React.FC = () => {
             <button
               key={idx}
               type="button"
-              className="palette-key-btn"
+              className={`palette-key-btn ${draggingKeycode === kc.code ? 'is-dragging' : ''}`}
+              draggable={typeof kc.code === 'number'}
+              onDragStart={(e) => {
+                if (typeof kc.code === 'number') {
+                  e.dataTransfer.setData('text/plain', String(kc.code));
+                  e.dataTransfer.setData('application/json', JSON.stringify({ code: kc.code, label: kc.label, name: kc.name }));
+                  e.dataTransfer.effectAllowed = 'copy';
+                  setDraggingKeycode(kc.code);
+                }
+              }}
+              onDragEnd={() => {
+                setDraggingKeycode(null);
+                setDragOverSlot(null);
+              }}
               title={`${kc.name}: ${kc.desc || kc.title || ''}`}
               onClick={() => {
                 if (typeof kc.code === 'number') {
