@@ -4,9 +4,9 @@
  * Base version is managed in package.json.
  */
 
-export const BASE_VERSION = '1.4.3';
-export const GIT_BRANCH = 'master';
-export const IS_DEV_BUILD = false;
-export const APP_VERSION = '1.4.3';
+export const BASE_VERSION = '1.4.4';
+export const GIT_BRANCH = 'develop';
+export const IS_DEV_BUILD = true;
+export const APP_VERSION = '1.4.4-dev';
 
 export default APP_VERSION;
