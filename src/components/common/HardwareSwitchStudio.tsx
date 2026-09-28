@@ -230,7 +230,7 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
               <polyline points="17 21 17 13 7 13 7 21"></polyline>
               <polyline points="7 3 7 8 15 8"></polyline>
             </svg>
-            {isSaving ? 'Saving...' : t('btnSaveSwitches')}
+            {isSaving ? t('lblSaving') : t('btnSaveSwitches')}
           </button>
         </div>
       </div>
