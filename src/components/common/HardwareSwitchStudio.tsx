@@ -168,7 +168,7 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
                   border: '1px solid rgba(0, 240, 255, 0.25)',
                 }}
               >
-                Physical OS Switch (Mac / Win)
+                {t('lblPhysicalOsSwitch')}
               </span>
             </div>
             <div style={{ fontSize: '0.82rem', color: 'var(--text-muted, #94a3b8)', marginTop: '0.15rem' }}>
