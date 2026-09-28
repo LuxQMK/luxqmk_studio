@@ -568,11 +568,31 @@ export function useLightingVisualizer(
       });
     });
 
+    let isVisibleInViewport = true;
+    let observer: IntersectionObserver | null = null;
+    if (typeof IntersectionObserver !== 'undefined' && container) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0]) {
+            isVisibleInViewport = entries[0].isIntersecting;
+          }
+        },
+        { threshold: 0.01 }
+      );
+      observer.observe(container);
+    }
+
     let lastFrameTime = 0;
     const targetInterval = 1000 / 60; // 60 FPS cap (~16.6ms)
 
     const renderLoop = (timestamp: number) => {
       if (!isRunning) return;
+
+      // Skip CPU/GPU rendering work if window is hidden or keyboard is scrolled out of viewport
+      if (document.hidden || !isVisibleInViewport) {
+        animFrameRef.current = requestAnimationFrame(renderLoop);
+        return;
+      }
 
       const elapsed = timestamp - lastFrameTime;
       if (elapsed < targetInterval - 1) {
@@ -1062,7 +1082,7 @@ export function useLightingVisualizer(
               k.lastB = 0;
               k.el.style.backgroundColor = 'rgba(15, 20, 32, 0.9)';
               k.el.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-              k.el.style.boxShadow = 'inset 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 0, 0, 0.5)';
+              k.el.style.boxShadow = 'none';
             }
           } else {
             if (k.lastR !== rgb.r || k.lastG !== rgb.g || k.lastB !== rgb.b) {
@@ -1071,7 +1091,7 @@ export function useLightingVisualizer(
               k.lastB = rgb.b;
               k.el.style.backgroundColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
               k.el.style.borderColor = `rgba(${Math.min(255, rgb.r + 60)}, ${Math.min(255, rgb.g + 60)}, ${Math.min(255, rgb.b + 60)}, 0.9)`;
-              k.el.style.boxShadow = `0 0 16px rgb(${rgb.r}, ${rgb.g}, ${rgb.b}), 0 0 28px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.55), inset 0 1px 2px rgba(255, 255, 255, 0.6)`;
+              k.el.style.boxShadow = `0 0 14px rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
             }
           }
         } else {
@@ -1080,13 +1100,13 @@ export function useLightingVisualizer(
             k.lastG = rgb.g;
             k.lastB = rgb.b;
 
-            const avgBri = (rgb.r + rgb.g + rgb.b) / 3;
-            const glowAlpha = Math.min(0.85, (avgBri / 255) * 0.75);
             const textColor = (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114) > 140 ? '#111827' : '#ffffff';
 
-            k.el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.85)`;
+            k.el.style.backgroundColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
             k.el.style.borderColor = `rgba(${Math.min(255, rgb.r + 40)}, ${Math.min(255, rgb.g + 40)}, ${Math.min(255, rgb.b + 40)}, 0.5)`;
-            k.el.style.boxShadow = `0 0 10px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${glowAlpha}), inset 0 1px 0 rgba(255, 255, 255, 0.2)`;
+            k.el.style.boxShadow = (rgb.r > 10 || rgb.g > 10 || rgb.b > 10)
+              ? `0 0 8px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.5)`
+              : 'none';
             if (k.lastTextColor !== textColor) {
               k.lastTextColor = textColor;
               k.el.style.color = textColor;
@@ -1364,9 +1384,9 @@ export function useLightingVisualizer(
             sd.el.style.boxShadow = 'none';
             sd.el.style.borderColor = 'rgba(255, 255, 255, 0.12)';
           } else {
-            sd.el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.92)`;
+            sd.el.style.backgroundColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
             sd.el.style.borderColor = `rgba(${Math.min(255, rgb.r + 50)}, ${Math.min(255, rgb.g + 50)}, ${Math.min(255, rgb.b + 50)}, 0.6)`;
-            sd.el.style.boxShadow = `0 0 10px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.85), 0 0 18px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.4)`;
+            sd.el.style.boxShadow = `0 0 10px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.7)`;
           }
         }
       }
@@ -1378,6 +1398,7 @@ export function useLightingVisualizer(
 
     return () => {
       isRunning = false;
+      if (observer) observer.disconnect();
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current);
       }

@@ -149,13 +149,14 @@ body {
 
 /* Keymap Canvas Container */
 .keyboard-canvas-card {
-  background: var(--bg-card);
+  background: linear-gradient(180deg, rgba(20, 26, 40, 0.95) 0%, rgba(12, 16, 26, 0.98) 100%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 1rem 1.25rem;
   box-shadow: var(--shadow-md);
   margin-bottom: 1rem;
-  backdrop-filter: blur(16px);
+  contain: layout style;
+  transform: translateZ(0);
 }
 
 .keyboard-canvas-header {
@@ -228,6 +229,8 @@ body {
   user-select: none;
   transform-origin: top center;
   transition: transform 0.08s ease-out;
+  contain: layout style;
+  transform: translateZ(0);
 }
 
 /* Subtle physical diffuser slot on Chassis - ONLY when device has sidelights */
@@ -253,11 +256,12 @@ body {
 
 /* Keycode Picker Palette */
 .palette-card {
-  background: var(--bg-card);
+  background: linear-gradient(180deg, rgba(20, 26, 40, 0.95) 0%, rgba(12, 16, 26, 0.98) 100%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 1rem 1.25rem;
-  backdrop-filter: blur(16px);
+  contain: layout style;
+  transform: translateZ(0);
 }
 
 .palette-header {
