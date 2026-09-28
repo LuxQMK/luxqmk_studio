@@ -120,7 +120,7 @@ export const SettingsView: React.FC = () => {
 
     if (firmwareInfo.major === 0 && firmwareInfo.minor === 0 && firmwareInfo.patch === 0) {
       return {
-        text: t('statusFwLegacy', 'Legacy Firmware / Unknown Version'),
+        text: t('statusFwLegacy', 'Legacy Keyboard Firmware / Unknown Version'),
         color: 'var(--accent-amber, #ffaa00)',
       };
     }
@@ -145,7 +145,7 @@ export const SettingsView: React.FC = () => {
       (firmwareInfo.major === REQUIRED_FW.major && firmwareInfo.minor > REQUIRED_FW.minor)
     ) {
       return {
-        text: t('statusFwNewer', 'Newer Firmware Detected (Update Studio)'),
+        text: t('statusFwNewer', 'Newer Keyboard Firmware Detected (Please update LuxQMK Studio)'),
         color: 'var(--accent-cyan, #00e5ff)',
       };
     }

@@ -119,14 +119,20 @@ test('AGENTS.md and .agents/rules exist', () => {
   assert(fs.existsSync(path.join(ROOT_DIR, '.agents', 'rules', 'luxqmk_rules.md')), '.agents/rules/luxqmk_rules.md must exist');
 });
 
-// 5. Validate Translations (EN & PL parity in translations.ts)
+// 5. Validate Translations (EN & PL modular files and parity)
 test('Translation dictionaries EN and PL have matching keys and valid strings', () => {
   const transPath = path.join(STUDIO_DIR, 'src', 'i18n', 'translations.ts');
-  assert(fs.existsSync(transPath), 'translations.ts must exist');
-  const content = fs.readFileSync(transPath, 'utf-8');
+  const enPath = path.join(STUDIO_DIR, 'src', 'i18n', 'locales', 'en.ts');
+  const plPath = path.join(STUDIO_DIR, 'src', 'i18n', 'locales', 'pl.ts');
 
-  assert(content.includes('"en":'), 'translations.ts must define EN translations');
-  assert(content.includes('"pl":'), 'translations.ts must define PL translations');
+  assert(fs.existsSync(transPath), 'translations.ts must exist');
+  assert(fs.existsSync(enPath), 'locales/en.ts must exist');
+  assert(fs.existsSync(plPath), 'locales/pl.ts must exist');
+
+  const enContent = fs.readFileSync(enPath, 'utf-8');
+  const plContent = fs.readFileSync(plPath, 'utf-8');
+  assert(enContent.includes('export const en'), 'en.ts must export EN dictionary');
+  assert(plContent.includes('export const pl'), 'pl.ts must export PL dictionary');
 });
 
 console.log(`\n=== Test Results: ${passed} / ${total} Passed (${Math.round(passed / total * 100)}%) ===\n`);
