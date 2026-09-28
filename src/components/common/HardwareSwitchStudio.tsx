@@ -92,8 +92,10 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
     try {
       await hidProtocol.saveDipSwitchesToEEPROM();
       showToast(t('toastSwitchesSaved'), 'success');
-    } catch (e) {
-      showToast('Failed to save hardware switch settings to EEPROM', 'error');
+    } catch (e: any) {
+      console.error('Failed to save hardware switches to EEPROM:', e);
+      const errMsg = e?.message ? ` (${e.message})` : '';
+      showToast(`${t('toastSwitchesSaveError')}${errMsg}`, 'error');
     } finally {
       setIsSaving(false);
     }
