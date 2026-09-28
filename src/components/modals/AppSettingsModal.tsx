@@ -202,40 +202,42 @@ export const AppSettingsModal: React.FC = () => {
             </>
           )}
 
-          {/* 3. Beta / Prerelease Channel Toggle */}
-          <div className="modal-section" id="appBetaUpdatesModalSection">
-            <div className="modal-section-title">
-              <span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M10 2v7.31"></path>
-                  <path d="M14 9.3V1.99"></path>
-                  <path d="M8.5 2h7"></path>
-                  <path d="M14 9.3a6.5 6.5 0 1 1-4 0"></path>
-                  <path d="M5.52 16h12.96"></path>
-                </svg>
-              </span>
-              <span>{t('lblIncludeBetaUpdates')}</span>
-            </div>
-            <div className="modal-section-content">
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '0.6rem' }}>
-                {t('lblIncludeBetaUpdatesDesc')}
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                <label className="switch" style={{ margin: 0 }}>
-                  <input
-                    type="checkbox"
-                    id="chkAppIncludeBetaModal"
-                    checked={studioUpdate.includeBeta}
-                    onChange={handleToggleIncludeBeta}
-                  />
-                  <span className="slider"></span>
-                </label>
-                <span id="lblAppBetaChannelStatus" style={{ fontSize: '0.85rem', fontWeight: 500, color: studioUpdate.includeBeta ? 'var(--accent-purple, #bd00ff)' : 'var(--text-muted)' }}>
-                  {studioUpdate.includeBeta ? t('lblChannelBeta') : t('lblChannelStable')}
+          {/* 3. Beta / Prerelease Channel Toggle (Desktop Only) */}
+          {isDesktop && (
+            <div className="modal-section" id="appBetaUpdatesModalSection">
+              <div className="modal-section-title">
+                <span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 2v7.31"></path>
+                    <path d="M14 9.3V1.99"></path>
+                    <path d="M8.5 2h7"></path>
+                    <path d="M14 9.3a6.5 6.5 0 1 1-4 0"></path>
+                    <path d="M5.52 16h12.96"></path>
+                  </svg>
                 </span>
+                <span>{t('lblIncludeBetaUpdates')}</span>
+              </div>
+              <div className="modal-section-content">
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '0.6rem' }}>
+                  {t('lblIncludeBetaUpdatesDesc')}
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                  <label className="switch" style={{ margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      id="chkAppIncludeBetaModal"
+                      checked={studioUpdate.includeBeta}
+                      onChange={handleToggleIncludeBeta}
+                    />
+                    <span className="slider"></span>
+                  </label>
+                  <span id="lblAppBetaChannelStatus" style={{ fontSize: '0.85rem', fontWeight: 500, color: studioUpdate.includeBeta ? 'var(--accent-purple, #bd00ff)' : 'var(--text-muted)' }}>
+                    {studioUpdate.includeBeta ? t('lblChannelBeta') : t('lblChannelStable')}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* 4. Studio App Updates & Environment Section */}
           <div className="modal-section">
@@ -280,7 +282,7 @@ export const AppSettingsModal: React.FC = () => {
                                 : t('lblStudioUpToDate'))
                           : t('lblAppWebModeBadge')}
                       </span>
-                      {studioUpdate.includeBeta && (
+                      {isDesktop && studioUpdate.includeBeta && (
                         <span className="badge-pill badge-neutral" style={{ fontSize: '0.7rem', borderColor: 'rgba(189, 0, 255, 0.4)', color: '#d066ff' }}>
                           {t('lblChannelBeta')}
                         </span>

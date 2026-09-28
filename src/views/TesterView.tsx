@@ -121,6 +121,35 @@ export const CODE_TO_KEY_ID: Record<string, string> = {
   ArrowRight: 'RGHT',
   Numpad0: 'P0',
   NumpadDecimal: 'PDOT',
+  // International & ISO
+  IntlBackslash: 'NUBS',
+  NonUSBackslash: 'NUBS',
+  IntlRo: 'RO',
+  IntlYen: 'JYEN',
+  NumpadEqual: 'PEQL',
+  NumpadComma: 'PCMM',
+  // Audio & Media
+  AudioVolumeUp: 'VOLU',
+  AudioVolumeDown: 'VOLD',
+  AudioVolumeMute: 'MUTE',
+  VolumeUp: 'VOLU',
+  VolumeDown: 'VOLD',
+  VolumeMute: 'MUTE',
+  MediaTrackNext: 'MNXT',
+  MediaTrackPrevious: 'MPRV',
+  MediaPlayPause: 'MPLY',
+  MediaStop: 'MSTP',
+  MediaSelect: 'MSEL',
+  // Browser & App Launch
+  BrowserBack: 'WBAK',
+  BrowserForward: 'WFWD',
+  BrowserRefresh: 'WREF',
+  BrowserHome: 'WHOM',
+  BrowserSearch: 'WSCH',
+  BrowserFavorites: 'WFAV',
+  LaunchMail: 'MAIL',
+  LaunchApp2: 'CALC',
+  LaunchApp1: 'MYCM',
 };
 
 export const TesterView: React.FC = () => {
@@ -130,6 +159,7 @@ export const TesterView: React.FC = () => {
   const [testedKeys, setTestedKeys] = useState<Set<string>>(new Set());
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
   const [history, setHistory] = useState<KeyHistoryItem[]>([]);
+  const [blockOsKeystrokes, setBlockOsKeystrokes] = useState<boolean>(true);
 
   const { activeDescriptor } = useDeviceStore();
   const desc = activeDescriptor || ALL_DEVICE_DESCRIPTORS.find((d) => d.id === presetLayoutId) || null;
@@ -155,7 +185,22 @@ export const TesterView: React.FC = () => {
 
   // Keyboard event listener
   useEffect(() => {
+    // Keyboard Lock API (Chromium / Electron) to capture system-level keys
+    if (blockOsKeystrokes && typeof navigator !== 'undefined' && 'keyboard' in navigator && (navigator as any).keyboard?.lock) {
+      (navigator as any).keyboard.lock().catch(() => {
+        // Ignored if user hasn't interacted or unsupported in current context
+      });
+    }
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (blockOsKeystrokes) {
+        const isDevTools = e.code === 'F12' || ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.code === 'KeyI' || e.code === 'KeyJ' || e.code === 'KeyC'));
+        if (!isDevTools) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+
       const keyId = CODE_TO_KEY_ID[e.code];
       if (keyId) {
         setActiveKeys((prev) => new Set(prev).add(keyId));
@@ -168,6 +213,14 @@ export const TesterView: React.FC = () => {
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
+      if (blockOsKeystrokes) {
+        const isDevTools = e.code === 'F12' || ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.code === 'KeyI' || e.code === 'KeyJ' || e.code === 'KeyC'));
+        if (!isDevTools) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+
       const keyId = CODE_TO_KEY_ID[e.code];
       if (keyId) {
         setActiveKeys((prev) => {
@@ -178,13 +231,17 @@ export const TesterView: React.FC = () => {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown, true);
-    window.addEventListener('keyup', handleKeyUp, true);
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    window.addEventListener('keyup', handleKeyUp, { capture: true });
+
     return () => {
-      window.removeEventListener('keydown', handleKeyDown, true);
-      window.removeEventListener('keyup', handleKeyUp, true);
+      window.removeEventListener('keydown', handleKeyDown, { capture: true });
+      window.removeEventListener('keyup', handleKeyUp, { capture: true });
+      if (typeof navigator !== 'undefined' && 'keyboard' in navigator && (navigator as any).keyboard?.unlock) {
+        (navigator as any).keyboard.unlock();
+      }
     };
-  }, []);
+  }, [blockOsKeystrokes]);
 
   const resetTest = () => {
     setTestedKeys(new Set());
@@ -197,13 +254,40 @@ export const TesterView: React.FC = () => {
       <div className="keyboard-canvas-card">
         {/* Header */}
         <div className="keyboard-canvas-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
             <h3>{t('viewTesterTitle')}</h3>
             <div className="badge-target">
               <span>{t('testedKeys')} </span>
               <strong id="testedKeysCount" style={{ color: 'var(--accent-cyan)' }}>
                 {testedKeys.size} / {layoutKeys.filter((k) => !(k as any).isLogo).length}
               </strong>
+            </div>
+
+            {/* Block OS Keystrokes Toggle */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                background: 'rgba(255, 255, 255, 0.03)',
+                padding: '0.35rem 0.75rem',
+                borderRadius: '8px',
+                border: `1px solid ${blockOsKeystrokes ? 'rgba(0, 240, 255, 0.3)' : 'var(--border-color)'}`,
+              }}
+              title={t('tooltipBlockKeystrokes')}
+            >
+              <label className="switch" style={{ margin: 0 }}>
+                <input
+                  type="checkbox"
+                  id="chkBlockOsKeystrokes"
+                  checked={blockOsKeystrokes}
+                  onChange={(e) => setBlockOsKeystrokes(e.target.checked)}
+                />
+                <span className="slider"></span>
+              </label>
+              <span style={{ fontSize: '0.82rem', color: blockOsKeystrokes ? 'var(--accent-cyan)' : 'var(--text-dim)', fontWeight: 500 }}>
+                {t('lblBlockKeystrokes')}
+              </span>
             </div>
           </div>
 
