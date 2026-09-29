@@ -1165,7 +1165,7 @@ export const LightingView: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
               <h3 style={{ fontSize: '1.05rem' }}>{t('reactiveSectionTitle')}</h3>
               <span className="badge-pill" style={{ fontSize: '0.75rem' }}>
-                {reactive.enable ? 'Enabled' : t('badgeDisabled')}
+                {reactive.enable ? t('badgeEnabled') : t('badgeDisabled')}
               </span>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
@@ -1278,7 +1278,7 @@ export const LightingView: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
               <h3 style={{ fontSize: '1.05rem' }}>{t('winLockSectionTitle')}</h3>
               <span className="badge-pill" style={{ fontSize: '0.75rem' }}>
-                {winLock.isLocked ? 'Locked' : t('badgeUnlocked')}
+                {winLock.isLocked ? t('badgeLocked') : t('badgeUnlocked')}
               </span>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>

@@ -248,7 +248,7 @@ export const SettingsView: React.FC = () => {
             </div>
             <p className="settings-item-desc">{t('descNkro')}</p>
             <div className={`nkro-status-badge ${performance.nkroEnabled ? 'active' : ''}`} id="nkroStatusBadge">
-              {performance.nkroEnabled ? t('nkroActiveBadge', 'Active: Full NKRO Mode (Unlimited Keys)') : '6-Key Standard Rollover'}
+              {performance.nkroEnabled ? t('nkroActiveBadge', 'Active: Full NKRO Mode (Unlimited Keys)') : t('nkroDisabledBadge', 'Active: 6KRO Mode (6-Key Limit)')}
             </div>
           </div>
 
