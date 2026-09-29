@@ -602,7 +602,7 @@ export function useLightingVisualizer(
       lastFrameTime = timestamp - (elapsed % targetInterval);
 
       const store = useLightingStore.getState();
-      const { backlight, reactive, isSimulatingFn, winLock, layerLighting, logoLocks, sidelight } = store;
+      const { backlight, reactive, isSimulatingFn, winLock, capsLock, numLock, scrollLock, layerLighting, logoLocks, sidelight } = store;
 
       const now = timestamp;
       const speed = Math.max(10, backlight.speed || 128);
@@ -645,11 +645,15 @@ export function useLightingVisualizer(
       const layerTargetRgb = hexToRgb(layerTargetColorHex);
       const layerDimFactor = (layerLighting.dimLevel !== undefined ? layerLighting.dimLevel : 100) / 255;
 
-      const winLockColorRgb = hexToRgb(winLock.color || '#ff0000');
+      const winLockColorRgb = hexToRgb(winLock.color || '#ffffff');
+      const capsColorRgb = hexToRgb(capsLock?.color || '#ffffff');
+      const numColorRgb = hexToRgb(numLock?.color || '#ffffff');
+      const scrollColorRgb = hexToRgb(scrollLock?.color || '#ffffff');
       const hostLeds = devStore.hostLeds || { caps: false, num: false, scroll: false };
       const currentSubTab = uiStore.lightingSubTab;
       const activeView = uiStore.activeView;
       const isLogoSubTab = activeView === 'lighting' && currentSubTab === 'logo';
+      const isIndicatorsTab = activeView === 'lighting' && currentSubTab === 'winlock';
 
       // Render each key
       for (let i = 0; i < visualizerKeys.length; i++) {
@@ -1019,11 +1023,42 @@ export function useLightingVisualizer(
         }
 
         // Win Lock indicator
-        if (k.id === 'LWIN' && winLock.isLocked) {
+        const isWinKey = k.id === 'LWIN' || k.id === 'RWIN' || k.id === 'WIN' || k.id === 'KC_LGUI' || k.id === 'KC_RGUI' || k.label?.toLowerCase() === 'win';
+        if (isWinKey && winLock.isLocked && winLock.mode !== 0) {
           if (winLock.mode === 1) {
             rgb = { r: 0, g: 0, b: 0 };
           } else if (winLock.mode === 2) {
             rgb = winLockColorRgb;
+          }
+        }
+
+        // Caps Lock indicator
+        const isCapsKey = k.id === 'CAPS' || k.id === 'KC_CAPS' || k.label?.toLowerCase() === 'caps';
+        if (isCapsKey && hostLeds.caps && capsLock?.mode !== 0) {
+          if (capsLock?.mode === 1) {
+            rgb = { r: 0, g: 0, b: 0 };
+          } else if (capsLock?.mode === 2) {
+            rgb = capsColorRgb;
+          }
+        }
+
+        // Num Lock indicator
+        const isNumKey = k.id === 'NUM' || k.id === 'NLCK' || k.id === 'KC_NUM' || k.id === 'KC_NLCK' || k.label?.toLowerCase() === 'num';
+        if (isNumKey && hostLeds.num && numLock?.mode !== 0) {
+          if (numLock?.mode === 1) {
+            rgb = { r: 0, g: 0, b: 0 };
+          } else if (numLock?.mode === 2) {
+            rgb = numColorRgb;
+          }
+        }
+
+        // Scroll Lock indicator
+        const isScrollKey = k.id === 'SCRL' || k.id === 'SLCK' || k.id === 'KC_SCRL' || k.id === 'KC_SLCK' || k.label?.toLowerCase() === 'scrlk' || k.label?.toLowerCase() === 'scroll';
+        if (isScrollKey && hostLeds.scroll && scrollLock?.mode !== 0) {
+          if (scrollLock?.mode === 1) {
+            rgb = { r: 0, g: 0, b: 0 };
+          } else if (scrollLock?.mode === 2) {
+            rgb = scrollColorRgb;
           }
         }
 

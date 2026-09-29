@@ -86,6 +86,12 @@ export const CUSTOM_VAL = {
   DIP_SWITCH_GET_POS: 53,
   DIP_SWITCH_SET_POS: 54,
   DIP_SWITCH_SAVE_EEPROM: 55,
+  CAPS_LOCK_MODE: 56,
+  CAPS_LOCK_COLOR: 57,
+  NUM_LOCK_MODE: 58,
+  NUM_LOCK_COLOR: 59,
+  SCROLL_LOCK_MODE: 60,
+  SCROLL_LOCK_COLOR: 61,
 } as const;
 
 export interface DipSwitchPosConfig {

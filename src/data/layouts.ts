@@ -8146,10 +8146,53 @@ export const LAYOUT_REGISTRY: Record<string, KeyLayoutItem[]> = {
   'generic-tkl': LAYOUT_TKL_ANSI,
   'generic-60': LAYOUT_60_ANSI,
   'generic-via': LAYOUT_100_ANSI,
+
+  // Keychron Q Series
+  'keychron-q1v2-ansi-encoder': LAYOUT_75_ANSI,
+  'keychron-q1v2-iso-encoder': LAYOUT_75_ANSI,
+  'keychron-q1v2-ansi': LAYOUT_75_ANSI,
+  'keychron-q2-ansi-encoder': LAYOUT_65_ANSI,
+  'keychron-q3-ansi-encoder': LAYOUT_TKL_ANSI,
+  'keychron-q4-ansi': LAYOUT_60_ANSI,
+  'keychron-q5-ansi-encoder': LAYOUT_96_ANSI,
+  'keychron-q6-ansi-encoder': LAYOUT_100_ANSI,
+  'keychron-q7-ansi': LAYOUT_65_ANSI,
+  'keychron-q8-ansi-encoder': LAYOUT_65_ANSI,
+  'keychron-q10-ansi-encoder': LAYOUT_75_ANSI,
+  'keychron-q11-ansi-encoder': LAYOUT_75_ANSI,
+  'keychron-q12-ansi-encoder': LAYOUT_96_ANSI,
+  'keychron-q0': LAYOUT_100_ANSI,
+
+  // Keychron V Series
+  'keychron-v1-ansi-encoder': LAYOUT_75_ANSI,
+  'keychron-v1-iso-encoder': LAYOUT_75_ANSI,
+  'keychron-v2-ansi-encoder': LAYOUT_65_ANSI,
+  'keychron-v3-ansi-encoder': LAYOUT_TKL_ANSI,
+  'keychron-v4-ansi': LAYOUT_60_ANSI,
+  'keychron-v5-ansi-encoder': LAYOUT_96_ANSI,
+  'keychron-v6-ansi-encoder': LAYOUT_100_ANSI,
+  'keychron-v8-ansi-encoder': LAYOUT_65_ANSI,
+  'keychron-v10-ansi-encoder': LAYOUT_75_ANSI,
+
+  // Keychron C Pro & S Series
+  'keychron-c1pro-ansi': LAYOUT_TKL_ANSI,
+  'keychron-c2pro-ansi': LAYOUT_100_ANSI,
+  'keychron-c3pro-ansi': LAYOUT_TKL_ANSI,
+  'keychron-s1-ansi': LAYOUT_75_ANSI,
 };
 
 export function getLayoutForPreset(presetId: string): KeyLayoutItem[] {
-  return LAYOUT_REGISTRY[presetId] || LAYOUT_100_ANSI;
+  if (LAYOUT_REGISTRY[presetId]) {
+    return LAYOUT_REGISTRY[presetId];
+  }
+  const idLower = presetId.toLowerCase();
+  if (idLower.includes('75')) return LAYOUT_75_ANSI;
+  if (idLower.includes('65') || idLower.includes('alice')) return LAYOUT_65_ANSI;
+  if (idLower.includes('60') || idLower.includes('40')) return LAYOUT_60_ANSI;
+  if (idLower.includes('tkl') || idLower.includes('80')) return LAYOUT_TKL_ANSI;
+  if (idLower.includes('96') || idLower.includes('1800')) return LAYOUT_96_ANSI;
+  if (idLower.includes('100')) return LAYOUT_100_ANSI;
+  return LAYOUT_100_ANSI;
 }
 
 export interface SideLedItem {
@@ -8236,3 +8279,44 @@ export function getSideLedSegments(
 
   return { left, right };
 }
+
+/**
+ * Returns an intuitive, localized display name for a keyboard layer index,
+ * taking into account keyboard-specific layer conventions (e.g. GMMK vs Keychron).
+ */
+export function getLayerDisplayName(
+  layer: number,
+  descOrFamily?: { family?: string; id?: string } | string | null,
+  lang: 'en' | 'pl' = 'en'
+): string {
+  const isPl = lang === 'pl';
+  const familyOrId = typeof descOrFamily === 'string'
+    ? descOrFamily.toLowerCase()
+    : `${descOrFamily?.family || ''} ${descOrFamily?.id || ''}`.toLowerCase();
+
+  // 1. Keychron family (Layer 0/1 = Mac, Layer 2/3 = Win)
+  if (familyOrId.includes('keychron')) {
+    switch (layer) {
+      case 0: return isPl ? 'Warstwa 0 (Mac)' : 'Layer 0 (Mac)';
+      case 1: return isPl ? 'Warstwa 1 (Mac Fn)' : 'Layer 1 (Mac Fn)';
+      case 2: return isPl ? 'Warstwa 2 (Win)' : 'Layer 2 (Win)';
+      case 3: return isPl ? 'Warstwa 3 (Win Fn)' : 'Layer 3 (Win Fn)';
+      default: return isPl ? `Warstwa ${layer}` : `Layer ${layer}`;
+    }
+  }
+
+  // 2. GMMK family (Layer 0/1 = Win, Layer 2/3 = Mac)
+  if (familyOrId.includes('gmmk')) {
+    switch (layer) {
+      case 0: return isPl ? 'Warstwa 0 (Win)' : 'Layer 0 (Win)';
+      case 1: return isPl ? 'Warstwa 1 (Win Fn)' : 'Layer 1 (Win Fn)';
+      case 2: return isPl ? 'Warstwa 2 (Mac)' : 'Layer 2 (Mac)';
+      case 3: return isPl ? 'Warstwa 3 (Mac Fn)' : 'Layer 3 (Mac Fn)';
+      default: return isPl ? `Warstwa ${layer}` : `Layer ${layer}`;
+    }
+  }
+
+  // 3. Option B: Universal / Clean VIA Standard
+  return isPl ? `Warstwa ${layer}` : `Layer ${layer}`;
+}
+

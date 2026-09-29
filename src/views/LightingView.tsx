@@ -19,6 +19,9 @@ export const LightingView: React.FC = () => {
     sidelight,
     reactive,
     winLock,
+    capsLock,
+    numLock,
+    scrollLock,
     layerLighting,
     logoLocks,
     activeProfileIndex,
@@ -29,6 +32,9 @@ export const LightingView: React.FC = () => {
     setSidelight,
     setReactive,
     setWinLock,
+    setCapsLock,
+    setNumLock,
+    setScrollLock,
     setLayerLighting,
     setLogoLocks,
     setActiveProfileIndex,
@@ -80,6 +86,72 @@ export const LightingView: React.FC = () => {
 
   const layoutKeys = useMemo(() => getLayoutForPreset(presetLayoutId), [presetLayoutId]);
   const hasSidelights = useMemo(() => isSidelightSupported(presetLayoutId, desc), [presetLayoutId, desc]);
+
+  const supportedLocks = useMemo(() => {
+    const hasCapsLock = layoutKeys.some(
+      (k) =>
+        k.id === 'CAPS' ||
+        k.id === 'KC_CAPS' ||
+        k.defaultKeycode === 57 ||
+        k.label?.toLowerCase().includes('caps')
+    );
+
+    const hasWinKey = layoutKeys.some(
+      (k) =>
+        k.id === 'LWIN' ||
+        k.id === 'RWIN' ||
+        k.id === 'WIN' ||
+        k.id === 'KC_LGUI' ||
+        k.id === 'KC_RGUI' ||
+        k.defaultKeycode === 227 ||
+        k.defaultKeycode === 231 ||
+        k.label?.toLowerCase().includes('win') ||
+        k.label?.toLowerCase().includes('cmd')
+    );
+    const hasWinLock = (desc?.capabilities?.hasWinLock !== false) && hasWinKey;
+
+    const hasNumLock = layoutKeys.some(
+      (k) =>
+        k.id === 'NUM' ||
+        k.id === 'NLCK' ||
+        k.id === 'KC_NUM' ||
+        k.id === 'KC_NUM_LOCK' ||
+        k.id === 'KC_NLCK' ||
+        k.defaultKeycode === 83 ||
+        k.label?.toLowerCase() === 'num' ||
+        k.label?.toLowerCase() === 'nlck' ||
+        k.label?.toLowerCase().includes('num lock')
+    );
+
+    const hasScrollLock = layoutKeys.some(
+      (k) =>
+        k.id === 'SCRL' ||
+        k.id === 'SLCK' ||
+        k.id === 'KC_SCRL' ||
+        k.id === 'KC_SCROLL_LOCK' ||
+        k.id === 'KC_SLCK' ||
+        k.defaultKeycode === 71 ||
+        k.label?.toLowerCase().includes('scrl') ||
+        k.label?.toLowerCase().includes('scroll') ||
+        k.label?.toLowerCase() === 'slck'
+    );
+
+    return {
+      hasCapsLock: hasCapsLock || (layoutKeys.length === 0),
+      hasWinLock,
+      hasNumLock,
+      hasScrollLock,
+    };
+  }, [layoutKeys, desc]);
+
+  const hasAnyLockSupported = supportedLocks.hasCapsLock || supportedLocks.hasWinLock || supportedLocks.hasNumLock || supportedLocks.hasScrollLock;
+
+  useEffect(() => {
+    if (lightingSubTab === 'winlock' && !hasAnyLockSupported) {
+      setLightingSubTab('backlight');
+    }
+  }, [lightingSubTab, hasAnyLockSupported, setLightingSubTab]);
+
 
   const unitSize = 46;
   const { canvasWidth, canvasHeight } = useMemo(() => {
@@ -265,16 +337,16 @@ export const LightingView: React.FC = () => {
         </svg>
       ),
     },
-    {
-      id: 'winlock',
-      labelKey: 'tabWinLock',
+    ...(hasAnyLockSupported ? [{
+      id: 'winlock' as LightingSubTab,
+      labelKey: 'tabIndicators',
       icon: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
         </svg>
       ),
-    },
+    }] : []),
     {
       id: 'layers',
       labelKey: 'tabLayers',
@@ -1271,64 +1343,225 @@ export const LightingView: React.FC = () => {
         </div>
       )}
 
-      {/* 3. Sub-Tab: Win Lock */}
+      {/* 3. Sub-Tab: Lock & Status Indicators */}
       {lightingSubTab === 'winlock' && (
         <div className="lighting-subview active" id="lighting-tab-winlock">
-          <div className="palette-card" style={{ maxWidth: '680px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.05rem' }}>{t('winLockSectionTitle')}</h3>
-              <span className="badge-pill" style={{ fontSize: '0.75rem' }}>
-                {winLock.isLocked ? t('badgeLocked') : t('badgeUnlocked')}
-              </span>
-            </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
-              {t('winLockDesc')}
-            </p>
-
-            <div className="form-group">
-              <label>{t('lblWinLockMode')}</label>
-              <select
-                className="form-control"
-                value={winLock.mode}
-                onChange={(e) => setWinLock({ mode: Number(e.target.value) })}
-              >
-                <option value={0}>{t('optWinLockAnim')}</option>
-                <option value={1}>{t('optWinLockOff')}</option>
-                <option value={2}>{t('optWinLockColor')}</option>
-              </select>
+          <div style={{ maxWidth: '980px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div className="palette-card" style={{ padding: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-cyan)' }}>
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>{t('lockIndicatorsSectionTitle')}</h3>
+              </div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                {t('lockIndicatorsDesc')}
+              </p>
             </div>
 
-            {winLock.mode === 2 && (
-              <div className="form-group">
-                <label>{t('lblWinLockColor')}</label>
-                <div className="color-input-wrap">
-                  <input
-                    type="color"
-                    className="color-picker-input"
-                    value={winLock.color}
-                    onChange={(e) => setWinLock({ color: e.target.value })}
-                  />
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('lblWinLockColorHint')}</span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.25rem' }}>
+              {/* Card 1: Caps Lock Indicator */}
+              {supportedLocks.hasCapsLock && (
+                <div className="palette-card">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-cyan)' }}>
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                      <h4 style={{ fontSize: '0.98rem', fontWeight: 600 }}>{t('capsLockSectionTitle')}</h4>
+                    </div>
+                    <span className="badge-pill" style={{ fontSize: '0.72rem' }}>
+                      Caps Lock
+                    </span>
+                  </div>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: '1.1rem', minHeight: '38px' }}>
+                    {t('capsLockDesc')}
+                  </p>
+
+                  <div className="form-group">
+                    <label>{t('lblCapsLockMode')}</label>
+                    <select
+                      className="form-control"
+                      value={capsLock.mode}
+                      onChange={(e) => setCapsLock({ mode: Number(e.target.value) })}
+                    >
+                      <option value={0}>{t('optLockAnim')}</option>
+                      <option value={1}>{t('optLockOff')}</option>
+                      <option value={2}>{t('optLockColor')}</option>
+                    </select>
+                  </div>
+
+                  {capsLock.mode === 2 && (
+                    <div className="form-group">
+                      <label>{t('lblLockColor')}</label>
+                      <div className="color-input-wrap">
+                        <input
+                          type="color"
+                          className="color-picker-input"
+                          value={capsLock.color}
+                          onChange={(e) => setCapsLock({ color: e.target.value })}
+                        />
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('lblLockColorHint')}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              )}
 
-            <div className="switch-wrap" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem', marginTop: '1rem' }}>
-              <div>
-                <span style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem' }}>{t('lblWinLockToggle')}</span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('lblWinLockToggleHint')}</span>
-              </div>
-              <label className="switch">
-                <input
-                  type="checkbox"
-                  checked={winLock.isLocked}
-                  onChange={(e) => setWinLock({ isLocked: e.target.checked })}
-                />
-                <span className="slider"></span>
-              </label>
+              {/* Card 2: Windows Key Lock (Win Lock) */}
+              {supportedLocks.hasWinLock && (
+                <div className="palette-card">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#ec4899' }}>
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                      </svg>
+                      <h4 style={{ fontSize: '0.98rem', fontWeight: 600 }}>{t('winLockSectionTitle')}</h4>
+                    </div>
+                    <span className="badge-pill" style={{ fontSize: '0.72rem' }}>
+                      Win Lock
+                    </span>
+                  </div>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: '1.1rem', minHeight: '38px' }}>
+                    {t('winLockDesc')}
+                  </p>
+
+                  <div className="form-group">
+                    <label>{t('lblWinLockMode')}</label>
+                    <select
+                      className="form-control"
+                      value={winLock.mode}
+                      onChange={(e) => setWinLock({ mode: Number(e.target.value) })}
+                    >
+                      <option value={0}>{t('optLockAnim')}</option>
+                      <option value={1}>{t('optLockOff')}</option>
+                      <option value={2}>{t('optLockColor')}</option>
+                    </select>
+                  </div>
+
+                  {winLock.mode === 2 && (
+                    <div className="form-group">
+                      <label>{t('lblLockColor')}</label>
+                      <div className="color-input-wrap">
+                        <input
+                          type="color"
+                          className="color-picker-input"
+                          value={winLock.color}
+                          onChange={(e) => setWinLock({ color: e.target.value })}
+                        />
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('lblLockColorHint')}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Card 3: Num Lock Indicator */}
+              {supportedLocks.hasNumLock && (
+                <div className="palette-card">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-blue)' }}>
+                        <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                        <line x1="9" y1="9" x2="9" y2="9.01"></line>
+                        <line x1="15" y1="9" x2="15" y2="9.01"></line>
+                        <line x1="9" y1="15" x2="9" y2="15.01"></line>
+                        <line x1="15" y1="15" x2="15" y2="15.01"></line>
+                      </svg>
+                      <h4 style={{ fontSize: '0.98rem', fontWeight: 600 }}>{t('numLockSectionTitle')}</h4>
+                    </div>
+                    <span className="badge-pill" style={{ fontSize: '0.72rem' }}>
+                      Num Lock
+                    </span>
+                  </div>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: '1.1rem', minHeight: '38px' }}>
+                    {t('numLockDesc')}
+                  </p>
+
+                  <div className="form-group">
+                    <label>{t('lblNumLockMode')}</label>
+                    <select
+                      className="form-control"
+                      value={numLock.mode}
+                      onChange={(e) => setNumLock({ mode: Number(e.target.value) })}
+                    >
+                      <option value={0}>{t('optLockAnim')}</option>
+                      <option value={1}>{t('optLockOff')}</option>
+                      <option value={2}>{t('optLockColor')}</option>
+                    </select>
+                  </div>
+
+                  {numLock.mode === 2 && (
+                    <div className="form-group">
+                      <label>{t('lblLockColor')}</label>
+                      <div className="color-input-wrap">
+                        <input
+                          type="color"
+                          className="color-picker-input"
+                          value={numLock.color}
+                          onChange={(e) => setNumLock({ color: e.target.value })}
+                        />
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('lblLockColorHint')}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Card 4: Scroll Lock Indicator */}
+              {supportedLocks.hasScrollLock && (
+                <div className="palette-card">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-purple)' }}>
+                        <polyline points="7 13 12 18 17 13"></polyline>
+                        <polyline points="7 6 12 11 17 6"></polyline>
+                      </svg>
+                      <h4 style={{ fontSize: '0.98rem', fontWeight: 600 }}>{t('scrollLockSectionTitle')}</h4>
+                    </div>
+                    <span className="badge-pill" style={{ fontSize: '0.72rem' }}>
+                      Scroll Lock
+                    </span>
+                  </div>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: '1.1rem', minHeight: '38px' }}>
+                    {t('scrollLockDesc')}
+                  </p>
+
+                  <div className="form-group">
+                    <label>{t('lblScrollLockMode')}</label>
+                    <select
+                      className="form-control"
+                      value={scrollLock.mode}
+                      onChange={(e) => setScrollLock({ mode: Number(e.target.value) })}
+                    >
+                      <option value={0}>{t('optLockAnim')}</option>
+                      <option value={1}>{t('optLockOff')}</option>
+                      <option value={2}>{t('optLockColor')}</option>
+                    </select>
+                  </div>
+
+                  {scrollLock.mode === 2 && (
+                    <div className="form-group">
+                      <label>{t('lblLockColor')}</label>
+                      <div className="color-input-wrap">
+                        <input
+                          type="color"
+                          className="color-picker-input"
+                          value={scrollLock.color}
+                          onChange={(e) => setScrollLock({ color: e.target.value })}
+                        />
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('lblLockColorHint')}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem', marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            {/* Action Buttons */}
+            <div className="palette-card" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', padding: '1rem 1.25rem' }}>
               <button type="button" className="btn btn-secondary btn-sm" id="btnDiscardWinLockEEPROM" onClick={discardAllChanges}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
@@ -1338,7 +1571,12 @@ export const LightingView: React.FC = () => {
               </button>
               <button
                 type="button"
-                className={`btn btn-primary btn-sm ${dirtyModules.has('winlock') ? 'btn-save-eeprom-pulse' : ''}`}
+                className={`btn btn-primary btn-sm ${(
+                  (supportedLocks.hasWinLock && dirtyModules.has('winlock')) ||
+                  (supportedLocks.hasCapsLock && dirtyModules.has('capslock')) ||
+                  (supportedLocks.hasNumLock && dirtyModules.has('numlock')) ||
+                  (supportedLocks.hasScrollLock && dirtyModules.has('scrolllock'))
+                ) ? 'btn-save-eeprom-pulse' : ''}`}
                 id="btnSaveWinLockEEPROM"
                 onClick={saveLightingToHardware}
               >

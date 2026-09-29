@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { hidProtocol, DipSwitchConfig, DipSwitchPosConfig } from '../../core/hid-protocol';
 import { useDeviceStore } from '../../store/useDeviceStore';
 import { useUIStore } from '../../store/useUIStore';
+import { getLayerDisplayName } from '../../data/layouts';
 import { useI18n } from '../../i18n';
 
 interface HardwareSwitchStudioProps {
@@ -24,9 +25,9 @@ const DEFAULT_CONFIG: DipSwitchConfig = {
 };
 
 export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ switchIndex = 0 }) => {
-  const { isConnected } = useDeviceStore();
+  const { isConnected, activeDescriptor } = useDeviceStore();
   const { showToast } = useUIStore();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   const [config, setConfig] = useState<DipSwitchConfig>(DEFAULT_CONFIG);
   const [liveState, setLiveState] = useState<number>(0); // 0 = Pos 1 (Mac), 1 = Pos 2 (Win)
@@ -312,10 +313,10 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
                 onChange={(e) => handleUpdatePos('posA', 'targetLayer', parseInt(e.target.value, 10))}
                 style={{ width: '100%', padding: '0.45rem 0.65rem', fontSize: '0.85rem' }}
               >
-                <option value={2}>{t('layer2')}</option>
-                <option value={0}>{t('layer0')}</option>
-                <option value={1}>{t('layer1')}</option>
-                <option value={3}>{t('layer3')}</option>
+                <option value={2}>{getLayerDisplayName(2, activeDescriptor, language)}</option>
+                <option value={0}>{getLayerDisplayName(0, activeDescriptor, language)}</option>
+                <option value={1}>{getLayerDisplayName(1, activeDescriptor, language)}</option>
+                <option value={3}>{getLayerDisplayName(3, activeDescriptor, language)}</option>
                 <option value={0xFF}>{t('optNoChange')}</option>
               </select>
             </div>
@@ -422,10 +423,10 @@ export const HardwareSwitchStudio: React.FC<HardwareSwitchStudioProps> = ({ swit
                 onChange={(e) => handleUpdatePos('posB', 'targetLayer', parseInt(e.target.value, 10))}
                 style={{ width: '100%', padding: '0.45rem 0.65rem', fontSize: '0.85rem' }}
               >
-                <option value={0}>{t('layer0')}</option>
-                <option value={2}>{t('layer2')}</option>
-                <option value={1}>{t('layer1')}</option>
-                <option value={3}>{t('layer3')}</option>
+                <option value={0}>{getLayerDisplayName(0, activeDescriptor, language)}</option>
+                <option value={2}>{getLayerDisplayName(2, activeDescriptor, language)}</option>
+                <option value={1}>{getLayerDisplayName(1, activeDescriptor, language)}</option>
+                <option value={3}>{getLayerDisplayName(3, activeDescriptor, language)}</option>
                 <option value={0xFF}>{t('optNoChange')}</option>
               </select>
             </div>

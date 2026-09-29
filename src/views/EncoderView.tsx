@@ -2,14 +2,18 @@ import React, { useState } from 'react';
 import { useKeymapStore } from '../store/useKeymapStore';
 import { useDeviceStore } from '../store/useDeviceStore';
 import { KEYCODES_DB, getKeycodeInfo } from '../data/keycodes';
+import { getLayerDisplayName } from '../data/layouts';
+import { ALL_DEVICE_DESCRIPTORS } from '../data/devices';
 import { useI18n } from '../i18n';
 
 export const EncoderView: React.FC = () => {
   const { activeLayer, setActiveLayer, activeCategory, setActiveCategory } = useKeymapStore();
   const { isConnected, activeDescriptor } = useDeviceStore();
-  const { t } = useI18n();
+  const presetLayoutId = useKeymapStore((s) => s.presetLayoutId);
+  const desc = activeDescriptor || ALL_DEVICE_DESCRIPTORS.find((d) => d.id === presetLayoutId) || null;
+  const { t, language } = useI18n();
 
-  const hasEncoder = activeDescriptor ? (activeDescriptor.capabilities?.hasRotaryEncoder !== false) : true;
+  const hasEncoder = desc ? (desc.capabilities?.hasRotaryEncoder !== false) : true;
 
   const [selectedSlot, setSelectedSlot] = useState<'ccw' | 'cw' | 'press'>('ccw');
   const [dragOverSlot, setDragOverSlot] = useState<'ccw' | 'cw' | 'press' | null>(null);
@@ -89,28 +93,28 @@ export const EncoderView: React.FC = () => {
             className={`layer-btn ${activeLayer === 0 ? 'active' : ''}`}
             onClick={() => setActiveLayer(0)}
           >
-            {t('layer0')}
+            {getLayerDisplayName(0, desc, language)}
           </button>
           <button
             type="button"
             className={`layer-btn ${activeLayer === 1 ? 'active' : ''}`}
             onClick={() => setActiveLayer(1)}
           >
-            {t('layer1')}
+            {getLayerDisplayName(1, desc, language)}
           </button>
           <button
             type="button"
             className={`layer-btn ${activeLayer === 2 ? 'active' : ''}`}
             onClick={() => setActiveLayer(2)}
           >
-            {t('layer2')}
+            {getLayerDisplayName(2, desc, language)}
           </button>
           <button
             type="button"
             className={`layer-btn ${activeLayer === 3 ? 'active' : ''}`}
             onClick={() => setActiveLayer(3)}
           >
-            {t('layer3')}
+            {getLayerDisplayName(3, desc, language)}
           </button>
         </div>
 

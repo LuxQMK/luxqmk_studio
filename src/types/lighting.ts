@@ -36,6 +36,11 @@ export interface WinLockConfig {
   isLocked: boolean;
 }
 
+export interface LockIndicatorConfig {
+  mode: number; // 0=animation/disabled, 1=off, 2=custom color, 3=solid white
+  color: string;
+}
+
 export interface LayerLightingConfig {
   enable: boolean;
   dimLevel: number; // 0-255

@@ -4,6 +4,7 @@ import {
   SidelightConfig,
   ReactiveConfig,
   WinLockConfig,
+  LockIndicatorConfig,
   LayerLightingConfig,
   LogoLocksConfig,
   MonochromeConfig,
@@ -86,6 +87,9 @@ interface LightingState {
   sidelight: SidelightConfig;
   reactive: ReactiveConfig;
   winLock: WinLockConfig;
+  capsLock: LockIndicatorConfig;
+  numLock: LockIndicatorConfig;
+  scrollLock: LockIndicatorConfig;
   layerLighting: LayerLightingConfig;
   logoLocks: LogoLocksConfig;
   monochrome: MonochromeConfig;
@@ -101,6 +105,9 @@ interface LightingState {
   setSidelight: (patch: Partial<SidelightConfig>) => void;
   setReactive: (patch: Partial<ReactiveConfig>) => void;
   setWinLock: (patch: Partial<WinLockConfig>) => void;
+  setCapsLock: (patch: Partial<LockIndicatorConfig>) => void;
+  setNumLock: (patch: Partial<LockIndicatorConfig>) => void;
+  setScrollLock: (patch: Partial<LockIndicatorConfig>) => void;
   setLayerLighting: (patch: Partial<LayerLightingConfig>) => void;
   setLogoLocks: (patch: Partial<LogoLocksConfig>) => void;
   setMonochrome: (patch: Partial<MonochromeConfig>) => void;
@@ -235,8 +242,20 @@ export const useLightingStore = create<LightingState>((set, get) => ({
   },
   winLock: {
     mode: 0,
-    color: '#ff0000',
+    color: '#ffffff',
     isLocked: false,
+  },
+  capsLock: {
+    mode: 0,
+    color: '#ffffff',
+  },
+  numLock: {
+    mode: 0,
+    color: '#ffffff',
+  },
+  scrollLock: {
+    mode: 0,
+    color: '#ffffff',
   },
   layerLighting: {
     enable: true,
@@ -402,6 +421,54 @@ export const useLightingStore = create<LightingState>((set, get) => ({
       }
       if (patch.isLocked !== undefined) {
         hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.WIN_LOCK_STATE, [w.isLocked ? 1 : 0]);
+      }
+    }
+  },
+
+  setCapsLock: (patch) => {
+    set((state) => ({ capsLock: { ...state.capsLock, ...patch } }));
+    useDeviceStore.getState().markDirty('capslock');
+
+    if (useDeviceStore.getState().isConnected) {
+      const c = get().capsLock;
+      if (patch.mode !== undefined) {
+        hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.CAPS_LOCK_MODE, [c.mode]);
+      }
+      if (patch.color !== undefined) {
+        const [h, s] = hexToHs(c.color);
+        hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.CAPS_LOCK_COLOR, [h, s]);
+      }
+    }
+  },
+
+  setNumLock: (patch) => {
+    set((state) => ({ numLock: { ...state.numLock, ...patch } }));
+    useDeviceStore.getState().markDirty('numlock');
+
+    if (useDeviceStore.getState().isConnected) {
+      const n = get().numLock;
+      if (patch.mode !== undefined) {
+        hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.NUM_LOCK_MODE, [n.mode]);
+      }
+      if (patch.color !== undefined) {
+        const [h, s] = hexToHs(n.color);
+        hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.NUM_LOCK_COLOR, [h, s]);
+      }
+    }
+  },
+
+  setScrollLock: (patch) => {
+    set((state) => ({ scrollLock: { ...state.scrollLock, ...patch } }));
+    useDeviceStore.getState().markDirty('scrolllock');
+
+    if (useDeviceStore.getState().isConnected) {
+      const slock = get().scrollLock;
+      if (patch.mode !== undefined) {
+        hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SCROLL_LOCK_MODE, [slock.mode]);
+      }
+      if (patch.color !== undefined) {
+        const [h, s] = hexToHs(slock.color);
+        hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SCROLL_LOCK_COLOR, [h, s]);
       }
     }
   },
@@ -915,8 +982,45 @@ export const useLightingStore = create<LightingState>((set, get) => ({
           winLock: {
             ...state.winLock,
             mode: wModeRes && wModeRes.length > 0 ? wModeRes[0] : 0,
-            color: wColRes && wColRes.length >= 2 ? hsToHex(wColRes[0], wColRes[1]) : '#ff0000',
+            color: wColRes && wColRes.length >= 2 ? hsToHex(wColRes[0], wColRes[1]) : '#ffffff',
             isLocked: wStRes && wStRes.length > 0 ? wStRes[0] === 1 : false,
+          },
+        }));
+      } catch (e) {}
+
+      // Lock Indicators (Caps, Num, Scroll)
+      try {
+        const capsModeRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.CAPS_LOCK_MODE);
+        const capsColRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.CAPS_LOCK_COLOR);
+        set((state) => ({
+          capsLock: {
+            ...state.capsLock,
+            mode: capsModeRes && capsModeRes.length > 0 ? capsModeRes[0] : 0,
+            color: capsColRes && capsColRes.length >= 2 ? hsToHex(capsColRes[0], capsColRes[1]) : '#ffffff',
+          },
+        }));
+      } catch (e) {}
+
+      try {
+        const numModeRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.NUM_LOCK_MODE);
+        const numColRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.NUM_LOCK_COLOR);
+        set((state) => ({
+          numLock: {
+            ...state.numLock,
+            mode: numModeRes && numModeRes.length > 0 ? numModeRes[0] : 0,
+            color: numColRes && numColRes.length >= 2 ? hsToHex(numColRes[0], numColRes[1]) : '#ffffff',
+          },
+        }));
+      } catch (e) {}
+
+      try {
+        const scrollModeRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SCROLL_LOCK_MODE);
+        const scrollColRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SCROLL_LOCK_COLOR);
+        set((state) => ({
+          scrollLock: {
+            ...state.scrollLock,
+            mode: scrollModeRes && scrollModeRes.length > 0 ? scrollModeRes[0] : 0,
+            color: scrollColRes && scrollColRes.length >= 2 ? hsToHex(scrollColRes[0], scrollColRes[1]) : '#ffffff',
           },
         }));
       } catch (e) {}
@@ -1002,6 +1106,9 @@ export const useLightingStore = create<LightingState>((set, get) => ({
         sidelight: JSON.parse(JSON.stringify(get().sidelight)),
         reactive: JSON.parse(JSON.stringify(get().reactive)),
         winLock: JSON.parse(JSON.stringify(get().winLock)),
+        capsLock: JSON.parse(JSON.stringify(get().capsLock)),
+        numLock: JSON.parse(JSON.stringify(get().numLock)),
+        scrollLock: JSON.parse(JSON.stringify(get().scrollLock)),
         layerLighting: JSON.parse(JSON.stringify(get().layerLighting)),
         logoLocks: JSON.parse(JSON.stringify(get().logoLocks)),
         perKeyProfiles: JSON.parse(JSON.stringify(get().perKeyProfiles)),
@@ -1029,6 +1136,9 @@ export const useLightingStore = create<LightingState>((set, get) => ({
         sidelight: JSON.parse(JSON.stringify(get().sidelight)),
         reactive: JSON.parse(JSON.stringify(get().reactive)),
         winLock: JSON.parse(JSON.stringify(get().winLock)),
+        capsLock: JSON.parse(JSON.stringify(get().capsLock)),
+        numLock: JSON.parse(JSON.stringify(get().numLock)),
+        scrollLock: JSON.parse(JSON.stringify(get().scrollLock)),
         layerLighting: JSON.parse(JSON.stringify(get().layerLighting)),
         logoLocks: JSON.parse(JSON.stringify(get().logoLocks)),
         perKeyProfiles: JSON.parse(JSON.stringify(get().perKeyProfiles)),
@@ -1090,7 +1200,24 @@ export const useLightingStore = create<LightingState>((set, get) => ({
           await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.WIN_LOCK_STATE, [snap.winLock.isLocked ? 1 : 0]);
         }
 
-        // 6. Re-apply layerLighting live
+        // 6. Re-apply lock indicators live
+        if (snap.capsLock) {
+          const [ch, cs] = hexToHs(snap.capsLock.color);
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.CAPS_LOCK_MODE, [snap.capsLock.mode]);
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.CAPS_LOCK_COLOR, [ch, cs]);
+        }
+        if (snap.numLock) {
+          const [nh, ns] = hexToHs(snap.numLock.color);
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.NUM_LOCK_MODE, [snap.numLock.mode]);
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.NUM_LOCK_COLOR, [nh, ns]);
+        }
+        if (snap.scrollLock) {
+          const [sh, ss] = hexToHs(snap.scrollLock.color);
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SCROLL_LOCK_MODE, [snap.scrollLock.mode]);
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SCROLL_LOCK_COLOR, [sh, ss]);
+        }
+
+        // 7. Re-apply layerLighting live
         if (snap.layerLighting) {
           const [l1h, l1s] = hexToHs(snap.layerLighting.layer1Color);
           const [l2h, l2s] = hexToHs(snap.layerLighting.layer2Color);
@@ -1102,7 +1229,7 @@ export const useLightingStore = create<LightingState>((set, get) => ({
           await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_3_COLOR, [l3h, l3s]);
         }
 
-        // 7. Re-apply logo live
+        // 8. Re-apply logo live
         if (snap.logoLocks) {
           const [ch, cs] = hexToHs(snap.logoLocks.colorCaps);
           const [nh, ns] = hexToHs(snap.logoLocks.colorNum);
@@ -1113,7 +1240,7 @@ export const useLightingStore = create<LightingState>((set, get) => ({
           await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_SCROLL, [sch, scs]);
         }
 
-        // 8. Re-apply per-key profiles live
+        // 9. Re-apply per-key profiles live
         if (snap.perKeyProfiles) {
           for (let p = 0; p < 3; p++) {
             if (snap.perKeyProfiles[p]) {
@@ -1138,6 +1265,9 @@ export const useLightingStore = create<LightingState>((set, get) => ({
           sidelight: JSON.parse(JSON.stringify(snap.sidelight)),
           reactive: JSON.parse(JSON.stringify(snap.reactive)),
           winLock: JSON.parse(JSON.stringify(snap.winLock)),
+          capsLock: JSON.parse(JSON.stringify(snap.capsLock)),
+          numLock: JSON.parse(JSON.stringify(snap.numLock)),
+          scrollLock: JSON.parse(JSON.stringify(snap.scrollLock)),
           layerLighting: JSON.parse(JSON.stringify(snap.layerLighting)),
           logoLocks: JSON.parse(JSON.stringify(snap.logoLocks)),
           perKeyProfiles: JSON.parse(JSON.stringify(snap.perKeyProfiles)),

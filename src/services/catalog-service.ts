@@ -223,7 +223,7 @@ class CatalogService {
               release_name: targetRelease.name || `LuxQMK Studio ${targetRelease.tag_name}`,
               release_date: targetRelease.published_at || new Date().toISOString(),
               is_prerelease: Boolean(targetRelease.prerelease),
-              min_compatible_firmware: '0.3.3',
+              min_compatible_firmware: '0.3.4',
               changelog: changelogLines,
               downloads: {
                 windows_installer:
