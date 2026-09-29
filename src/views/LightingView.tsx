@@ -10,6 +10,8 @@ import { useI18n } from '../i18n';
 import { useKeyboardFit } from '../hooks/useKeyboardFit';
 import { useLightingVisualizer } from '../hooks/useLightingVisualizer';
 import { HardwareGradientStudio } from '../components/common/HardwareGradientStudio';
+import { KeyboardAppearanceButton } from '../components/common/KeyboardAppearanceButton';
+import { useKeyboardThemeStore } from '../store/useKeyboardThemeStore';
 
 export const LightingView: React.FC = () => {
   const {
@@ -39,6 +41,8 @@ export const LightingView: React.FC = () => {
     setSimulatingFn,
     saveLightingToHardware,
   } = useLightingStore();
+
+  const canvasThemeStyles = useKeyboardThemeStore((s) => s.canvasThemeStyles);
 
   const { presetLayoutId, getKeycode, layerKeymaps } = useKeymapStore();
   const { discardAllChanges, activeLayer: hwActiveLayer, dirtyModules } = useDeviceStore();
@@ -339,6 +343,7 @@ export const LightingView: React.FC = () => {
             <h3 style={{ fontSize: '1.05rem', fontWeight: 600 }}>{t('lightingLivePreviewTitle')}</h3>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <KeyboardAppearanceButton />
             <button
               type="button"
               className={`btn ${effectiveFnActive ? 'btn-primary' : 'btn-secondary'}`}
@@ -375,7 +380,7 @@ export const LightingView: React.FC = () => {
             className={`keyboard-canvas ${hasSidelights ? 'has-sidelights' : ''}`}
             id="lightingKeyboardCanvas"
             ref={canvasRef}
-            style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, position: 'relative' }}
+            style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, position: 'relative', ...canvasThemeStyles }}
           >
             {/* Left & Right Sidelight LED Diffusers */}
             {hasSidelights && sideLeds && (

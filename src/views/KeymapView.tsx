@@ -9,6 +9,8 @@ import { useKeyboardFit } from '../hooks/useKeyboardFit';
 import { useUIStore } from '../store/useUIStore';
 import { LogoLedBadge } from '../components/common/LogoLedBadge';
 import { HardwareSwitchStudio } from '../components/common/HardwareSwitchStudio';
+import { KeyboardAppearanceButton } from '../components/common/KeyboardAppearanceButton';
+import { useKeyboardThemeStore } from '../store/useKeyboardThemeStore';
 
 export const KeymapView: React.FC = () => {
   const {
@@ -26,6 +28,8 @@ export const KeymapView: React.FC = () => {
     readAllLayersFromKeyboard,
     loadViaJson,
   } = useKeymapStore();
+
+  const canvasThemeStyles = useKeyboardThemeStore((s) => s.canvasThemeStyles);
 
   const [dragOverKey, setDragOverKey] = React.useState<{ row: number; col: number } | null>(null);
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
@@ -316,6 +320,7 @@ export const KeymapView: React.FC = () => {
               style={{ display: 'none' }}
               onChange={handleFileUpload}
             />
+            <KeyboardAppearanceButton />
             <button
               type="button"
               className="btn btn-secondary btn-sm"
@@ -341,7 +346,7 @@ export const KeymapView: React.FC = () => {
             className={`keyboard-canvas ${hasSidelights ? 'has-sidelights' : ''}`}
             id="keyboardCanvas"
             ref={canvasRef}
-            style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, position: 'relative' }}
+            style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, position: 'relative', ...canvasThemeStyles }}
             onClick={(e) => {
               if (e.target === e.currentTarget) {
                 setSelectedKey(null);

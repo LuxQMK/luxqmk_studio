@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useUIStore } from '../../store/useUIStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { useKeyboardThemeStore } from '../../store/useKeyboardThemeStore';
+import { CASE_THEMES, KEYCAP_THEMES } from '../../data/keyboardThemes';
 import { useI18n } from '../../i18n';
 import { APP_VERSION } from '../../version';
 
@@ -8,6 +10,7 @@ export const AppSettingsModal: React.FC = () => {
   const { isAppSettingsOpen, setAppSettingsOpen, showToast } = useUIStore();
   const { studioUpdate, checkCloudUpdates, startStudioDownload, applyStudioUpdate, setIncludeBeta } = useSettingsStore();
   const { language, setLanguage, t } = useI18n();
+  const { caseThemeId, keycapThemeId, setCaseThemeId, setKeycapThemeId, setDesignModalOpen } = useKeyboardThemeStore();
 
   const isDesktop = typeof window !== 'undefined' && !!window.electronAPI && !!window.electronAPI.isDesktop;
   const [autostart, setAutostart] = useState(false);
@@ -132,6 +135,85 @@ export const AppSettingsModal: React.FC = () => {
                   <option value="pl">Polski (PL)</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          {/* 2. Virtual Keyboard Design & Appearance */}
+          <div className="modal-section">
+            <div className="modal-section-title">
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 2a14.5 14.5 0 0 0 0 20 10 10 0 0 0 9.54-13.42A10 10 0 0 0 12 2z"></path>
+                  <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"></circle>
+                  <circle cx="15.5" cy="8.5" r="1.5" fill="currentColor"></circle>
+                  <circle cx="8.5" cy="15.5" r="1.5" fill="currentColor"></circle>
+                </svg>
+              </span>
+              <span>{t('modalDesignTitle', 'Virtual Keyboard Appearance')}</span>
+            </div>
+            <div className="modal-section-content">
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '0.75rem' }}>
+                {t('modalDesignSubtitle', 'Customize keyboard case and keycaps visual styling (GUI only)')}
+              </p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                {/* Case Selector */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                    {t('lblCaseThemeTitle', 'Keyboard Case')}
+                  </label>
+                  <select
+                    className="settings-select form-control"
+                    id="appCaseThemeSelect"
+                    value={caseThemeId}
+                    onChange={(e) => setCaseThemeId(e.target.value)}
+                  >
+                    {CASE_THEMES.map((theme) => (
+                      <option key={theme.id} value={theme.id}>
+                        {t(theme.nameKey, theme.defaultName)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Keycaps Selector */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                    {t('lblKeycapThemeTitle', 'Keycaps Colorway')}
+                  </label>
+                  <select
+                    className="settings-select form-control"
+                    id="appKeycapThemeSelect"
+                    value={keycapThemeId}
+                    onChange={(e) => setKeycapThemeId(e.target.value)}
+                  >
+                    {KEYCAP_THEMES.map((theme) => (
+                      <option key={theme.id} value={theme.id}>
+                        {t(theme.nameKey, theme.defaultName)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => {
+                  setAppSettingsOpen(false);
+                  setDesignModalOpen(true);
+                }}
+                style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', gap: '0.45rem' }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 2a14.5 14.5 0 0 0 0 20 10 10 0 0 0 9.54-13.42A10 10 0 0 0 12 2z"></path>
+                  <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"></circle>
+                  <circle cx="15.5" cy="8.5" r="1.5" fill="currentColor"></circle>
+                </svg>
+                <span>{t('btnOpenVisualStudio', 'Open Full Appearance Studio')}</span>
+              </button>
             </div>
           </div>
 

@@ -10,6 +10,7 @@ import { TopBar } from './components/layout/TopBar';
 import { AppSettingsModal } from './components/modals/AppSettingsModal';
 import { AboutModal } from './components/modals/AboutModal';
 import { UpdateModal } from './components/modals/UpdateModal';
+import { KeyboardDesignModal } from './components/modals/KeyboardDesignModal';
 import { AppToast } from './components/modals/AppToast';
 
 // 8 Primary Views (1:1 with legacy_index.html)
@@ -58,6 +59,7 @@ export const App: React.FC = () => {
       <AppSettingsModal />
       <AboutModal />
       <UpdateModal />
+      <KeyboardDesignModal />
       <AppToast />
     </div>
   );

@@ -216,19 +216,19 @@ body {
   position: relative;
   width: calc(var(--keyboard-width-units, 22.5) * var(--key-unit) + 36px);
   height: calc(var(--keyboard-height-units, 6.25) * var(--key-unit) + 36px);
-  background: linear-gradient(180deg, #141b2b 0%, #0c101a 60%, #06080e 100%);
+  background: var(--keyboard-case-bg, linear-gradient(180deg, #141b2b 0%, #0c101a 60%, #06080e 100%));
   border-radius: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.12);
+  border: var(--keyboard-case-border, 2px solid rgba(255, 255, 255, 0.12));
   padding: 18px;
-  box-shadow: 
+  box-shadow: var(--keyboard-case-shadow, 
     0 12px 32px rgba(0, 0, 0, 0.75),
     0 0 0 1px rgba(0, 0, 0, 0.9),
     inset 0 1px 1px rgba(255, 255, 255, 0.15),
-    inset 0 -3px 12px rgba(0, 0, 0, 0.8);
+    inset 0 -3px 12px rgba(0, 0, 0, 0.8));
   flex-shrink: 0;
   user-select: none;
   transform-origin: top center;
-  transition: transform 0.08s ease-out;
+  transition: transform 0.08s ease-out, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   contain: layout style;
   transform: translateZ(0);
 }

@@ -6,6 +6,8 @@ import { useDeviceStore } from '../store/useDeviceStore';
 import { useI18n } from '../i18n';
 import { useKeyboardFit } from '../hooks/useKeyboardFit';
 import { LogoLedBadge } from '../components/common/LogoLedBadge';
+import { KeyboardAppearanceButton } from '../components/common/KeyboardAppearanceButton';
+import { useKeyboardThemeStore } from '../store/useKeyboardThemeStore';
 
 interface KeyHistoryItem {
   code: string;
@@ -155,6 +157,7 @@ export const CODE_TO_KEY_ID: Record<string, string> = {
 export const TesterView: React.FC = () => {
   const { presetLayoutId } = useKeymapStore();
   const { t } = useI18n();
+  const canvasThemeStyles = useKeyboardThemeStore((s) => s.canvasThemeStyles);
 
   const [testedKeys, setTestedKeys] = useState<Set<string>>(new Set());
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
@@ -291,14 +294,17 @@ export const TesterView: React.FC = () => {
             </div>
           </div>
 
-          <button className="btn btn-secondary" id="btnResetKeyTest" onClick={resetTest}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="23 4 23 10 17 10"></polyline>
-              <polyline points="1 20 1 14 7 14"></polyline>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-            </svg>
-            <span>{t('btnResetTest')}</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <KeyboardAppearanceButton />
+            <button className="btn btn-secondary" id="btnResetKeyTest" onClick={resetTest}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              <span>{t('btnResetTest')}</span>
+            </button>
+          </div>
         </div>
 
         {/* Matrix Canvas */}
@@ -307,7 +313,7 @@ export const TesterView: React.FC = () => {
             className={`keyboard-canvas ${hasSidelights ? 'has-sidelights' : ''}`}
             id="testerCanvas"
             ref={canvasRef}
-            style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, position: 'relative' }}
+            style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, position: 'relative', ...canvasThemeStyles }}
           >
             {/* Left & Right Sidelight LED Diffusers */}
             {hasSidelights && (() => {
@@ -404,7 +410,7 @@ export const TesterView: React.FC = () => {
               return (
                 <div
                   key={idx}
-                  className={`keycap-btn ${isTested ? 'tested' : ''} ${isActive ? 'active' : ''}`}
+                  className={`keycap-btn key-group-${key.group || 'alpha'} ${isTested ? 'tested' : ''} ${isActive ? 'active' : ''}`}
                   style={{
                     position: 'absolute',
                     left: `${left}px`,

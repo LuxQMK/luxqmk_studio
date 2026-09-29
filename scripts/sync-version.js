@@ -41,18 +41,24 @@ function getVersionInfo(pkg) {
     };
   }
 
-  const rawVersion = pkg.version || '1.4.3';
+  const rawVersion = pkg.version || '1.4.4';
   const baseVersion = rawVersion.replace(/-(dev|beta|rc|alpha)(\.\d+)?$/, '');
 
   const branch = getGitBranch();
   const isMaster = branch === 'master';
-  const targetVersion = isMaster ? baseVersion : `${baseVersion}-dev`;
+  
+  let targetVersion = rawVersion;
+  if (isMaster) {
+    targetVersion = baseVersion;
+  } else if (!rawVersion.includes('-beta') && !rawVersion.includes('-rc') && !rawVersion.includes('-alpha')) {
+    targetVersion = `${baseVersion}-dev`;
+  }
 
   return {
     targetVersion,
     baseVersion,
     branch,
-    isDevBuild: !isMaster,
+    isDevBuild: targetVersion.includes('-'),
   };
 }
 

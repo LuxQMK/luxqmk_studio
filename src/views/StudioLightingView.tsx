@@ -10,6 +10,8 @@ import { useI18n } from '../i18n';
 import { useKeyboardFit } from '../hooks/useKeyboardFit';
 import { LogoLedBadge } from '../components/common/LogoLedBadge';
 import { CustomGradientStudio } from '../components/common/CustomGradientStudio';
+import { KeyboardAppearanceButton } from '../components/common/KeyboardAppearanceButton';
+import { useKeyboardThemeStore } from '../store/useKeyboardThemeStore';
 import { visualizerService } from '../core/visualizer-service';
 
 const EFFECT_DIRECTION_OPTIONS: Record<string, Array<{ value: string; labelKey: string }>> = {
@@ -103,6 +105,7 @@ export const StudioLightingView: React.FC = () => {
   const { presetLayoutId } = useKeymapStore();
   const { studioSubTab, setStudioSubTab } = useUIStore();
   const { t } = useI18n();
+  const canvasThemeStyles = useKeyboardThemeStore((s) => s.canvasThemeStyles);
 
   const [audioSources, setAudioSources] = useState<Array<{ id: string; label: string }>>([
     { id: 'system_loopback', label: 'System Audio Output (WASAPI / Loopback)' }
@@ -215,10 +218,13 @@ export const StudioLightingView: React.FC = () => {
             <span className="live-dot-pulse"></span>
             <h3 style={{ fontSize: '1.05rem', fontWeight: 600 }}>{t('studioLightingLivePreviewTitle')}</h3>
           </div>
-          <div className="lighting-preview-status">
-            <span className={`badge-pill ${config.isRunning ? 'badge-connected' : ''}`} id="studioLightingStatusBadge">
-              {config.isRunning ? t('lblSoftwareActiveBadge', 'Running (60 FPS)') : t('lblSoftwareStoppedBadge', 'Stopped')}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <KeyboardAppearanceButton />
+            <div className="lighting-preview-status">
+              <span className={`badge-pill ${config.isRunning ? 'badge-connected' : ''}`} id="studioLightingStatusBadge">
+                {config.isRunning ? t('lblSoftwareActiveBadge', 'Running (60 FPS)') : t('lblSoftwareStoppedBadge', 'Stopped')}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -227,7 +233,7 @@ export const StudioLightingView: React.FC = () => {
             className={`keyboard-canvas lighting-keyboard-canvas ${hasSidelights ? 'has-sidelights' : ''}`}
             id="studioLightingKeyboardCanvas"
             ref={canvasRef}
-            style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, position: 'relative' }}
+            style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, position: 'relative', ...canvasThemeStyles }}
           >
             {/* Left & Right Sidelight LED Diffusers */}
             {hasSidelights && (() => {

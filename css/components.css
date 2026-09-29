@@ -26,8 +26,8 @@
 }
 
 .keycap-btn.is-custom-mapped {
-  border-color: rgba(0, 240, 255, 0.35);
-  background: #0f1c2e;
+  border-color: var(--key-custom-text, var(--accent-cyan, #00f0ff));
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(0, 240, 255, 0.18);
 }
 
 .keycap-btn.is-trns {
@@ -134,9 +134,9 @@
 .keycap-knob,
 .keycap-btn.keycap-knob,
 .lighting-keycap.keycap-knob {
-  background: radial-gradient(circle at 40% 35%, #3d4452, #21252d 80%) !important;
+  background: var(--key-knob-bg, radial-gradient(circle at 40% 35%, #3d4452, #21252d 80%)) !important;
   border-radius: 50% !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
+  border: 1.5px solid var(--key-knob-border, rgba(255, 255, 255, 0.14)) !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.15), inset 0 -1px 2px rgba(0, 0, 0, 0.4) !important;
   display: flex !important;
   align-items: center !important;
@@ -166,11 +166,56 @@
   display: none !important;
 }
 
-/* Key Group Colors */
-.key-group-mod { background: #162035; }
-.key-group-func { background: #121829; }
-.key-group-nav { background: #17223b; }
-.key-group-numpad { background: #141c2e; }
+/* Key Group Colors & Text Legibility */
+.key-group-mod {
+  background: var(--key-group-mod, #162035);
+  border-color: var(--key-border-mod, var(--key-border, rgba(255, 255, 255, 0.1)));
+}
+.key-group-mod .key-primary {
+  color: var(--key-text-mod, var(--key-text, #ffffff));
+}
+.key-group-mod .key-secondary {
+  color: var(--key-text-mod, var(--key-subtext, rgba(255, 255, 255, 0.45)));
+  opacity: 0.8;
+}
+
+.key-group-func {
+  background: var(--key-group-func, #121829);
+  border-color: var(--key-border-func, var(--key-border, rgba(255, 255, 255, 0.1)));
+}
+.key-group-func .key-primary {
+  color: var(--key-text-func, var(--key-text-mod, var(--key-text, #ffffff)));
+}
+.key-group-func .key-secondary {
+  color: var(--key-text-func, var(--key-subtext, rgba(255, 255, 255, 0.45)));
+  opacity: 0.8;
+}
+
+.key-group-nav {
+  background: var(--key-group-nav, #17223b);
+  border-color: var(--key-border-nav, var(--key-border, rgba(255, 255, 255, 0.1)));
+}
+.key-group-nav .key-primary {
+  color: var(--key-text-nav, var(--key-text-mod, var(--key-text, #ffffff)));
+}
+.key-group-nav .key-secondary {
+  color: var(--key-text-nav, var(--key-subtext, rgba(255, 255, 255, 0.45)));
+  opacity: 0.8;
+}
+
+.key-group-num {
+  background: var(--key-group-num, var(--key-bg, #111726));
+}
+.key-group-num .key-primary {
+  color: var(--key-text-num, var(--key-text, #ffffff));
+}
+
+.key-group-numpad {
+  background: var(--key-group-numpad, #141c2e);
+}
+.key-group-numpad .key-primary {
+  color: var(--key-text-numpad, var(--key-text, #ffffff));
+}
 
 /* Live RGB Visualizer Keycap */
 .lighting-keycap {

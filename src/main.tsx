@@ -9,6 +9,7 @@ import { useLightingStore } from './store/useLightingStore';
 import { useVisualizerStore } from './store/useVisualizerStore';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useMacroStore } from './store/useMacroStore';
+import { useKeyboardThemeStore } from './store/useKeyboardThemeStore';
 import { useI18n } from './i18n';
 import { ALL_DEVICE_DESCRIPTORS } from './data/devices';
 
@@ -20,6 +21,7 @@ import { ALL_DEVICE_DESCRIPTORS } from './data/devices';
   useVisualizerStore,
   useSettingsStore,
   useMacroStore,
+  useKeyboardThemeStore,
   useI18n,
   ALL_DEVICE_DESCRIPTORS,
 };
