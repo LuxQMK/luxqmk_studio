@@ -144,7 +144,7 @@ export function hexToHs(hex: string): [number, number] {
 }
 
 export function hsvToRgb(hByte: number, sByte: number, vByte: number): { r: number; g: number; b: number } {
-  const normH = (((hByte % 256) + 256) % 256) / 256;
+  const normH = Math.max(0, Math.min(255, hByte)) / 255;
   const h = normH * 360;
   const s = Math.max(0, Math.min(255, sByte)) / 255;
   const v = Math.max(0, Math.min(255, vByte)) / 255;
