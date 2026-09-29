@@ -110,9 +110,21 @@ app.whenReady().then(async () => {
               7: { h: 0, s: 0 }
             }
           },
+          capsLock: {
+            mode: 2,
+            color: '#00ffff'
+          },
           winLock: {
-            mode: 2, // Custom color
-            color: { h: 0, s: 255 }
+            mode: 2,
+            color: '#ec4899'
+          },
+          numLock: {
+            mode: 2,
+            color: '#3b82f6'
+          },
+          scrollLock: {
+            mode: 2,
+            color: '#a855f7'
           },
           sidelight: {
             customEnable: true,
@@ -243,11 +255,47 @@ app.whenReady().then(async () => {
       `
     },
     {
-      name: 'Lighting - Win Lock',
+      name: 'Lighting - Lock Indicators (75% Compact Layout)',
       file: 'studio-lighting-winlock.png',
       setup: `
+        const desc75 = window.__stores.ALL_DEVICE_DESCRIPTORS.find(d => d.id === 'gmmk3-75-ansi') || window.__stores.ALL_DEVICE_DESCRIPTORS[0];
+        window.__stores.useDeviceStore.setState({
+          isConnected: true,
+          activeDescriptor: desc75,
+        });
+        window.__stores.useKeymapStore.setState({
+          presetLayoutId: 'gmmk3-75-ansi'
+        });
         window.__stores.useUIStore.getState().setActiveView('lighting');
         window.__stores.useUIStore.getState().setLightingSubTab('winlock');
+        window.__stores.useLightingStore.setState({
+          capsLock: { mode: 2, color: '#00ffff' },
+          winLock: { mode: 2, color: '#ec4899' },
+        });
+        const main = document.querySelector('.main-content');
+        if (main) main.scrollTop = 400;
+      `
+    },
+    {
+      name: 'Lighting - Full Lock Indicators (100% Layout)',
+      file: 'studio-lighting-indicators-100.png',
+      setup: `
+        const desc100 = window.__stores.ALL_DEVICE_DESCRIPTORS.find(d => d.id === 'gmmk3-100-ansi') || window.__stores.ALL_DEVICE_DESCRIPTORS[0];
+        window.__stores.useDeviceStore.setState({
+          isConnected: true,
+          activeDescriptor: desc100,
+        });
+        window.__stores.useKeymapStore.setState({
+          presetLayoutId: 'gmmk3-100-ansi'
+        });
+        window.__stores.useUIStore.getState().setActiveView('lighting');
+        window.__stores.useUIStore.getState().setLightingSubTab('winlock');
+        window.__stores.useLightingStore.setState({
+          capsLock: { mode: 2, color: '#00ffff' },
+          winLock: { mode: 2, color: '#ec4899' },
+          numLock: { mode: 2, color: '#3b82f6' },
+          scrollLock: { mode: 2, color: '#a855f7' },
+        });
         const main = document.querySelector('.main-content');
         if (main) main.scrollTop = 400;
       `
