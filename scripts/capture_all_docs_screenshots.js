@@ -358,9 +358,18 @@ app.whenReady().then(async () => {
       name: 'Keymap - Hardware Switch Studio',
       file: 'studio-hardware-switches.png',
       setup: `
+        window.__stores.useKeyboardThemeStore.getState().setDesignModalOpen(false);
         window.__stores.useUIStore.getState().setActiveView('keymap');
         const main = document.querySelector('.main-content');
         if (main) main.scrollTop = 480;
+      `
+    },
+    {
+      name: 'Keymap - Virtual Keyboard Appearance Customizer',
+      file: 'studio-keyboard-customizer.png',
+      setup: `
+        window.__stores.useUIStore.getState().setActiveView('keymap');
+        window.__stores.useKeyboardThemeStore.getState().setDesignModalOpen(true);
       `
     }
   ];
