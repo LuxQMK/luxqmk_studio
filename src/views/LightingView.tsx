@@ -55,7 +55,7 @@ export const LightingView: React.FC = () => {
   const { lightingSubTab, setLightingSubTab } = useUIStore();
   const { t } = useI18n();
 
-  const effectiveFnActive = isSimulatingFn || (hwActiveLayer !== undefined && hwActiveLayer > 0) || lightingSubTab === 'layers';
+  const effectiveFnActive = isSimulatingFn || (hwActiveLayer !== undefined && hwActiveLayer > 0);
 
   const isPerKeyActive = backlight.effect >= 39 && backlight.effect <= 41;
   const isHardwareGradientActive = !isPerKeyActive && (
@@ -421,15 +421,14 @@ export const LightingView: React.FC = () => {
               className={`btn ${effectiveFnActive ? 'btn-primary' : 'btn-secondary'}`}
               id="btnHoldFnSim"
               style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
-              onPointerDown={() => setSimulatingFn(true)}
-              onPointerUp={() => setSimulatingFn(false)}
               onClick={() => setSimulatingFn(!isSimulatingFn)}
+              title={isSimulatingFn ? t('btnSimulatingFnActive') : t('btnSimulateFn')}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
-              <span>{t('btnHoldFn')}</span>
+              <span>{isSimulatingFn ? t('btnPreviewLayerActive') : t('btnPreviewLayer')}</span>
             </button>
             <div className="lighting-preview-status">
               <span className="badge-pill" id="lightingStatusBadge">
@@ -1669,8 +1668,6 @@ export const LightingView: React.FC = () => {
                     className={`btn ${isSimulatingFn ? 'btn-primary' : 'btn-secondary'} btn-sm`}
                     style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
                     onClick={() => setSimulatingFn(!isSimulatingFn)}
-                    onMouseDown={() => setSimulatingFn(true)}
-                    onMouseUp={() => setSimulatingFn(false)}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polygon points="5 3 19 12 5 21 5 3"></polygon>
@@ -1683,43 +1680,107 @@ export const LightingView: React.FC = () => {
 
             <div className="palette-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               <h3 style={{ marginBottom: '0.5rem', fontSize: '1.05rem' }}>{t('layerColorsTitle')}</h3>
+              
+              {/* Layer 1 */}
               <div className="color-item-card">
                 <div className="color-item-info">
-                  <strong>{t('lblLayer1Color')}</strong>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <strong>{t('lblLayer1Color')}</strong>
+                    {layerLighting.layer1Enable === false && (
+                      <span className="badge-pill" style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', opacity: 0.7 }}>
+                        {t('lblDisabled')}
+                      </span>
+                    )}
+                  </div>
                   <span>{t('layer1ColorDesc')}</span>
                 </div>
-                <input
-                  type="color"
-                  className="color-picker-input"
-                  value={layerLighting.layer1Color}
-                  onChange={(e) => setLayerLighting({ layer1Color: e.target.value })}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <label className="toggle-switch" title={t('lblToggleLayerHighlight')}>
+                    <input
+                      type="checkbox"
+                      className="toggle-switch-input"
+                      checked={layerLighting.layer1Enable !== false}
+                      onChange={(e) => setLayerLighting({ layer1Enable: e.target.checked })}
+                    />
+                    <span className="toggle-switch-slider"></span>
+                  </label>
+                  <input
+                    type="color"
+                    className="color-picker-input"
+                    disabled={layerLighting.layer1Enable === false}
+                    style={{ opacity: layerLighting.layer1Enable === false ? 0.35 : 1, cursor: layerLighting.layer1Enable === false ? 'not-allowed' : 'pointer' }}
+                    value={layerLighting.layer1Color}
+                    onChange={(e) => setLayerLighting({ layer1Color: e.target.value })}
+                  />
+                </div>
               </div>
 
+              {/* Layer 2 */}
               <div className="color-item-card">
                 <div className="color-item-info">
-                  <strong>{t('lblLayer2Color')}</strong>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <strong>{t('lblLayer2Color')}</strong>
+                    {layerLighting.layer2Enable === false && (
+                      <span className="badge-pill" style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', opacity: 0.7 }}>
+                        {t('lblDisabled')}
+                      </span>
+                    )}
+                  </div>
                   <span>{t('layer2ColorDesc')}</span>
                 </div>
-                <input
-                  type="color"
-                  className="color-picker-input"
-                  value={layerLighting.layer2Color}
-                  onChange={(e) => setLayerLighting({ layer2Color: e.target.value })}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <label className="toggle-switch" title={t('lblToggleLayerHighlight')}>
+                    <input
+                      type="checkbox"
+                      className="toggle-switch-input"
+                      checked={layerLighting.layer2Enable !== false}
+                      onChange={(e) => setLayerLighting({ layer2Enable: e.target.checked })}
+                    />
+                    <span className="toggle-switch-slider"></span>
+                  </label>
+                  <input
+                    type="color"
+                    className="color-picker-input"
+                    disabled={layerLighting.layer2Enable === false}
+                    style={{ opacity: layerLighting.layer2Enable === false ? 0.35 : 1, cursor: layerLighting.layer2Enable === false ? 'not-allowed' : 'pointer' }}
+                    value={layerLighting.layer2Color}
+                    onChange={(e) => setLayerLighting({ layer2Color: e.target.value })}
+                  />
+                </div>
               </div>
 
+              {/* Layer 3 */}
               <div className="color-item-card">
                 <div className="color-item-info">
-                  <strong>{t('lblLayer3Color')}</strong>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <strong>{t('lblLayer3Color')}</strong>
+                    {layerLighting.layer3Enable === false && (
+                      <span className="badge-pill" style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', opacity: 0.7 }}>
+                        {t('lblDisabled')}
+                      </span>
+                    )}
+                  </div>
                   <span>{t('layer3ColorDesc')}</span>
                 </div>
-                <input
-                  type="color"
-                  className="color-picker-input"
-                  value={layerLighting.layer3Color}
-                  onChange={(e) => setLayerLighting({ layer3Color: e.target.value })}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <label className="toggle-switch" title={t('lblToggleLayerHighlight')}>
+                    <input
+                      type="checkbox"
+                      className="toggle-switch-input"
+                      checked={layerLighting.layer3Enable !== false}
+                      onChange={(e) => setLayerLighting({ layer3Enable: e.target.checked })}
+                    />
+                    <span className="toggle-switch-slider"></span>
+                  </label>
+                  <input
+                    type="color"
+                    className="color-picker-input"
+                    disabled={layerLighting.layer3Enable === false}
+                    style={{ opacity: layerLighting.layer3Enable === false ? 0.35 : 1, cursor: layerLighting.layer3Enable === false ? 'not-allowed' : 'pointer' }}
+                    value={layerLighting.layer3Color}
+                    onChange={(e) => setLayerLighting({ layer3Color: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
           </div>

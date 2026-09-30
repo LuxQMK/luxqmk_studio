@@ -260,8 +260,11 @@ export const useLightingStore = create<LightingState>((set, get) => ({
   layerLighting: {
     enable: true,
     dimLevel: 128,
+    layer1Enable: true,
     layer1Color: '#ffffff',
+    layer2Enable: true,
     layer2Color: '#00ffff',
+    layer3Enable: true,
     layer3Color: '#b400ff',
   },
   logoLocks: {
@@ -479,8 +482,15 @@ export const useLightingStore = create<LightingState>((set, get) => ({
 
     if (useDeviceStore.getState().isConnected) {
       const l = get().layerLighting;
-      if (patch.enable !== undefined) {
-        hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, [l.enable ? 1 : 0]);
+      if (patch.enable !== undefined || patch.layer1Enable !== undefined || patch.layer2Enable !== undefined || patch.layer3Enable !== undefined) {
+        let mask = 0;
+        if (l.enable) {
+          mask = 0x01;
+          if (l.layer1Enable !== false) mask |= (1 << 1);
+          if (l.layer2Enable !== false) mask |= (1 << 2);
+          if (l.layer3Enable !== false) mask |= (1 << 3);
+        }
+        hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, [mask]);
       }
       if (patch.dimLevel !== undefined) {
         hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL, [l.dimLevel]);
@@ -1033,10 +1043,19 @@ export const useLightingStore = create<LightingState>((set, get) => ({
         const l2Res = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_2_COLOR);
         const l3Res = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_3_COLOR);
 
+        const lEnVal = lEnRes && lEnRes.length > 0 ? lEnRes[0] : 0x0F;
+        const isMasterEnabled = lEnVal === 1 || (lEnVal & 0x01) !== 0;
+        const isL1Enabled = lEnVal === 1 || (lEnVal & 0x02) !== 0;
+        const isL2Enabled = lEnVal === 1 || (lEnVal & 0x04) !== 0;
+        const isL3Enabled = lEnVal === 1 || (lEnVal & 0x08) !== 0;
+
         set((state) => ({
           layerLighting: {
             ...state.layerLighting,
-            enable: lEnRes && lEnRes.length > 0 ? lEnRes[0] === 1 : true,
+            enable: isMasterEnabled,
+            layer1Enable: isL1Enabled,
+            layer2Enable: isL2Enabled,
+            layer3Enable: isL3Enabled,
             dimLevel: lDimRes && lDimRes.length > 0 ? lDimRes[0] : 128,
             layer1Color: l1Res && l1Res.length >= 2 ? hsToHex(l1Res[0], l1Res[1]) : '#ffffff',
             layer2Color: l2Res && l2Res.length >= 2 ? hsToHex(l2Res[0], l2Res[1]) : '#00ffff',
@@ -1222,7 +1241,14 @@ export const useLightingStore = create<LightingState>((set, get) => ({
           const [l1h, l1s] = hexToHs(snap.layerLighting.layer1Color);
           const [l2h, l2s] = hexToHs(snap.layerLighting.layer2Color);
           const [l3h, l3s] = hexToHs(snap.layerLighting.layer3Color);
-          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, [snap.layerLighting.enable ? 1 : 0]);
+          let snapMask = 0;
+          if (snap.layerLighting.enable) {
+            snapMask = 0x01;
+            if (snap.layerLighting.layer1Enable !== false) snapMask |= (1 << 1);
+            if (snap.layerLighting.layer2Enable !== false) snapMask |= (1 << 2);
+            if (snap.layerLighting.layer3Enable !== false) snapMask |= (1 << 3);
+          }
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, [snapMask]);
           await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL, [snap.layerLighting.dimLevel]);
           await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_1_COLOR, [l1h, l1s]);
           await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_2_COLOR, [l2h, l2s]);

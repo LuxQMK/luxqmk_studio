@@ -634,9 +634,12 @@ export function useLightingVisualizer(
       const keymapStore = useKeymapStore.getState();
 
       const hwActiveLayer = devStore.activeLayer || 0;
-      const isLayersTab = uiStore.activeView === 'lighting' && uiStore.lightingSubTab === 'layers';
-      const activeLyr = isSimulatingFn ? 1 : (hwActiveLayer > 0 ? hwActiveLayer : (isLayersTab ? 1 : 0));
-      const isLayerActive = activeLyr > 0 && layerLighting.enable;
+      const activeLyr = isSimulatingFn ? 1 : (hwActiveLayer > 0 ? hwActiveLayer : 0);
+      const isLayerActive = activeLyr > 0 && layerLighting.enable && (
+        activeLyr === 1 ? (layerLighting.layer1Enable !== false) :
+        activeLyr === 2 ? (layerLighting.layer2Enable !== false) :
+        activeLyr === 3 ? (layerLighting.layer3Enable !== false) : true
+      );
 
       let layerTargetColorHex = '#ffffff';
       if (activeLyr === 2) layerTargetColorHex = layerLighting.layer2Color || '#00ffff';

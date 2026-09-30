@@ -44,8 +44,11 @@ export interface LockIndicatorConfig {
 export interface LayerLightingConfig {
   enable: boolean;
   dimLevel: number; // 0-255
+  layer1Enable?: boolean;
   layer1Color: string;
+  layer2Enable?: boolean;
   layer2Color: string;
+  layer3Enable?: boolean;
   layer3Color: string;
 }
 

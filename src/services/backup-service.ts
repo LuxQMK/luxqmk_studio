@@ -28,6 +28,7 @@ export interface BackupData {
     rgb_reverse?: boolean;
     effect_density?: number;
     layer_lighting_enable?: boolean;
+    layer_lighting_mask?: number;
     layer_dim_level?: number;
     layer_colors?: {
       layer_1?: { h: number; s: number };
@@ -225,7 +226,8 @@ export async function createFullBackup(
       debounce_time: dbTime !== undefined ? dbTime : 5,
       rgb_reverse: rev ? rev[0] === 1 : false,
       effect_density: effectDensity,
-      layer_lighting_enable: lEn ? lEn[0] === 1 : true,
+      layer_lighting_enable: lEn ? (lEn[0] === 1 || (lEn[0] & 0x01) !== 0) : true,
+      layer_lighting_mask: lEn && lEn.length > 0 ? lEn[0] : 0x0F,
       layer_dim_level: lDim && lDim.length > 0 ? lDim[0] : 128,
       layer_colors: {
         layer_1: l1 && l1.length >= 2 ? { h: l1[0], s: l1[1] } : { h: 28, s: 255 },
@@ -463,8 +465,11 @@ export async function restoreFullBackup(
         await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.RGB_REVERSE, [cust.rgb_reverse ? 1 : 0]);
         await hidProtocol.sleep(10);
       }
-      if (cust.layer_lighting_enable !== undefined) {
-        await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, [cust.layer_lighting_enable ? 1 : 0]);
+      if (cust.layer_lighting_mask !== undefined) {
+        await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, [cust.layer_lighting_mask]);
+        await hidProtocol.sleep(10);
+      } else if (cust.layer_lighting_enable !== undefined) {
+        await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, [cust.layer_lighting_enable ? 0x0F : 0]);
         await hidProtocol.sleep(10);
       }
       if (cust.layer_dim_level !== undefined) {
