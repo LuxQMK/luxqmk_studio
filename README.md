@@ -11,7 +11,8 @@ Professional WebHID / Desktop companion suite for real-time keymap remapping, li
 ## 🌟 Key Features
 
 - **Universal Dynamic VIA Layout Engine**: Native matrix rendering for 100%, 96%, 80% TKL, 75%, 65%, and 60% form factors (ANSI & ISO), plus on-the-fly custom VIA `design_layout.json` & QMK `keyboard.json` importing.
-- **Visual Keymap & Rotary Encoder Editor**: Interactive real-time keycode remapping across layers 0 to 2, full VIA keycode categories (Basic, Media, Macro, Layers, Special, Lighting, Custom), and rotary knob action configuration.
+- **Visual Keymap & Rotary Encoder Editor**: Interactive real-time keycode remapping across layers 0 to 3 with vendor-aware labels (Win Base, Win Fn, Mac Base, Mac Fn), drag-and-drop assignment, full VIA keycode categories, and rotary knob action configuration.
+- **Decoupled Layer Lighting & Per-Layer Background Dimming**: Independent layer key highlight colors and separate 0–255 background dimming sliders with per-layer enable toggles and clean Mac Base transparency defaults.
 - **Advanced Multi-Stop Gradient Engine**: Custom gradient designer supporting up to 8 color stops, CIE1931 perceptual lightness curve, spatial density controls, and EEPROM persistence.
 - **Sidelight & Underglow Suite**: Center-out wave dynamics, board-aware optical window calibration (GMMK 3, GMMK 2, Generic), density tuning, and independent color/speed control.
 - **Dual-Layer Reactive Lighting**: Real-time hardware layering for reactive effects (Fade, Splash, Rainbow Ripple, Cross, Nexus Star, Wide Wave, Typing Heatmap).
