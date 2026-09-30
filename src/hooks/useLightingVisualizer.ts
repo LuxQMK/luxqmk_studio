@@ -646,7 +646,11 @@ export function useLightingVisualizer(
       else if (activeLyr === 3) layerTargetColorHex = layerLighting.layer3Color || '#b400ff';
       else layerTargetColorHex = layerLighting.layer1Color || '#ffffff';
       const layerTargetRgb = hexToRgb(layerTargetColorHex);
-      const layerDimFactor = (layerLighting.dimLevel !== undefined ? layerLighting.dimLevel : 100) / 255;
+      let activeLayerDim = 128;
+      if (activeLyr === 1) activeLayerDim = layerLighting.layer1DimLevel ?? layerLighting.dimLevel ?? 128;
+      else if (activeLyr === 2) activeLayerDim = layerLighting.layer2DimLevel ?? 255;
+      else if (activeLyr === 3) activeLayerDim = layerLighting.layer3DimLevel ?? layerLighting.dimLevel ?? 128;
+      const layerDimFactor = activeLayerDim / 255;
 
       const winLockColorRgb = hexToRgb(winLock.color || '#ffffff');
       const capsColorRgb = hexToRgb(capsLock?.color || '#ffffff');
