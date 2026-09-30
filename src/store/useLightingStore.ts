@@ -259,16 +259,21 @@ export const useLightingStore = create<LightingState>((set, get) => ({
   },
   layerLighting: {
     enable: true,
-    dimLevel: 128,
-    layer1DimLevel: 128,
     layer1Enable: true,
     layer1Color: '#ffffff',
-    layer2DimLevel: 255,
     layer2Enable: false,
     layer2Color: '#00ffff',
-    layer3DimLevel: 128,
     layer3Enable: true,
     layer3Color: '#b400ff',
+
+    dimMasterEnable: true,
+    dimLevel: 128,
+    dimLayer1Enable: true,
+    layer1DimLevel: 128,
+    dimLayer2Enable: false,
+    layer2DimLevel: 255,
+    dimLayer3Enable: true,
+    layer3DimLevel: 128,
   },
   logoLocks: {
     mode: 1,
@@ -485,6 +490,7 @@ export const useLightingStore = create<LightingState>((set, get) => ({
 
     if (useDeviceStore.getState().isConnected) {
       const l = get().layerLighting;
+      // 1. Color highlight bitmask
       if (patch.enable !== undefined || patch.layer1Enable !== undefined || patch.layer2Enable !== undefined || patch.layer3Enable !== undefined) {
         let mask = 0;
         if (l.enable) {
@@ -495,6 +501,20 @@ export const useLightingStore = create<LightingState>((set, get) => ({
         }
         hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, [mask]);
       }
+
+      // 2. Dimming enable bitmask (USER_VAL_LAYER_DIM_ENABLE = 30)
+      if (patch.dimMasterEnable !== undefined || patch.dimLayer1Enable !== undefined || patch.dimLayer2Enable !== undefined || patch.dimLayer3Enable !== undefined) {
+        let dimMask = 0;
+        if (l.dimMasterEnable !== false) {
+          dimMask = 0x01;
+          if (l.dimLayer1Enable !== false) dimMask |= (1 << 1);
+          if (l.dimLayer2Enable === true) dimMask |= (1 << 2);
+          if (l.dimLayer3Enable !== false) dimMask |= (1 << 3);
+        }
+        hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_ENABLE, [dimMask]);
+      }
+
+      // 3. Dimming levels
       if (patch.layer1DimLevel !== undefined) {
         hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL, [1, patch.layer1DimLevel, 0xAA]);
       }
@@ -507,6 +527,8 @@ export const useLightingStore = create<LightingState>((set, get) => ({
       if (patch.dimLevel !== undefined && patch.layer1DimLevel === undefined) {
         hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL, [1, patch.dimLevel, 0xAA]);
       }
+
+      // 4. Color values
       if (patch.layer1Color !== undefined) {
         const [h, s] = hexToHs(l.layer1Color);
         hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_1_COLOR, [h, s]);
@@ -1047,9 +1069,10 @@ export const useLightingStore = create<LightingState>((set, get) => ({
         }));
       } catch (e) {}
 
-      // Layer lighting
+      // Layer lighting & dimming
       try {
         const lEnRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE);
+        const lDimEnRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_ENABLE);
         const lDimRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL);
         const l1Res = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_1_COLOR);
         const l2Res = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_2_COLOR);
@@ -1061,21 +1084,31 @@ export const useLightingStore = create<LightingState>((set, get) => ({
         const isL2Enabled = (lEnVal & 0x04) !== 0;
         const isL3Enabled = (lEnVal & 0x08) !== 0;
 
-        const l1Dim = lDimRes && lDimRes.length > 0 ? lDimRes[0] : 128;
-        const l2Dim = lDimRes && lDimRes.length > 1 ? lDimRes[1] : 255;
-        const l3Dim = lDimRes && lDimRes.length > 2 ? lDimRes[2] : 128;
+        const lDimEnVal = lDimEnRes && lDimEnRes.length > 0 ? (lDimEnRes[0] === 1 ? 0x0B : lDimEnRes[0]) : 0x0B;
+        const isDimMasterEnabled = (lDimEnVal & 0x01) !== 0;
+        const isDimL1Enabled = (lDimEnVal & 0x02) !== 0;
+        const isDimL2Enabled = (lDimEnVal & 0x04) !== 0;
+        const isDimL3Enabled = (lDimEnVal & 0x08) !== 0;
+
+        const l1Dim = lDimRes && lDimRes.length > 0 && lDimRes[0] !== 0xFF ? lDimRes[0] : 128;
+        const l2Dim = (lDimRes && lDimRes.length > 1 && lDimRes[1] !== 0 && lDimRes[1] !== 0xFF) ? lDimRes[1] : 255;
+        const l3Dim = (lDimRes && lDimRes.length > 2 && lDimRes[2] !== 0 && lDimRes[2] !== 0xFF) ? lDimRes[2] : (l1Dim || 128);
 
         set((state) => ({
           layerLighting: {
             ...state.layerLighting,
             enable: isMasterEnabled,
+            layer1Enable: isL1Enabled,
+            layer2Enable: isL2Enabled,
+            layer3Enable: isL3Enabled,
+            dimMasterEnable: isDimMasterEnabled,
+            dimLayer1Enable: isDimL1Enabled,
+            dimLayer2Enable: isDimL2Enabled,
+            dimLayer3Enable: isDimL3Enabled,
             dimLevel: l1Dim,
             layer1DimLevel: l1Dim,
-            layer1Enable: isL1Enabled,
             layer2DimLevel: l2Dim,
-            layer2Enable: isL2Enabled,
             layer3DimLevel: l3Dim,
-            layer3Enable: isL3Enabled,
             layer1Color: l1Res && l1Res.length >= 2 ? hsToHex(l1Res[0], l1Res[1]) : '#ffffff',
             layer2Color: l2Res && l2Res.length >= 2 ? hsToHex(l2Res[0], l2Res[1]) : '#00ffff',
             layer3Color: l3Res && l3Res.length >= 2 ? hsToHex(l3Res[0], l3Res[1]) : '#b400ff',
@@ -1268,6 +1301,16 @@ export const useLightingStore = create<LightingState>((set, get) => ({
             if (snap.layerLighting.layer3Enable !== false) snapMask |= (1 << 3);
           }
           await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, [snapMask]);
+
+          let snapDimMask = 0;
+          if (snap.layerLighting.dimMasterEnable !== false) {
+            snapDimMask = 0x01;
+            if (snap.layerLighting.dimLayer1Enable !== false) snapDimMask |= (1 << 1);
+            if (snap.layerLighting.dimLayer2Enable === true) snapDimMask |= (1 << 2);
+            if (snap.layerLighting.dimLayer3Enable !== false) snapDimMask |= (1 << 3);
+          }
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_ENABLE, [snapDimMask]);
+
           const d1 = snap.layerLighting.layer1DimLevel ?? snap.layerLighting.dimLevel ?? 128;
           const d2 = snap.layerLighting.layer2DimLevel ?? 255;
           const d3 = snap.layerLighting.layer3DimLevel ?? 128;

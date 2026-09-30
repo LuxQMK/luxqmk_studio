@@ -635,7 +635,14 @@ export function useLightingVisualizer(
 
       const hwActiveLayer = devStore.activeLayer || 0;
       const activeLyr = isSimulatingFn ? 1 : (hwActiveLayer > 0 ? hwActiveLayer : 0);
-      const isLayerActive = activeLyr > 0 && layerLighting.enable && (
+
+      const doDim = activeLyr > 0 && layerLighting.dimMasterEnable !== false && (
+        activeLyr === 1 ? (layerLighting.dimLayer1Enable !== false) :
+        activeLyr === 2 ? (layerLighting.dimLayer2Enable === true) :
+        activeLyr === 3 ? (layerLighting.dimLayer3Enable !== false) : false
+      );
+
+      const doColor = activeLyr > 0 && layerLighting.enable && (
         activeLyr === 1 ? (layerLighting.layer1Enable !== false) :
         activeLyr === 2 ? (layerLighting.layer2Enable === true) :
         activeLyr === 3 ? (layerLighting.layer3Enable !== false) : false
@@ -1004,7 +1011,7 @@ export function useLightingVisualizer(
         }
 
         // Layer simulation & hardware layer highlighting and dimming (1:1 QMK luxqmk.c parity)
-        if (isLayerActive) {
+        if (doDim || doColor) {
           let isKeyProgrammed = false;
           if (k.matrix) {
             const kc = keymapStore.getKeycode(activeLyr, k.matrix[0], k.matrix[1]);
@@ -1019,13 +1026,17 @@ export function useLightingVisualizer(
           }
 
           if (isKeyProgrammed) {
-            rgb = layerTargetRgb;
+            if (doColor) {
+              rgb = layerTargetRgb;
+            }
           } else {
-            rgb = {
-              r: Math.round(rgb.r * layerDimFactor),
-              g: Math.round(rgb.g * layerDimFactor),
-              b: Math.round(rgb.b * layerDimFactor),
-            };
+            if (doDim) {
+              rgb = {
+                r: Math.round(rgb.r * layerDimFactor),
+                g: Math.round(rgb.g * layerDimFactor),
+                b: Math.round(rgb.b * layerDimFactor),
+              };
+            }
           }
         }
 

@@ -1594,28 +1594,197 @@ export const LightingView: React.FC = () => {
       {lightingSubTab === 'layers' && (
         <div className="lighting-subview active" id="lighting-tab-layers">
           <div className="grid-2">
-            <div className="palette-card">
-              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem' }}>{t('tabLayers')}</h3>
-              <div className="switch-wrap" style={{ marginBottom: '1.25rem' }}>
+            {/* Left Card: Layer Background Dimming */}
+            <div className="palette-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <h3 style={{ fontSize: '1.05rem', margin: 0 }}>{t('layerDimmingTitle')}</h3>
+              <div className="switch-wrap">
                 <div>
-                  <span style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem' }}>{t('lblLayerLightingEnable')}</span>
+                  <span style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem' }}>{t('lblLayerDimMasterEnable')}</span>
                 </div>
                 <label className="switch">
                   <input
                     type="checkbox"
-                    checked={layerLighting.enable}
-                    onChange={(e) => setLayerLighting({ enable: e.target.checked })}
+                    checked={layerLighting.dimMasterEnable !== false}
+                    onChange={(e) => setLayerLighting({ dimMasterEnable: e.target.checked })}
                   />
                   <span className="slider"></span>
                 </label>
               </div>
 
-              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.45', marginBottom: '1.25rem' }}>
-                {t('hintLayerLightingDesc')}
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.45', marginBottom: '0.25rem' }}>
+                {t('hintLayerDimmingDesc')}
+              </div>
+
+              {/* Layer 1 Dimming */}
+              <div className="color-item-card" style={{ flexDirection: 'column', gap: '0.75rem', alignItems: 'stretch' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div className="color-item-info">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <strong>{t('lblLayer1Dim')}</strong>
+                      {layerLighting.dimLayer1Enable === false && (
+                        <span className="badge-pill" style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', opacity: 0.7 }}>
+                          {t('lblDisabled')}
+                        </span>
+                      )}
+                    </div>
+                    <span>{t('layer1DimDesc')}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <label className="toggle-switch" title={t('lblToggleLayerDim')}>
+                      <input
+                        type="checkbox"
+                        className="toggle-switch-input"
+                        checked={layerLighting.dimLayer1Enable !== false}
+                        onChange={(e) => setLayerLighting({ dimLayer1Enable: e.target.checked })}
+                      />
+                      <span className="toggle-switch-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '0.6rem', marginTop: '0.1rem', opacity: layerLighting.dimLayer1Enable === false ? 0.4 : 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', fontSize: '0.8rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>{t('lblLayerDimLevel')}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)', fontWeight: 600 }}>
+                      {layerLighting.layer1DimLevel ?? layerLighting.dimLevel ?? 128}
+                      {(layerLighting.layer1DimLevel ?? layerLighting.dimLevel ?? 128) === 255
+                        ? ` (${t('lblNoDimming', '100% - brak ściemniania')})`
+                        : (layerLighting.layer1DimLevel ?? layerLighting.dimLevel ?? 128) === 0
+                        ? ` (${t('lblDarkBg', '0% - ciemne tło')})`
+                        : ''}
+                    </span>
+                  </div>
+                  <div className="range-slider-wrap">
+                    <input
+                      type="range"
+                      className="range-slider"
+                      min={0}
+                      max={255}
+                      disabled={layerLighting.dimLayer1Enable === false}
+                      value={layerLighting.layer1DimLevel ?? layerLighting.dimLevel ?? 128}
+                      onChange={(e) => setLayerLighting({ layer1DimLevel: Number(e.target.value), dimLevel: Number(e.target.value) })}
+                    />
+                  </div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                    {t('hintDimLevelScale')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Layer 2 Dimming */}
+              <div className="color-item-card" style={{ flexDirection: 'column', gap: '0.75rem', alignItems: 'stretch' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div className="color-item-info">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <strong>{t('lblLayer2Dim')}</strong>
+                      {!layerLighting.dimLayer2Enable && (
+                        <span className="badge-pill" style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', opacity: 0.7 }}>
+                          {t('lblDisabled')}
+                        </span>
+                      )}
+                    </div>
+                    <span>{t('layer2DimDesc')}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <label className="toggle-switch" title={t('lblToggleLayerDim')}>
+                      <input
+                        type="checkbox"
+                        className="toggle-switch-input"
+                        checked={layerLighting.dimLayer2Enable === true}
+                        onChange={(e) => setLayerLighting({ dimLayer2Enable: e.target.checked })}
+                      />
+                      <span className="toggle-switch-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '0.6rem', marginTop: '0.1rem', opacity: !layerLighting.dimLayer2Enable ? 0.4 : 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', fontSize: '0.8rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>{t('lblLayerDimLevel')}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)', fontWeight: 600 }}>
+                      {layerLighting.layer2DimLevel ?? 255}
+                      {(layerLighting.layer2DimLevel ?? 255) === 255
+                        ? ` (${t('lblNoDimming', '100% - brak ściemniania')})`
+                        : (layerLighting.layer2DimLevel ?? 255) === 0
+                        ? ` (${t('lblDarkBg', '0% - ciemne tło')})`
+                        : ''}
+                    </span>
+                  </div>
+                  <div className="range-slider-wrap">
+                    <input
+                      type="range"
+                      className="range-slider"
+                      min={0}
+                      max={255}
+                      disabled={!layerLighting.dimLayer2Enable}
+                      value={layerLighting.layer2DimLevel ?? 255}
+                      onChange={(e) => setLayerLighting({ layer2DimLevel: Number(e.target.value) })}
+                    />
+                  </div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                    {t('hintDimLevelScale')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Layer 3 Dimming */}
+              <div className="color-item-card" style={{ flexDirection: 'column', gap: '0.75rem', alignItems: 'stretch' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div className="color-item-info">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <strong>{t('lblLayer3Dim')}</strong>
+                      {layerLighting.dimLayer3Enable === false && (
+                        <span className="badge-pill" style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', opacity: 0.7 }}>
+                          {t('lblDisabled')}
+                        </span>
+                      )}
+                    </div>
+                    <span>{t('layer3DimDesc')}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <label className="toggle-switch" title={t('lblToggleLayerDim')}>
+                      <input
+                        type="checkbox"
+                        className="toggle-switch-input"
+                        checked={layerLighting.dimLayer3Enable !== false}
+                        onChange={(e) => setLayerLighting({ dimLayer3Enable: e.target.checked })}
+                      />
+                      <span className="toggle-switch-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '0.6rem', marginTop: '0.1rem', opacity: layerLighting.dimLayer3Enable === false ? 0.4 : 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', fontSize: '0.8rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>{t('lblLayerDimLevel')}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)', fontWeight: 600 }}>
+                      {layerLighting.layer3DimLevel ?? layerLighting.dimLevel ?? 128}
+                      {(layerLighting.layer3DimLevel ?? layerLighting.dimLevel ?? 128) === 255
+                        ? ` (${t('lblNoDimming', '100% - brak ściemniania')})`
+                        : (layerLighting.layer3DimLevel ?? layerLighting.dimLevel ?? 128) === 0
+                        ? ` (${t('lblDarkBg', '0% - ciemne tło')})`
+                        : ''}
+                    </span>
+                  </div>
+                  <div className="range-slider-wrap">
+                    <input
+                      type="range"
+                      className="range-slider"
+                      min={0}
+                      max={255}
+                      disabled={layerLighting.dimLayer3Enable === false}
+                      value={layerLighting.layer3DimLevel ?? layerLighting.dimLevel ?? 128}
+                      onChange={(e) => setLayerLighting({ layer3DimLevel: Number(e.target.value) })}
+                    />
+                  </div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+                    {t('hintDimLevelScale')}
+                  </span>
+                </div>
               </div>
 
               {/* Live Hardware Layer Status & Simulate Fn Button */}
-              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem', marginTop: '1rem' }}>
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '0.85rem', marginTop: '0.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
                   <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-main)' }}>
                     {t('lblLiveLayerIndicator')}
@@ -1665,193 +1834,127 @@ export const LightingView: React.FC = () => {
               </div>
             </div>
 
+            {/* Right Card: Layer Key Accent Colors */}
             <div className="palette-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.05rem' }}>{t('layerColorsTitle')}</h3>
+              <h3 style={{ fontSize: '1.05rem', margin: 0 }}>{t('layerColorsTitle')}</h3>
+              <div className="switch-wrap">
+                <div>
+                  <span style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem' }}>{t('lblLayerColorMasterEnable')}</span>
+                </div>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={layerLighting.enable}
+                    onChange={(e) => setLayerLighting({ enable: e.target.checked })}
+                  />
+                  <span className="slider"></span>
+                </label>
+              </div>
+
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.45', marginBottom: '0.25rem' }}>
+                {t('hintLayerColorsDesc')}
+              </div>
               
-              {/* Layer 1 */}
-              <div className="color-item-card" style={{ flexDirection: 'column', gap: '0.75rem', alignItems: 'stretch' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div className="color-item-info">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <strong>{t('lblLayer1Color')}</strong>
-                      {layerLighting.layer1Enable === false && (
-                        <span className="badge-pill" style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', opacity: 0.7 }}>
-                          {t('lblDisabled')}
-                        </span>
-                      )}
-                    </div>
-                    <span>{t('layer1ColorDesc')}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <label className="toggle-switch" title={t('lblToggleLayerHighlight')}>
-                      <input
-                        type="checkbox"
-                        className="toggle-switch-input"
-                        checked={layerLighting.layer1Enable !== false}
-                        onChange={(e) => setLayerLighting({ layer1Enable: e.target.checked })}
-                      />
-                      <span className="toggle-switch-slider"></span>
-                    </label>
-                    <input
-                      type="color"
-                      className="color-picker-input"
-                      disabled={layerLighting.layer1Enable === false}
-                      style={{ opacity: layerLighting.layer1Enable === false ? 0.35 : 1, cursor: layerLighting.layer1Enable === false ? 'not-allowed' : 'pointer' }}
-                      value={layerLighting.layer1Color}
-                      onChange={(e) => setLayerLighting({ layer1Color: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                {layerLighting.layer1Enable !== false && (
-                  <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '0.6rem', marginTop: '0.1rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', fontSize: '0.8rem' }}>
-                      <span style={{ color: 'var(--text-muted)' }}>{t('lblLayerDimLevel')}</span>
-                      <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)', fontWeight: 600 }}>
-                        {layerLighting.layer1DimLevel ?? layerLighting.dimLevel ?? 128}
-                        {(layerLighting.layer1DimLevel ?? layerLighting.dimLevel ?? 128) === 255
-                          ? ` (${t('lblNoDimming', '100% - brak ściemniania')})`
-                          : (layerLighting.layer1DimLevel ?? layerLighting.dimLevel ?? 128) === 0
-                          ? ` (${t('lblDarkBg', '0% - ciemne tło')})`
-                          : ''}
+              {/* Layer 1 Color */}
+              <div className="color-item-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div className="color-item-info">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <strong>{t('lblLayer1Color')}</strong>
+                    {layerLighting.layer1Enable === false && (
+                      <span className="badge-pill" style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', opacity: 0.7 }}>
+                        {t('lblDisabled')}
                       </span>
-                    </div>
-                    <div className="range-slider-wrap">
-                      <input
-                        type="range"
-                        className="range-slider"
-                        min={0}
-                        max={255}
-                        value={layerLighting.layer1DimLevel ?? layerLighting.dimLevel ?? 128}
-                        onChange={(e) => setLayerLighting({ layer1DimLevel: Number(e.target.value), dimLevel: Number(e.target.value) })}
-                      />
-                    </div>
+                    )}
                   </div>
-                )}
+                  <span>{t('layer1ColorDesc')}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <label className="toggle-switch" title={t('lblToggleLayerHighlight')}>
+                    <input
+                      type="checkbox"
+                      className="toggle-switch-input"
+                      checked={layerLighting.layer1Enable !== false}
+                      onChange={(e) => setLayerLighting({ layer1Enable: e.target.checked })}
+                    />
+                    <span className="toggle-switch-slider"></span>
+                  </label>
+                  <input
+                    type="color"
+                    className="color-picker-input"
+                    disabled={layerLighting.layer1Enable === false}
+                    style={{ opacity: layerLighting.layer1Enable === false ? 0.35 : 1, cursor: layerLighting.layer1Enable === false ? 'not-allowed' : 'pointer' }}
+                    value={layerLighting.layer1Color}
+                    onChange={(e) => setLayerLighting({ layer1Color: e.target.value })}
+                  />
+                </div>
               </div>
 
-              {/* Layer 2 */}
-              <div className="color-item-card" style={{ flexDirection: 'column', gap: '0.75rem', alignItems: 'stretch' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div className="color-item-info">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <strong>{t('lblLayer2Color')}</strong>
-                      {!layerLighting.layer2Enable && (
-                        <span className="badge-pill" style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', opacity: 0.7 }}>
-                          {t('lblDisabled')}
-                        </span>
-                      )}
-                    </div>
-                    <span>{t('layer2ColorDesc')}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <label className="toggle-switch" title={t('lblToggleLayerHighlight')}>
-                      <input
-                        type="checkbox"
-                        className="toggle-switch-input"
-                        checked={layerLighting.layer2Enable === true}
-                        onChange={(e) => setLayerLighting({ layer2Enable: e.target.checked })}
-                      />
-                      <span className="toggle-switch-slider"></span>
-                    </label>
-                    <input
-                      type="color"
-                      className="color-picker-input"
-                      disabled={!layerLighting.layer2Enable}
-                      style={{ opacity: !layerLighting.layer2Enable ? 0.35 : 1, cursor: !layerLighting.layer2Enable ? 'not-allowed' : 'pointer' }}
-                      value={layerLighting.layer2Color}
-                      onChange={(e) => setLayerLighting({ layer2Color: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                {layerLighting.layer2Enable === true && (
-                  <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '0.6rem', marginTop: '0.1rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', fontSize: '0.8rem' }}>
-                      <span style={{ color: 'var(--text-muted)' }}>{t('lblLayerDimLevel')}</span>
-                      <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)', fontWeight: 600 }}>
-                        {layerLighting.layer2DimLevel ?? 255}
-                        {(layerLighting.layer2DimLevel ?? 255) === 255
-                          ? ` (${t('lblNoDimming', '100% - brak ściemniania')})`
-                          : (layerLighting.layer2DimLevel ?? 255) === 0
-                          ? ` (${t('lblDarkBg', '0% - ciemne tło')})`
-                          : ''}
+              {/* Layer 2 Color */}
+              <div className="color-item-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div className="color-item-info">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <strong>{t('lblLayer2Color')}</strong>
+                    {!layerLighting.layer2Enable && (
+                      <span className="badge-pill" style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', opacity: 0.7 }}>
+                        {t('lblDisabled')}
                       </span>
-                    </div>
-                    <div className="range-slider-wrap">
-                      <input
-                        type="range"
-                        className="range-slider"
-                        min={0}
-                        max={255}
-                        value={layerLighting.layer2DimLevel ?? 255}
-                        onChange={(e) => setLayerLighting({ layer2DimLevel: Number(e.target.value) })}
-                      />
-                    </div>
+                    )}
                   </div>
-                )}
+                  <span>{t('layer2ColorDesc')}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <label className="toggle-switch" title={t('lblToggleLayerHighlight')}>
+                    <input
+                      type="checkbox"
+                      className="toggle-switch-input"
+                      checked={layerLighting.layer2Enable === true}
+                      onChange={(e) => setLayerLighting({ layer2Enable: e.target.checked })}
+                    />
+                    <span className="toggle-switch-slider"></span>
+                  </label>
+                  <input
+                    type="color"
+                    className="color-picker-input"
+                    disabled={!layerLighting.layer2Enable}
+                    style={{ opacity: !layerLighting.layer2Enable ? 0.35 : 1, cursor: !layerLighting.layer2Enable ? 'not-allowed' : 'pointer' }}
+                    value={layerLighting.layer2Color}
+                    onChange={(e) => setLayerLighting({ layer2Color: e.target.value })}
+                  />
+                </div>
               </div>
 
-              {/* Layer 3 */}
-              <div className="color-item-card" style={{ flexDirection: 'column', gap: '0.75rem', alignItems: 'stretch' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div className="color-item-info">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <strong>{t('lblLayer3Color')}</strong>
-                      {layerLighting.layer3Enable === false && (
-                        <span className="badge-pill" style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', opacity: 0.7 }}>
-                          {t('lblDisabled')}
-                        </span>
-                      )}
-                    </div>
-                    <span>{t('layer3ColorDesc')}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <label className="toggle-switch" title={t('lblToggleLayerHighlight')}>
-                      <input
-                        type="checkbox"
-                        className="toggle-switch-input"
-                        checked={layerLighting.layer3Enable !== false}
-                        onChange={(e) => setLayerLighting({ layer3Enable: e.target.checked })}
-                      />
-                      <span className="toggle-switch-slider"></span>
-                    </label>
-                    <input
-                      type="color"
-                      className="color-picker-input"
-                      disabled={layerLighting.layer3Enable === false}
-                      style={{ opacity: layerLighting.layer3Enable === false ? 0.35 : 1, cursor: layerLighting.layer3Enable === false ? 'not-allowed' : 'pointer' }}
-                      value={layerLighting.layer3Color}
-                      onChange={(e) => setLayerLighting({ layer3Color: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                {layerLighting.layer3Enable !== false && (
-                  <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '0.6rem', marginTop: '0.1rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', fontSize: '0.8rem' }}>
-                      <span style={{ color: 'var(--text-muted)' }}>{t('lblLayerDimLevel')}</span>
-                      <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)', fontWeight: 600 }}>
-                        {layerLighting.layer3DimLevel ?? layerLighting.dimLevel ?? 128}
-                        {(layerLighting.layer3DimLevel ?? layerLighting.dimLevel ?? 128) === 255
-                          ? ` (${t('lblNoDimming', '100% - brak ściemniania')})`
-                          : (layerLighting.layer3DimLevel ?? layerLighting.dimLevel ?? 128) === 0
-                          ? ` (${t('lblDarkBg', '0% - ciemne tło')})`
-                          : ''}
+              {/* Layer 3 Color */}
+              <div className="color-item-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div className="color-item-info">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <strong>{t('lblLayer3Color')}</strong>
+                    {layerLighting.layer3Enable === false && (
+                      <span className="badge-pill" style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', opacity: 0.7 }}>
+                        {t('lblDisabled')}
                       </span>
-                    </div>
-                    <div className="range-slider-wrap">
-                      <input
-                        type="range"
-                        className="range-slider"
-                        min={0}
-                        max={255}
-                        value={layerLighting.layer3DimLevel ?? layerLighting.dimLevel ?? 128}
-                        onChange={(e) => setLayerLighting({ layer3DimLevel: Number(e.target.value) })}
-                      />
-                    </div>
+                    )}
                   </div>
-                )}
+                  <span>{t('layer3ColorDesc')}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <label className="toggle-switch" title={t('lblToggleLayerHighlight')}>
+                    <input
+                      type="checkbox"
+                      className="toggle-switch-input"
+                      checked={layerLighting.layer3Enable !== false}
+                      onChange={(e) => setLayerLighting({ layer3Enable: e.target.checked })}
+                    />
+                    <span className="toggle-switch-slider"></span>
+                  </label>
+                  <input
+                    type="color"
+                    className="color-picker-input"
+                    disabled={layerLighting.layer3Enable === false}
+                    style={{ opacity: layerLighting.layer3Enable === false ? 0.35 : 1, cursor: layerLighting.layer3Enable === false ? 'not-allowed' : 'pointer' }}
+                    value={layerLighting.layer3Color}
+                    onChange={(e) => setLayerLighting({ layer3Color: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
           </div>

@@ -42,17 +42,23 @@ export interface LockIndicatorConfig {
 }
 
 export interface LayerLightingConfig {
-  enable: boolean;
-  dimLevel: number; // 0-255
-  layer1DimLevel?: number; // 0-255 (default 128)
+  enable: boolean; // Master color highlight enable
   layer1Enable?: boolean;
   layer1Color: string;
-  layer2DimLevel?: number; // 0-255 (default 255)
   layer2Enable?: boolean;
   layer2Color: string;
-  layer3DimLevel?: number; // 0-255 (default 128)
   layer3Enable?: boolean;
   layer3Color: string;
+
+  // Background dimming configuration (completely independent)
+  dimMasterEnable?: boolean;
+  dimLevel: number; // 0-255 (Layer 1 / global dim level)
+  dimLayer1Enable?: boolean;
+  layer1DimLevel?: number; // 0-255 (default 128)
+  dimLayer2Enable?: boolean;
+  layer2DimLevel?: number; // 0-255 (default 255)
+  dimLayer3Enable?: boolean;
+  layer3DimLevel?: number; // 0-255 (default 128)
 }
 
 export interface LogoLocksConfig {
