@@ -108,7 +108,7 @@ export const SettingsView: React.FC = () => {
         color: 'var(--text-muted, #888888)',
       };
     }
-    const REQUIRED_FW = { major: 0, minor: 3, patch: 4 };
+    const REQUIRED_FW = { major: 0, minor: 3, patch: 5 };
     const STUDIO_VERSION = APP_VERSION;
 
     if (!firmwareInfo) {
