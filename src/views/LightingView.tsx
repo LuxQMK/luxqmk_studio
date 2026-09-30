@@ -418,7 +418,7 @@ export const LightingView: React.FC = () => {
             <KeyboardAppearanceButton />
             <button
               type="button"
-              className={`btn ${effectiveFnActive ? 'btn-primary' : 'btn-secondary'}`}
+              className={`btn ${isSimulatingFn ? 'btn-primary' : 'btn-secondary'}`}
               id="btnHoldFnSim"
               style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
               onClick={() => setSimulatingFn(!isSimulatingFn)}
@@ -1720,7 +1720,7 @@ export const LightingView: React.FC = () => {
                 <div className="color-item-info">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <strong>{t('lblLayer2Color')}</strong>
-                    {layerLighting.layer2Enable === false && (
+                    {!layerLighting.layer2Enable && (
                       <span className="badge-pill" style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', opacity: 0.7 }}>
                         {t('lblDisabled')}
                       </span>
@@ -1733,7 +1733,7 @@ export const LightingView: React.FC = () => {
                     <input
                       type="checkbox"
                       className="toggle-switch-input"
-                      checked={layerLighting.layer2Enable !== false}
+                      checked={layerLighting.layer2Enable === true}
                       onChange={(e) => setLayerLighting({ layer2Enable: e.target.checked })}
                     />
                     <span className="toggle-switch-slider"></span>
@@ -1741,8 +1741,8 @@ export const LightingView: React.FC = () => {
                   <input
                     type="color"
                     className="color-picker-input"
-                    disabled={layerLighting.layer2Enable === false}
-                    style={{ opacity: layerLighting.layer2Enable === false ? 0.35 : 1, cursor: layerLighting.layer2Enable === false ? 'not-allowed' : 'pointer' }}
+                    disabled={!layerLighting.layer2Enable}
+                    style={{ opacity: !layerLighting.layer2Enable ? 0.35 : 1, cursor: !layerLighting.layer2Enable ? 'not-allowed' : 'pointer' }}
                     value={layerLighting.layer2Color}
                     onChange={(e) => setLayerLighting({ layer2Color: e.target.value })}
                   />

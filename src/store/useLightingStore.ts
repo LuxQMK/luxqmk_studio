@@ -262,7 +262,7 @@ export const useLightingStore = create<LightingState>((set, get) => ({
     dimLevel: 128,
     layer1Enable: true,
     layer1Color: '#ffffff',
-    layer2Enable: true,
+    layer2Enable: false,
     layer2Color: '#00ffff',
     layer3Enable: true,
     layer3Color: '#b400ff',
@@ -487,7 +487,7 @@ export const useLightingStore = create<LightingState>((set, get) => ({
         if (l.enable) {
           mask = 0x01;
           if (l.layer1Enable !== false) mask |= (1 << 1);
-          if (l.layer2Enable !== false) mask |= (1 << 2);
+          if (l.layer2Enable === true) mask |= (1 << 2);
           if (l.layer3Enable !== false) mask |= (1 << 3);
         }
         hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, [mask]);
@@ -1043,11 +1043,11 @@ export const useLightingStore = create<LightingState>((set, get) => ({
         const l2Res = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_2_COLOR);
         const l3Res = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_3_COLOR);
 
-        const lEnVal = lEnRes && lEnRes.length > 0 ? lEnRes[0] : 0x0F;
-        const isMasterEnabled = lEnVal === 1 || (lEnVal & 0x01) !== 0;
-        const isL1Enabled = lEnVal === 1 || (lEnVal & 0x02) !== 0;
-        const isL2Enabled = lEnVal === 1 || (lEnVal & 0x04) !== 0;
-        const isL3Enabled = lEnVal === 1 || (lEnVal & 0x08) !== 0;
+        const lEnVal = lEnRes && lEnRes.length > 0 ? (lEnRes[0] === 1 ? 0x0B : lEnRes[0]) : 0x0B;
+        const isMasterEnabled = (lEnVal & 0x01) !== 0;
+        const isL1Enabled = (lEnVal & 0x02) !== 0;
+        const isL2Enabled = (lEnVal & 0x04) !== 0;
+        const isL3Enabled = (lEnVal & 0x08) !== 0;
 
         set((state) => ({
           layerLighting: {
@@ -1245,7 +1245,7 @@ export const useLightingStore = create<LightingState>((set, get) => ({
           if (snap.layerLighting.enable) {
             snapMask = 0x01;
             if (snap.layerLighting.layer1Enable !== false) snapMask |= (1 << 1);
-            if (snap.layerLighting.layer2Enable !== false) snapMask |= (1 << 2);
+            if (snap.layerLighting.layer2Enable === true) snapMask |= (1 << 2);
             if (snap.layerLighting.layer3Enable !== false) snapMask |= (1 << 3);
           }
           await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, [snapMask]);

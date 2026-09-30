@@ -637,8 +637,8 @@ export function useLightingVisualizer(
       const activeLyr = isSimulatingFn ? 1 : (hwActiveLayer > 0 ? hwActiveLayer : 0);
       const isLayerActive = activeLyr > 0 && layerLighting.enable && (
         activeLyr === 1 ? (layerLighting.layer1Enable !== false) :
-        activeLyr === 2 ? (layerLighting.layer2Enable !== false) :
-        activeLyr === 3 ? (layerLighting.layer3Enable !== false) : true
+        activeLyr === 2 ? (layerLighting.layer2Enable === true) :
+        activeLyr === 3 ? (layerLighting.layer3Enable !== false) : false
       );
 
       let layerTargetColorHex = '#ffffff';
