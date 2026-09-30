@@ -6,37 +6,6 @@ import { useDeviceStore } from './useDeviceStore';
 import { useUIStore } from './useUIStore';
 import { useI18n } from '../i18n';
 
-const DEFAULT_FL_MAP: Record<string, number> = {
-  F1: 0x00A5, // Media Play/Pause
-  F2: 0x00A6, // Media Stop
-  F3: 0x00A7, // Media Prev
-  F4: 0x00A8, // Media Next
-  F5: 0x00A9, // Volume Down
-  F6: 0x00AA, // Volume Up
-  F7: 0x00AB, // Mute
-  F8: 0x00AC, // Media Select
-  F9: 0x00AD, // Mail
-  F10: 0x00AE, // Calculator
-  F11: 0x00AF, // My Computer
-  F12: 0x0046, // PrintScreen
-  O: 30752, // RGB Toggle (RGB_TOG / 0x7820)
-  Z: 30754, // RGB Mode - (RGB_RMOD / 0x7822)
-  X: 30753, // RGB Mode + (RGB_MOD / 0x7821)
-  C: 30756, // RGB Hue - (RGB_HUD / 0x7824)
-  V: 30755, // RGB Hue + (RGB_HUI / 0x7823)
-  LWIN: 31765, // Win Lock / Magic GUI Toggle (0x7C15)
-  UP: 30759, // Brightness + (RGB_VAI / 0x7827)
-  DOWN: 30760, // Brightness - (RGB_VAD / 0x7828)
-  LEFT: 30762, // Speed - (RGB_SPD / 0x782A)
-  RGHT: 30761, // Speed + (RGB_SPI / 0x7829)
-  PGUP: 32257, // Density + (RGB_DEN_INC / 0x7E01)
-  PGDN: 32258, // Density - (RGB_DEN_DEC / 0x7E02)
-  END: 32260, // Density Reset (RGB_DEN_RST / 0x7E04)
-  HOME: 32261, // Gradient Step (RGB_GRAD_STEP / 0x7E05)
-  INS: 32262, // Reactive Step (RGB_REACT_STEP / 0x7E06)
-  DEL: 32256, // RGB Reverse (RGB_REV / 0x7E00)
-};
-
 interface KeymapState {
   activeLayer: number; // 0, 1, 2, 3
   selectedKey: KeyLayoutItem | null;
@@ -90,7 +59,7 @@ export const useKeymapStore = create<KeymapState>((set, get) => ({
   getKeycode: (layer, row, col) => {
     const keyStr = `${row},${col}`;
     const val = get().layerKeymaps[layer]?.[keyStr];
-    if (val !== undefined && val !== null && val !== 0x0000 && val !== 0x0001) return val;
+    if (val !== undefined && val !== null) return val;
 
     const keys = getLayoutForPreset(get().presetLayoutId);
     const item = keys.find((k) => k.matrix[0] === row && k.matrix[1] === col);
@@ -99,22 +68,7 @@ export const useKeymapStore = create<KeymapState>((set, get) => ({
       return (item as any)?.defaultKeycode || 0x0000;
     }
 
-    if (layer === 1 && item?.id && DEFAULT_FL_MAP[item.id]) {
-      return DEFAULT_FL_MAP[item.id];
-    }
-
-    if (layer === 2) {
-      // Layer 2 is Mac Base -> default to standard base keycode if not remapped
-      return (item as any)?.defaultKeycode || 0x0000;
-    }
-
-    if (layer === 3 && item?.id && DEFAULT_FL_MAP[item.id]) {
-      // Layer 3 is Mac Fn -> default to media/lighting keys or pass-through
-      return DEFAULT_FL_MAP[item.id];
-    }
-
-    // Default to KC_TRNS (0x0001) or whatever value was in EEPROM
-    return val !== undefined ? val : 0x0001;
+    return 0x0001; // KC_TRNS for layers 1, 2, 3 by default when no hardware data is present
   },
 
   assignKeycodeToKey: async (layer: number, row: number, col: number, keycode: number) => {
