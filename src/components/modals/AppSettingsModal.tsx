@@ -495,11 +495,11 @@ export const AppSettingsModal: React.FC = () => {
               </div>
 
               <a
-                href="https://github.com/doriand3v/LuxQMK/releases"
+                href="https://github.com/LuxQMK/luxqmk_studio/releases"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-secondary"
-                onClick={(e) => openExternalUrl('https://github.com/doriand3v/LuxQMK/releases', e)}
+                onClick={(e) => openExternalUrl('https://github.com/LuxQMK/luxqmk_studio/releases', e)}
                 style={{ fontSize: '0.72rem', padding: '0.25rem 0.55rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
