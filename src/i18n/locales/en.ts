@@ -70,7 +70,7 @@ export const en = {
   "navBackup": "Profiles & Backup",
   "navSettings": "Device Settings",
   "viewKeymapTitle": "Visual Keymap Editor",
-  "viewKeymapSubtitle": "Real-time key assignment for hardware layers 0 to 2",
+  "viewKeymapSubtitle": "Real-time key assignment for hardware layers 0 to 3",
   "viewMacroTitle": "Hardware Macro Editor",
   "viewMacroSubtitle": "Automate keystrokes, shortcuts, and custom sequences stored directly in keyboard EEPROM",
   "viewLightingTitle": "QMK Lighting (Hardware EEPROM)",

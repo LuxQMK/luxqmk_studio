@@ -91,12 +91,20 @@ app.whenReady().then(async () => {
           },
           layerLighting: {
             enable: true,
+            layer1Enable: true,
+            layer1Color: '#ffb700',
+            layer2Enable: false,
+            layer2Color: '#00ffff',
+            layer3Enable: true,
+            layer3Color: '#b400ff',
+            dimMasterEnable: true,
             dimLevel: 128,
-            layerColors: {
-              1: { h: 28, s: 255 },
-              2: { h: 128, s: 255 },
-              3: { h: 200, s: 255 }
-            }
+            dimLayer1Enable: true,
+            layer1DimLevel: 128,
+            dimLayer2Enable: false,
+            layer2DimLevel: 255,
+            dimLayer3Enable: true,
+            layer3DimLevel: 128,
           },
           logoLocks: {
             mode: 1, // Indicator (RGB Idle)

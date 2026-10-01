@@ -71,7 +71,7 @@ export const pl: Record<TranslationKey, string> = {
   "navBackup": "Profile i kopie",
   "navSettings": "Ustawienia urządzenia",
   "viewKeymapTitle": "Wizualny edytor układu",
-  "viewKeymapSubtitle": "Mapowanie klawiszy w czasie rzeczywistym dla warstw 0-2",
+  "viewKeymapSubtitle": "Mapowanie klawiszy w czasie rzeczywistym dla warstw 0-3",
   "viewMacroTitle": "Edytor makr sprzętowych",
   "viewMacroSubtitle": "Automatyzacja sekwencji klawiszy i skrótów zapisywanych bezpośrednio w pamięci EEPROM klawiatury",
   "viewLightingTitle": "Oświetlenie QMK (pamięć EEPROM)",
