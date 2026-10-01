@@ -3,6 +3,7 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { useDeviceStore } from '../store/useDeviceStore';
 import { useI18n } from '../i18n';
 import { APP_VERSION } from '../version';
+import { STUDIO_CHANGELOG } from '../data/changelog';
 
 export const SettingsView: React.FC = () => {
   const {
@@ -48,6 +49,59 @@ export const SettingsView: React.FC = () => {
     text: t('flasherToolReady'),
     className: 'badge-pill badge-success',
   });
+
+  const [expandedReleases, setExpandedReleases] = useState<Record<string, boolean>>({
+    [STUDIO_CHANGELOG[0]?.version || '']: true,
+  });
+
+  const toggleRelease = (version: string) => {
+    setExpandedReleases((prev) => ({
+      ...prev,
+      [version]: !prev[version],
+    }));
+  };
+
+  const renderFormattedText = (text: string) => {
+    const parts: React.ReactNode[] = [];
+    const regex = /(\*\*[^*]+\*\*|`[^`]+`)/g;
+    let lastIdx = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > lastIdx) {
+        parts.push(text.substring(lastIdx, match.index));
+      }
+      const token = match[0];
+      if (token.startsWith('**') && token.endsWith('**')) {
+        parts.push(
+          <strong key={match.index} style={{ color: 'var(--text-primary, #ffffff)' }}>
+            {token.slice(2, -2)}
+          </strong>
+        );
+      } else if (token.startsWith('`') && token.endsWith('`')) {
+        parts.push(
+          <code
+            key={match.index}
+            style={{
+              padding: '0.1rem 0.35rem',
+              background: 'rgba(255, 255, 255, 0.08)',
+              borderRadius: '4px',
+              fontSize: '0.82rem',
+              fontFamily: 'monospace',
+            }}
+          >
+            {token.slice(1, -1)}
+          </code>
+        );
+      }
+      lastIdx = regex.lastIndex;
+    }
+    if (lastIdx < text.length) {
+      parts.push(text.substring(lastIdx));
+    }
+    return parts;
+  };
+
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.getFlasherToolsStatus === 'function') {
@@ -689,7 +743,171 @@ export const SettingsView: React.FC = () => {
           </div>
         </div>
 
+        {/* CARD 5: RELEASE NOTES & CHANGELOG */}
+        <div className="palette-card settings-card" style={{ gridColumn: '1 / -1' }}>
+          <div className="settings-card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+              <span className="settings-card-icon" style={{ background: 'rgba(168, 85, 247, 0.12)', color: '#c084fc' }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                  <path d="M6 6h10"></path>
+                  <path d="M6 10h10"></path>
+                  <path d="M6 14h6"></path>
+                </svg>
+              </span>
+              <div>
+                <h3>{t('cardReleaseNotesTitle')}</h3>
+                <p className="settings-card-subtitle">{t('cardReleaseNotesSubtitle')}</p>
+              </div>
+            </div>
+
+            <a
+              href="https://github.com/doriand3v/LuxQMK/releases"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-sm btn-secondary"
+              onClick={(e) => openExternalUrl('https://github.com/doriand3v/LuxQMK/releases', e)}
+              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+              <span>GitHub Releases</span>
+            </a>
+          </div>
+
+          <div className="changelog-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.25rem' }}>
+            {STUDIO_CHANGELOG.map((rel, idx) => {
+              const isExpanded = !!expandedReleases[rel.version];
+              const isLatest = idx === 0;
+
+              return (
+                <div
+                  key={rel.version}
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.45)',
+                    border: isLatest ? '1px solid rgba(168, 85, 247, 0.35)' : '1px solid rgba(255, 255, 255, 0.07)',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleRelease(rel.version)}
+                    style={{
+                      width: '100%',
+                      padding: '0.85rem 1.1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      background: isExpanded ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      color: 'inherit',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary, #ffffff)' }}>
+                        v{rel.version}
+                      </span>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted, #94a3b8)' }}>
+                        {rel.date}
+                      </span>
+                      {isLatest && (
+                        <span
+                          style={{
+                            fontSize: '0.7rem',
+                            fontWeight: 600,
+                            padding: '0.15rem 0.5rem',
+                            borderRadius: '9999px',
+                            background: 'rgba(168, 85, 247, 0.2)',
+                            color: '#c084fc',
+                            border: '1px solid rgba(168, 85, 247, 0.3)',
+                          }}
+                        >
+                          {rel.date.includes('Development') || rel.date.includes('Unreleased') ? 'In Development' : t('lblLatestVersionTag')}
+                        </span>
+                      )}
+                    </div>
+
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{
+                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s ease',
+                        color: 'var(--text-muted, #94a3b8)',
+                      }}
+                    >
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </button>
+
+                  {isExpanded && (
+                    <div style={{ padding: '0.85rem 1.25rem 1.1rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                      {Object.entries(rel.sections).map(([sectionName, items]) => {
+                        let badgeColor = 'rgba(0, 240, 255, 0.15)';
+                        let textColor = '#38bdf8';
+                        let borderColor = 'rgba(56, 189, 248, 0.3)';
+
+                        if (sectionName.toLowerCase() === 'added') {
+                          badgeColor = 'rgba(34, 197, 94, 0.15)';
+                          textColor = '#4ade80';
+                          borderColor = 'rgba(74, 222, 128, 0.3)';
+                        } else if (sectionName.toLowerCase() === 'fixed') {
+                          badgeColor = 'rgba(234, 179, 8, 0.15)';
+                          textColor = '#facc15';
+                          borderColor = 'rgba(250, 204, 21, 0.3)';
+                        }
+
+                        return (
+                          <div key={sectionName} style={{ marginBottom: '0.85rem' }}>
+                            <div style={{ marginBottom: '0.4rem' }}>
+                              <span
+                                style={{
+                                  fontSize: '0.72rem',
+                                  fontWeight: 700,
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.04em',
+                                  padding: '0.15rem 0.5rem',
+                                  borderRadius: '4px',
+                                  background: badgeColor,
+                                  color: textColor,
+                                  border: `1px solid ${borderColor}`,
+                                }}
+                              >
+                                {sectionName}
+                              </span>
+                            </div>
+                            <ul style={{ margin: 0, paddingLeft: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                              {items.map((item, iIdx) => (
+                                <li key={iIdx} style={{ fontSize: '0.86rem', color: 'var(--text-secondary, #cbd5e1)', lineHeight: 1.45 }}>
+                                  {renderFormattedText(item)}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
       </div>
     </section>
+
   );
 };

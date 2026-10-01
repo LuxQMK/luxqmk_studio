@@ -106,6 +106,98 @@ export default APP_VERSION;
     fs.writeFileSync(versionTsPath, versionTsContent, 'utf8');
     console.log(`[version-sync] Generated src/version.ts with APP_VERSION = "${targetVersion}"`);
   }
+
+  // 3. Parse CHANGELOG.md and generate src/data/changelog.ts
+  syncChangelog();
+}
+
+function parseMarkdownChangelog(filePath) {
+  if (!fs.existsSync(filePath)) return [];
+
+  const raw = fs.readFileSync(filePath, 'utf8');
+  const lines = raw.split(/\r?\n/);
+  const releases = [];
+  let currentRelease = null;
+  let currentSection = 'General';
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('## [')) {
+      if (currentRelease) {
+        releases.push(currentRelease);
+      }
+      const header = trimmed.slice(3).trim(); // "[1.4.5] - 2026-10-01"
+      const verEnd = header.indexOf(']');
+      const ver = verEnd !== -1 ? header.slice(1, verEnd) : header;
+      const datePart = verEnd !== -1 ? header.slice(verEnd + 1).replace(/^[\s-]+/, '').trim() : '';
+
+      currentRelease = {
+        version: ver,
+        date: datePart,
+        sections: {},
+        bullets: []
+      };
+      currentSection = 'General';
+    } else if (trimmed.startsWith('### ') && currentRelease) {
+      currentSection = trimmed.slice(4).trim();
+      if (!currentRelease.sections[currentSection]) {
+        currentRelease.sections[currentSection] = [];
+      }
+    } else if (trimmed.startsWith('- ') && currentRelease) {
+      const bullet = trimmed.slice(2).trim();
+      if (!currentRelease.sections[currentSection]) {
+        currentRelease.sections[currentSection] = [];
+      }
+      currentRelease.sections[currentSection].append
+        ? currentRelease.sections[currentSection].append(bullet)
+        : currentRelease.sections[currentSection].push(bullet);
+      currentRelease.bullets.push(`[${currentSection}] ${bullet}`);
+    }
+  }
+
+  if (currentRelease) {
+    releases.push(currentRelease);
+  }
+
+  return releases;
+}
+
+function syncChangelog() {
+  const changelogMdPath = path.resolve(__dirname, '../CHANGELOG.md');
+  const changelogTsPath = path.resolve(__dirname, '../src/data/changelog.ts');
+
+  if (!fs.existsSync(changelogMdPath)) return;
+
+  const entries = parseMarkdownChangelog(changelogMdPath);
+  const tsContent = `/**
+ * LuxQMK Studio Changelog Database
+ * Automatically generated from CHANGELOG.md by scripts/sync-version.js. DO NOT EDIT DIRECTLY.
+ */
+
+export interface ChangelogRelease {
+  version: string;
+  date: string;
+  sections: Record<string, string[]>;
+  bullets: string[];
+}
+
+export const STUDIO_CHANGELOG: ChangelogRelease[] = ${JSON.stringify(entries, null, 2)};
+
+export const LATEST_RELEASE = STUDIO_CHANGELOG[0] || null;
+
+export default STUDIO_CHANGELOG;
+`;
+
+  let existing = '';
+  if (fs.existsSync(changelogTsPath)) {
+    existing = fs.readFileSync(changelogTsPath, 'utf8');
+  }
+
+  if (existing !== tsContent) {
+    fs.mkdirSync(path.dirname(changelogTsPath), { recursive: true });
+    fs.writeFileSync(changelogTsPath, tsContent, 'utf8');
+    console.log(`[version-sync] Generated src/data/changelog.ts (${entries.length} release entries)`);
+  }
 }
 
 syncVersion();

@@ -834,5 +834,12 @@ export const pl: Record<TranslationKey, string> = {
   "keyThemeBotanical": "Botanical Sage (Leśna szałwia)",
   "keyThemeSynthwave": "Synthwave 80s (Neonowy fiolet)",
   "keyThemeSamurai": "Red Samurai (Bordowo-złoty)",
-  "keyThemeMatrix": "Matrix Terminal (Zielony kod)"
+  "keyThemeMatrix": "Matrix Terminal (Zielony kod)",
+  "cardReleaseNotesTitle": "Historia wydań i lista zmian",
+  "cardReleaseNotesSubtitle": "Poznaj nowe funkcje, ulepszenia i poprawki błędów w aktualizacjach LuxQMK Studio",
+  "btnViewFullChangelog": "Pełna historia wydań",
+  "lblLatestVersionTag": "Najnowsza wersja",
+  "lblReleaseHighlights": "Główne zmiany w tej wersji",
+  "lblVersionHistory": "Historia wydań",
+  "lblChangelogEmpty": "Brak dostępnych wpisów listy zmian."
 };

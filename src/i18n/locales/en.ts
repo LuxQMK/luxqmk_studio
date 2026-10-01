@@ -833,7 +833,14 @@ export const en = {
   "keyThemeBotanical": "Botanical Sage",
   "keyThemeSynthwave": "Synthwave 80s",
   "keyThemeSamurai": "Red Samurai",
-  "keyThemeMatrix": "Matrix Terminal"
+  "keyThemeMatrix": "Matrix Terminal",
+  "cardReleaseNotesTitle": "Release Notes & Changelog",
+  "cardReleaseNotesSubtitle": "Explore new features, improvements, and bug fixes across LuxQMK Studio updates",
+  "btnViewFullChangelog": "View Full Changelog",
+  "lblLatestVersionTag": "Latest Version",
+  "lblReleaseHighlights": "Highlights & Key Changes",
+  "lblVersionHistory": "Version History",
+  "lblChangelogEmpty": "No changelog entries available."
 } as const;
 
 export type TranslationSchema = typeof en;
