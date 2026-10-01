@@ -253,6 +253,8 @@ class VisualizerEngineService {
   private isRestartingAudio: boolean = false;
   private deviceChangeDebounceTimer: any = null;
   private lastAudioRestartTime: number = 0;
+  private lastAudioDeviceSignature: string = '';
+  private consecutiveSilentFrames: number = 0;
   private dataArray: Uint8Array = new Uint8Array(128);
   public frequencyBands: Float32Array = new Float32Array(16);
 
@@ -354,23 +356,45 @@ class VisualizerEngineService {
 
   /**
    * Listens for Windows / OS audio output and input device changes.
-   * Seamlessly re-binds WASAPI loopback and user audio streams on active endpoint switch.
+   * Employs both event-driven listener and continuous background polling to catch
+   * Windows default output changes (e.g. Headphones <-> Speakers) without physical USB replugging.
    */
   private _bindDeviceEvents() {
     if (typeof navigator !== 'undefined' && navigator.mediaDevices && typeof navigator.mediaDevices.addEventListener === 'function') {
       navigator.mediaDevices.addEventListener('devicechange', () => {
-        console.log('[AudioVisualizer] Audio output / input device change detected by OS.');
         if (this.deviceChangeDebounceTimer) {
           clearTimeout(this.deviceChangeDebounceTimer);
         }
         this.deviceChangeDebounceTimer = setTimeout(() => {
-          const activeTab = useUIStore.getState().studioSubTab;
-          if (this.isRunning && activeTab === 'audio') {
-            this.restartAudioStream();
-          }
-        }, 350);
+          this._checkAudioDeviceChange();
+        }, 300);
       });
     }
+
+    // Active polling every 1.2s to detect default audio endpoint switches in Windows
+    if (typeof window !== 'undefined') {
+      setInterval(() => {
+        this._checkAudioDeviceChange();
+      }, 1200);
+    }
+  }
+
+  private async _checkAudioDeviceChange(): Promise<void> {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const newSignature = devices.map((d) => `${d.deviceId}:${d.kind}:${d.label}:${d.groupId}`).join('|');
+      if (this.lastAudioDeviceSignature && this.lastAudioDeviceSignature !== newSignature) {
+        console.log('[AudioVisualizer] Windows audio device configuration changed.');
+        this.lastAudioDeviceSignature = newSignature;
+        const activeTab = useUIStore.getState().studioSubTab;
+        if (this.isRunning && activeTab === 'audio') {
+          this.restartAudioStream();
+        }
+      } else if (!this.lastAudioDeviceSignature) {
+        this.lastAudioDeviceSignature = newSignature;
+      }
+    } catch (e) {}
   }
 
   public rebuildKeyGeometry(presetId: string): void {
@@ -728,6 +752,23 @@ class VisualizerEngineService {
       levels.push(val);
     }
     useVisualizerStore.getState().setAudioLevels(levels);
+
+    const totalEnergy = levels.reduce((a, b) => a + b, 0);
+    if (totalEnergy < 1) {
+      this.consecutiveSilentFrames++;
+      // If we observe total continuous silence for > 1.2s (70 frames at 60 FPS) in loopback mode,
+      // and last restart was > 2.5s ago, auto-reconnect to ensure we are hooked to the active default audio output
+      if (config.audioSource === 'system_loopback' && this.consecutiveSilentFrames > 70 && !this.isRestartingAudio) {
+        const now = performance.now();
+        if (now - this.lastAudioRestartTime > 2500) {
+          this.consecutiveSilentFrames = 0;
+          this.restartAudioStream();
+          return;
+        }
+      }
+    } else {
+      this.consecutiveSilentFrames = 0;
+    }
 
     let bassSum = 0;
     for (let b = 0; b < 4; b++) {
