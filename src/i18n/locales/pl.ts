@@ -836,10 +836,16 @@ export const pl: Record<TranslationKey, string> = {
   "keyThemeSamurai": "Red Samurai (Bordowo-złoty)",
   "keyThemeMatrix": "Matrix Terminal (Zielony kod)",
   "cardReleaseNotesTitle": "Historia wydań i lista zmian",
-  "cardReleaseNotesSubtitle": "Poznaj nowe funkcje, ulepszenia i poprawki błędów w aktualizacjach LuxQMK Studio",
+  "cardReleaseNotesSubtitle": "Poznaj nowe funkcje, ulepszenia i poprawki błędów w aktualizacjach ekosystemu LuxQMK",
+  "cardFirmwareChangelogTitle": "Historia zmian oprogramowania układowego (Firmware)",
+  "cardFirmwareChangelogSubtitle": "Poznaj zmiany w silniku LuxQMK Firmware, animacje matrycy RGB, optymalizacje debouncingu i obsługę płytek",
+  "cardStudioChangelogTitle": "Historia zmian aplikacji LuxQMK Studio",
+  "cardStudioChangelogSubtitle": "Poznaj nowe funkcje, ulepszenia i poprawki błędów w aplikacji LuxQMK Studio",
   "btnViewFullChangelog": "Pełna historia wydań",
   "lblLatestVersionTag": "Najnowsza wersja",
   "lblReleaseHighlights": "Główne zmiany w tej wersji",
   "lblVersionHistory": "Historia wydań",
-  "lblChangelogEmpty": "Brak dostępnych wpisów listy zmian."
+  "lblChangelogEmpty": "Brak dostępnych wpisów listy zmian.",
+  "lblFirmwareChangelogEmpty": "Brak dostępnych wpisów historii oprogramowania układowego.",
+  "lblStudioChangelogEmpty": "Brak dostępnych wpisów historii zmian aplikacji."
 };

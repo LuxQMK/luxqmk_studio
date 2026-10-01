@@ -5,6 +5,8 @@ import { useKeyboardThemeStore } from '../../store/useKeyboardThemeStore';
 import { CASE_THEMES, KEYCAP_THEMES } from '../../data/keyboardThemes';
 import { useI18n } from '../../i18n';
 import { APP_VERSION } from '../../version';
+import { STUDIO_CHANGELOG } from '../../data/changelog';
+import { ChangelogViewer } from '../common/ChangelogViewer';
 
 export const AppSettingsModal: React.FC = () => {
   const { isAppSettingsOpen, setAppSettingsOpen, showToast } = useUIStore();
@@ -474,6 +476,49 @@ export const AppSettingsModal: React.FC = () => {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* 5. Studio Release Notes & Changelog */}
+          <div className="modal-section" id="appStudioChangelogSection">
+            <div className="modal-section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                    <path d="M6 6h10"></path>
+                    <path d="M6 10h10"></path>
+                    <path d="M6 14h6"></path>
+                  </svg>
+                </span>
+                <span>{t('cardStudioChangelogTitle', 'LuxQMK Studio Changelog')}</span>
+              </div>
+
+              <a
+                href="https://github.com/doriand3v/LuxQMK/releases"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-secondary"
+                onClick={(e) => openExternalUrl('https://github.com/doriand3v/LuxQMK/releases', e)}
+                style={{ fontSize: '0.72rem', padding: '0.25rem 0.55rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                <span>GitHub Releases</span>
+              </a>
+            </div>
+            <div className="modal-section-content">
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '0.75rem' }}>
+                {t('cardStudioChangelogSubtitle', 'Explore new features, improvements, and bug fixes across LuxQMK Studio updates')}
+              </p>
+              <ChangelogViewer
+                entries={STUDIO_CHANGELOG}
+                accentColor="#bd00ff"
+                emptyMessage={t('lblStudioChangelogEmpty')}
+              />
             </div>
           </div>
         </div>

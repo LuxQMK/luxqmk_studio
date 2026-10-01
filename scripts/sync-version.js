@@ -163,13 +163,13 @@ function parseMarkdownChangelog(filePath) {
 }
 
 function syncChangelog() {
-  const changelogMdPath = path.resolve(__dirname, '../CHANGELOG.md');
-  const changelogTsPath = path.resolve(__dirname, '../src/data/changelog.ts');
+  // 1. Studio Changelog
+  const studioMdPath = path.resolve(__dirname, '../CHANGELOG.md');
+  const studioTsPath = path.resolve(__dirname, '../src/data/changelog.ts');
 
-  if (!fs.existsSync(changelogMdPath)) return;
-
-  const entries = parseMarkdownChangelog(changelogMdPath);
-  const tsContent = `/**
+  if (fs.existsSync(studioMdPath)) {
+    const entries = parseMarkdownChangelog(studioMdPath);
+    const tsContent = `/**
  * LuxQMK Studio Changelog Database
  * Automatically generated from CHANGELOG.md by scripts/sync-version.js. DO NOT EDIT DIRECTLY.
  */
@@ -188,15 +188,48 @@ export const LATEST_RELEASE = STUDIO_CHANGELOG[0] || null;
 export default STUDIO_CHANGELOG;
 `;
 
-  let existing = '';
-  if (fs.existsSync(changelogTsPath)) {
-    existing = fs.readFileSync(changelogTsPath, 'utf8');
+    let existing = '';
+    if (fs.existsSync(studioTsPath)) {
+      existing = fs.readFileSync(studioTsPath, 'utf8');
+    }
+
+    if (existing !== tsContent) {
+      fs.mkdirSync(path.dirname(studioTsPath), { recursive: true });
+      fs.writeFileSync(studioTsPath, tsContent, 'utf8');
+      console.log(`[version-sync] Generated src/data/changelog.ts (${entries.length} release entries)`);
+    }
   }
 
-  if (existing !== tsContent) {
-    fs.mkdirSync(path.dirname(changelogTsPath), { recursive: true });
-    fs.writeFileSync(changelogTsPath, tsContent, 'utf8');
-    console.log(`[version-sync] Generated src/data/changelog.ts (${entries.length} release entries)`);
+  // 2. Firmware Changelog
+  const fwMdPath = path.resolve(__dirname, '../../qmk_firmware/users/luxqmk/CHANGELOG.md');
+  const fwTsPath = path.resolve(__dirname, '../src/data/firmwareChangelog.ts');
+
+  if (fs.existsSync(fwMdPath)) {
+    const fwEntries = parseMarkdownChangelog(fwMdPath);
+    const fwTsContent = `/**
+ * LuxQMK Firmware Changelog Database
+ * Automatically generated from qmk_firmware/users/luxqmk/CHANGELOG.md by scripts/sync-version.js. DO NOT EDIT DIRECTLY.
+ */
+
+import { ChangelogRelease } from './changelog';
+
+export const FIRMWARE_CHANGELOG: ChangelogRelease[] = ${JSON.stringify(fwEntries, null, 2)};
+
+export const LATEST_FIRMWARE_RELEASE = FIRMWARE_CHANGELOG[0] || null;
+
+export default FIRMWARE_CHANGELOG;
+`;
+
+    let existingFw = '';
+    if (fs.existsSync(fwTsPath)) {
+      existingFw = fs.readFileSync(fwTsPath, 'utf8');
+    }
+
+    if (existingFw !== fwTsContent) {
+      fs.mkdirSync(path.dirname(fwTsPath), { recursive: true });
+      fs.writeFileSync(fwTsPath, fwTsContent, 'utf8');
+      console.log(`[version-sync] Generated src/data/firmwareChangelog.ts (${fwEntries.length} firmware release entries)`);
+    }
   }
 }
 

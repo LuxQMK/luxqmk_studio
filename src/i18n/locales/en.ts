@@ -835,12 +835,18 @@ export const en = {
   "keyThemeSamurai": "Red Samurai",
   "keyThemeMatrix": "Matrix Terminal",
   "cardReleaseNotesTitle": "Release Notes & Changelog",
-  "cardReleaseNotesSubtitle": "Explore new features, improvements, and bug fixes across LuxQMK Studio updates",
+  "cardReleaseNotesSubtitle": "Explore new features, improvements, and bug fixes across LuxQMK updates",
+  "cardFirmwareChangelogTitle": "Firmware Release Notes & Changelog",
+  "cardFirmwareChangelogSubtitle": "Explore firmware engine updates, reactive RGB shaders, debounce tuning, and hardware drivers",
+  "cardStudioChangelogTitle": "LuxQMK Studio Changelog",
+  "cardStudioChangelogSubtitle": "Explore new features, improvements, and bug fixes across LuxQMK Studio companion updates",
   "btnViewFullChangelog": "View Full Changelog",
   "lblLatestVersionTag": "Latest Version",
   "lblReleaseHighlights": "Highlights & Key Changes",
   "lblVersionHistory": "Version History",
-  "lblChangelogEmpty": "No changelog entries available."
+  "lblChangelogEmpty": "No changelog entries available.",
+  "lblFirmwareChangelogEmpty": "No firmware changelog entries available.",
+  "lblStudioChangelogEmpty": "No Studio changelog entries available."
 } as const;
 
 export type TranslationSchema = typeof en;
