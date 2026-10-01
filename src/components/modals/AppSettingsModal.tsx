@@ -88,7 +88,7 @@ export const AppSettingsModal: React.FC = () => {
         if (e.target === e.currentTarget) setAppSettingsOpen(false);
       }}
     >
-      <div className="modal-card" style={{ maxWidth: '620px' }}>
+      <div className="modal-card" style={{ maxWidth: '820px' }}>
         {/* Modal Header */}
         <div className="modal-header">
           <div className="modal-title-wrap">

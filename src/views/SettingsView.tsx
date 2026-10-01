@@ -370,9 +370,8 @@ export const SettingsView: React.FC = () => {
             </div>
           </div>
         </div>
-
         {/* CARD 3: MAINTENANCE & EEPROM TOOLS */}
-        <div className="palette-card settings-card">
+        <div className="palette-card settings-card" style={{ gridColumn: '1 / -1' }}>
           <div className="settings-card-header">
             <span className="settings-card-icon" style={{ background: 'rgba(255, 170, 0, 0.1)', color: 'var(--accent-amber)' }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -385,11 +384,21 @@ export const SettingsView: React.FC = () => {
             </div>
           </div>
 
-          <div className="maintenance-action-list">
-            <div className="maintenance-action-item">
-              <div className="maintenance-action-text">
-                <strong>{t('lblBootloaderTitle')}</strong>
-                <p>{t('btnBootloaderDesc')}</p>
+          <div className="maintenance-action-grid">
+            <div className="maintenance-action-card">
+              <div className="maintenance-action-card-header">
+                <span className="maintenance-action-icon" style={{ background: 'rgba(0, 240, 255, 0.12)', color: 'var(--accent-cyan)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+                    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+                    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
+                    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
+                  </svg>
+                </span>
+                <div>
+                  <strong>{t('lblBootloaderTitle')}</strong>
+                  <p>{t('btnBootloaderDesc')}</p>
+                </div>
               </div>
               <button
                 type="button"
@@ -401,17 +410,24 @@ export const SettingsView: React.FC = () => {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
                   <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
-                  <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
-                  <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
                 </svg>
                 <span>{t('btnBootloader')}</span>
               </button>
             </div>
 
-            <div className="maintenance-action-item">
-              <div className="maintenance-action-text">
-                <strong>{t('lblResetEepromTitle')}</strong>
-                <p>{t('btnResetEepromDesc')}</p>
+            <div className="maintenance-action-card">
+              <div className="maintenance-action-card-header">
+                <span className="maintenance-action-icon" style={{ background: 'rgba(239, 68, 68, 0.12)', color: '#ef4444' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 1 1.73-3Z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                </span>
+                <div>
+                  <strong>{t('lblResetEepromTitle')}</strong>
+                  <p>{t('btnResetEepromDesc')}</p>
+                </div>
               </div>
               <button
                 type="button"
@@ -421,7 +437,7 @@ export const SettingsView: React.FC = () => {
                 onClick={factoryResetEeprom}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 1 1.73-3Z"></path>
                   <line x1="12" y1="9" x2="12" y2="13"></line>
                   <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
@@ -429,10 +445,19 @@ export const SettingsView: React.FC = () => {
               </button>
             </div>
 
-            <div className="maintenance-action-item">
-              <div className="maintenance-action-text">
-                <strong>{t('lblQuickBackupTitle')}</strong>
-                <p>{t('btnQuickBackupDesc')}</p>
+            <div className="maintenance-action-card">
+              <div className="maintenance-action-card-header">
+                <span className="maintenance-action-icon" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                </span>
+                <div>
+                  <strong>{t('lblQuickBackupTitle')}</strong>
+                  <p>{t('btnQuickBackupDesc')}</p>
+                </div>
               </div>
               <button
                 type="button"
@@ -453,7 +478,7 @@ export const SettingsView: React.FC = () => {
         </div>
 
         {/* CARD 4: SMART FIRMWARE FLASHER & UPGRADE */}
-        <div className="palette-card settings-card flasher-card">
+        <div className="palette-card settings-card flasher-card" style={{ gridColumn: '1 / -1' }}>
           <div className="settings-card-header">
             <span className="settings-card-icon" style={{ background: 'rgba(0, 240, 255, 0.1)', color: 'var(--accent-cyan)' }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -482,212 +507,219 @@ export const SettingsView: React.FC = () => {
             }}
           />
 
-          {/* Cloud Catalog Detection Banner */}
-          {flasher.cloudEntry && (
-            <div
-              className="cloud-firmware-banner"
-              style={{
-                background: flasher.cloudUpdateAvailable ? 'rgba(0, 245, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
-                border: `1px solid ${flasher.cloudUpdateAvailable ? 'rgba(0, 245, 255, 0.4)' : 'var(--border-color)'}`,
-                borderRadius: '12px',
-                padding: '1rem 1.25rem',
-                marginBottom: '1rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '0.8rem',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={{ color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center' }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
-                  </svg>
-                </span>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <strong style={{ fontSize: '0.95rem', color: 'var(--text-primary)' }}>{flasher.cloudEntry.name}</strong>
-                    <span className={`badge-pill ${flasher.cloudUpdateAvailable ? 'badge-warning' : 'badge-success'}`}>
-                      {flasher.cloudUpdateAvailable ? `${t('lblCloudFirmwareUpdateAvailable', { current: firmwareInfo ? `v${firmwareInfo.major}.${firmwareInfo.minor}.${firmwareInfo.patch}` : 'v1.4.1', latest: `v${flasher.cloudEntry.version}` })}` : `Cloud: v${flasher.cloudEntry.version} (${t('lblCloudFirmwareUpToDate')})`}
-                    </span>
-                  </div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                    {t('lblCloudCatalogDesc', 'Official verified LuxQMK build from files.luxqmk.click')}
-                  </span>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-                <a
-                  href="https://luxqmk.click/#firmware"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-sm btn-secondary"
-                  onClick={(e) => openExternalUrl('https://luxqmk.click/#firmware', e)}
-                  style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                  </svg>
-                  <span>luxqmk.click</span>
-                </a>
-                <button
-                  type="button"
-                  className={`btn btn-sm ${flasher.cloudUpdateAvailable ? 'btn-primary' : 'btn-secondary'}`}
-                  disabled={flasher.isDownloadingCloud || flasher.isFlashing}
-                  onClick={() => applyCloudFirmware()}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                  <span>{flasher.isDownloadingCloud ? 'Pobieranie...' : t('btnOneClickFwUpdate', '1-Click Cloud Update')}</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Flasher Dropzone */}
-          <div
-            className={`flasher-dropzone ${flasher.file ? 'has-file' : ''}`}
-            id="flasherDropzone"
-            style={{ cursor: 'pointer' }}
-            onClick={handleSelectFirmware}
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const dropped = e.dataTransfer.files?.[0];
-              if (dropped) setFlasherFile(dropped);
-            }}
-          >
-            {!flasher.file ? (
-              <div className="flasher-dropzone-content" id="flasherDropzoneContent">
-                <div className="flasher-dropzone-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="12" y1="18" x2="12" y2="12"></line>
-                    <polyline points="9 15 12 12 15 15"></polyline>
-                  </svg>
-                </div>
-                <div className="flasher-dropzone-title">{t('flasherDropzoneTitle')}</div>
-                <div className="flasher-dropzone-desc">{t('flasherDropzoneDesc')}</div>
-              </div>
-            ) : (
-              <div className="flasher-file-card" id="flasherFileCard" style={{ display: 'flex' }}>
-                <div className="flasher-file-details">
-                  <div className="flasher-file-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                      <polyline points="13 2 13 9 20 9"></polyline>
-                    </svg>
-                  </div>
-                  <div className="flasher-file-meta">
-                    <h4>{flasher.fileName}</h4>
-                    <span>{flasher.fileSizeText}</span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-secondary"
-                  id="btnClearSelectedFirmware"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setFlasherFile(null);
+          <div className="flasher-station-grid">
+            {/* Left Column: Cloud catalog & File selection & Action buttons */}
+            <div className="flasher-station-col">
+              {/* Cloud Catalog Detection Banner */}
+              {flasher.cloudEntry && (
+                <div
+                  className="cloud-firmware-banner"
+                  style={{
+                    background: flasher.cloudUpdateAvailable ? 'rgba(0, 245, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                    border: `1px solid ${flasher.cloudUpdateAvailable ? 'rgba(0, 245, 255, 0.4)' : 'var(--border-color)'}`,
+                    borderRadius: '12px',
+                    padding: '1rem 1.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '0.8rem',
                   }}
                 >
-                  <span>{t('btnClear', 'Clear')}</span>
-                </button>
-              </div>
-            )}
-          </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span style={{ color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center' }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+                      </svg>
+                    </span>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <strong style={{ fontSize: '0.95rem', color: 'var(--text-primary)' }}>{flasher.cloudEntry.name}</strong>
+                        <span className={`badge-pill ${flasher.cloudUpdateAvailable ? 'badge-warning' : 'badge-success'}`}>
+                          {flasher.cloudUpdateAvailable ? `${t('lblCloudFirmwareUpdateAvailable', { current: firmwareInfo ? `v${firmwareInfo.major}.${firmwareInfo.minor}.${firmwareInfo.patch}` : 'v1.4.1', latest: `v${flasher.cloudEntry.version}` })}` : `Cloud: v${flasher.cloudEntry.version} (${t('lblCloudFirmwareUpToDate')})`}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                        {t('lblCloudCatalogDesc', 'Official verified LuxQMK build from files.luxqmk.click')}
+                      </span>
+                    </div>
+                  </div>
 
-          {/* 4-Step Progress Tracker Grid */}
-          <div className="flasher-steps-grid">
-            <div className={`flasher-step-item ${flasher.currentStep === 1 ? 'active' : flasher.currentStep > 1 ? 'complete' : 'pending'}`}>
-              <span className="flasher-step-badge">1</span>
-              <span className="flasher-step-title">{t('flasherStep1')}</span>
-            </div>
-            <div className={`flasher-step-item ${flasher.currentStep === 2 ? 'active' : flasher.currentStep > 2 ? 'complete' : 'pending'}`}>
-              <span className="flasher-step-badge">2</span>
-              <span className="flasher-step-title">{t('flasherStep2')}</span>
-            </div>
-            <div className={`flasher-step-item ${flasher.currentStep === 3 ? 'active' : flasher.currentStep > 3 ? 'complete' : 'pending'}`}>
-              <span className="flasher-step-badge">3</span>
-              <span className="flasher-step-title">{t('flasherStep3')}</span>
-            </div>
-            <div className={`flasher-step-item ${flasher.currentStep === 4 ? 'active' : flasher.currentStep > 4 ? 'complete' : 'pending'}`}>
-              <span className="flasher-step-badge">4</span>
-              <span className="flasher-step-title">{t('flasherStep4')}</span>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          {flasher.isFlashing && (
-            <div className="flasher-progress-wrap" id="flasherProgressContainer" style={{ display: 'block' }}>
-              <div className="flasher-progress-header">
-                <span>{flasher.statusLabel}</span>
-                <span>{flasher.progressPercent}%</span>
-              </div>
-              <div className="flasher-progress-track">
-                <div className="flasher-progress-fill" style={{ width: `${flasher.progressPercent}%` }}></div>
-              </div>
-            </div>
-          )}
-
-          {/* Controls */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              id="btnSelectFirmware"
-              onClick={handleSelectFirmware}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-              </svg>
-              <span>{t('btnSelectFirmware')}</span>
-            </button>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              {flasher.isFlashing && (
-                <button type="button" className="btn btn-secondary" onClick={cancelFlash}>
-                  <span>{t('btnCancelFlash', 'Cancel')}</span>
-                </button>
-              )}
-              <button
-                type="button"
-                className="btn btn-primary btn-smart-flash"
-                id="btnStartSmartFlash"
-                disabled={!flasher.file || flasher.isFlashing}
-                onClick={startSmartFlash}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-                <span>{t('btnStartSmartFlash')}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Console Log */}
-          <div className="flasher-console-wrapper" id="flasherConsoleWrapper" style={{ display: 'block', marginTop: '1rem' }}>
-            <div className="flasher-console-header">
-              <span>{t('flasherConsoleTitle')}</span>
-            </div>
-            <div className="flasher-console" id="flasherConsoleLog" ref={consoleLogRef}>
-              {flasher.consoleLogs.map((log, idx) => (
-                <div key={idx} className={`log-line ${log.isError ? 'log-error' : ''}`}>
-                  <span className="log-time">{log.time}</span> <span className="log-info">{log.text}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                    <a
+                      href="https://luxqmk.click/#firmware"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-sm btn-secondary"
+                      onClick={(e) => openExternalUrl('https://luxqmk.click/#firmware', e)}
+                      style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                      </svg>
+                      <span>luxqmk.click</span>
+                    </a>
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${flasher.cloudUpdateAvailable ? 'btn-primary' : 'btn-secondary'}`}
+                      disabled={flasher.isDownloadingCloud || flasher.isFlashing}
+                      onClick={() => applyCloudFirmware()}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                      <span>{flasher.isDownloadingCloud ? 'Pobieranie...' : t('btnOneClickFwUpdate', '1-Click Cloud Update')}</span>
+                    </button>
+                  </div>
                 </div>
-              ))}
+              )}
+
+              {/* Flasher Dropzone */}
+              <div
+                className={`flasher-dropzone ${flasher.file ? 'has-file' : ''}`}
+                id="flasherDropzone"
+                style={{ cursor: 'pointer', flex: 1, marginBottom: 0 }}
+                onClick={handleSelectFirmware}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const dropped = e.dataTransfer.files?.[0];
+                  if (dropped) setFlasherFile(dropped);
+                }}
+              >
+                {!flasher.file ? (
+                  <div className="flasher-dropzone-content" id="flasherDropzoneContent">
+                    <div className="flasher-dropzone-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <polyline points="9 15 12 12 15 15"></polyline>
+                      </svg>
+                    </div>
+                    <div className="flasher-dropzone-title">{t('flasherDropzoneTitle')}</div>
+                    <div className="flasher-dropzone-desc">{t('flasherDropzoneDesc')}</div>
+                  </div>
+                ) : (
+                  <div className="flasher-file-card" id="flasherFileCard" style={{ display: 'flex' }}>
+                    <div className="flasher-file-details">
+                      <div className="flasher-file-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                          <polyline points="13 2 13 9 20 9"></polyline>
+                        </svg>
+                      </div>
+                      <div className="flasher-file-meta">
+                        <h4>{flasher.fileName}</h4>
+                        <span>{flasher.fileSizeText}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-secondary"
+                      id="btnClearSelectedFirmware"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFlasherFile(null);
+                      }}
+                    >
+                      <span>{t('btnClear', 'Clear')}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Controls */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  id="btnSelectFirmware"
+                  onClick={handleSelectFirmware}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span>{t('btnSelectFirmware')}</span>
+                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {flasher.isFlashing && (
+                    <button type="button" className="btn btn-secondary" onClick={cancelFlash}>
+                      <span>{t('btnCancelFlash', 'Cancel')}</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-smart-flash"
+                    id="btnStartSmartFlash"
+                    disabled={!flasher.file || flasher.isFlashing}
+                    onClick={startSmartFlash}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                    <span>{t('btnStartSmartFlash')}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Steps tracker, Progress Bar, Live Console */}
+            <div className="flasher-station-col">
+              {/* 4-Step Progress Tracker Grid */}
+              <div className="flasher-steps-grid" style={{ margin: '0 0 0.5rem 0' }}>
+                <div className={`flasher-step-item ${flasher.currentStep === 1 ? 'active' : flasher.currentStep > 1 ? 'complete' : 'pending'}`}>
+                  <span className="flasher-step-badge">1</span>
+                  <span className="flasher-step-title">{t('flasherStep1')}</span>
+                </div>
+                <div className={`flasher-step-item ${flasher.currentStep === 2 ? 'active' : flasher.currentStep > 2 ? 'complete' : 'pending'}`}>
+                  <span className="flasher-step-badge">2</span>
+                  <span className="flasher-step-title">{t('flasherStep2')}</span>
+                </div>
+                <div className={`flasher-step-item ${flasher.currentStep === 3 ? 'active' : flasher.currentStep > 3 ? 'complete' : 'pending'}`}>
+                  <span className="flasher-step-badge">3</span>
+                  <span className="flasher-step-title">{t('flasherStep3')}</span>
+                </div>
+                <div className={`flasher-step-item ${flasher.currentStep === 4 ? 'active' : flasher.currentStep > 4 ? 'complete' : 'pending'}`}>
+                  <span className="flasher-step-badge">4</span>
+                  <span className="flasher-step-title">{t('flasherStep4')}</span>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              {flasher.isFlashing && (
+                <div className="flasher-progress-wrap" id="flasherProgressContainer" style={{ display: 'block' }}>
+                  <div className="flasher-progress-header">
+                    <span>{flasher.statusLabel}</span>
+                    <span>{flasher.progressPercent}%</span>
+                  </div>
+                  <div className="flasher-progress-track">
+                    <div className="flasher-progress-fill" style={{ width: `${flasher.progressPercent}%` }}></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Console Log */}
+              <div className="flasher-console-wrapper" id="flasherConsoleWrapper" style={{ display: 'block', margin: 0, flex: 1 }}>
+                <div className="flasher-console-header">
+                  <span>{t('flasherConsoleTitle')}</span>
+                </div>
+                <div className="flasher-console" id="flasherConsoleLog" ref={consoleLogRef} style={{ minHeight: '160px', maxHeight: '240px' }}>
+                  {flasher.consoleLogs.map((log, idx) => (
+                    <div key={idx} className={`log-line ${log.isError ? 'log-error' : ''}`}>
+                      <span className="log-time">{log.time}</span> <span className="log-info">{log.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
