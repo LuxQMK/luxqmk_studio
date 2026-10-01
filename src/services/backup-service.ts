@@ -29,7 +29,14 @@ export interface BackupData {
     effect_density?: number;
     layer_lighting_enable?: boolean;
     layer_lighting_mask?: number;
+    layer_dim_enable?: boolean;
+    layer_dim_mask?: number;
     layer_dim_level?: number;
+    layer_dim_levels?: {
+      layer_1?: number;
+      layer_2?: number;
+      layer_3?: number;
+    };
     layer_colors?: {
       layer_1?: { h: number; s: number };
       layer_2?: { h: number; s: number };
@@ -56,6 +63,24 @@ export interface BackupData {
       num_scroll?: { h: number; s: number };
       all?: { h: number; s: number };
     };
+    lock_indicators?: {
+      caps_lock?: { mode: number; color?: { h: number; s: number } };
+      num_lock?: { mode: number; color?: { h: number; s: number } };
+      scroll_lock?: { mode: number; color?: { h: number; s: number } };
+    };
+    sidelights?: {
+      enable?: boolean;
+      mode?: number;
+      color?: { h: number; s: number };
+      speed?: number;
+      gradient?: number;
+      reverse?: boolean;
+      density?: number;
+    };
+    dip_switches?: Array<{
+      posA?: { target_layer: number; swap_gui_alt: number; perkey_profile: number; win_lock_state: number };
+      posB?: { target_layer: number; swap_gui_alt: number; perkey_profile: number; win_lock_state: number };
+    }>;
     hardware_gradient?: {
       active_gradient?: number;
       profiles?: Array<Array<{ pos: number; r: number; g: number; b: number }>>;
@@ -188,11 +213,12 @@ export async function createFullBackup(
   if (onProgress) onProgress(85);
 
   // 5. Read LuxQMK custom settings
-  log('Reading LuxQMK custom settings (Debounce time, Layers, Reactive, Dimming, Logo Lock Indicators)...', 'info');
+  log('Reading LuxQMK custom settings (Debounce time, Layers, Reactive, Dimming, Lock Indicators, Sidelights)...', 'info');
   try {
     const dbTime = await hidProtocol.getDebounceTime();
     const rev = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.RGB_REVERSE);
     const lEn = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE);
+    const lDimEn = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_ENABLE);
     const lDim = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL);
     const l1 = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_1_COLOR);
     const l2 = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_2_COLOR);
@@ -219,16 +245,44 @@ export async function createFullBackup(
     const numScroll = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_NUM_SCROLL);
     const all = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_ALL);
 
-    const densityRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, 36);
+    // Lock Indicators (Caps, Num, Scroll)
+    const capsMode = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.CAPS_LOCK_MODE);
+    const capsCol = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.CAPS_LOCK_COLOR);
+    const numMode = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.NUM_LOCK_MODE);
+    const numCol = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.NUM_LOCK_COLOR);
+    const scrollMode = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SCROLL_LOCK_MODE);
+    const scrollCol = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SCROLL_LOCK_COLOR);
+
+    // Sidelights Configuration
+    const sEn = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_ENABLE);
+    const sMode = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_MODE);
+    const sCol = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_COLOR);
+    const sSpd = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_SPEED);
+    const sGrad = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_GRADIENT);
+    const sRev = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_REVERSE);
+    const sDens = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_DENSITY);
+
+    const densityRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.EFFECT_DENSITY);
     const effectDensity = densityRes && densityRes[0] !== 0xFF && Number.isFinite(densityRes[0]) ? densityRes[0] : 128;
+
+    const l1Dim = lDim && lDim.length > 0 && lDim[0] !== 0xFF ? lDim[0] : 128;
+    const l2Dim = lDim && lDim.length > 1 && lDim[1] !== 0 && lDim[1] !== 0xFF ? lDim[1] : 255;
+    const l3Dim = lDim && lDim.length > 2 && lDim[2] !== 0 && lDim[2] !== 0xFF ? lDim[2] : (l1Dim || 128);
 
     backup.custom_settings = {
       debounce_time: dbTime !== undefined ? dbTime : 5,
       rgb_reverse: rev ? rev[0] === 1 : false,
       effect_density: effectDensity,
       layer_lighting_enable: lEn ? (lEn[0] === 1 || (lEn[0] & 0x01) !== 0) : true,
-      layer_lighting_mask: lEn && lEn.length > 0 ? lEn[0] : 0x0F,
-      layer_dim_level: lDim && lDim.length > 0 ? lDim[0] : 128,
+      layer_lighting_mask: lEn && lEn.length > 0 ? (lEn[0] === 1 ? 0x0B : lEn[0]) : 0x0B,
+      layer_dim_enable: lDimEn ? (lDimEn[0] === 1 || (lDimEn[0] & 0x01) !== 0) : true,
+      layer_dim_mask: lDimEn && lDimEn.length > 0 ? (lDimEn[0] === 1 ? 0x0B : lDimEn[0]) : 0x0B,
+      layer_dim_level: l1Dim,
+      layer_dim_levels: {
+        layer_1: l1Dim,
+        layer_2: l2Dim,
+        layer_3: l3Dim,
+      },
       layer_colors: {
         layer_1: l1 && l1.length >= 2 ? { h: l1[0], s: l1[1] } : { h: 28, s: 255 },
         layer_2: l2 && l2.length >= 2 ? { h: l2[0], s: l2[1] } : { h: 128, s: 255 },
@@ -255,7 +309,59 @@ export async function createFullBackup(
         num_scroll: numScroll && numScroll.length >= 2 ? { h: numScroll[0], s: numScroll[1] } : { h: 106, s: 255 },
         all: all && all.length >= 2 ? { h: all[0], s: all[1] } : { h: 0, s: 0 },
       },
+      lock_indicators: {
+        caps_lock: {
+          mode: capsMode && capsMode.length > 0 ? capsMode[0] : 0,
+          color: capsCol && capsCol.length >= 2 ? { h: capsCol[0], s: capsCol[1] } : { h: 0, s: 0 },
+        },
+        num_lock: {
+          mode: numMode && numMode.length > 0 ? numMode[0] : 0,
+          color: numCol && numCol.length >= 2 ? { h: numCol[0], s: numCol[1] } : { h: 0, s: 0 },
+        },
+        scroll_lock: {
+          mode: scrollMode && scrollMode.length > 0 ? scrollMode[0] : 0,
+          color: scrollCol && scrollCol.length >= 2 ? { h: scrollCol[0], s: scrollCol[1] } : { h: 0, s: 0 },
+        },
+      },
+      sidelights: {
+        enable: sEn ? sEn[0] === 1 : false,
+        mode: sMode && sMode.length > 0 ? sMode[0] : 0,
+        color: sCol && sCol.length >= 2 ? { h: sCol[0], s: sCol[1] } : { h: 0, s: 255 },
+        speed: sSpd && sSpd.length > 0 ? sSpd[0] : 128,
+        gradient: sGrad && sGrad.length > 0 ? sGrad[0] : 0,
+        reverse: sRev ? sRev[0] === 1 : false,
+        density: sDens && sDens.length > 0 ? sDens[0] : 128,
+      },
     };
+
+    // Hardware DIP / Physical Slider Switches
+    try {
+      const dipSwitches: Array<{
+        posA: { target_layer: number; swap_gui_alt: number; perkey_profile: number; win_lock_state: number };
+        posB: { target_layer: number; swap_gui_alt: number; perkey_profile: number; win_lock_state: number };
+      }> = [];
+      const countRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_COUNT);
+      const switchCount = countRes && countRes.length > 0 && countRes[0] > 0 && countRes[0] <= 4 ? countRes[0] : 1;
+      for (let s = 0; s < switchCount; s++) {
+        const posARes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_GET_POS, s, 0);
+        const posBRes = await hidProtocol.getCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_GET_POS, s, 1);
+        dipSwitches.push({
+          posA: {
+            target_layer: posARes && posARes.length >= 4 ? posARes[0] : 2,
+            swap_gui_alt: posARes && posARes.length >= 4 ? posARes[1] : 1,
+            perkey_profile: posARes && posARes.length >= 4 ? posARes[2] : 0xFF,
+            win_lock_state: posARes && posARes.length >= 4 ? posARes[3] : 0xFF,
+          },
+          posB: {
+            target_layer: posBRes && posBRes.length >= 4 ? posBRes[0] : 0,
+            swap_gui_alt: posBRes && posBRes.length >= 4 ? posBRes[1] : 0,
+            perkey_profile: posBRes && posBRes.length >= 4 ? posBRes[2] : 0xFF,
+            win_lock_state: posBRes && posBRes.length >= 4 ? posBRes[3] : 0xFF,
+          },
+        });
+      }
+      backup.custom_settings.dip_switches = dipSwitches;
+    } catch (e) {}
 
     // Hardware Multi-Stop Gradient Settings
     try {
@@ -469,11 +575,26 @@ export async function restoreFullBackup(
         await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, [cust.layer_lighting_mask]);
         await hidProtocol.sleep(10);
       } else if (cust.layer_lighting_enable !== undefined) {
-        await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, [cust.layer_lighting_enable ? 0x0F : 0]);
+        await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_LIGHTING_ENABLE, [cust.layer_lighting_enable ? 0x0B : 0]);
         await hidProtocol.sleep(10);
       }
-      if (cust.layer_dim_level !== undefined) {
-        await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL, [cust.layer_dim_level]);
+
+      if (cust.layer_dim_mask !== undefined) {
+        await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_ENABLE, [cust.layer_dim_mask]);
+        await hidProtocol.sleep(10);
+      } else if (cust.layer_dim_enable !== undefined) {
+        await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_ENABLE, [cust.layer_dim_enable ? 0x0B : 0]);
+        await hidProtocol.sleep(10);
+      }
+
+      if (cust.layer_dim_levels) {
+        const d1 = cust.layer_dim_levels.layer_1 ?? cust.layer_dim_level ?? 128;
+        const d2 = cust.layer_dim_levels.layer_2 ?? 255;
+        const d3 = cust.layer_dim_levels.layer_3 ?? 128;
+        await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL, [d1, d2, d3]);
+        await hidProtocol.sleep(10);
+      } else if (cust.layer_dim_level !== undefined) {
+        await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LAYER_DIM_LEVEL, [cust.layer_dim_level, 255, cust.layer_dim_level]);
         await hidProtocol.sleep(10);
       }
 
@@ -562,6 +683,92 @@ export async function restoreFullBackup(
         if (ll.all) {
           await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.LOGO_COLOR_ALL, [ll.all.h, ll.all.s]);
           await hidProtocol.sleep(10);
+        }
+      }
+
+      if (cust.lock_indicators) {
+        const li = cust.lock_indicators;
+        if (li.caps_lock) {
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.CAPS_LOCK_MODE, [li.caps_lock.mode]);
+          await hidProtocol.sleep(10);
+          if (li.caps_lock.color) {
+            await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.CAPS_LOCK_COLOR, [li.caps_lock.color.h, li.caps_lock.color.s]);
+            await hidProtocol.sleep(10);
+          }
+        }
+        if (li.num_lock) {
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.NUM_LOCK_MODE, [li.num_lock.mode]);
+          await hidProtocol.sleep(10);
+          if (li.num_lock.color) {
+            await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.NUM_LOCK_COLOR, [li.num_lock.color.h, li.num_lock.color.s]);
+            await hidProtocol.sleep(10);
+          }
+        }
+        if (li.scroll_lock) {
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SCROLL_LOCK_MODE, [li.scroll_lock.mode]);
+          await hidProtocol.sleep(10);
+          if (li.scroll_lock.color) {
+            await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SCROLL_LOCK_COLOR, [li.scroll_lock.color.h, li.scroll_lock.color.s]);
+            await hidProtocol.sleep(10);
+          }
+        }
+      }
+
+      if (cust.sidelights) {
+        const sl = cust.sidelights;
+        if (sl.enable !== undefined) {
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_ENABLE, [sl.enable ? 1 : 0]);
+          await hidProtocol.sleep(10);
+        }
+        if (sl.mode !== undefined) {
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_MODE, [sl.mode]);
+          await hidProtocol.sleep(10);
+        }
+        if (sl.color) {
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_COLOR, [sl.color.h, sl.color.s]);
+          await hidProtocol.sleep(10);
+        }
+        if (sl.speed !== undefined) {
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_SPEED, [sl.speed]);
+          await hidProtocol.sleep(10);
+        }
+        if (sl.gradient !== undefined) {
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_GRADIENT, [sl.gradient]);
+          await hidProtocol.sleep(10);
+        }
+        if (sl.reverse !== undefined) {
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_REVERSE, [sl.reverse ? 1 : 0]);
+          await hidProtocol.sleep(10);
+        }
+        if (sl.density !== undefined) {
+          await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.SIDELIGHT_DENSITY, [sl.density]);
+          await hidProtocol.sleep(10);
+        }
+      }
+
+      if (Array.isArray(cust.dip_switches)) {
+        for (let s = 0; s < cust.dip_switches.length && s < 4; s++) {
+          const sw = cust.dip_switches[s];
+          if (sw.posA) {
+            await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_SET_POS, [
+              s, 0,
+              sw.posA.target_layer,
+              sw.posA.swap_gui_alt,
+              sw.posA.perkey_profile,
+              sw.posA.win_lock_state
+            ]);
+            await hidProtocol.sleep(10);
+          }
+          if (sw.posB) {
+            await hidProtocol.setCustomValue(CHANNELS.CUSTOM, CUSTOM_VAL.DIP_SWITCH_SET_POS, [
+              s, 1,
+              sw.posB.target_layer,
+              sw.posB.swap_gui_alt,
+              sw.posB.perkey_profile,
+              sw.posB.win_lock_state
+            ]);
+            await hidProtocol.sleep(10);
+          }
         }
       }
 
