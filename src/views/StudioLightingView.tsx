@@ -114,6 +114,9 @@ export const StudioLightingView: React.FC = () => {
   const refreshAudioSources = () => {
     visualizerService.enumerateAudioSources().then((sources) => {
       setAudioSources(sources);
+      if (useVisualizerStore.getState().config.isRunning && useUIStore.getState().studioSubTab === 'audio') {
+        visualizerService.restartAudioStream();
+      }
     });
   };
 
@@ -421,9 +424,10 @@ export const StudioLightingView: React.FC = () => {
                 className="form-control"
                 value={config.audioSource}
                 onChange={(e) => {
-                  setConfig({ audioSource: e.target.value });
-                  if (config.isRunning) {
-                    visualizerService.start();
+                  const newSource = e.target.value;
+                  setConfig({ audioSource: newSource });
+                  if (config.isRunning && studioSubTab === 'audio') {
+                    visualizerService.restartAudioStream();
                   }
                 }}
               >

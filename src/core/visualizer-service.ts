@@ -250,6 +250,9 @@ class VisualizerEngineService {
   private bgTimer: any = null;
 
   public isRunning: boolean = false;
+  private isRestartingAudio: boolean = false;
+  private deviceChangeDebounceTimer: any = null;
+  private lastAudioRestartTime: number = 0;
   private dataArray: Uint8Array = new Uint8Array(128);
   public frequencyBands: Float32Array = new Float32Array(16);
 
@@ -277,6 +280,7 @@ class VisualizerEngineService {
   constructor() {
     this._initProcedurals();
     this._bindVisibility();
+    this._bindDeviceEvents();
   }
 
   private _initProcedurals() {
@@ -346,6 +350,27 @@ class VisualizerEngineService {
         }
       }
     });
+  }
+
+  /**
+   * Listens for Windows / OS audio output and input device changes.
+   * Seamlessly re-binds WASAPI loopback and user audio streams on active endpoint switch.
+   */
+  private _bindDeviceEvents() {
+    if (typeof navigator !== 'undefined' && navigator.mediaDevices && typeof navigator.mediaDevices.addEventListener === 'function') {
+      navigator.mediaDevices.addEventListener('devicechange', () => {
+        console.log('[AudioVisualizer] Audio output / input device change detected by OS.');
+        if (this.deviceChangeDebounceTimer) {
+          clearTimeout(this.deviceChangeDebounceTimer);
+        }
+        this.deviceChangeDebounceTimer = setTimeout(() => {
+          const activeTab = useUIStore.getState().studioSubTab;
+          if (this.isRunning && activeTab === 'audio') {
+            this.restartAudioStream();
+          }
+        }, 350);
+      });
+    }
   }
 
   public rebuildKeyGeometry(presetId: string): void {
@@ -460,9 +485,14 @@ class VisualizerEngineService {
   }
 
   public async start(): Promise<void> {
-    if (this.isRunning) return;
+    const activeTab = useUIStore.getState().studioSubTab;
+    if (this.isRunning) {
+      if (activeTab === 'audio' && (!this.mediaStream || this.mediaStream.getAudioTracks().every((t) => t.readyState === 'ended'))) {
+        await this.restartAudioStream();
+      }
+      return;
+    }
     try {
-      const activeTab = useUIStore.getState().studioSubTab;
       if (activeTab === 'audio') {
         await this._startAudioStream();
       }
@@ -512,6 +542,33 @@ class VisualizerEngineService {
     else this.start();
   }
 
+  /**
+   * Gracefully restarts audio capture without interrupting the 60 FPS matrix renderer.
+   * Reconnects to current default Windows endpoint.
+   */
+  public async restartAudioStream(): Promise<void> {
+    if (this.isRestartingAudio) return;
+    this.isRestartingAudio = true;
+    this.lastAudioRestartTime = performance.now();
+
+    try {
+      console.log('[AudioVisualizer] Seamlessly reconnecting audio capture stream...');
+      this._stopAudioStream();
+      // Allow OS / Windows audio routing 200ms to settle
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      const activeTab = useUIStore.getState().studioSubTab;
+      if (this.isRunning && activeTab === 'audio') {
+        await this._startAudioStream();
+        console.log('[AudioVisualizer] Audio capture reconnected successfully.');
+      }
+    } catch (err) {
+      console.warn('[AudioVisualizer] Could not restart audio capture stream:', err);
+    } finally {
+      this.isRestartingAudio = false;
+    }
+  }
+
   private async _startAudioStream(): Promise<void> {
     const config = useVisualizerStore.getState().config;
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
@@ -521,6 +578,12 @@ class VisualizerEngineService {
     if (this.audioCtx.state === 'suspended') {
       await this.audioCtx.resume();
     }
+
+    this.audioCtx.onstatechange = () => {
+      if (this.audioCtx && this.audioCtx.state === 'suspended' && this.isRunning) {
+        this.audioCtx.resume().catch(() => {});
+      }
+    };
 
     if (config.audioSource === 'system_loopback') {
       if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
@@ -565,6 +628,23 @@ class VisualizerEngineService {
     if (!this.mediaStream || this.mediaStream.getAudioTracks().length === 0) {
       throw new Error('No audio stream track found');
     }
+
+    // Attach lifecycle listeners to audio tracks to detect Windows device changes or stream closure
+    this.mediaStream.getAudioTracks().forEach((track) => {
+      track.addEventListener('ended', () => {
+        console.log('[AudioVisualizer] Audio track ended (device switched or disconnected).');
+        const activeTab = useUIStore.getState().studioSubTab;
+        if (this.isRunning && activeTab === 'audio') {
+          this.restartAudioStream();
+        }
+      });
+      track.addEventListener('mute', () => {
+        console.log('[AudioVisualizer] Audio track muted by OS.');
+      });
+      track.addEventListener('unmute', () => {
+        console.log('[AudioVisualizer] Audio track unmuted by OS.');
+      });
+    });
 
     this.sourceNode = this.audioCtx.createMediaStreamSource(this.mediaStream);
     this.analyser = this.audioCtx.createAnalyser();
@@ -613,6 +693,20 @@ class VisualizerEngineService {
   }
 
   private _processAudioAnalysis(): void {
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume().catch(() => {});
+    }
+
+    const tracks = this.mediaStream ? this.mediaStream.getAudioTracks() : [];
+    const isEnded = tracks.length === 0 || tracks.some((t) => t.readyState === 'ended');
+    if (isEnded && this.isRunning && !this.isRestartingAudio) {
+      const now = performance.now();
+      if (now - this.lastAudioRestartTime > 2500) {
+        this.restartAudioStream();
+        return;
+      }
+    }
+
     if (!this.analyser) return;
     this.analyser.getByteFrequencyData(this.dataArray as any);
 
