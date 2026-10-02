@@ -452,12 +452,6 @@ export const StudioLightingView: React.FC = () => {
                   onChange={(e) => setConfig({ audioMode: e.target.value })}
                 >
                   <option value="equalizer">{t('optEqualizer')}</option>
-                  <option value="bassPulse">{t('optBassPulse')}</option>
-                  <option value="vuMeter">{t('optVuMeter')}</option>
-                  <option value="audioWave">{t('optAudioWave')}</option>
-                  <option value="spectrumHeatmap">{t('optSpectrumHeatmap')}</option>
-                  <option value="starfieldBeats">{t('optStarfieldBeats')}</option>
-                  <option value="voiceAura">{t('optVoiceAura')}</option>
                 </select>
               </div>
 

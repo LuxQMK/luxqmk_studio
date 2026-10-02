@@ -260,8 +260,13 @@ class VisualizerEngineService {
 
   public bassEnergy: number = 0;
   private bassHistory: number[] = [];
+  private avgBass: number = 0;
   public isBeat: boolean = false;
   public beatDecay: number = 0;
+  public lastBeatTime: number = 0;
+  private lastBeatDetectedTime: number = 0;
+  public beatPulseEnergy: number = 0;
+  public beatHueOffset: number = 0;
 
   private isHardwareStreaming: boolean = false;
   private lastHardwareStreamTime: number = 0;
@@ -770,23 +775,21 @@ class VisualizerEngineService {
       this.consecutiveSilentFrames = 0;
     }
 
-    let bassSum = 0;
-    for (let b = 0; b < 4; b++) {
-      bassSum += this.dataArray[b];
-    }
-    const curBass = (bassSum / 4) * (config.audioSensitivity || 1.2);
-    this.bassHistory.push(curBass);
-    if (this.bassHistory.length > 30) this.bassHistory.shift();
+    // Direct bass level (0..255) from sub-bass, bass, and punch-bass frequency bands
+    const b0 = this.frequencyBands[0] || 0;
+    const b1 = this.frequencyBands[1] || 0;
+    const b2 = this.frequencyBands[2] || 0;
+    const b3 = this.frequencyBands[3] || 0;
 
-    const avgBass = this.bassHistory.reduce((a, v) => a + v, 0) / this.bassHistory.length;
-    if (curBass > avgBass * 1.35 && curBass > 85) {
-      this.isBeat = true;
-      this.beatDecay = 255;
+    const instantBass = Math.max(b0 * 1.15, b1 * 1.05, b2 * 0.95, (b0 + b1 + b2 + b3) * 0.35);
+    this.bassEnergy = Math.min(255, instantBass);
+
+    // Envelope Follower: instant attack on bass transient, smooth punchy release decay (~250ms)
+    if (this.bassEnergy > this.beatDecay) {
+      this.beatDecay = this.bassEnergy;
     } else {
-      this.isBeat = false;
-      this.beatDecay = Math.max(0, this.beatDecay - 16);
+      this.beatDecay = Math.max(0, this.beatDecay * 0.88 - 2.0);
     }
-    this.bassEnergy = curBass;
   }
 
   private _renderAudioFrame(now: number): void {
@@ -807,98 +810,18 @@ class VisualizerEngineService {
       let rgb: [number, number, number] = [0, 0, 0];
       let brightFactor = floor;
 
-      switch (config.audioMode) {
-        case 'equalizer': {
-          const bandIdx = Math.min(15, Math.max(0, Math.floor(dirCoord.secondary * 16)));
-          const bandVal = this.frequencyBands[bandIdx] || 0;
-          const heightThreshold = dirCoord.primary * 255;
+      // Graphic Equalizer Mode
+      const bandIdx = Math.min(15, Math.max(0, Math.floor(dirCoord.secondary * 16)));
+      const bandVal = this.frequencyBands[bandIdx] || 0;
+      const heightThreshold = dirCoord.primary * 255;
 
-          if (bandVal > 10 && bandVal >= heightThreshold) {
-            const normVal = bandVal / 255;
-            brightFactor = (floor + (1 - floor) * normVal) * intensity;
-            rgb = samplePaletteRgb(palette, dirCoord.secondary - now * 0.0005 * speed, customRgb);
-          } else {
-            brightFactor = floor * intensity;
-            rgb = samplePaletteRgb(palette, dirCoord.secondary - now * 0.0005 * speed, customRgb);
-          }
-          break;
-        }
-
-        case 'bassPulse': {
-          const shockwave = Math.max(0, Math.sin((dirCoord.dist * 12) - (now * 0.008 * speed)));
-          const pulseNorm = (this.beatDecay / 255) * Math.pow(shockwave, 2);
-          if (pulseNorm > 0.02) {
-            brightFactor = (floor + (1 - floor) * pulseNorm) * intensity;
-            rgb = samplePaletteRgb(palette, dirCoord.dist * 0.8 - now * 0.0008 * speed, customRgb);
-          } else {
-            brightFactor = floor * intensity;
-            rgb = samplePaletteRgb(palette, dirCoord.dist * 0.8, customRgb);
-          }
-          break;
-        }
-
-        case 'vuMeter': {
-          const isRight = k.centerX > (this.maxX / 2);
-          const halfW = (this.maxX / 2) || 1;
-          const band = isRight ? this.frequencyBands[12] : this.frequencyBands[3];
-          const xNorm = isRight ? ((k.centerX - halfW) / halfW) : ((halfW - k.centerX) / halfW);
-          if (band > 12 && (xNorm * 255) <= band) {
-            brightFactor = 1.0 * intensity;
-            rgb = samplePaletteRgb(palette, xNorm, customRgb);
-          } else {
-            brightFactor = floor * intensity;
-            rgb = samplePaletteRgb(palette, xNorm, customRgb);
-          }
-          break;
-        }
-
-        case 'audioWave': {
-          const waveProg = ((now * 0.0006 * speed) % 1.0 + 1.0) % 1.0;
-          const diff = Math.abs(dirCoord.primary - waveProg);
-          const wrappedDiff = Math.min(diff, 1 - diff);
-          if (wrappedDiff < 0.12 && this.bassEnergy > 10) {
-            const ripple = Math.pow(1 - (wrappedDiff / 0.12), 2);
-            const waveNorm = Math.min(1.0, ripple * (this.bassEnergy / 180));
-            brightFactor = (floor + (1 - floor) * waveNorm) * intensity;
-            rgb = samplePaletteRgb(palette, dirCoord.primary - now * 0.0006 * speed, customRgb);
-          } else {
-            brightFactor = floor * intensity;
-            rgb = samplePaletteRgb(palette, dirCoord.primary, customRgb);
-          }
-          break;
-        }
-
-        case 'spectrumHeatmap': {
-          const lowW = (this.frequencyBands[1] + this.frequencyBands[2]) / 510;
-          const highW = (this.frequencyBands[12] + this.frequencyBands[13]) / 510;
-          const energyNorm = Math.min(1.0, lowW * (1 - dirCoord.primary) + highW * dirCoord.primary);
-          brightFactor = (floor + (1 - floor) * energyNorm) * intensity;
-          rgb = samplePaletteRgb(palette, dirCoord.primary - now * 0.0004 * speed, customRgb);
-          break;
-        }
-
-        case 'starfieldBeats': {
-          const beatBoost = 1 + (this.bassEnergy / 255);
-          const starPhase = ((now * 0.0005 * speed * beatBoost + dirCoord.dist * 0.5) % 1.0 + 1.0) % 1.0;
-          brightFactor = (floor + (1 - floor) * (this.bassEnergy / 255)) * intensity;
-          rgb = samplePaletteRgb(palette, starPhase, customRgb);
-          break;
-        }
-
-        case 'voiceAura': {
-          const aura = Math.sin(now * 0.003 * speed + dirCoord.dist * 4.0);
-          const auraNorm = Math.max(0, aura) * (this.frequencyBands[6] / 255);
-          brightFactor = (floor + (1 - floor) * auraNorm) * intensity;
-          rgb = samplePaletteRgb(palette, dirCoord.dist + now * 0.0002, customRgb);
-          break;
-        }
-
-        default: {
-          const phase = ((dirCoord.primary + now * 0.0008 * speed) % 1.0 + 1.0) % 1.0;
-          brightFactor = (floor + (1 - floor) * (this.bassEnergy / 255)) * intensity;
-          rgb = samplePaletteRgb(palette, phase, customRgb);
-          break;
-        }
+      if (bandVal > 10 && bandVal >= heightThreshold) {
+        const normVal = bandVal / 255;
+        brightFactor = (floor + (1 - floor) * normVal) * intensity;
+        rgb = samplePaletteRgb(palette, dirCoord.secondary - now * 0.0005 * speed, customRgb);
+      } else {
+        brightFactor = floor * intensity;
+        rgb = samplePaletteRgb(palette, dirCoord.secondary - now * 0.0005 * speed, customRgb);
       }
 
       this._applyKeyStyle(k, rgb[0], rgb[1], rgb[2], brightFactor);
@@ -1445,6 +1368,7 @@ class VisualizerEngineService {
         const bandVal = (this.frequencyBands[Math.min(15, Math.floor(normY * 16))] || 0) / 255;
         const bright = (floor + (1 - floor) * bandVal) * intensity;
         const rgb = samplePaletteRgb(palette, phase, customRgb);
+
         return {
           r: Math.max(0, Math.min(255, Math.round(rgb[0] * bright))),
           g: Math.max(0, Math.min(255, Math.round(rgb[1] * bright))),
@@ -1550,7 +1474,7 @@ class VisualizerEngineService {
     }
 
     if (mode === 'rhythmicPulse') {
-      const pulseNorm = Math.max(0.1, this.beatDecay / 255);
+      const pulseNorm = Math.max(0.1, (this.beatDecay * 0.7 + (this.bassEnergy / 255) * 0.5));
       const phase = ((now * 0.0005 * speed) % 1.0 + 1.0) % 1.0;
       const rgb = samplePaletteRgb(palette, phase, customRgb);
       return {
