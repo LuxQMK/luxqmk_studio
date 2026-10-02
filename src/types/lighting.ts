@@ -101,6 +101,7 @@ export interface StudioLightingConfig {
   // Audio visualizer settings
   audioSource: string;
   audioMode: string;
+  audioColorStyle?: 'spectrum' | 'backgroundWave';
   audioColorMode: string;
   audioDirection: string;
   audioSingleColor: string;

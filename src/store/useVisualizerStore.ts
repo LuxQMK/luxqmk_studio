@@ -105,6 +105,7 @@ export const useVisualizerStore = create<VisualizerState>((set, get) => ({
     activeSubTab: 'audio',
     audioSource: 'system_loopback',
     audioMode: 'equalizer',
+    audioColorStyle: 'spectrum',
     audioColorMode: 'rainbow',
     audioDirection: 'bottom_to_top',
     audioSingleColor: '#00ffff',

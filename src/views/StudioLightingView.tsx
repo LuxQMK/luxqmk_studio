@@ -442,17 +442,21 @@ export const StudioLightingView: React.FC = () => {
               </span>
             </div>
 
-            {/* Mode, Palette, Direction Grid */}
-            <div className="grid-3" style={{ gap: '1.25rem', marginBottom: '1.25rem' }}>
+            {/* Mode, Style, Palette, Direction Grid */}
+            <div className="grid-2" style={{ gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div className="form-group">
-                <label>{t('audioMode')}</label>
+                <label>{t('lblAudioColorStyle')}</label>
                 <select
                   className="form-control"
-                  value={config.audioMode}
-                  onChange={(e) => setConfig({ audioMode: e.target.value })}
+                  value={config.audioColorStyle || 'spectrum'}
+                  onChange={(e) => setConfig({ audioColorStyle: e.target.value as any })}
                 >
-                  <option value="equalizer">{t('optEqualizer')}</option>
+                  <option value="spectrum">{t('optAudioStyleSpectrum')}</option>
+                  <option value="backgroundWave">{t('optAudioStyleWave')}</option>
                 </select>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.3rem' }}>
+                  {(config.audioColorStyle === 'backgroundWave') ? t('hintAudioStyleWave') : t('hintAudioStyleSpectrum')}
+                </span>
               </div>
 
               <div className="form-group">
@@ -483,6 +487,17 @@ export const StudioLightingView: React.FC = () => {
                       ))}
                     </optgroup>
                   )}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>{t('audioMode')}</label>
+                <select
+                  className="form-control"
+                  value={config.audioMode}
+                  onChange={(e) => setConfig({ audioMode: e.target.value })}
+                >
+                  <option value="equalizer">{t('optEqualizer')}</option>
                 </select>
               </div>
 
@@ -605,7 +620,7 @@ export const StudioLightingView: React.FC = () => {
               <div className="form-group">
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <label>{t('lblAudioFloor', 'Ambient Floor Glow (Idle Background Brightness)')}</label>
-                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>{Math.round((config.audioFloor || 0.15) * 100)}%</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>{Math.round((config.audioFloor ?? 0.15) * 100)}%</span>
                 </div>
                 <div className="range-slider-wrap">
                   <input
@@ -800,7 +815,7 @@ export const StudioLightingView: React.FC = () => {
               <div className="form-group">
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <label>{t('lblSoftwareFloor', 'Ambient Floor Glow')}</label>
-                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>{Math.round((config.softwareFloor || 0.10) * 100)}%</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>{Math.round((config.softwareFloor ?? 0.10) * 100)}%</span>
                 </div>
                 <div className="range-slider-wrap">
                   <input
