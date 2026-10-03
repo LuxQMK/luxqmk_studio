@@ -97,45 +97,81 @@ interface VisualizerState {
   setCustomGradients: (gradients: CustomGradientPreset[]) => void;
 }
 
+const DEFAULT_STUDIO_LIGHTING_CONFIG: StudioLightingConfig = {
+  isRunning: false,
+  activeSubTab: 'audio',
+  audioSource: 'system_loopback',
+  audioMode: 'equalizer',
+  audioColorStyle: 'spectrum',
+  audioColorMode: 'rainbow',
+  audioDirection: 'bottom_to_top',
+  audioSingleColor: '#00ffff',
+  audioSensitivity: 1.2,
+  audioSpeed: 1.0,
+  audioIntensity: 1.0,
+  audioSmoothing: 0.82,
+  audioFloor: 0.15,
+
+  softwareEffect: 'neonWave',
+  softwarePalette: 'rainbow',
+  softwareDirection: 'left_to_right',
+  softwareSingleColor: '#00ffff',
+  softwareSpeed: 1.0,
+  softwareIntensity: 1.0,
+  softwareFloor: 0.10,
+
+  sidelightCustomEnable: false,
+  sidelightMode: 'followMain',
+  sidelightPalette: 'rainbow',
+  sidelightColor: '#00ffff',
+  sidelightSpeed: 1.0,
+  sidelightIntensity: 1.0,
+};
+
+function loadSavedStudioConfig(): StudioLightingConfig {
+  if (typeof window === 'undefined') return DEFAULT_STUDIO_LIGHTING_CONFIG;
+  try {
+    const raw = localStorage.getItem('luxqmk_studio_lighting_config');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          ...DEFAULT_STUDIO_LIGHTING_CONFIG,
+          ...parsed,
+          isRunning: false // Never auto-start rendering engine on cold launch
+        };
+      }
+    }
+  } catch (e) {}
+  return DEFAULT_STUDIO_LIGHTING_CONFIG;
+}
+
+function persistStudioConfig(config: StudioLightingConfig) {
+  if (typeof window === 'undefined') return;
+  try {
+    const toSave = { ...config, isRunning: false };
+    localStorage.setItem('luxqmk_studio_lighting_config', JSON.stringify(toSave));
+    if ((window as any).electronAPI && (window as any).electronAPI.saveUserConfig) {
+      (window as any).electronAPI.saveUserConfig({ studioLightingConfig: toSave });
+    }
+  } catch (e) {}
+}
+
 const initialGradients = loadSavedCustomGradients();
+const initialConfig = loadSavedStudioConfig();
 
 export const useVisualizerStore = create<VisualizerState>((set, get) => ({
-  config: {
-    isRunning: false,
-    activeSubTab: 'audio',
-    audioSource: 'system_loopback',
-    audioMode: 'equalizer',
-    audioColorStyle: 'spectrum',
-    audioColorMode: 'rainbow',
-    audioDirection: 'bottom_to_top',
-    audioSingleColor: '#00ffff',
-    audioSensitivity: 1.2,
-    audioSpeed: 1.0,
-    audioIntensity: 1.0,
-    audioSmoothing: 0.82,
-    audioFloor: 0.15,
-
-    softwareEffect: 'neonWave',
-    softwarePalette: 'rainbow',
-    softwareDirection: 'left_to_right',
-    softwareSingleColor: '#00ffff',
-    softwareSpeed: 1.0,
-    softwareIntensity: 1.0,
-    softwareFloor: 0.10,
-
-    sidelightCustomEnable: false,
-    sidelightMode: 'followMain',
-    sidelightPalette: 'rainbow',
-    sidelightColor: '#00ffff',
-    sidelightSpeed: 1.0,
-    sidelightIntensity: 1.0,
-  },
+  config: initialConfig,
   audioLevels: Array(16).fill(0),
   customGradients: initialGradients,
   activeCustomGradientId: initialGradients[0]?.id || 'custom_grad_sunset',
 
   setConfig: (patch) => {
-    set((state) => ({ config: { ...state.config, ...patch } }));
+    set((state) => {
+      const updated = { ...state.config, ...patch };
+      persistStudioConfig(updated);
+      return { config: updated };
+    });
   },
 
   toggleStudioLighting: () => {
