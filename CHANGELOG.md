@@ -10,11 +10,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.4.5] - Unreleased / In Development
 
 ### Added
-- **Integrated Release Notes Engine**: Native in-app changelog browser and update summaries in Settings and OTA dialogs.
-- **Offline Changelog Support**: Bundled typed changelog history without third-party API rate limits.
+- **Modular Studio Lighting & Visualizer Architecture**: Refactored the core lighting and streaming engine into dedicated submodules (`audio`, `effects`, `geometry`, `palettes`, `sidelights`, `visualizer-engine`).
+- **Background & Minimized Streaming Engine**: Implemented a hybrid timer mechanism ensuring continuous real-time RGB streaming even when the Studio window is minimized or running in the background (bypassing Chromium throttling).
+- **Studio Lighting Persistence**: Full persistence of all visualizer settings, audio sensitivity, background floor, direction, and color modes in `localStorage` and `electronAPI`.
+- **Bass Shockwave Audio Mode**: Radial expanding shockwave anchored to keyboard physical center (Key P / matrix center) with bidirectional spatial velocity.
+- **Customizable Idle Background Wave Direction**: Granular animation direction controls (Left-to-Right, Right-to-Left, Center-to-Outward, Outward-to-Center) for ambient lighting under Graphic Equalizer and Bass Shockwave.
+- **Audio Visualizer Color Styles**: Dynamic Wave / ROYGBIV Rainbow Spectrum, Unified Monochromatic, and Frequency-Banded color mapping with a configurable 0%–100% idle floor brightness.
+- **Integrated Release Notes Browser**: In-app modal viewer with decoupled Studio and Firmware release notes (`ChangelogViewer.tsx`).
 
 ### Changed
+- **Audio Stream Resilience & Watchdog**: Auto-reconnect and watchdog monitoring for seamless Windows audio endpoint switching (e.g. headphones to speakers) without streaming drops or silence freezing.
+- **Equalizer Decay Smoothing**: Eliminated non-sequential decay artifacts and silence flickering on sudden volume dropouts.
+- **Settings & Application UI**: Expanded workstation layout with improved spacing and unified navigation across settings modals.
 - **Version Synchronization Pipeline**: Integrated automated changelog compilation into `scripts/sync-version.js` (`src/data/changelog.ts`).
+
+### Fixed
+- **Wave Vector Direction Alignment**: Corrected visualizer wave propagation vectors to match physical keyboard layouts.
 
 ---
 
