@@ -1,6 +1,11 @@
 # LuxQMK Studio Changelog
 
+All notable changes to the **LuxQMK Studio Companion Application** are documented in this file.
 
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
 
 ## [1.4.5] - Unreleased / In Development
 
@@ -58,6 +63,9 @@
 
 ### Added
 - **Full Architecture Rewrite**: Modern React 19 + TypeScript + Zustand companion suite.
-- **WebHID Streaming Engine**: 60 FPS bidirectional RGB packet streaming and audio visualizers.
-- **Keymap & Macro Editor**: Full 4-layer key remapping with QMK keycode database.
-- **Hardware Profile Database**: Deep matrix descriptors for Glorious GMMK 3, GMMK 2, and Keychron keyboards.
+- **High-Speed WebHID Protocol Engine**: Direct USB packet communication with QMK firmware (`0xFF60` raw HID).
+- **Dual Reactive RGB Engine**: Real-time canvas preview and simultaneous configuration of base animations and reactive keystroke layers.
+- **60 FPS WASAPI Audio Visualizer**: Live audio frequency loopback analyzer streaming directly to keyboard matrix LEDs.
+- **Rotary Encoder Customizer**: Dynamic mapping of clockwise, counter-clockwise, and button press functions.
+- **Interactive Keyboard Matrix Tester**: Visual keystroke and latency verification.
+- **Universal Backup & Cloud Profile Migration**: JSON profile snapshot export/import.

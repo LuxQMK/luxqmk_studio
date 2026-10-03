@@ -103,16 +103,22 @@ export const STUDIO_CHANGELOG: ChangelogRelease[] = [
     "sections": {
       "Added": [
         "**Full Architecture Rewrite**: Modern React 19 + TypeScript + Zustand companion suite.",
-        "**WebHID Streaming Engine**: 60 FPS bidirectional RGB packet streaming and audio visualizers.",
-        "**Keymap & Macro Editor**: Full 4-layer key remapping with QMK keycode database.",
-        "**Hardware Profile Database**: Deep matrix descriptors for Glorious GMMK 3, GMMK 2, and Keychron keyboards."
+        "**High-Speed WebHID Protocol Engine**: Direct USB packet communication with QMK firmware (`0xFF60` raw HID).",
+        "**Dual Reactive RGB Engine**: Real-time canvas preview and simultaneous configuration of base animations and reactive keystroke layers.",
+        "**60 FPS WASAPI Audio Visualizer**: Live audio frequency loopback analyzer streaming directly to keyboard matrix LEDs.",
+        "**Rotary Encoder Customizer**: Dynamic mapping of clockwise, counter-clockwise, and button press functions.",
+        "**Interactive Keyboard Matrix Tester**: Visual keystroke and latency verification.",
+        "**Universal Backup & Cloud Profile Migration**: JSON profile snapshot export/import."
       ]
     },
     "bullets": [
       "[Added] **Full Architecture Rewrite**: Modern React 19 + TypeScript + Zustand companion suite.",
-      "[Added] **WebHID Streaming Engine**: 60 FPS bidirectional RGB packet streaming and audio visualizers.",
-      "[Added] **Keymap & Macro Editor**: Full 4-layer key remapping with QMK keycode database.",
-      "[Added] **Hardware Profile Database**: Deep matrix descriptors for Glorious GMMK 3, GMMK 2, and Keychron keyboards."
+      "[Added] **High-Speed WebHID Protocol Engine**: Direct USB packet communication with QMK firmware (`0xFF60` raw HID).",
+      "[Added] **Dual Reactive RGB Engine**: Real-time canvas preview and simultaneous configuration of base animations and reactive keystroke layers.",
+      "[Added] **60 FPS WASAPI Audio Visualizer**: Live audio frequency loopback analyzer streaming directly to keyboard matrix LEDs.",
+      "[Added] **Rotary Encoder Customizer**: Dynamic mapping of clockwise, counter-clockwise, and button press functions.",
+      "[Added] **Interactive Keyboard Matrix Tester**: Visual keystroke and latency verification.",
+      "[Added] **Universal Backup & Cloud Profile Migration**: JSON profile snapshot export/import."
     ]
   }
 ];
