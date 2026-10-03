@@ -50,7 +50,7 @@ export class EqualizerEffect implements AudioEffectRenderer {
       // Subtle horizontal stereo-frequency hue offset
       const bandHueOffset = (bandIdx / 15) * 0.15;
 
-      if (fillDiff >= 0 && bandVal > 8) {
+      if (fillDiff >= 0 && bandVal > 6) {
         // Active key in the rising equalizer column
         const fillRatio = Math.min(1.0, 0.45 + (fillDiff / antialiasRange) * 0.55);
         brightFactor = (floor + (1.0 - floor) * fillRatio) * intensity;
@@ -75,44 +75,23 @@ export class EqualizerEffect implements AudioEffectRenderer {
           }
         }
       } else {
-        // Check for Peak Hold Dot (pure saturated color, no white dilution)
-        const peakDiff = Math.abs(heightThreshold - peakVal);
-        if (peakVal > 20 && peakDiff < 26) {
-          const peakRatio = 1.0 - (peakDiff / 26);
-          brightFactor = (floor + (1.0 - floor) * peakRatio * 0.95) * intensity;
-          const peakHeightPos = Math.min(1.0, peakVal / 255);
-
+        // Inactive background above the active bar
+        if (floor <= 0.001) {
+          brightFactor = 0;
+          rgb = [0, 0, 0];
+        } else {
+          brightFactor = floor * intensity;
           if (isWaveStyle) {
             rgb = samplePaletteRgb(palette, wavePhase, customRgb);
           } else {
             if (palette === 'rainbow') {
-              const peakHNorm = ((0.66 - peakHeightPos * 0.66 + bandHueOffset) % 1.0 + 1.0) % 1.0;
-              rgb = hsvToRgb(Math.round(peakHNorm * 255), 255, 255);
+              const dimHue = ((0.66 - heightPos * 0.66 + bandHueOffset) % 1.0 + 1.0) % 1.0;
+              rgb = hsvToRgb(Math.round(dimHue * 255), 255, 60);
             } else if (palette === 'singleColor') {
-              rgb = customRgb;
+              rgb = [Math.round(customRgb[0] * 0.2), Math.round(customRgb[1] * 0.2), Math.round(customRgb[2] * 0.2)];
             } else {
-              rgb = sampleLinearPaletteRgb(palette, peakHeightPos, customRgb);
-            }
-          }
-        } else {
-          // Inactive background above the active bar
-          if (floor <= 0.001) {
-            brightFactor = 0;
-            rgb = [0, 0, 0];
-          } else {
-            brightFactor = floor * intensity;
-            if (isWaveStyle) {
-              rgb = samplePaletteRgb(palette, wavePhase, customRgb);
-            } else {
-              if (palette === 'rainbow') {
-                const dimHue = ((0.66 - heightPos * 0.66 + bandHueOffset) % 1.0 + 1.0) % 1.0;
-                rgb = hsvToRgb(Math.round(dimHue * 255), 255, 60);
-              } else if (palette === 'singleColor') {
-                rgb = [Math.round(customRgb[0] * 0.2), Math.round(customRgb[1] * 0.2), Math.round(customRgb[2] * 0.2)];
-              } else {
-                const basePal = sampleLinearPaletteRgb(palette, heightPos, customRgb);
-                rgb = [Math.round(basePal[0] * 0.25), Math.round(basePal[1] * 0.25), Math.round(basePal[2] * 0.25)];
-              }
+              const basePal = sampleLinearPaletteRgb(palette, heightPos, customRgb);
+              rgb = [Math.round(basePal[0] * 0.25), Math.round(basePal[1] * 0.25), Math.round(basePal[2] * 0.25)];
             }
           }
         }

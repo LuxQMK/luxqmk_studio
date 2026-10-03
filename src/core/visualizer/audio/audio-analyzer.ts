@@ -16,7 +16,6 @@ export class AudioAnalyzer {
   private deviceChangeDebounceTimer: any = null;
   private lastAudioRestartTime: number = 0;
   private lastAudioDeviceSignature: string = '';
-  private consecutiveSilentFrames: number = 0;
   private dataArray: Uint8Array = new Uint8Array(128);
 
   public frequencyBands: Float32Array = new Float32Array(16);
@@ -196,23 +195,47 @@ export class AudioAnalyzer {
       }
     }
 
+// Perceptually spaced 16 frequency band boundaries across 128 FFT bins (from ~40Hz sub-bass to ~20kHz brilliance)
+const LOG_BAND_BOUNDARIES: Array<[number, number]> = [
+  [0, 2],    // Band 0:  0 - 375 Hz (Sub-Bass & Bass)
+  [2, 3],    // Band 1:  375 - 562 Hz (Low Mids)
+  [3, 4],    // Band 2:  562 - 750 Hz (Warmth)
+  [4, 6],    // Band 3:  750 - 1125 Hz (Midrange)
+  [6, 8],    // Band 4:  1.1k - 1.5k Hz
+  [8, 11],   // Band 5:  1.5k - 2.0k Hz
+  [11, 15],  // Band 6:  2.0k - 2.8k Hz (Presence)
+  [15, 20],  // Band 7:  2.8k - 3.75k Hz
+  [20, 26],  // Band 8:  3.75k - 4.8k Hz
+  [26, 34],  // Band 9:  4.8k - 6.3k Hz (Treble)
+  [34, 44],  // Band 10: 6.3k - 8.2k Hz
+  [44, 56],  // Band 11: 8.2k - 10.5k Hz
+  [56, 70],  // Band 12: 10.5k - 13.1k Hz (Air)
+  [70, 86],  // Band 13: 13.1k - 16.1k Hz
+  [86, 105], // Band 14: 16.1k - 19.6k Hz
+  [105, 128] // Band 15: 19.6k - 24.0k Hz
+];
+
     if (!this.analyser) return;
-    this.analyser.getByteFrequencyData(this.dataArray as any);
 
     const config = useVisualizerStore.getState().config;
-    const binCount = this.analyser.frequencyBinCount;
-    const step = Math.floor(binCount / 16);
+    const targetSmoothing = config.audioSmoothing !== undefined ? config.audioSmoothing : 0.82;
+    if (this.analyser.smoothingTimeConstant !== targetSmoothing) {
+      this.analyser.smoothingTimeConstant = targetSmoothing;
+    }
+
+    this.analyser.getByteFrequencyData(this.dataArray as any);
+
     const now = performance.now();
 
     const levels: number[] = [];
     for (let i = 0; i < 16; i++) {
+      const [start, end] = LOG_BAND_BOUNDARIES[i];
       let sum = 0;
-      const start = i * step;
-      const end = start + step;
+      const count = end - start;
       for (let b = start; b < end; b++) {
         sum += this.dataArray[b];
       }
-      const avg = (sum / step) * (config.audioSensitivity || 1.2);
+      const avg = (sum / count) * (config.audioSensitivity || 1.2);
       const val = Math.min(255, avg);
       this.frequencyBands[i] = val;
       levels.push(val);
@@ -226,21 +249,6 @@ export class AudioAnalyzer {
       }
     }
     useVisualizerStore.getState().setAudioLevels(levels);
-
-    const totalEnergy = levels.reduce((a, b) => a + b, 0);
-    if (totalEnergy < 1) {
-      this.consecutiveSilentFrames++;
-      if (config.audioSource === 'system_loopback' && this.consecutiveSilentFrames > 70 && !this.isRestartingAudio) {
-        const nowTime = performance.now();
-        if (nowTime - this.lastAudioRestartTime > 2500) {
-          this.consecutiveSilentFrames = 0;
-          this.restartAudioStream();
-          return;
-        }
-      }
-    } else {
-      this.consecutiveSilentFrames = 0;
-    }
 
     // Direct bass level (0..255)
     const b0 = this.frequencyBands[0] || 0;
