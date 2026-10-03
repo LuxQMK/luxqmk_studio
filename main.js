@@ -359,6 +359,30 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, "index.html"));
   }
 
+  mainWindow.on("minimize", () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("window-minimized", true);
+    }
+  });
+
+  mainWindow.on("restore", () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("window-minimized", false);
+    }
+  });
+
+  mainWindow.on("hide", () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("window-minimized", true);
+    }
+  });
+
+  mainWindow.on("show", () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("window-minimized", false);
+    }
+  });
+
   mainWindow.on("close", (event) => {
     if (!isQuitting) {
       event.preventDefault();

@@ -18,6 +18,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
     return () => ipcRenderer.removeListener("autostart-changed", handler);
   },
 
+  onWindowMinimized: (callback) => {
+    const handler = (event, isMinimized) => callback(isMinimized);
+    ipcRenderer.on("window-minimized", handler);
+    return () => ipcRenderer.removeListener("window-minimized", handler);
+  },
+
   // Firmware Flasher APIs
   getFlasherToolsStatus: () => ipcRenderer.invoke("flasher:get-tools-status"),
   selectFirmwareFile: () => ipcRenderer.invoke("flasher:select-firmware-file"),

@@ -24,6 +24,7 @@ export class VisualizerEngineService {
 
   private isHardwareStreaming: boolean = false;
   private lastHardwareStreamTime: number = 0;
+  private isWindowMinimized: boolean = false;
 
   constructor() {
     this._bindVisibility();
@@ -31,25 +32,45 @@ export class VisualizerEngineService {
 
   private _bindVisibility() {
     if (typeof document === 'undefined') return;
-    document.addEventListener('visibilitychange', () => {
+
+    const switchToBgTimer = () => {
       if (!this.isRunning) return;
-      if (document.hidden) {
-        if (this.animFrameId) {
-          cancelAnimationFrame(this.animFrameId);
-          this.animFrameId = null;
-        }
-        if (this.bgTimer) clearInterval(this.bgTimer);
-        this.bgTimer = setInterval(() => this._tick(performance.now()), 33);
-      } else {
-        if (this.bgTimer) {
-          clearInterval(this.bgTimer);
-          this.bgTimer = null;
-        }
-        if (!this.animFrameId) {
-          this.animFrameId = requestAnimationFrame((t) => this._tick(t));
-        }
+      if (this.animFrameId) {
+        cancelAnimationFrame(this.animFrameId);
+        this.animFrameId = null;
       }
-    });
+      if (this.bgTimer) clearInterval(this.bgTimer);
+      // High-precision 60 FPS background timer (16ms)
+      this.bgTimer = setInterval(() => this._tick(performance.now()), 16);
+    };
+
+    const switchToRaf = () => {
+      if (!this.isRunning) return;
+      if (this.bgTimer) {
+        clearInterval(this.bgTimer);
+        this.bgTimer = null;
+      }
+      if (!this.animFrameId) {
+        this.animFrameId = requestAnimationFrame((t) => this._tick(t));
+      }
+    };
+
+    const updateVisibilityState = () => {
+      if (document.hidden || this.isWindowMinimized) {
+        switchToBgTimer();
+      } else {
+        switchToRaf();
+      }
+    };
+
+    document.addEventListener('visibilitychange', updateVisibilityState);
+
+    if (typeof window !== 'undefined' && (window as any).electronAPI?.onWindowMinimized) {
+      (window as any).electronAPI.onWindowMinimized((minimized: boolean) => {
+        this.isWindowMinimized = minimized;
+        updateVisibilityState();
+      });
+    }
   }
 
   public get audioAnalyzer(): typeof audioAnalyzer {
@@ -117,8 +138,20 @@ export class VisualizerEngineService {
         await hidProtocol.setDirectLightingEnable(true);
       }
 
-      if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
-      this.animFrameId = requestAnimationFrame((t) => this._tick(t));
+      if (this.animFrameId) {
+        cancelAnimationFrame(this.animFrameId);
+        this.animFrameId = null;
+      }
+      if (this.bgTimer) {
+        clearInterval(this.bgTimer);
+        this.bgTimer = null;
+      }
+
+      if (document.hidden || this.isWindowMinimized) {
+        this.bgTimer = setInterval(() => this._tick(performance.now()), 16);
+      } else {
+        this.animFrameId = requestAnimationFrame((t) => this._tick(t));
+      }
 
       useUIStore.getState().showToast(useI18n.getState().t('toastStudioLightingStarted'), 'success');
     } catch (err: any) {
@@ -241,7 +274,7 @@ export class VisualizerEngineService {
       console.error('Error during studio lighting frame render:', err);
     }
 
-    if (this.isRunning && !document.hidden && typeof requestAnimationFrame !== 'undefined') {
+    if (this.isRunning && !this.bgTimer && !document.hidden && !this.isWindowMinimized && typeof requestAnimationFrame !== 'undefined') {
       this.animFrameId = requestAnimationFrame((t) => this._tick(t));
     }
   }
