@@ -7,6 +7,6 @@
 export const BASE_VERSION = '1.4.5';
 export const GIT_BRANCH = 'develop';
 export const IS_DEV_BUILD = true;
-export const APP_VERSION = '1.4.5-dev';
+export const APP_VERSION = '1.4.5-beta.1';
 
 export default APP_VERSION;

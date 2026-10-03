@@ -12,8 +12,8 @@ export interface ChangelogRelease {
 
 export const STUDIO_CHANGELOG: ChangelogRelease[] = [
   {
-    "version": "1.4.5",
-    "date": "Unreleased / In Development",
+    "version": "1.4.5-beta.1",
+    "date": "2026-10-04",
     "sections": {
       "Added": [
         "**Modular Studio Lighting & Visualizer Architecture**: Refactored the core lighting and streaming engine into dedicated submodules (`audio`, `effects`, `geometry`, `palettes`, `sidelights`, `visualizer-engine`).",
