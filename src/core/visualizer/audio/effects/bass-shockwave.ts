@@ -238,7 +238,38 @@ export class BassShockwaveEffect implements AudioEffectRenderer {
           rgb = [0, 0, 0];
         } else {
           brightFactor = floor * intensity;
-          const ambientPhase = ((((k.qmkX ?? 109) / 224) * 0.4 + now * 0.00025 * speed) % 1.0 + 1.0) % 1.0;
+          const bgDir = config.audioBackgroundDirection || 'static';
+
+          let ambientPhase = 0.5;
+          if (bgDir === 'static') {
+            ambientPhase = 0.35;
+          } else {
+            const effectiveBgDir = bgDir === 'follow' ? direction : bgDir;
+            let bgCoord = 0;
+            switch (effectiveBgDir) {
+              case 'center_out':
+                bgCoord = (k.dist !== undefined ? k.dist : Math.hypot(k.dx, k.dy)) / maxDist;
+                break;
+              case 'perimeter_in':
+                bgCoord = (maxDist - (k.dist !== undefined ? k.dist : Math.hypot(k.dx, k.dy))) / maxDist;
+                break;
+              case 'bottom_to_top':
+                bgCoord = (64 - (k.qmkY ?? 32)) / 64;
+                break;
+              case 'top_to_bottom':
+                bgCoord = (k.qmkY ?? 32) / 64;
+                break;
+              case 'right_to_left':
+                bgCoord = (224 - (k.qmkX ?? 109)) / 224;
+                break;
+              case 'left_to_right':
+              default:
+                bgCoord = (k.qmkX ?? 109) / 224;
+                break;
+            }
+            ambientPhase = (((bgCoord * 0.4) - now * 0.00025 * speed) % 1.0 + 1.0) % 1.0;
+          }
+
           if (palette === 'rainbow') {
             rgb = hsvToRgb(Math.round(ambientPhase * 255), 255, 60);
           } else if (palette === 'singleColor') {
@@ -318,15 +349,43 @@ export class BassShockwaveEffect implements AudioEffectRenderer {
     }
 
     const bright = (floor + (1.0 - floor) * Math.min(1.0, sideWaveTotal * 1.3)) * intensity;
-    const phase = ((normY * 0.35 + now * 0.0004 * speed) % 1.0 + 1.0) % 1.0;
+    const bgDir = config.audioBackgroundDirection || 'static';
+    let sidePhase = 0.5;
+
+    if (bgDir !== 'static') {
+      const effectiveBgDir = bgDir === 'follow' ? direction : bgDir;
+      let bgCoord = 0;
+      switch (effectiveBgDir) {
+        case 'center_out':
+          bgCoord = Math.hypot(qmkX - centerAnchor.qmkX, qmkY - centerAnchor.qmkY) / maxDist;
+          break;
+        case 'perimeter_in':
+          bgCoord = (maxDist - Math.hypot(qmkX - centerAnchor.qmkX, qmkY - centerAnchor.qmkY)) / maxDist;
+          break;
+        case 'bottom_to_top':
+          bgCoord = (64 - qmkY) / 64;
+          break;
+        case 'top_to_bottom':
+          bgCoord = qmkY / 64;
+          break;
+        case 'right_to_left':
+          bgCoord = (224 - qmkX) / 224;
+          break;
+        case 'left_to_right':
+        default:
+          bgCoord = qmkX / 224;
+          break;
+      }
+      sidePhase = (((bgCoord * 0.35) - now * 0.0004 * speed) % 1.0 + 1.0) % 1.0;
+    }
 
     let rgb: [number, number, number] = [0, 0, 0];
     if (palette === 'rainbow') {
-      rgb = hsvToRgb(Math.round(phase * 255), 255, 255);
+      rgb = hsvToRgb(Math.round(sidePhase * 255), 255, 255);
     } else if (palette === 'singleColor') {
       rgb = customRgb;
     } else {
-      rgb = samplePaletteRgb(palette, phase, customRgb);
+      rgb = samplePaletteRgb(palette, sidePhase, customRgb);
     }
 
     return {

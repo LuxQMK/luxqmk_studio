@@ -110,6 +110,7 @@ export interface StudioLightingConfig {
   audioIntensity: number;
   audioSmoothing: number;
   audioFloor: number;
+  audioBackgroundDirection?: string;
 
   // PC software effects
   softwareEffect: string;

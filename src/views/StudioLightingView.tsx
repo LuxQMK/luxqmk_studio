@@ -445,18 +445,15 @@ export const StudioLightingView: React.FC = () => {
             {/* Mode, Style, Palette, Direction Grid */}
             <div className="grid-2" style={{ gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div className="form-group">
-                <label>{t('lblAudioColorStyle')}</label>
+                <label>{t('audioMode')}</label>
                 <select
                   className="form-control"
-                  value={config.audioColorStyle || 'spectrum'}
-                  onChange={(e) => setConfig({ audioColorStyle: e.target.value as any })}
+                  value={config.audioMode}
+                  onChange={(e) => setConfig({ audioMode: e.target.value })}
                 >
-                  <option value="spectrum">{t('optAudioStyleSpectrum')}</option>
-                  <option value="backgroundWave">{t('optAudioStyleWave')}</option>
+                  <option value="equalizer">{t('optEqualizer')}</option>
+                  <option value="bassShockwave">{t('optBassShockwave')}</option>
                 </select>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.3rem' }}>
-                  {(config.audioColorStyle === 'backgroundWave') ? t('hintAudioStyleWave') : t('hintAudioStyleSpectrum')}
-                </span>
               </div>
 
               <div className="form-group">
@@ -490,17 +487,22 @@ export const StudioLightingView: React.FC = () => {
                 </select>
               </div>
 
-              <div className="form-group">
-                <label>{t('audioMode')}</label>
-                <select
-                  className="form-control"
-                  value={config.audioMode}
-                  onChange={(e) => setConfig({ audioMode: e.target.value })}
-                >
-                  <option value="equalizer">{t('optEqualizer')}</option>
-                  <option value="bassShockwave">{t('optBassShockwave')}</option>
-                </select>
-              </div>
+              {config.audioMode === 'equalizer' && (
+                <div className="form-group">
+                  <label>{t('lblAudioColorStyle')}</label>
+                  <select
+                    className="form-control"
+                    value={config.audioColorStyle || 'spectrum'}
+                    onChange={(e) => setConfig({ audioColorStyle: e.target.value as any })}
+                  >
+                    <option value="spectrum">{t('optAudioStyleSpectrum')}</option>
+                    <option value="backgroundWave">{t('optAudioStyleWave')}</option>
+                  </select>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.3rem' }}>
+                    {(config.audioColorStyle === 'backgroundWave') ? t('hintAudioStyleWave') : t('hintAudioStyleSpectrum')}
+                  </span>
+                </div>
+              )}
 
               <div className="form-group">
                 <label>{t('lblAudioDirection')}</label>
@@ -635,6 +637,27 @@ export const StudioLightingView: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {/* Idle Background Animation Direction (when floor > 0) */}
+              {(config.audioFloor ?? 0.15) > 0.001 && (
+                <div className="form-group">
+                  <label>{t('lblAudioBgDirection', 'Idle Background Animation Direction')}</label>
+                  <select
+                    className="form-control"
+                    value={config.audioBackgroundDirection || 'static'}
+                    onChange={(e) => setConfig({ audioBackgroundDirection: e.target.value })}
+                  >
+                    <option value="static">{t('optBgStatic', 'Static Dim (No Movement)')}</option>
+                    <option value="follow">{t('optBgFollow', 'Follow Main Effect Direction')}</option>
+                    <option value="left_to_right">{t('optDirLeftToRight')}</option>
+                    <option value="right_to_left">{t('optDirRightToLeft')}</option>
+                    <option value="bottom_to_top">{t('optDirBottomToTop')}</option>
+                    <option value="top_to_bottom">{t('optDirTopToBottom')}</option>
+                    <option value="center_out">{t('optDirCenterOut')}</option>
+                    <option value="perimeter_in">{t('optDirPerimeterIn')}</option>
+                  </select>
+                </div>
+              )}
             </div>
           </div>
         )}

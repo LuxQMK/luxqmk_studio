@@ -45,8 +45,18 @@ export class EqualizerEffect implements AudioEffectRenderer {
       const fillDiff = bandVal - heightThreshold;
       const antialiasRange = 32;
 
-      // Dynamic animated wave phase (when backgroundWave style is selected)
-      const wavePhase = ((dirCoord.primary - now * 0.0008 * speed) % 1.0 + 1.0) % 1.0;
+      // Dynamic animated wave phase governed by audioBackgroundDirection
+      const bgDir = config.audioBackgroundDirection || 'follow';
+      let wavePhase = 0.5;
+      if (bgDir === 'static') {
+        wavePhase = 0.35;
+      } else if (bgDir === 'follow') {
+        wavePhase = ((dirCoord.primary - now * 0.0008 * speed) % 1.0 + 1.0) % 1.0;
+      } else {
+        const bgCoord = getDirectedCoordinate(k.centerX, k.centerY, bgDir, maxX, maxY);
+        wavePhase = ((bgCoord.primary - now * 0.0008 * speed) % 1.0 + 1.0) % 1.0;
+      }
+
       // Subtle horizontal stereo-frequency hue offset
       const bandHueOffset = (bandIdx / 15) * 0.15;
 
@@ -57,7 +67,11 @@ export class EqualizerEffect implements AudioEffectRenderer {
 
         if (isWaveStyle) {
           // Dynamic flowing background wave illuminated by equalizer bars
-          rgb = samplePaletteRgb(palette, wavePhase, customRgb);
+          if (bgDir === 'static') {
+            rgb = samplePaletteRgb(palette, ((heightPos * 0.5 + bandHueOffset) % 1.0 + 1.0) % 1.0, customRgb);
+          } else {
+            rgb = samplePaletteRgb(palette, wavePhase, customRgb);
+          }
         } else {
           // Vertical Spectral Mode: Deep Royal Blue (0.0) -> Cyan -> Emerald Green -> Amber Gold -> Pure Fiery Crimson Red (1.0)
           if (palette === 'rainbow') {
@@ -115,6 +129,7 @@ export class EqualizerEffect implements AudioEffectRenderer {
     const intensity = config.audioIntensity || 1.0;
     const floor = config.audioFloor !== undefined ? config.audioFloor : 0.15;
     const customRgb = hexToRgbList(config.audioSingleColor || '#00ffff');
+    const bgDir = config.audioBackgroundDirection || 'follow';
 
     const heightPos = 1.0 - normY;
     const heightThreshold = heightPos * 255;
@@ -122,7 +137,20 @@ export class EqualizerEffect implements AudioEffectRenderer {
       ? (frequencyBands[Math.min(7, Math.floor((1 - normY) * 8))] || 0)
       : (frequencyBands[Math.min(15, 8 + Math.floor((1 - normY) * 8))] || 0);
 
-    const wavePhase = ((normY - now * 0.0008 * speed) % 1.0 + 1.0) % 1.0;
+    let wavePhase = 0.5;
+    if (bgDir === 'static') {
+      wavePhase = 0.35;
+    } else {
+      let sideWaveCoord = normY;
+      if (bgDir === 'top_to_bottom') sideWaveCoord = normY;
+      else if (bgDir === 'bottom_to_top') sideWaveCoord = 1.0 - normY;
+      else if (bgDir === 'left_to_right') sideWaveCoord = side === 'left' ? 0.0 : 1.0;
+      else if (bgDir === 'right_to_left') sideWaveCoord = side === 'left' ? 1.0 : 0.0;
+      else if (bgDir === 'center_out') sideWaveCoord = 1.0;
+      else if (bgDir === 'perimeter_in') sideWaveCoord = 0.0;
+      else sideWaveCoord = 1.0 - normY;
+      wavePhase = ((sideWaveCoord - now * 0.0008 * speed) % 1.0 + 1.0) % 1.0;
+    }
     let bright = floor * intensity;
     let rgb: [number, number, number] = [0, 0, 0];
 
