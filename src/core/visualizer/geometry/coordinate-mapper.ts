@@ -2,14 +2,29 @@
  * LuxQMK Studio - Spatial Coordinate Mapper (6 Directions)
  */
 
-export function getDirectedCoordinate(x: number, y: number, dir: string, maxX: number = 22.5, maxY: number = 5.5) {
+export function getDirectedCoordinate(
+  x: number,
+  y: number,
+  dir: string,
+  maxX: number = 22.5,
+  maxY: number = 5.5,
+  anchorX?: number,
+  anchorY?: number
+) {
   const normX = Math.max(0, Math.min(1, x / (maxX || 1)));
   const normY = Math.max(0, Math.min(1, y / (maxY || 1)));
-  const centerX = maxX / 2;
-  const centerY = maxY / 2;
-  const distCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-  const maxDist = Math.sqrt(Math.pow(centerX, 2) + Math.pow(centerY, 2));
-  const normDist = Math.min(1, distCenter / (maxDist || 1));
+  
+  // Standard Anchor: Key P center (11.0, 2.75) or midpoint
+  const centerX = anchorX !== undefined ? anchorX : (maxX > 18 ? 11.0 : maxX / 2);
+  const centerY = anchorY !== undefined ? anchorY : (maxY > 4.5 ? 2.75 : maxY / 2);
+  const distCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow((y - centerY) * 1.5, 2));
+  const maxDist = Math.max(
+    Math.hypot(centerX, centerY * 1.5),
+    Math.hypot(maxX - centerX, centerY * 1.5),
+    Math.hypot(centerX, (maxY - centerY) * 1.5),
+    Math.hypot(maxX - centerX, (maxY - centerY) * 1.5)
+  ) || 1;
+  const normDist = Math.min(1, distCenter / maxDist);
 
   switch (dir) {
     case 'left_to_right':

@@ -4,12 +4,14 @@
 
 import { AudioEffectRenderer } from '../types';
 import { EqualizerEffect } from './effects/equalizer';
+import { BassShockwaveEffect } from './effects/bass-shockwave';
 
 class AudioEffectsRegistry {
   private effects: Map<string, AudioEffectRenderer> = new Map();
 
   constructor() {
     this.register(new EqualizerEffect());
+    this.register(new BassShockwaveEffect());
   }
 
   public register(effect: AudioEffectRenderer): void {

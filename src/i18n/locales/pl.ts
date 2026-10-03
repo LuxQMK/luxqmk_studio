@@ -437,6 +437,7 @@ export const pl: Record<TranslationKey, string> = {
   "lblSoftwareStoppedBadge": "Zatrzymane",
   "audioMode": "Tryb wizualizacji audio",
   "optEqualizer": "Korektor graficzny (Equalizer Spectrum - słupki)",
+  "optBassShockwave": "Fala uderzeniowa basu (Bass Shockwave)",
   "optBassPulse": "Pulsowanie basem (Bass Beat Pulse)",
   "optAudioWave": "Fala dźwiękowa (Audio Wave)",
   "optVuMeter": "Wskaźnik wysterowania (Stereo VU Meter)",

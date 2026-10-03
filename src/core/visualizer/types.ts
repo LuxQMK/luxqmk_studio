@@ -45,13 +45,24 @@ export interface AudioRenderContext extends RenderContext {
   frequencyBands: Float32Array; // 16 frequency bands (0..255)
   peakBands: Float32Array;      // 16 peak hold indicators (0..255)
   bassEnergy: number;           // Bass volume energy (0..255)
+  rawBassFlux?: number;         // Unclipped transient onset flux (0..255)
+  rawBassEnergy?: number;       // Raw unclipped bass level (0..255)
 }
 
 export interface AudioEffectRenderer {
   id: string;
   init?: () => void;
   reset?: () => void;
-  updateAnalysis?: (now: number, frequencyBands: Float32Array, bassEnergy: number, config: StudioLightingConfig, maxX: number, maxY: number) => void;
+  updateAnalysis?: (
+    now: number,
+    frequencyBands: Float32Array,
+    bassEnergy: number,
+    config: StudioLightingConfig,
+    maxX: number,
+    maxY: number,
+    rawBassFlux?: number,
+    rawBassEnergy?: number
+  ) => void;
   render: (ctx: AudioRenderContext) => void;
   computeSidelightRgb?: (
     side: 'left' | 'right',

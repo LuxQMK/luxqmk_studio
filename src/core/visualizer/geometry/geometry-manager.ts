@@ -13,6 +13,11 @@ export class GeometryManager {
   private cachedLayoutId: string = '';
   public maxX: number = 22.5;
   public maxY: number = 5.5;
+  public centerAnchorX: number = 11.0;
+  public centerAnchorY: number = 2.75;
+  public centerQmkX: number = 109;
+  public centerQmkY: number = 27;
+  public maxDist: number = 125;
 
   public rebuildKeyGeometry(presetId: string): void {
     const layout = getLayoutForPreset(presetId);
@@ -28,18 +33,26 @@ export class GeometryManager {
     this.maxX = maxX || 22.5;
     this.maxY = maxY || 5.5;
 
-    // Anchor: Key P center or physical board midpoint
+    // Standard Anchor: Key P center (QMK coordinate standard point (109, 27))
     const keyP = layout.find((k: KeyLayoutItem) => k.id === 'P' || k.label === 'P');
     let centerQmkX = 109;
     let centerQmkY = 27;
+    let centerAnchorX = 11.0;
+    let centerAnchorY = 2.75;
+
     if (keyP) {
       const pKeyW = keyP.w || 1;
       const pKeyH = keyP.h || 1;
-      const pCenterX = keyP.x + pKeyW / 2;
-      const pCenterY = keyP.y + pKeyH / 2;
-      centerQmkX = (keyP as any).qmkPoint ? (keyP as any).qmkPoint[0] : Math.round((pCenterX / this.maxX) * 224);
-      centerQmkY = (keyP as any).qmkPoint ? (keyP as any).qmkPoint[1] : Math.round((pCenterY / this.maxY) * 64);
+      centerAnchorX = keyP.x + pKeyW / 2;
+      centerAnchorY = keyP.y + pKeyH / 2;
+      centerQmkX = (keyP as any).qmkPoint ? (keyP as any).qmkPoint[0] : Math.round((centerAnchorX / this.maxX) * 224);
+      centerQmkY = (keyP as any).qmkPoint ? (keyP as any).qmkPoint[1] : Math.round((centerAnchorY / this.maxY) * 64);
     }
+
+    this.centerAnchorX = centerAnchorX;
+    this.centerAnchorY = centerAnchorY;
+    this.centerQmkX = centerQmkX;
+    this.centerQmkY = centerQmkY;
 
     this.cachedKeys = layout.map((k: KeyLayoutItem) => {
       const w = k.w || 1;
@@ -85,7 +98,24 @@ export class GeometryManager {
       };
     });
 
+    let maxDist = 0;
+    for (let i = 0; i < this.cachedKeys.length; i++) {
+      if (this.cachedKeys[i].dist > maxDist) {
+        maxDist = this.cachedKeys[i].dist;
+      }
+    }
+    this.maxDist = maxDist || 125;
     this.cachedLayoutId = presetId;
+  }
+
+  public getCenterAnchor(): { x: number; y: number; qmkX: number; qmkY: number; maxDist: number } {
+    return {
+      x: this.centerAnchorX,
+      y: this.centerAnchorY,
+      qmkX: this.centerQmkX,
+      qmkY: this.centerQmkY,
+      maxDist: this.maxDist
+    };
   }
 
   public ensureGeometry(): KeyGeometry[] {

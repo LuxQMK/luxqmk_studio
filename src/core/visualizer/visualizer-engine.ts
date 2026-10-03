@@ -178,7 +178,9 @@ export class VisualizerEngineService {
             audioAnalyzer.bassEnergy,
             config,
             geometryManager.maxX,
-            geometryManager.maxY
+            geometryManager.maxY,
+            audioAnalyzer.rawBassFlux,
+            audioAnalyzer.rawBassEnergy
           );
         }
 
@@ -190,6 +192,8 @@ export class VisualizerEngineService {
           frequencyBands: audioAnalyzer.frequencyBands,
           peakBands: audioAnalyzer.peakBands,
           bassEnergy: audioAnalyzer.bassEnergy,
+          rawBassFlux: audioAnalyzer.rawBassFlux,
+          rawBassEnergy: audioAnalyzer.rawBassEnergy,
           maxX: geometryManager.maxX,
           maxY: geometryManager.maxY,
           applyKeyStyle: (k, r, g, b, bright) => this._applyKeyStyle(k, r, g, b, bright)

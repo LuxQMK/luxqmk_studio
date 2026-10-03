@@ -22,6 +22,10 @@ export class AudioAnalyzer {
   public peakBands: Float32Array = new Float32Array(16);
   public peakHoldTimes: Float32Array = new Float32Array(16);
   public bassEnergy: number = 0;
+  public rawBassEnergy: number = 0;
+  public rawBassFlux: number = 0;
+  private bassFastEma: number = 0;
+  private bassSlowEma: number = 0;
 
   constructor() {
     this._bindDeviceEvents();
@@ -256,6 +260,18 @@ const LOG_BAND_BOUNDARIES: Array<[number, number]> = [
     const b2 = this.frequencyBands[2] || 0;
     const b3 = this.frequencyBands[3] || 0;
     this.bassEnergy = Math.min(255, Math.max(b0 * 1.15, b1 * 1.05, b2 * 0.95, (b0 + b1 + b2 + b3) * 0.35));
+
+    // Raw unclipped low-end dynamics (bins 0..3 before sensitivity scaling) for universal beat detection
+    const r0 = this.dataArray[0] || 0;
+    const r1 = this.dataArray[1] || 0;
+    const r2 = this.dataArray[2] || 0;
+    const r3 = this.dataArray[3] || 0;
+    const rawBass = r0 * 0.45 + r1 * 0.35 + r2 * 0.15 + r3 * 0.05;
+
+    this.bassFastEma = this.bassFastEma * 0.70 + rawBass * 0.30;
+    this.bassSlowEma = this.bassSlowEma * 0.95 + rawBass * 0.05;
+    this.rawBassFlux = Math.max(0, rawBass - this.bassFastEma);
+    this.rawBassEnergy = rawBass;
   }
 
   private _bindDeviceEvents(): void {

@@ -436,6 +436,7 @@ export const en = {
   "lblSoftwareStoppedBadge": "Stopped",
   "audioMode": "Audio Visualization Mode",
   "optEqualizer": "Graphic Equalizer (Spectrum Column Bars)",
+  "optBassShockwave": "Bass Shockwave (Beat & Drop Ripple)",
   "optBassPulse": "Bass Pulse (Beat Drop Reaction)",
   "optAudioWave": "Audio Wave (Energy Ripples)",
   "optVuMeter": "Stereo VU Meter (Left/Right Channel Level)",

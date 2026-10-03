@@ -498,6 +498,7 @@ export const StudioLightingView: React.FC = () => {
                   onChange={(e) => setConfig({ audioMode: e.target.value })}
                 >
                   <option value="equalizer">{t('optEqualizer')}</option>
+                  <option value="bassShockwave">{t('optBassShockwave')}</option>
                 </select>
               </div>
 
