@@ -96,7 +96,7 @@ export interface PerKeyProfileData {
 
 export interface StudioLightingConfig {
   isRunning: boolean;
-  activeSubTab: 'audio' | 'effects';
+  activeSubTab: 'audio' | 'effects' | 'gif';
   
   // Audio visualizer settings
   audioSource: string;
@@ -120,6 +120,18 @@ export interface StudioLightingConfig {
   softwareSpeed: number;
   softwareIntensity: number;
   softwareFloor: number;
+
+  // GIF Player settings
+  gifFitMode: 'fit' | 'fill' | 'stretch';
+  gifSpeed: number;
+  gifIntensity: number;
+  gifContrast: number;
+  gifSidelightMode: 'edge' | 'dominant' | 'off';
+  gifFileName?: string;
+  gifDataUrl?: string;
+  gifDimensions?: { width: number; height: number };
+  gifFrameCount?: number;
+  gifFileSize?: number;
 
   // Studio Sidelight
   sidelightCustomEnable: boolean;

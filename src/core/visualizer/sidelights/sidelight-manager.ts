@@ -6,6 +6,7 @@ import { useUIStore } from '../../../store/useUIStore';
 import { audioEffectsRegistry } from '../audio/audio-effects-registry';
 import { samplePaletteRgb, hexToRgbList, PALETTES } from '../palettes';
 import { getDirectedCoordinate } from '../geometry/coordinate-mapper';
+import { gifPlayerService } from '../gif/gif-player-service';
 
 export class SidelightManager {
   public computeSidelightRgb(
@@ -27,6 +28,10 @@ export class SidelightManager {
 
     if (!isCustom || config.sidelightMode === 'followMain') {
       const activeTab = useUIStore.getState().studioSubTab;
+      if (activeTab === 'gif') {
+        return gifPlayerService.computeSidelightRgb(side, normY, config);
+      }
+
       if (activeTab === 'audio') {
         const audioMode = config.audioMode || 'equalizer';
         const eff = audioEffectsRegistry.get(audioMode);

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 export type ViewTab = 'keymap' | 'macro' | 'encoder' | 'tester' | 'lighting' | 'studio_lighting' | 'backup' | 'settings';
 export type LightingSubTab = 'backlight' | 'reactive' | 'winlock' | 'layers' | 'logo';
-export type StudioSubTab = 'audio' | 'effects';
+export type StudioSubTab = 'audio' | 'effects' | 'gif';
 
 export interface ToastMessage {
   id: string;

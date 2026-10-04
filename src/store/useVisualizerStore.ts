@@ -121,6 +121,13 @@ const DEFAULT_STUDIO_LIGHTING_CONFIG: StudioLightingConfig = {
   softwareIntensity: 1.0,
   softwareFloor: 0.10,
 
+  // GIF Player defaults
+  gifFitMode: 'fit',
+  gifSpeed: 1.0,
+  gifIntensity: 1.0,
+  gifContrast: 1.0,
+  gifSidelightMode: 'edge',
+
   sidelightCustomEnable: false,
   sidelightMode: 'followMain',
   sidelightPalette: 'rainbow',

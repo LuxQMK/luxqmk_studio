@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useVisualizerStore } from '../store/useVisualizerStore';
 import { useKeymapStore } from '../store/useKeymapStore';
 import { useDeviceStore } from '../store/useDeviceStore';
@@ -13,6 +13,7 @@ import { CustomGradientStudio } from '../components/common/CustomGradientStudio'
 import { KeyboardAppearanceButton } from '../components/common/KeyboardAppearanceButton';
 import { useKeyboardThemeStore } from '../store/useKeyboardThemeStore';
 import { visualizerService } from '../core/visualizer-service';
+import { gifPlayerService } from '../core/visualizer/gif/gif-player-service';
 
 const EFFECT_DIRECTION_OPTIONS: Record<string, Array<{ value: string; labelKey: string }>> = {
   spatial6: [
@@ -107,6 +108,11 @@ export const StudioLightingView: React.FC = () => {
   const { t } = useI18n();
   const canvasThemeStyles = useKeyboardThemeStore((s) => s.canvasThemeStyles);
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isDecoding, setIsDecoding] = useState(false);
+  const [gifMetadata, setGifMetadata] = useState(gifPlayerService.gifMetadata);
+
   const [audioSources, setAudioSources] = useState<Array<{ id: string; label: string }>>([
     { id: 'system_loopback', label: 'System Audio Output (WASAPI / Loopback)' }
   ]);
@@ -120,11 +126,70 @@ export const StudioLightingView: React.FC = () => {
     });
   };
 
+  const handleGifFileSelected = async (file: File) => {
+    if (!file) return;
+    if (!file.type.includes('gif') && !file.name.toLowerCase().endsWith('.gif')) {
+      useUIStore.getState().showToast(t('toastGifInvalidFormat'), 'warning');
+      return;
+    }
+
+    setIsDecoding(true);
+    try {
+      const res = await gifPlayerService.loadGif(file, file.name, file.size);
+      if (res.success) {
+        setGifMetadata(gifPlayerService.gifMetadata);
+        setConfig({
+          gifFileName: file.name,
+          gifFileSize: file.size,
+          gifFrameCount: res.frameCount,
+          gifDimensions: { width: res.width, height: res.height },
+          gifDataUrl: gifPlayerService.dataUrl || undefined
+        });
+        useUIStore.getState().showToast(t('toastGifLoadedSuccess'), 'success');
+      } else {
+        useUIStore.getState().showToast(`${t('toastGifLoadFailed')}: ${res.error}`, 'error');
+      }
+    } catch (err: any) {
+      useUIStore.getState().showToast(`${t('toastGifLoadFailed')}: ${err.message || err}`, 'error');
+    } finally {
+      setIsDecoding(false);
+    }
+  };
+
+  const handleClearGif = () => {
+    gifPlayerService.clear();
+    setGifMetadata(null);
+    setConfig({
+      gifFileName: undefined,
+      gifFileSize: undefined,
+      gifFrameCount: undefined,
+      gifDimensions: undefined,
+      gifDataUrl: undefined
+    });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   useEffect(() => {
     if (!isDesktop) return;
     refreshAudioSources();
     if (useDeviceStore.getState().isConnected) {
       useLightingStore.getState().loadFromHardware();
+    }
+
+    // Restore cached GIF if present in user config
+    if (config.gifDataUrl && !gifPlayerService.isGifLoaded) {
+      fetch(config.gifDataUrl)
+        .then((res) => res.arrayBuffer())
+        .then((buf) => {
+          gifPlayerService.loadGif(buf, config.gifFileName || 'saved.gif', config.gifFileSize || buf.byteLength).then((res) => {
+            if (res.success) {
+              setGifMetadata(gifPlayerService.gifMetadata);
+            }
+          });
+        })
+        .catch((e) => console.warn('Could not restore saved GIF:', e));
     }
   }, [isDesktop]);
 
@@ -380,6 +445,23 @@ export const StudioLightingView: React.FC = () => {
               <line x1="12" y1="17" x2="12" y2="21"></line>
             </svg>
             <span>{t('tabSoftwareEffects')}</span>
+          </button>
+          <button
+            type="button"
+            className={`studio-lighting-tab-btn ${studioSubTab === 'gif' ? 'active' : ''}`}
+            onClick={() => setStudioSubTab('gif')}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+              <line x1="7" y1="2" x2="7" y2="22"></line>
+              <line x1="17" y1="2" x2="17" y2="22"></line>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <line x1="2" y1="7" x2="7" y2="7"></line>
+              <line x1="2" y1="17" x2="7" y2="17"></line>
+              <line x1="17" y1="17" x2="22" y2="17"></line>
+              <line x1="17" y1="7" x2="22" y2="7"></line>
+            </svg>
+            <span>{t('tabGifPlayer')}</span>
           </button>
         </div>
 
@@ -850,6 +932,300 @@ export const StudioLightingView: React.FC = () => {
                     step={0.05}
                     value={config.softwareFloor !== undefined ? config.softwareFloor : 0.10}
                     onChange={(e) => setConfig({ softwareFloor: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PANE 3: GIF Matrix Player */}
+        {studioSubTab === 'gif' && (
+          <div id="pane-studio-gif" className="studio-lighting-subview active">
+            {/* Hidden File Input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/gif"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleGifFileSelected(file);
+              }}
+            />
+
+            {/* Dropzone & Loaded Animation Card */}
+            {!gifPlayerService.isGifLoaded && !config.gifDataUrl ? (
+              <div
+                className={`gif-dropzone ${isDragging ? 'dragging' : ''}`}
+                style={{
+                  border: isDragging ? '2px dashed var(--accent-cyan)' : '2px dashed var(--border-color)',
+                  background: isDragging ? 'rgba(0, 240, 255, 0.08)' : 'var(--bg-glass)',
+                  borderRadius: '16px',
+                  padding: '2.5rem 1.5rem',
+                  textAlign: 'center',
+                  marginBottom: '1.5rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s ease'
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) handleGifFileSelected(file);
+                }}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+                  <div
+                    style={{
+                      width: '52px',
+                      height: '52px',
+                      borderRadius: '50%',
+                      background: 'rgba(0, 240, 255, 0.12)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--accent-cyan)',
+                      boxShadow: '0 0 20px rgba(0, 240, 255, 0.2)'
+                    }}
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                      <line x1="7" y1="2" x2="7" y2="22"></line>
+                      <line x1="17" y1="2" x2="17" y2="22"></line>
+                      <line x1="2" y1="12" x2="22" y2="12"></line>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '0 0 0.25rem 0', color: 'var(--text-main)' }}>
+                      {isDecoding ? t('btnLoading', 'Decoding GIF Frames...') : t('gifUploadTitle')}
+                    </h4>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
+                      {t('gifUploadDesc')}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>{t('gifUploadBtn')}</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                className="card"
+                style={{
+                  background: 'var(--bg-glass)',
+                  border: '1px solid rgba(0, 240, 255, 0.25)',
+                  borderRadius: '16px',
+                  padding: '1.25rem 1.5rem',
+                  marginBottom: '1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '1.5rem',
+                  flexWrap: 'wrap'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                  {/* Thumbnail */}
+                  <div
+                    style={{
+                      width: '76px',
+                      height: '76px',
+                      borderRadius: '10px',
+                      overflow: 'hidden',
+                      background: '#090d16',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)'
+                    }}
+                  >
+                    <img
+                      src={gifPlayerService.dataUrl || config.gifDataUrl}
+                      alt="GIF Preview"
+                      style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                    />
+                  </div>
+
+                  {/* Metadata */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem' }}>
+                      <span className="badge-pill badge-connected" style={{ fontSize: '0.7rem', padding: '0.2rem 0.6rem' }}>
+                        {t('gifLoadedBadge')}
+                      </span>
+                      <h4 style={{ fontSize: '0.98rem', fontWeight: 700, margin: 0, color: 'var(--text-main)', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {config.gifFileName || gifMetadata?.fileName || 'animation.gif'}
+                      </h4>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                      {(gifMetadata?.width || config.gifDimensions?.width) && (
+                        <span>
+                          {t('gifFileInfoDimensions')}: <strong style={{ color: 'var(--text-main)' }}>{(gifMetadata?.width || config.gifDimensions?.width)}×{(gifMetadata?.height || config.gifDimensions?.height)}</strong>
+                        </span>
+                      )}
+                      {(gifMetadata?.frameCount || config.gifFrameCount) && (
+                        <span>
+                          {t('gifFileInfoFrames')}: <strong style={{ color: 'var(--text-main)' }}>{gifMetadata?.frameCount || config.gifFrameCount}</strong>
+                        </span>
+                      )}
+                      {gifMetadata?.totalDurationMs && (
+                        <span>
+                          {t('gifFileInfoDuration')}: <strong style={{ color: 'var(--text-main)' }}>{(gifMetadata.totalDurationMs / 1000).toFixed(1)}s</strong>
+                        </span>
+                      )}
+                      {(config.gifFileSize || gifMetadata?.fileSizeBytes) && (
+                        <span>
+                          {t('gifFileInfoSize')}: <strong style={{ color: 'var(--text-main)' }}>{((config.gifFileSize || gifMetadata?.fileSizeBytes || 0) / 1024).toFixed(0)} KB</strong>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>{t('gifReplaceBtn')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                    onClick={handleClearGif}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    <span>{t('gifRemoveBtn')}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* GIF Settings & Aspect Fit Controls */}
+            <div className="grid-2" style={{ gap: '1.25rem', marginBottom: '1.25rem' }}>
+              {/* Aspect Ratio Fit Mode */}
+              <div className="form-group">
+                <label>{t('gifFitModeLabel')}</label>
+                <select
+                  className="form-control"
+                  value={config.gifFitMode || 'fit'}
+                  onChange={(e) => setConfig({ gifFitMode: e.target.value as any })}
+                >
+                  <option value="fit">{t('gifFitModeFit')} — {t('gifFitModeFitDesc')}</option>
+                  <option value="fill">{t('gifFitModeFill')} — {t('gifFitModeFillDesc')}</option>
+                  <option value="stretch">{t('gifFitModeStretch')} — {t('gifFitModeStretchDesc')}</option>
+                </select>
+              </div>
+
+              {/* Sidelights (Underglow) Sampling Mode */}
+              <div className="form-group">
+                <label>{t('gifSidelightModeLabel')}</label>
+                <select
+                  className="form-control"
+                  value={config.gifSidelightMode || 'edge'}
+                  onChange={(e) => setConfig({ gifSidelightMode: e.target.value as any })}
+                >
+                  <option value="edge">{t('gifSidelightEdge')}</option>
+                  <option value="dominant">{t('gifSidelightDominant')}</option>
+                  <option value="off">{t('gifSidelightOff')}</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Sliders Grid: Speed, Brightness, Contrast */}
+            <div className="grid-3" style={{ gap: '1.25rem', marginBottom: '1.25rem' }}>
+              {/* Playback Speed */}
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <label>{t('gifSpeedLabel')}</label>
+                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>
+                    {(config.gifSpeed !== undefined ? config.gifSpeed : 1.0).toFixed(2)}x
+                  </span>
+                </div>
+                <div className="range-slider-wrap">
+                  <input
+                    type="range"
+                    className="range-slider"
+                    min={0.25}
+                    max={3.0}
+                    step={0.05}
+                    value={config.gifSpeed !== undefined ? config.gifSpeed : 1.0}
+                    onChange={(e) => setConfig({ gifSpeed: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+
+              {/* LED Brightness & Intensity */}
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <label>{t('gifIntensityLabel')}</label>
+                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>
+                    {Math.round((config.gifIntensity !== undefined ? config.gifIntensity : 1.0) * 100)}%
+                  </span>
+                </div>
+                <div className="range-slider-wrap">
+                  <input
+                    type="range"
+                    className="range-slider"
+                    min={0.1}
+                    max={1.5}
+                    step={0.05}
+                    value={config.gifIntensity !== undefined ? config.gifIntensity : 1.0}
+                    onChange={(e) => setConfig({ gifIntensity: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+
+              {/* LED Contrast Boost */}
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <label>{t('gifContrastLabel')}</label>
+                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>
+                    {Math.round((config.gifContrast !== undefined ? config.gifContrast : 1.0) * 100)}%
+                  </span>
+                </div>
+                <div className="range-slider-wrap">
+                  <input
+                    type="range"
+                    className="range-slider"
+                    min={0.5}
+                    max={2.0}
+                    step={0.05}
+                    value={config.gifContrast !== undefined ? config.gifContrast : 1.0}
+                    onChange={(e) => setConfig({ gifContrast: Number(e.target.value) })}
                   />
                 </div>
               </div>

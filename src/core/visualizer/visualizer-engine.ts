@@ -15,6 +15,7 @@ import { audioAnalyzer } from './audio/audio-analyzer';
 import { audioEffectsRegistry } from './audio/audio-effects-registry';
 import { softwareEffectsRegistry } from './effects/software-effects-registry';
 import { sidelightManager } from './sidelights/sidelight-manager';
+import { gifPlayerService } from './gif/gif-player-service';
 
 export class VisualizerEngineService {
   private animFrameId: number | null = null;
@@ -200,7 +201,27 @@ export class VisualizerEngineService {
       const config = useVisualizerStore.getState().config;
       const activeTab = useUIStore.getState().studioSubTab;
 
-      if (activeTab === 'audio' && audioAnalyzer.isRunning) {
+      if (activeTab === 'gif') {
+        gifPlayerService.tick(
+          now,
+          dt,
+          config,
+          keys,
+          geometryManager.maxX,
+          geometryManager.maxY,
+          (k, r, g, b, bright) => this._applyKeyStyle(k, r, g, b, bright)
+        );
+
+        sidelightManager.renderSidelightDom(
+          now,
+          config,
+          audioAnalyzer.frequencyBands,
+          audioAnalyzer.bassEnergy,
+          0,
+          geometryManager.maxX,
+          geometryManager.maxY
+        );
+      } else if (activeTab === 'audio' && audioAnalyzer.isRunning) {
         audioAnalyzer.processAudioAnalysis();
 
         const audioEff = audioEffectsRegistry.get(config.audioMode);
