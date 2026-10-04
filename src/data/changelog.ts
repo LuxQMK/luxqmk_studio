@@ -12,6 +12,32 @@ export interface ChangelogRelease {
 
 export const STUDIO_CHANGELOG: ChangelogRelease[] = [
   {
+    "version": "1.4.5-beta.2",
+    "date": "In Development",
+    "sections": {
+      "Added": [
+        "**GIF Animation Matrix Player**: Real-time GIF playback directly on keyboard LEDs with WebCodecs multi-frame decoding, multi-point area averaging, and configurable playback speed (0.25x–3.0x).",
+        "**Aspect Ratio & Matrix Fit Modes**: Three dedicated mapping presets (*Fit / Letterbox*, *Fill / Crop*, *Stretch / Full*) to accurately render any GIF aspect ratio on physical keyboard matrices.",
+        "**LED Contrast Enhancement Engine**: Parametric contrast boost slider (50%–200%) providing punchy colors and deep blacks tailored for mechanical keyboard LED matrices.",
+        "**Studio Lighting Auto-Resume Pipeline**: Automatic restoration and live streaming resumption of active Studio Lighting effects (Audio, PC procedural animations, and GIF animations) across application restarts and USB device re-connections.",
+        "**Sidelight Lateral Band Sampling**: Regional 30% edge band sampling and alpha-fallback mechanism for dynamic underglow lightbar animations synchronized with GIF frames."
+      ],
+      "Changed": [
+        "**Studio Sub-Tab Navigation**: Added dedicated *GIF Animation Player* tab alongside *Audio Visualizer* and *PC Animations* with synchronized state persistence.",
+        "**Saved Asset Restoration**: Transparent background-decoding pipeline ensuring cached GIF files resume streaming immediately upon hardware connection."
+      ]
+    },
+    "bullets": [
+      "[Added] **GIF Animation Matrix Player**: Real-time GIF playback directly on keyboard LEDs with WebCodecs multi-frame decoding, multi-point area averaging, and configurable playback speed (0.25x–3.0x).",
+      "[Added] **Aspect Ratio & Matrix Fit Modes**: Three dedicated mapping presets (*Fit / Letterbox*, *Fill / Crop*, *Stretch / Full*) to accurately render any GIF aspect ratio on physical keyboard matrices.",
+      "[Added] **LED Contrast Enhancement Engine**: Parametric contrast boost slider (50%–200%) providing punchy colors and deep blacks tailored for mechanical keyboard LED matrices.",
+      "[Added] **Studio Lighting Auto-Resume Pipeline**: Automatic restoration and live streaming resumption of active Studio Lighting effects (Audio, PC procedural animations, and GIF animations) across application restarts and USB device re-connections.",
+      "[Added] **Sidelight Lateral Band Sampling**: Regional 30% edge band sampling and alpha-fallback mechanism for dynamic underglow lightbar animations synchronized with GIF frames.",
+      "[Changed] **Studio Sub-Tab Navigation**: Added dedicated *GIF Animation Player* tab alongside *Audio Visualizer* and *PC Animations* with synchronized state persistence.",
+      "[Changed] **Saved Asset Restoration**: Transparent background-decoding pipeline ensuring cached GIF files resume streaming immediately upon hardware connection."
+    ]
+  },
+  {
     "version": "1.4.5-beta.1",
     "date": "2026-10-04",
     "sections": {
