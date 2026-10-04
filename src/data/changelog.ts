@@ -18,7 +18,7 @@ export const STUDIO_CHANGELOG: ChangelogRelease[] = [
       "Added": [
         "**GIF Animation Matrix Player**: Real-time GIF playback directly on keyboard LEDs with WebCodecs multi-frame decoding, multi-point area averaging, and configurable playback speed (0.25x–3.0x).",
         "**Aspect Ratio & Matrix Fit Modes**: Three dedicated mapping presets (*Fit / Letterbox*, *Fill / Crop*, *Stretch / Full*) to accurately render any GIF aspect ratio on physical keyboard matrices.",
-        "**LED Contrast Enhancement Engine**: Parametric contrast boost slider (50%–200%) providing punchy colors and deep blacks tailored for mechanical keyboard LED matrices.",
+        "**GIF LED Contrast Boost Engine**: Parametric contrast boost slider (50%–200%) for GIF animation playback providing punchy colors and deep blacks tailored for mechanical keyboard LED matrices.",
         "**Studio Lighting Auto-Resume Pipeline**: Automatic restoration and live streaming resumption of active Studio Lighting effects (Audio, PC procedural animations, and GIF animations) across application restarts and USB device re-connections.",
         "**Sidelight Lateral Band Sampling**: Regional 30% edge band sampling and alpha-fallback mechanism for dynamic underglow lightbar animations synchronized with GIF frames.",
         "**Key Tester Latency & Timing Suite**: High-precision performance timing in Key Tester tracking live switch hold duration, minimum hold time, inter-key interval delta ($\\Delta$), and peak scan interval.",
@@ -39,7 +39,7 @@ export const STUDIO_CHANGELOG: ChangelogRelease[] = [
     "bullets": [
       "[Added] **GIF Animation Matrix Player**: Real-time GIF playback directly on keyboard LEDs with WebCodecs multi-frame decoding, multi-point area averaging, and configurable playback speed (0.25x–3.0x).",
       "[Added] **Aspect Ratio & Matrix Fit Modes**: Three dedicated mapping presets (*Fit / Letterbox*, *Fill / Crop*, *Stretch / Full*) to accurately render any GIF aspect ratio on physical keyboard matrices.",
-      "[Added] **LED Contrast Enhancement Engine**: Parametric contrast boost slider (50%–200%) providing punchy colors and deep blacks tailored for mechanical keyboard LED matrices.",
+      "[Added] **GIF LED Contrast Boost Engine**: Parametric contrast boost slider (50%–200%) for GIF animation playback providing punchy colors and deep blacks tailored for mechanical keyboard LED matrices.",
       "[Added] **Studio Lighting Auto-Resume Pipeline**: Automatic restoration and live streaming resumption of active Studio Lighting effects (Audio, PC procedural animations, and GIF animations) across application restarts and USB device re-connections.",
       "[Added] **Sidelight Lateral Band Sampling**: Regional 30% edge band sampling and alpha-fallback mechanism for dynamic underglow lightbar animations synchronized with GIF frames.",
       "[Added] **Key Tester Latency & Timing Suite**: High-precision performance timing in Key Tester tracking live switch hold duration, minimum hold time, inter-key interval delta ($\\Delta$), and peak scan interval.",
