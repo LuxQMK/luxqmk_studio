@@ -366,6 +366,16 @@ app.whenReady().then(async () => {
       `
     },
     {
+      name: 'Studio Lighting - GIF Animation Player',
+      file: 'studio-visualizer-gif.png',
+      setup: `
+        window.__stores.useUIStore.getState().setActiveView('studio_lighting');
+        window.__stores.useUIStore.getState().setStudioSubTab('gif');
+        const main = document.querySelector('.main-content');
+        if (main) main.scrollTop = 380;
+      `
+    },
+    {
       name: 'Macro Editor',
       file: 'studio-macro.png',
       setup: `
