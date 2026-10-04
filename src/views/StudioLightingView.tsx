@@ -6,6 +6,7 @@ import { useLightingStore } from '../store/useLightingStore';
 import { useUIStore } from '../store/useUIStore';
 import { getLayoutForPreset, getSideLedSegments, isSidelightSupported } from '../data/layouts';
 import { ALL_DEVICE_DESCRIPTORS } from '../data/devices';
+import { getKeycodeInfo } from '../data/keycodes';
 import { useI18n } from '../i18n';
 import { useKeyboardFit } from '../hooks/useKeyboardFit';
 import { LogoLedBadge } from '../components/common/LogoLedBadge';
@@ -103,10 +104,14 @@ export const StudioLightingView: React.FC = () => {
   const isDesktop = typeof window !== 'undefined' && !!window.electronAPI && !!window.electronAPI.isDesktop;
 
   const { config, setConfig, toggleStudioLighting, customGradients } = useVisualizerStore();
-  const { presetLayoutId } = useKeymapStore();
+  const { presetLayoutId, getKeycode, layerKeymaps } = useKeymapStore();
+  const { activeLayer: hwActiveLayer } = useDeviceStore();
+  const { isSimulatingFn } = useLightingStore();
   const { studioSubTab, setStudioSubTab } = useUIStore();
   const { t } = useI18n();
   const canvasThemeStyles = useKeyboardThemeStore((s) => s.canvasThemeStyles);
+
+  const effectiveFnActive = isSimulatingFn || (hwActiveLayer !== undefined && hwActiveLayer > 0);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -385,11 +390,40 @@ export const StudioLightingView: React.FC = () => {
                 );
               }
 
+              const row = key.matrix ? key.matrix[0] : -1;
+              const col = key.matrix ? key.matrix[1] : -1;
+
+              const activeLyr = effectiveFnActive ? ((hwActiveLayer !== undefined && hwActiveLayer > 0) ? hwActiveLayer : 1) : 0;
+              let dynamicLabel = key.label || key.id || '';
+              if (row >= 0 && col >= 0) {
+                if (activeLyr > 0) {
+                  const kc = getKeycode(activeLyr, row, col);
+                  if (kc !== 0x0000 && kc !== 0x0001) {
+                    const info = getKeycodeInfo(kc);
+                    dynamicLabel = info.label || info.name || key.label || key.id || '';
+                  } else {
+                    const kc0 = getKeycode(0, row, col);
+                    if (kc0 !== 0x0000) {
+                      const info0 = getKeycodeInfo(kc0);
+                      if (info0.label === 'MO(1)') dynamicLabel = 'Fn';
+                      else dynamicLabel = info0.label || key.label || key.id || '';
+                    }
+                  }
+                } else {
+                  const kc0 = getKeycode(0, row, col);
+                  if (kc0 !== 0x0000) {
+                    const info0 = getKeycodeInfo(kc0);
+                    if (info0.label === 'MO(1)') dynamicLabel = 'Fn';
+                    else dynamicLabel = info0.label || key.label || key.id || '';
+                  }
+                }
+              }
+
               return (
                 <div
-                  key={idx}
+                  key={`${row}-${col}-${idx}`}
                   data-key-id={keyId}
-                  className="lighting-keycap"
+                  className={`lighting-keycap key-group-${key.group || 'alpha'}`}
                   style={{
                     position: 'absolute',
                     left: `${left}px`,
@@ -400,8 +434,9 @@ export const StudioLightingView: React.FC = () => {
                     boxShadow: config.isRunning ? '0 0 10px rgba(0, 240, 255, 0.5)' : undefined,
                     borderColor: config.isRunning ? 'rgba(0, 240, 255, 0.6)' : undefined,
                   }}
+                  title={dynamicLabel ? `${key.label || key.id}: ${dynamicLabel}` : undefined}
                 >
-                  <span className="l-legend">{key.label || key.id}</span>
+                  <span className="l-legend">{dynamicLabel}</span>
                 </div>
               );
             })}

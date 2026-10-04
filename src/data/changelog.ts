@@ -20,11 +20,20 @@ export const STUDIO_CHANGELOG: ChangelogRelease[] = [
         "**Aspect Ratio & Matrix Fit Modes**: Three dedicated mapping presets (*Fit / Letterbox*, *Fill / Crop*, *Stretch / Full*) to accurately render any GIF aspect ratio on physical keyboard matrices.",
         "**LED Contrast Enhancement Engine**: Parametric contrast boost slider (50%–200%) providing punchy colors and deep blacks tailored for mechanical keyboard LED matrices.",
         "**Studio Lighting Auto-Resume Pipeline**: Automatic restoration and live streaming resumption of active Studio Lighting effects (Audio, PC procedural animations, and GIF animations) across application restarts and USB device re-connections.",
-        "**Sidelight Lateral Band Sampling**: Regional 30% edge band sampling and alpha-fallback mechanism for dynamic underglow lightbar animations synchronized with GIF frames."
+        "**Sidelight Lateral Band Sampling**: Regional 30% edge band sampling and alpha-fallback mechanism for dynamic underglow lightbar animations synchronized with GIF frames.",
+        "**Key Tester Latency & Timing Suite**: High-precision performance timing in Key Tester tracking live switch hold duration, minimum hold time, inter-key interval delta ($\\Delta$), and peak scan interval.",
+        "**Hardware USB Ping Benchmark**: Dedicated real-time Raw HID round-trip latency tool calculating Min, Avg, Max latency, jitter stability, and RTT loop rate across the USB bus and keyboard MCU.",
+        "**Switch Chatter & Debounce Warning Engine**: Live detection and alert banner for rapid sub-12ms contact bounces on individual key switches."
       ],
       "Changed": [
         "**Studio Sub-Tab Navigation**: Added dedicated *GIF Animation Player* tab alongside *Audio Visualizer* and *PC Animations* with synchronized state persistence.",
-        "**Saved Asset Restoration**: Transparent background-decoding pipeline ensuring cached GIF files resume streaming immediately upon hardware connection."
+        "**Saved Asset Restoration**: Transparent background-decoding pipeline ensuring cached GIF files resume streaming immediately upon hardware connection.",
+        "**Debounce Algorithm Explanations**: Unified settings descriptions detailing all three firmware debounce engines (*Symmetric Defer*, *Asymmetric Eager*, *Symmetric Eager*) in visual selection order.",
+        "**Key Tester Timing Badges**: Expanded key history chips to display per-key hold durations and inter-key deltas alongside key codes and timestamps."
+      ],
+      "Fixed": [
+        "**Dynamic Keymap Legend Display**: Synchronized keycap legends in *Studio Lighting* view with live hardware EEPROM/VIA keymaps and active layer switches, matching the *QMK Lighting* preview.",
+        "**Key Tester Stuck State on Window Blur**: Added window focus/blur/visibility cleanup and automatic keyup recovery for OS-intercepted keys (such as Windows Start Menu, Snipping Tool/PrintScreen, and Alt+Tab) in Key Tester view."
       ]
     },
     "bullets": [
@@ -33,8 +42,15 @@ export const STUDIO_CHANGELOG: ChangelogRelease[] = [
       "[Added] **LED Contrast Enhancement Engine**: Parametric contrast boost slider (50%–200%) providing punchy colors and deep blacks tailored for mechanical keyboard LED matrices.",
       "[Added] **Studio Lighting Auto-Resume Pipeline**: Automatic restoration and live streaming resumption of active Studio Lighting effects (Audio, PC procedural animations, and GIF animations) across application restarts and USB device re-connections.",
       "[Added] **Sidelight Lateral Band Sampling**: Regional 30% edge band sampling and alpha-fallback mechanism for dynamic underglow lightbar animations synchronized with GIF frames.",
+      "[Added] **Key Tester Latency & Timing Suite**: High-precision performance timing in Key Tester tracking live switch hold duration, minimum hold time, inter-key interval delta ($\\Delta$), and peak scan interval.",
+      "[Added] **Hardware USB Ping Benchmark**: Dedicated real-time Raw HID round-trip latency tool calculating Min, Avg, Max latency, jitter stability, and RTT loop rate across the USB bus and keyboard MCU.",
+      "[Added] **Switch Chatter & Debounce Warning Engine**: Live detection and alert banner for rapid sub-12ms contact bounces on individual key switches.",
       "[Changed] **Studio Sub-Tab Navigation**: Added dedicated *GIF Animation Player* tab alongside *Audio Visualizer* and *PC Animations* with synchronized state persistence.",
-      "[Changed] **Saved Asset Restoration**: Transparent background-decoding pipeline ensuring cached GIF files resume streaming immediately upon hardware connection."
+      "[Changed] **Saved Asset Restoration**: Transparent background-decoding pipeline ensuring cached GIF files resume streaming immediately upon hardware connection.",
+      "[Changed] **Debounce Algorithm Explanations**: Unified settings descriptions detailing all three firmware debounce engines (*Symmetric Defer*, *Asymmetric Eager*, *Symmetric Eager*) in visual selection order.",
+      "[Changed] **Key Tester Timing Badges**: Expanded key history chips to display per-key hold durations and inter-key deltas alongside key codes and timestamps.",
+      "[Fixed] **Dynamic Keymap Legend Display**: Synchronized keycap legends in *Studio Lighting* view with live hardware EEPROM/VIA keymaps and active layer switches, matching the *QMK Lighting* preview.",
+      "[Fixed] **Key Tester Stuck State on Window Blur**: Added window focus/blur/visibility cleanup and automatic keyup recovery for OS-intercepted keys (such as Windows Start Menu, Snipping Tool/PrintScreen, and Alt+Tab) in Key Tester view."
     ]
   },
   {

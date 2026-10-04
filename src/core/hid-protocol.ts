@@ -276,6 +276,41 @@ export class HidProtocol {
     return null;
   }
 
+  /**
+   * Measures physical USB round-trip hardware latency by benchmarking lightweight raw HID requests.
+   */
+  public async measurePingLatency(samples = 10): Promise<{ min: number; avg: number; max: number; jitter: number; samples: number[] } | null> {
+    if (!this.isConnected()) return null;
+    const latencies: number[] = [];
+    for (let i = 0; i < samples; i++) {
+      try {
+        const start = performance.now();
+        await this.sendCommand(
+          [VIA_CMD.GET_PROTOCOL_VERSION],
+          400,
+          0,
+          (data) => data[0] === VIA_CMD.GET_PROTOCOL_VERSION
+        );
+        const duration = performance.now() - start;
+        if (duration > 0 && duration < 200) {
+          latencies.push(duration);
+        }
+        if (i < samples - 1) {
+          await this.sleep(12);
+        }
+      } catch (e) {
+        // Skip failed ping sample
+      }
+    }
+    if (latencies.length === 0) return null;
+    const min = Math.min(...latencies);
+    const max = Math.max(...latencies);
+    const sum = latencies.reduce((a, b) => a + b, 0);
+    const avg = sum / latencies.length;
+    const jitter = latencies.reduce((acc, val) => acc + Math.abs(val - avg), 0) / latencies.length;
+    return { min, avg, max, jitter, samples: latencies };
+  }
+
   // Keymap methods
   public async getKeycode(layer: number, row: number, col: number): Promise<number> {
     const res = await this.sendCommand([VIA_CMD.DYNAMIC_KEYMAP_GET_KEYCODE, layer, row, col]);
