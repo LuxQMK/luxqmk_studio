@@ -429,41 +429,88 @@ export class GifPlayerService {
     const intensity = config.gifIntensity !== undefined ? config.gifIntensity : 1.0;
     const contrast = config.gifContrast !== undefined ? config.gifContrast : 1.0;
 
-    let r = 0;
-    let g = 0;
-    let b = 0;
+    const centerY = Math.min(imgH - 1, Math.max(0, Math.floor(normY * imgH)));
+    const yRadius = Math.max(1, Math.floor(imgH * 0.12)); // 12% vertical band
+
+    let sumR = 0;
+    let sumG = 0;
+    let sumB = 0;
+    let count = 0;
 
     if (mode === 'edge') {
-      const sampleX = side === 'left' ? 0 : imgW - 1;
-      const sampleY = Math.min(imgH - 1, Math.max(0, Math.floor(normY * imgH)));
-      const pIdx = (sampleY * imgW + sampleX) * 4;
+      // Sample 30% lateral band on the specified side to capture non-transparent animation colors
+      const startX = side === 'left' ? 0 : Math.max(0, Math.floor(imgW * 0.70));
+      const endX = side === 'left' ? Math.min(imgW, Math.max(1, Math.floor(imgW * 0.30))) : imgW;
+      const startY = Math.max(0, centerY - yRadius);
+      const endY = Math.min(imgH, centerY + yRadius + 1);
 
-      const a = data[pIdx + 3] / 255;
-      r = data[pIdx + 0] * a;
-      g = data[pIdx + 1] * a;
-      b = data[pIdx + 2] * a;
-    } else {
-      // Dominant / Center average
-      const sampleX = Math.floor(imgW / 2);
-      const sampleY = Math.min(imgH - 1, Math.max(0, Math.floor(normY * imgH)));
-      const pIdx = (sampleY * imgW + sampleX) * 4;
+      const stepX = Math.max(1, Math.floor((endX - startX) / 5));
+      const stepY = Math.max(1, Math.floor((endY - startY) / 3));
 
-      const a = data[pIdx + 3] / 255;
-      r = data[pIdx + 0] * a;
-      g = data[pIdx + 1] * a;
-      b = data[pIdx + 2] * a;
+      for (let y = startY; y < endY; y += stepY) {
+        for (let x = startX; x < endX; x += stepX) {
+          const pIdx = (y * imgW + x) * 4;
+          const a = data[pIdx + 3];
+          if (a > 20) {
+            const alphaFactor = a / 255;
+            sumR += data[pIdx + 0] * alphaFactor;
+            sumG += data[pIdx + 1] * alphaFactor;
+            sumB += data[pIdx + 2] * alphaFactor;
+            count++;
+          }
+        }
+      }
     }
 
+    // Fallback: If edge region had no valid non-transparent pixels or mode is dominant:
+    if (count === 0 || mode === 'dominant') {
+      const stepX = Math.max(1, Math.floor(imgW / 8));
+      const stepY = Math.max(1, Math.floor(imgH / 8));
+      let fallbackR = 0;
+      let fallbackG = 0;
+      let fallbackB = 0;
+      let fallbackCount = 0;
+
+      for (let y = 0; y < imgH; y += stepY) {
+        for (let x = 0; x < imgW; x += stepX) {
+          const pIdx = (y * imgW + x) * 4;
+          const a = data[pIdx + 3];
+          if (a > 20) {
+            const alphaFactor = a / 255;
+            fallbackR += data[pIdx + 0] * alphaFactor;
+            fallbackG += data[pIdx + 1] * alphaFactor;
+            fallbackB += data[pIdx + 2] * alphaFactor;
+            fallbackCount++;
+          }
+        }
+      }
+
+      if (fallbackCount > 0) {
+        sumR = fallbackR;
+        sumG = fallbackG;
+        sumB = fallbackB;
+        count = fallbackCount;
+      }
+    }
+
+    if (count === 0) {
+      return { r: 0, g: 0, b: 0 };
+    }
+
+    let avgR = sumR / count;
+    let avgG = sumG / count;
+    let avgB = sumB / count;
+
     if (contrast !== 1.0) {
-      r = Math.max(0, Math.min(255, ((r / 255 - 0.5) * contrast + 0.5) * 255));
-      g = Math.max(0, Math.min(255, ((g / 255 - 0.5) * contrast + 0.5) * 255));
-      b = Math.max(0, Math.min(255, ((b / 255 - 0.5) * contrast + 0.5) * 255));
+      avgR = Math.max(0, Math.min(255, ((avgR / 255 - 0.5) * contrast + 0.5) * 255));
+      avgG = Math.max(0, Math.min(255, ((avgG / 255 - 0.5) * contrast + 0.5) * 255));
+      avgB = Math.max(0, Math.min(255, ((avgB / 255 - 0.5) * contrast + 0.5) * 255));
     }
 
     return {
-      r: Math.max(0, Math.min(255, Math.round(r * intensity))),
-      g: Math.max(0, Math.min(255, Math.round(g * intensity))),
-      b: Math.max(0, Math.min(255, Math.round(b * intensity)))
+      r: Math.max(0, Math.min(255, Math.round(avgR * intensity))),
+      g: Math.max(0, Math.min(255, Math.round(avgG * intensity))),
+      b: Math.max(0, Math.min(255, Math.round(avgB * intensity)))
     };
   }
 
