@@ -13,7 +13,7 @@ export interface ChangelogRelease {
 export const STUDIO_CHANGELOG: ChangelogRelease[] = [
   {
     "version": "1.4.5-beta.2",
-    "date": "In Development",
+    "date": "2026-10-05",
     "sections": {
       "Added": [
         "**GIF Animation Matrix Player**: Real-time GIF playback directly on keyboard LEDs with WebCodecs multi-frame decoding, multi-point area averaging, and configurable playback speed (0.25x–3.0x).",

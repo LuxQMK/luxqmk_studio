@@ -1,6 +1,6 @@
 # LuxQMK Studio
 
-[![Latest Release](https://img.shields.io/badge/Release-v1.4.5--beta.1-00b4d8.svg?style=flat)](https://github.com/LuxQMK/luxqmk_studio/releases/tag/v1.4.5-beta.1)
+[![Latest Release](https://img.shields.io/badge/Release-v1.4.5--beta.2-00b4d8.svg?style=flat)](https://github.com/LuxQMK/luxqmk_studio/releases/tag/v1.4.5-beta.2)
 [![Firmware Engine](https://img.shields.io/badge/Firmware-LuxQMK%20v0.3.5-8a2be2.svg?style=flat)](https://github.com/LuxQMK/qmk_firmware)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
