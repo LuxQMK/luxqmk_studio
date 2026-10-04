@@ -425,7 +425,10 @@ export const StudioLightingView: React.FC = () => {
           <button
             type="button"
             className={`studio-lighting-tab-btn ${studioSubTab === 'audio' ? 'active' : ''}`}
-            onClick={() => setStudioSubTab('audio')}
+            onClick={() => {
+              setStudioSubTab('audio');
+              setConfig({ activeSubTab: 'audio' });
+            }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 18V5l12-2v13"></path>
@@ -437,7 +440,10 @@ export const StudioLightingView: React.FC = () => {
           <button
             type="button"
             className={`studio-lighting-tab-btn ${studioSubTab === 'effects' ? 'active' : ''}`}
-            onClick={() => setStudioSubTab('effects')}
+            onClick={() => {
+              setStudioSubTab('effects');
+              setConfig({ activeSubTab: 'effects' });
+            }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
@@ -449,7 +455,10 @@ export const StudioLightingView: React.FC = () => {
           <button
             type="button"
             className={`studio-lighting-tab-btn ${studioSubTab === 'gif' ? 'active' : ''}`}
-            onClick={() => setStudioSubTab('gif')}
+            onClick={() => {
+              setStudioSubTab('gif');
+              setConfig({ activeSubTab: 'gif' });
+            }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>

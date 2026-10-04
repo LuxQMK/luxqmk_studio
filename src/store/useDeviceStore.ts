@@ -6,6 +6,8 @@ import { useUIStore } from './useUIStore';
 import { useKeymapStore } from './useKeymapStore';
 import { useLightingStore } from './useLightingStore';
 import { useSettingsStore } from './useSettingsStore';
+import { useVisualizerStore } from './useVisualizerStore';
+import { visualizerService } from '../core/visualizer-service';
 import { useI18n } from '../i18n';
 
 interface DeviceState {
@@ -222,6 +224,15 @@ const syncConnectedDeviceState = (desc: DeviceDescriptor) => {
 
       // 6. Start continuous live hardware polling for active layer & host LEDs
       startHardwarePolling();
+
+      // 7. Auto-resume Studio Lighting if previously active in user config
+      const isDesktop = typeof window !== 'undefined' && !!(window as any).electronAPI && !!(window as any).electronAPI.isDesktop;
+      if (isDesktop && desc.capabilities?.hasLighting !== false) {
+        const studioConfig = useVisualizerStore.getState().config;
+        if (studioConfig.isRunning) {
+          await visualizerService.start();
+        }
+      }
     } catch (e) {
       console.warn('Failed to sync connected device state from hardware:', e);
     }

@@ -146,7 +146,7 @@ function loadSavedStudioConfig(): StudioLightingConfig {
         return {
           ...DEFAULT_STUDIO_LIGHTING_CONFIG,
           ...parsed,
-          isRunning: false // Never auto-start rendering engine on cold launch
+          isRunning: parsed.isRunning === true
         };
       }
     }
@@ -157,7 +157,7 @@ function loadSavedStudioConfig(): StudioLightingConfig {
 function persistStudioConfig(config: StudioLightingConfig) {
   if (typeof window === 'undefined') return;
   try {
-    const toSave = { ...config, isRunning: false };
+    const toSave = { ...config };
     localStorage.setItem('luxqmk_studio_lighting_config', JSON.stringify(toSave));
     if ((window as any).electronAPI && (window as any).electronAPI.saveUserConfig) {
       (window as any).electronAPI.saveUserConfig({ studioLightingConfig: toSave });

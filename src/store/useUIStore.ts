@@ -29,10 +29,24 @@ interface UIState {
   removeToast: (id: string) => void;
 }
 
+function getSavedStudioSubTab(): StudioSubTab {
+  if (typeof window === 'undefined') return 'audio';
+  try {
+    const raw = localStorage.getItem('luxqmk_studio_lighting_config');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.activeSubTab && (parsed.activeSubTab === 'audio' || parsed.activeSubTab === 'effects' || parsed.activeSubTab === 'gif')) {
+        return parsed.activeSubTab;
+      }
+    }
+  } catch (e) {}
+  return 'audio';
+}
+
 export const useUIStore = create<UIState>((set) => ({
   activeView: 'keymap',
   lightingSubTab: 'backlight',
-  studioSubTab: 'audio',
+  studioSubTab: getSavedStudioSubTab(),
   isAppSettingsOpen: false,
   isAboutOpen: false,
   isUpdateModalOpen: false,

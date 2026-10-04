@@ -124,11 +124,25 @@ export class VisualizerEngineService {
       if (activeTab === 'audio' && !audioAnalyzer.isRunning) {
         await audioAnalyzer.restartAudioStream();
       }
+      if (hidProtocol.isConnected()) {
+        await hidProtocol.setDirectLightingEnable(true);
+      }
       return;
     }
     try {
       if (activeTab === 'audio') {
         await audioAnalyzer.startAudioStream();
+      } else if (activeTab === 'gif' && !gifPlayerService.isGifLoaded) {
+        const config = useVisualizerStore.getState().config;
+        if (config.gifDataUrl) {
+          try {
+            const res = await fetch(config.gifDataUrl);
+            const buf = await res.arrayBuffer();
+            await gifPlayerService.loadGif(buf, config.gifFileName || 'animation.gif', config.gifFileSize || buf.byteLength);
+          } catch (e) {
+            console.warn('Could not restore saved GIF:', e);
+          }
+        }
       }
 
       this.isRunning = true;
