@@ -502,6 +502,8 @@ export const pl: Record<TranslationKey, string> = {
   "hintAudioVuStyle": "Wybierz pomiędzy jednolitym poziomem głośności stereo a wielopasmowym spektrum częstotliwości",
   "lblAudioTrebleShimmer": "Gwiezdny połysk sopranów",
   "hintAudioTrebleShimmer": "Błyski gwiezdnego pyłu na losowych klawiszach w rytm wysokich częstotliwości i talerzy",
+  "lblSwitchEnabled": "Włączony",
+  "lblSwitchDisabled": "Wyłączony",
   "lblAudioDirection": "Kierunek efektu",
   "optDirBottomToTop": "Z dołu do góry (Spacja -> Rząd funkcyjny)",
   "optDirTopToBottom": "Z góry do dołu (Rząd funkcyjny -> Spacja)",

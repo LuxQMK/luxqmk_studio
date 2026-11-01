@@ -639,7 +639,7 @@ export const StudioLightingView: React.FC = () => {
                   <div
                     className="switch-wrap"
                     style={{
-                      padding: '0.45rem 0.75rem',
+                      padding: '0.45rem 0.85rem',
                       background: 'rgba(255, 255, 255, 0.03)',
                       borderRadius: 'var(--radius-sm)',
                       border: '1px solid var(--border-color)',
@@ -647,24 +647,28 @@ export const StudioLightingView: React.FC = () => {
                       height: '42px',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'space-between'
+                      justifyContent: 'space-between',
+                      cursor: 'pointer'
                     }}
+                    onClick={() => setConfig({ audioTrebleShimmer: config.audioTrebleShimmer === false })}
                   >
                     <span
                       style={{
                         fontSize: '0.825rem',
                         fontWeight: 500,
-                        color: config.audioTrebleShimmer !== false ? 'var(--accent-cyan)' : 'var(--text-muted)'
+                        color: config.audioTrebleShimmer !== false ? 'var(--accent-cyan)' : 'var(--text-muted)',
+                        userSelect: 'none'
                       }}
                     >
-                      {config.audioTrebleShimmer !== false ? t('badgeEnabled') : t('badgeDisabled')}
+                      {config.audioTrebleShimmer !== false ? t('lblSwitchEnabled') : t('lblSwitchDisabled')}
                     </span>
-                    <label className="switch" style={{ margin: 0, flexShrink: 0 }}>
+                    <label className="switch" style={{ margin: 0, flexShrink: 0, pointerEvents: 'none' }}>
                       <input
                         type="checkbox"
                         checked={config.audioTrebleShimmer !== false}
-                        onChange={(e) => setConfig({ audioTrebleShimmer: e.target.checked })}
+                        readOnly
                       />
+                      <span className="slider"></span>
                     </label>
                   </div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.3rem' }}>

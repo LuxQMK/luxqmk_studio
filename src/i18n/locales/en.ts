@@ -501,6 +501,8 @@ export const en = {
   "hintAudioVuStyle": "Switch between unified wide stereo level bars and multi-band frequency spectrum columns",
   "lblAudioTrebleShimmer": "Treble Starlight Shimmer",
   "hintAudioTrebleShimmer": "Starlight sparkles flash across random keys in sync with high-frequency percussion",
+  "lblSwitchEnabled": "Enabled",
+  "lblSwitchDisabled": "Disabled",
   "lblAudioDirection": "Effect Direction",
   "optDirBottomToTop": "Bottom to Top (Spacebar -> Function Row)",
   "optDirTopToBottom": "Top to Bottom (Function Row -> Spacebar)",
