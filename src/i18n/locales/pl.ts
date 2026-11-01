@@ -470,7 +470,7 @@ export const pl: Record<TranslationKey, string> = {
   "audioMode": "Tryb wizualizacji audio",
   "optEqualizer": "Korektor graficzny (Equalizer Spectrum - słupki)",
   "optBassShockwave": "Fala uderzeniowa basu (Bass Shockwave)",
-  "optBassPulse": "Pulsowanie basem (Bass Beat Pulse)",
+  "optBassPulse": "Pulsowanie basem z gwiezdnym połyskiem (Bass Pulse)",
   "optAudioWave": "Fala dźwiękowa (Audio Wave)",
   "optVuMeter": "Wskaźnik wysterowania (Stereo VU Meter)",
   "optSpectrumHeatmap": "Heatmapa pasm częstotliwości (Glow strefowy)",

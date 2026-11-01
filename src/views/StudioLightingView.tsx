@@ -580,6 +580,7 @@ export const StudioLightingView: React.FC = () => {
                   <option value="equalizer">{t('optEqualizer')}</option>
                   <option value="bassShockwave">{t('optBassShockwave')}</option>
                   <option value="vuMeter">{t('optVuMeter')}</option>
+                  <option value="bassPulse">{t('optBassPulse')}</option>
                 </select>
               </div>
 
