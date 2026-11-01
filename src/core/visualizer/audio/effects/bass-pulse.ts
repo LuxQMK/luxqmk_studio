@@ -3,9 +3,10 @@
  *
  * Cinematic Rhythm & Starlight Lighting Engine:
  * - Multi-tiered Bass & Kick Drum Detection (Fast/Slow EMA Flux, Delta Transient, Rolling Baseline AGC)
+ * - Polyphonic Wave Superposition: Multiple consecutive beats spawn independent traveling waves without cutoffs
  * - Dynamic 0-to-100% Brightness Surge with directional wavefront propagation
  * - Smooth continuous directional gradient flow (Rainbow, Curated Palettes, Custom Gradients, Single Color)
- * - Treble Shimmer: High-frequency percussion, hi-hats, and cymbal transients spawn sparkling star glints
+ * - Treble Shimmer: High-frequency percussion, hi-hats, and cymbal transients spawn sparkling star glints (toggleable)
  * - Fully synchronized room-filling ambient sidelight pulse
  */
 
@@ -13,6 +14,14 @@ import { AudioEffectRenderer, AudioRenderContext } from '../../types';
 import { sampleLinearPaletteRgb, hexToRgbList, hsvToRgb } from '../../palettes';
 import { geometryManager } from '../../geometry/geometry-manager';
 import { getDirectedCoordinate } from '../../geometry/coordinate-mapper';
+
+interface ActiveBassWave {
+  id: number;
+  startTime: number;
+  travelDuration: number;
+  decayDuration: number;
+  intensity: number;
+}
 
 interface ActiveSparkle {
   keyId: string;
@@ -24,9 +33,10 @@ interface ActiveSparkle {
 export class BassPulseEffect implements AudioEffectRenderer {
   public id = 'bassPulse';
 
-  // Bass beat onset detection & dynamic envelope
-  private beatIntensity = 0;
-  private beatTime = 0;
+  // Polyphonic Bass Waves & Dynamic Envelope
+  private activeWaves: ActiveBassWave[] = [];
+  private waveIdSeq = 0;
+  private lastKickTime = 0;
   private prevBass = 0;
   private bassBaseline = 25;
   private bassFast = 0;
@@ -37,8 +47,9 @@ export class BassPulseEffect implements AudioEffectRenderer {
   private sparkles: Map<string, ActiveSparkle> = new Map();
 
   public reset(): void {
-    this.beatIntensity = 0;
-    this.beatTime = 0;
+    this.activeWaves = [];
+    this.waveIdSeq = 0;
+    this.lastKickTime = 0;
     this.prevBass = 0;
     this.bassBaseline = 25;
     this.bassFast = 0;
@@ -75,10 +86,11 @@ export class BassPulseEffect implements AudioEffectRenderer {
     const flux = Math.max(0, this.bassFast - this.bassSlow);
 
     const fluxThresh = Math.max(3.0, this.bassSlow * 0.20) / Math.max(0.4, sensitivity);
-    const minCooldownMs = Math.max(80, 140 / speed);
+    // Lower cooldown to 70-110ms so rapid consecutive kick beats register cleanly as distinct waves
+    const minCooldownMs = Math.max(70, 110 / speed);
 
     const isKick =
-      now - this.beatTime > minCooldownMs &&
+      now - this.lastKickTime > minCooldownMs &&
       currentBass > 12.0 &&
       (flux > fluxThresh ||
         delta > 8.0 / Math.max(0.4, sensitivity) ||
@@ -86,9 +98,30 @@ export class BassPulseEffect implements AudioEffectRenderer {
         currentBass > this.bassBaseline * 1.28 + 4.0);
 
     if (isKick) {
-      this.beatTime = now;
-      this.beatIntensity = Math.min(1.0, Math.max(0.80, (currentBass / 140) * 1.2));
+      this.lastKickTime = now;
+      const hitIntensity = Math.min(1.0, Math.max(0.80, (currentBass / 140) * 1.2));
+      const travelDuration = Math.max(180, 260 / speed);
+      const decayDuration = Math.max(240, 340 / speed);
+
+      // Spawn new wave without interrupting previous waves
+      this.activeWaves.push({
+        id: ++this.waveIdSeq,
+        startTime: now,
+        travelDuration,
+        decayDuration,
+        intensity: hitIntensity
+      });
+
+      // Keep at most 6 overlapping active waves in flight
+      if (this.activeWaves.length > 6) {
+        this.activeWaves.shift();
+      }
     }
+
+    // Prune fully completed waves
+    this.activeWaves = this.activeWaves.filter(
+      (w) => now - w.startTime <= w.travelDuration + w.decayDuration
+    );
 
     // 2. Treble Shimmer Trigger (Bands 9..15: ~4.8 kHz - 24 kHz)
     const enableShimmer = config.audioTrebleShimmer !== false;
@@ -141,17 +174,6 @@ export class BassPulseEffect implements AudioEffectRenderer {
     const speed = config.audioSpeed || 1.0;
     const enableShimmer = config.audioTrebleShimmer !== false;
 
-    // Time elapsed since last beat
-    const elapsed = now - this.beatTime;
-    const travelDuration = Math.max(180, 260 / speed); // wave takes 180-260ms to sweep across keyboard
-    const decayDuration = Math.max(240, 340 / speed); // wave fades out over 240-340ms
-
-    // Initial punch pop across the whole keyboard (first 100ms)
-    const punchDuration = 100;
-    const globalPunch = elapsed < punchDuration
-      ? (1.0 - elapsed / punchDuration) * 0.45 * this.beatIntensity
-      : 0;
-
     // Continuous sub-bass breathing (gentle background elevation during heavy bass)
     const contBass = Math.max(0, (bassEnergy - 20) / 200);
     const continuousGlow = Math.pow(Math.min(1.0, contBass), 1.8) * 0.25;
@@ -167,20 +189,38 @@ export class BassPulseEffect implements AudioEffectRenderer {
       const dirCoord = getDirectedCoordinate(k.centerX, k.centerY, direction, maxX, maxY);
       const pos = dirCoord.primary;
 
-      // Directional wave propagation: arrival time depends on pos
-      const keyArrival = pos * travelDuration;
-      const keyAge = elapsed - keyArrival;
-      let waveGlow = 0;
-      if (keyAge >= 0 && keyAge < decayDuration) {
-        if (keyAge < 25) {
-          waveGlow = (keyAge / 25) * this.beatIntensity;
-        } else {
-          waveGlow = Math.pow(1.0 - (keyAge - 25) / (decayDuration - 25), 1.8) * this.beatIntensity;
+      // Polyphonic wave superposition: accumulate all overlapping waves
+      let totalWaveEnergy = 0;
+      let peakGlow = 0;
+      for (let w = 0; w < this.activeWaves.length; w++) {
+        const wave = this.activeWaves[w];
+        const elapsed = now - wave.startTime;
+        const keyArrival = pos * wave.travelDuration;
+        const keyAge = elapsed - keyArrival;
+
+        // Punchy flash on kick onset (first 100ms)
+        let punch = 0;
+        if (elapsed >= 0 && elapsed < 100) {
+          punch = (1.0 - elapsed / 100) * 0.40 * wave.intensity;
         }
+
+        // Directional traveling wave crest & decay
+        let glow = 0;
+        if (keyAge >= 0 && keyAge < wave.decayDuration) {
+          if (keyAge < 25) {
+            glow = (keyAge / 25) * wave.intensity;
+          } else {
+            glow = Math.pow(1.0 - (keyAge - 25) / (wave.decayDuration - 25), 1.8) * wave.intensity;
+          }
+        }
+
+        const waveHit = Math.max(glow, punch);
+        totalWaveEnergy += waveHit;
+        if (glow > peakGlow) peakGlow = glow;
       }
 
-      // Total key pulse combines directional wavefront, initial impact punch, and continuous sub-bass
-      const totalPulse = Math.min(1.0, Math.max(waveGlow, globalPunch) + continuousGlow);
+      // Total key pulse smoothly combines all active waves + continuous sub-bass
+      const totalPulse = Math.min(1.0, totalWaveEnergy + continuousGlow);
 
       // High-dynamic brightness: scales smoothly from floor (e.g. 15%) up to 100%+
       let brightFactor = (floor + (1.0 - floor) * totalPulse) * intensity;
@@ -192,7 +232,7 @@ export class BassPulseEffect implements AudioEffectRenderer {
       if (palette === 'rainbow') {
         rgb = hsvToRgb(Math.round(colorPhase * 255), 245, 255);
       } else if (palette === 'singleColor') {
-        const whiteLift = waveGlow * 0.35;
+        const whiteLift = peakGlow * 0.35;
         rgb = [
           Math.min(255, Math.round(customRgb[0] * (1 - whiteLift) + 255 * whiteLift)),
           Math.min(255, Math.round(customRgb[1] * (1 - whiteLift) + 255 * whiteLift)),
@@ -241,7 +281,6 @@ export class BassPulseEffect implements AudioEffectRenderer {
     const floor = config.audioFloor !== undefined ? config.audioFloor : 0.15;
     const customRgb = hexToRgbList(config.audioSingleColor || '#00ffff');
     const speed = config.audioSpeed || 1.0;
-    const enableShimmer = config.audioTrebleShimmer !== false;
 
     let pos = normY;
     if (direction === 'bottom_to_top') {
@@ -258,30 +297,33 @@ export class BassPulseEffect implements AudioEffectRenderer {
       pos = 1.0 - Math.abs(normY - 0.5) * 2.0;
     }
 
-    const elapsed = now - this.beatTime;
-    const travelDuration = Math.max(180, 260 / speed);
-    const decayDuration = Math.max(240, 340 / speed);
+    let totalWaveEnergy = 0;
+    for (let w = 0; w < this.activeWaves.length; w++) {
+      const wave = this.activeWaves[w];
+      const elapsed = now - wave.startTime;
+      const keyArrival = pos * wave.travelDuration;
+      const keyAge = elapsed - keyArrival;
 
-    const punchDuration = 100;
-    const globalPunch = elapsed < punchDuration
-      ? (1.0 - elapsed / punchDuration) * 0.45 * this.beatIntensity
-      : 0;
-
-    const keyArrival = pos * travelDuration;
-    const keyAge = elapsed - keyArrival;
-    let waveGlow = 0;
-    if (keyAge >= 0 && keyAge < decayDuration) {
-      if (keyAge < 25) {
-        waveGlow = (keyAge / 25) * this.beatIntensity;
-      } else {
-        waveGlow = Math.pow(1.0 - (keyAge - 25) / (decayDuration - 25), 1.8) * this.beatIntensity;
+      let punch = 0;
+      if (elapsed >= 0 && elapsed < 100) {
+        punch = (1.0 - elapsed / 100) * 0.40 * wave.intensity;
       }
+
+      let glow = 0;
+      if (keyAge >= 0 && keyAge < wave.decayDuration) {
+        if (keyAge < 25) {
+          glow = (keyAge / 25) * wave.intensity;
+        } else {
+          glow = Math.pow(1.0 - (keyAge - 25) / (wave.decayDuration - 25), 1.8) * wave.intensity;
+        }
+      }
+      totalWaveEnergy += Math.max(glow, punch);
     }
 
     const contBass = Math.max(0, (bassEnergy - 20) / 200);
     const continuousGlow = Math.pow(Math.min(1.0, contBass), 1.8) * 0.25;
 
-    const totalPulse = Math.min(1.0, Math.max(waveGlow, globalPunch) + continuousGlow);
+    const totalPulse = Math.min(1.0, totalWaveEnergy + continuousGlow);
     const bright = (floor + (1.0 - floor) * totalPulse) * intensity;
 
     const flowOffset = (now * 0.00025 * speed) % 1.0;
