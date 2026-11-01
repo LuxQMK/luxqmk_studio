@@ -91,39 +91,44 @@ export class BassPulseEffect implements AudioEffectRenderer {
     }
 
     // 2. Treble Shimmer Trigger (Bands 9..15: ~4.8 kHz - 24 kHz)
-    let trebleSum = 0;
-    for (let b = 9; b < 16; b++) {
-      trebleSum += frequencyBands[b] || 0;
-    }
-    const trebleAvg = trebleSum / 7;
-    const trebleDelta = Math.max(0, trebleAvg - this.prevTreble);
-    this.prevTreble = trebleAvg;
+    const enableShimmer = config.audioTrebleShimmer !== false;
+    if (!enableShimmer) {
+      if (this.sparkles.size > 0) this.sparkles.clear();
+    } else {
+      let trebleSum = 0;
+      for (let b = 9; b < 16; b++) {
+        trebleSum += frequencyBands[b] || 0;
+      }
+      const trebleAvg = trebleSum / 7;
+      const trebleDelta = Math.max(0, trebleAvg - this.prevTreble);
+      this.prevTreble = trebleAvg;
 
-    const trebleThreshold = 9.0 / Math.max(0.3, sensitivity);
-    if (trebleDelta > trebleThreshold || (trebleAvg > 45 && Math.random() < 0.35)) {
-      const keys = geometryManager.getCachedKeys();
-      if (keys.length > 0) {
-        const sparkleCount = Math.min(5, Math.max(1, Math.floor((trebleDelta / 8) * 2)));
-        for (let s = 0; s < sparkleCount; s++) {
-          const randKey = keys[Math.floor(Math.random() * keys.length)];
-          if (randKey && !randKey.isKnob) {
-            this.sparkles.set(randKey.id, {
-              keyId: randKey.id,
-              startTime: now,
-              duration: Math.max(130, 200 / speed),
-              intensity: Math.min(1.0, 0.75 + (trebleAvg / 255) * 0.5)
-            });
+      const trebleThreshold = 9.0 / Math.max(0.3, sensitivity);
+      if (trebleDelta > trebleThreshold || (trebleAvg > 45 && Math.random() < 0.35)) {
+        const keys = geometryManager.getCachedKeys();
+        if (keys.length > 0) {
+          const sparkleCount = Math.min(5, Math.max(1, Math.floor((trebleDelta / 8) * 2)));
+          for (let s = 0; s < sparkleCount; s++) {
+            const randKey = keys[Math.floor(Math.random() * keys.length)];
+            if (randKey && !randKey.isKnob) {
+              this.sparkles.set(randKey.id, {
+                keyId: randKey.id,
+                startTime: now,
+                duration: Math.max(130, 200 / speed),
+                intensity: Math.min(1.0, 0.75 + (trebleAvg / 255) * 0.5)
+              });
+            }
           }
         }
       }
-    }
 
-    // Prune expired sparkles
-    this.sparkles.forEach((sp, id) => {
-      if (now - sp.startTime > sp.duration) {
-        this.sparkles.delete(id);
-      }
-    });
+      // Prune expired sparkles
+      this.sparkles.forEach((sp, id) => {
+        if (now - sp.startTime > sp.duration) {
+          this.sparkles.delete(id);
+        }
+      });
+    }
   }
 
   public render(ctx: AudioRenderContext): void {
@@ -134,6 +139,7 @@ export class BassPulseEffect implements AudioEffectRenderer {
     const floor = config.audioFloor !== undefined ? config.audioFloor : 0.15;
     const customRgb = hexToRgbList(config.audioSingleColor || '#00ffff');
     const speed = config.audioSpeed || 1.0;
+    const enableShimmer = config.audioTrebleShimmer !== false;
 
     // Time elapsed since last beat
     const elapsed = now - this.beatTime;
@@ -197,20 +203,22 @@ export class BassPulseEffect implements AudioEffectRenderer {
       }
 
       // Treble Shimmer Overlay (Starlight Glints)
-      const sparkle = this.sparkles.get(k.id);
-      if (sparkle) {
-        const age = now - sparkle.startTime;
-        if (age >= 0 && age < sparkle.duration) {
-          const spNorm = age / sparkle.duration;
-          const glint = Math.sin(spNorm * Math.PI) * sparkle.intensity;
-          brightFactor = Math.min(1.5, Math.max(brightFactor, (0.50 + glint * 0.85) * intensity));
+      if (enableShimmer) {
+        const sparkle = this.sparkles.get(k.id);
+        if (sparkle) {
+          const age = now - sparkle.startTime;
+          if (age >= 0 && age < sparkle.duration) {
+            const spNorm = age / sparkle.duration;
+            const glint = Math.sin(spNorm * Math.PI) * sparkle.intensity;
+            brightFactor = Math.min(1.5, Math.max(brightFactor, (0.50 + glint * 0.85) * intensity));
 
-          const starTint = Math.min(1.0, glint * 1.35);
-          rgb = [
-            Math.min(255, Math.round(rgb[0] * (1 - starTint) + 255 * starTint)),
-            Math.min(255, Math.round(rgb[1] * (1 - starTint) + 255 * starTint)),
-            Math.min(255, Math.round(rgb[2] * (1 - starTint) + 255 * starTint))
-          ];
+            const starTint = Math.min(1.0, glint * 1.35);
+            rgb = [
+              Math.min(255, Math.round(rgb[0] * (1 - starTint) + 255 * starTint)),
+              Math.min(255, Math.round(rgb[1] * (1 - starTint) + 255 * starTint)),
+              Math.min(255, Math.round(rgb[2] * (1 - starTint) + 255 * starTint))
+            ];
+          }
         }
       }
 
@@ -233,6 +241,7 @@ export class BassPulseEffect implements AudioEffectRenderer {
     const floor = config.audioFloor !== undefined ? config.audioFloor : 0.15;
     const customRgb = hexToRgbList(config.audioSingleColor || '#00ffff');
     const speed = config.audioSpeed || 1.0;
+    const enableShimmer = config.audioTrebleShimmer !== false;
 
     let pos = normY;
     if (direction === 'bottom_to_top') {

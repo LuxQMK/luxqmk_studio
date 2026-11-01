@@ -112,6 +112,7 @@ export interface StudioLightingConfig {
   audioSmoothing: number;
   audioFloor: number;
   audioBackgroundDirection?: string;
+  audioTrebleShimmer?: boolean;
 
   // PC software effects
   softwareEffect: string;

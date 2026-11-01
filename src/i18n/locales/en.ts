@@ -499,6 +499,8 @@ export const en = {
   "optVuMasterBar": "Stereo Master Level Bar (Wide VU)",
   "optVuStereoColumns": "Stereo Spectrum Bands (8L + 8R Columns)",
   "hintAudioVuStyle": "Switch between unified wide stereo level bars and multi-band frequency spectrum columns",
+  "lblAudioTrebleShimmer": "Treble Starlight Shimmer",
+  "hintAudioTrebleShimmer": "Starlight sparkles flash across random keys in sync with high-frequency percussion",
   "lblAudioDirection": "Effect Direction",
   "optDirBottomToTop": "Bottom to Top (Spacebar -> Function Row)",
   "optDirTopToBottom": "Top to Bottom (Function Row -> Spacebar)",

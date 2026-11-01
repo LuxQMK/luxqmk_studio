@@ -633,6 +633,46 @@ export const StudioLightingView: React.FC = () => {
                 </div>
               )}
 
+              {config.audioMode === 'bassPulse' && (
+                <div className="form-group">
+                  <label>{t('lblAudioTrebleShimmer')}</label>
+                  <div
+                    className="switch-wrap"
+                    style={{
+                      padding: '0.45rem 0.75rem',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-color)',
+                      margin: 0,
+                      height: '42px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '0.825rem',
+                        fontWeight: 500,
+                        color: config.audioTrebleShimmer !== false ? 'var(--accent-cyan)' : 'var(--text-muted)'
+                      }}
+                    >
+                      {config.audioTrebleShimmer !== false ? t('badgeEnabled') : t('badgeDisabled')}
+                    </span>
+                    <label className="switch" style={{ margin: 0, flexShrink: 0 }}>
+                      <input
+                        type="checkbox"
+                        checked={config.audioTrebleShimmer !== false}
+                        onChange={(e) => setConfig({ audioTrebleShimmer: e.target.checked })}
+                      />
+                    </label>
+                  </div>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.3rem' }}>
+                    {t('hintAudioTrebleShimmer')}
+                  </span>
+                </div>
+              )}
+
               {config.audioMode === 'equalizer' && (
                 <div className="form-group">
                   <label>{t('lblAudioColorStyle')}</label>

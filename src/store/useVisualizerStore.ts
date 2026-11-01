@@ -113,6 +113,7 @@ const DEFAULT_STUDIO_LIGHTING_CONFIG: StudioLightingConfig = {
   audioSmoothing: 0.82,
   audioFloor: 0.15,
   audioBackgroundDirection: 'static',
+  audioTrebleShimmer: true,
 
   softwareEffect: 'neonWave',
   softwarePalette: 'rainbow',

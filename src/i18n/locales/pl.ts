@@ -500,6 +500,8 @@ export const pl: Record<TranslationKey, string> = {
   "optVuMasterBar": "Masywny poziom stereo (Master VU)",
   "optVuStereoColumns": "Pasma częstotliwości stereo (Kolumny 8L + 8R)",
   "hintAudioVuStyle": "Wybierz pomiędzy jednolitym poziomem głośności stereo a wielopasmowym spektrum częstotliwości",
+  "lblAudioTrebleShimmer": "Gwiezdny połysk sopranów",
+  "hintAudioTrebleShimmer": "Błyski gwiezdnego pyłu na losowych klawiszach w rytm wysokich częstotliwości i talerzy",
   "lblAudioDirection": "Kierunek efektu",
   "optDirBottomToTop": "Z dołu do góry (Spacja -> Rząd funkcyjny)",
   "optDirTopToBottom": "Z góry do dołu (Rząd funkcyjny -> Spacja)",
