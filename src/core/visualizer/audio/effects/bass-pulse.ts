@@ -2,11 +2,12 @@
  * LuxQMK Studio - Bass Beat Pulse & Treble Shimmer Audio Effect Renderer
  *
  * Cinematic Rhythm & Starlight Lighting Engine:
- * - Dynamic Transient Onset Detection for punchy kick drums and 808 sub-bass drops
- * - Smooth exponential decay envelope synchronized with music tempo and speed
- * - Direction-aware spatial bloom (Center-Out, Bottom-to-Top, Perimeter-In, etc.)
+ * - Dynamic Transient Onset Detection & continuous sub-bass envelope follower
+ * - Powerful 0-to-100% brightness surges on kick drums and 808 drops with smooth musical decay
+ * - Wave propagation following effect direction (Center-Out, Bottom-to-Top, Perimeter-In, etc.)
+ * - Smooth continuous color flow with zero abrupt color snapping or jumping
  * - Treble Shimmer: High-frequency percussion, hi-hats, and cymbal transients spawn sparkling star glints
- * - Ambient room-filling underglow sidelight pulse
+ * - Room-filling ambient underglow sidelight pulse
  * - Full support for Curated Palettes, Custom Gradients, and Single Accent Color
  */
 
@@ -25,22 +26,20 @@ interface ActiveSparkle {
 export class BassPulseEffect implements AudioEffectRenderer {
   public id = 'bassPulse';
 
-  private pulseLevel = 0;
+  private beatIntensity = 0;
+  private beatTime = 0;
   private prevBass = 0;
-  private bassBaseline = 35;
-  private lastBeatTime = 0;
+  private bassAverage = 30;
   private prevTreble = 0;
   private sparkles: Map<string, ActiveSparkle> = new Map();
-  private beatPhaseOffset = 0;
 
   public reset(): void {
-    this.pulseLevel = 0;
+    this.beatIntensity = 0;
+    this.beatTime = 0;
     this.prevBass = 0;
-    this.bassBaseline = 35;
-    this.lastBeatTime = 0;
+    this.bassAverage = 30;
     this.prevTreble = 0;
     this.sparkles.clear();
-    this.beatPhaseOffset = 0;
   }
 
   public updateAnalysis(
@@ -56,27 +55,27 @@ export class BassPulseEffect implements AudioEffectRenderer {
     const speed = config.audioSpeed || 1.0;
     const sensitivity = config.audioSensitivity || 1.2;
 
-    // 1. Transient Kick / Beat Detection
-    const unclippedBass = rawBassEnergy !== undefined ? rawBassEnergy : bassEnergy;
-    const unclippedFlux = rawBassFlux !== undefined ? rawBassFlux : Math.max(0, unclippedBass - this.prevBass);
-    const delta = unclippedBass - this.prevBass;
-    this.prevBass = unclippedBass;
+    // 1. Robust Transient Kick & Beat Detection
+    // Use bassEnergy directly (properly scaled by user sensitivity)
+    const currentBass = bassEnergy;
+    const delta = currentBass - this.prevBass;
+    this.prevBass = currentBass;
 
-    this.bassBaseline = this.bassBaseline * 0.94 + unclippedBass * 0.06;
+    // Moving average of bass volume for adaptive thresholding
+    this.bassAverage = this.bassAverage * 0.92 + currentBass * 0.08;
 
     const minCooldownMs = Math.max(90, 140 / speed);
-    const fluxThreshold = 12.0 / Math.max(0.3, sensitivity);
+    const fluxThreshold = 9.0 / Math.max(0.3, sensitivity);
 
     const isBeat =
-      now - this.lastBeatTime > minCooldownMs &&
-      unclippedBass > 24.0 &&
-      (unclippedFlux > fluxThreshold || (delta > fluxThreshold * 1.25 && unclippedBass > this.bassBaseline + 5.0));
+      now - this.beatTime > minCooldownMs &&
+      currentBass > 20.0 &&
+      (delta > fluxThreshold || currentBass > this.bassAverage * 1.35 + 8.0);
 
     if (isBeat) {
-      this.lastBeatTime = now;
-      const hitIntensity = Math.min(1.0, Math.max(0.55, (unclippedBass / 240) * 1.3));
-      this.pulseLevel = Math.max(this.pulseLevel, hitIntensity);
-      this.beatPhaseOffset = (this.beatPhaseOffset + 0.12) % 1.0;
+      this.beatTime = now;
+      // High-energy surge: scale punch from 0.75 up to 1.0
+      this.beatIntensity = Math.min(1.0, Math.max(0.75, (currentBass / 220) * 1.3));
     }
 
     // 2. Treble Shimmer Trigger (Bands 9..15: ~4.8 kHz - 24 kHz)
@@ -88,20 +87,20 @@ export class BassPulseEffect implements AudioEffectRenderer {
     const trebleDelta = Math.max(0, trebleAvg - this.prevTreble);
     this.prevTreble = trebleAvg;
 
-    const trebleThreshold = 14.0 / Math.max(0.3, sensitivity);
-    if (trebleDelta > trebleThreshold || (trebleAvg > 65 && Math.random() < 0.28)) {
+    const trebleThreshold = 12.0 / Math.max(0.3, sensitivity);
+    if (trebleDelta > trebleThreshold || (trebleAvg > 60 && Math.random() < 0.35)) {
       // Spawn 1 to 4 random sparkles across available keys
       const keys = geometryManager.getCachedKeys();
       if (keys.length > 0) {
-        const sparkleCount = Math.min(4, Math.max(1, Math.floor((trebleDelta / 15) * 2)));
+        const sparkleCount = Math.min(4, Math.max(1, Math.floor((trebleDelta / 12) * 2)));
         for (let s = 0; s < sparkleCount; s++) {
           const randKey = keys[Math.floor(Math.random() * keys.length)];
           if (randKey && !randKey.isKnob) {
             this.sparkles.set(randKey.id, {
               keyId: randKey.id,
               startTime: now,
-              duration: Math.max(120, 200 / speed),
-              intensity: Math.min(1.0, 0.65 + (trebleAvg / 255) * 0.5)
+              duration: Math.max(110, 180 / speed),
+              intensity: Math.min(1.0, 0.70 + (trebleAvg / 255) * 0.5)
             });
           }
         }
@@ -117,7 +116,7 @@ export class BassPulseEffect implements AudioEffectRenderer {
   }
 
   public render(ctx: AudioRenderContext): void {
-    const { now, dt, config, keys, bassEnergy, maxX, maxY, applyKeyStyle } = ctx;
+    const { now, config, keys, bassEnergy, maxX, maxY, applyKeyStyle } = ctx;
     const direction = config.audioDirection || 'center_out';
     const palette = config.audioColorMode || 'rainbow';
     const intensity = config.audioIntensity || 1.0;
@@ -126,21 +125,21 @@ export class BassPulseEffect implements AudioEffectRenderer {
     const speed = config.audioSpeed || 1.0;
     const bgDir = config.audioBackgroundDirection || 'static';
 
-    // Exponential decay of beat pulse envelope
-    const decayFactor = Math.exp(-dt / (180 / speed));
-    this.pulseLevel *= decayFactor;
-
-    // Combine transient kick impact with continuous sub-bass rumble
-    const continuousBass = (bassEnergy / 255) * 0.75;
-    const masterPulse = Math.min(1.0, Math.max(this.pulseLevel, continuousBass));
-
     const maxDist = geometryManager.maxDist || 125;
+    const timeSinceBeat = now - this.beatTime;
+    const beatDuration = Math.max(220, 340 / speed); // ~250-350ms musical surge envelope
+
+    // Continuous bass follower so sub-bass drone keeps the keyboard pumping between kicks
+    const continuousBass = Math.min(1.0, (bassEnergy / 255) * 1.15);
+
+    // Smooth continuous global color phase (NO sudden jumps on beats)
+    const timeColorPhase = (now * 0.00035 * speed) % 1.0;
 
     for (let i = 0; i < keys.length; i++) {
       const k = keys[i];
       if (k.isKnob) continue;
 
-      // 1. Calculate spatial falloff based on effect direction
+      // 1. Calculate spatial wave propagation delay based on effect direction
       let distFrac = 0;
       switch (direction) {
         case 'bottom_to_top':
@@ -168,35 +167,48 @@ export class BassPulseEffect implements AudioEffectRenderer {
         }
       }
 
-      // Smooth radial bloom from the epicenter
-      const waveSpread = 0.40;
-      const keyPulse = Math.max(0, masterPulse - distFrac * waveSpread) / (1.0 - waveSpread * 0.5);
-      const effectivePulse = Math.min(1.0, Math.max(0, keyPulse));
+      // Wave propagation delay from epicenter across the keyboard (~0 to 110ms)
+      const waveDelay = distFrac * 110;
+      const keyTimeSinceBeat = Math.max(0, timeSinceBeat - waveDelay);
 
-      // 2. Base Color & Brightness from Palette
-      let brightFactor = (floor + (1.0 - floor) * effectivePulse) * intensity;
-      let rgb: [number, number, number] = [0, 0, 0];
-
-      // Time-animated phase offset modulated by beats
-      let colorPhase = 0.5;
-      if (bgDir !== 'static') {
-        const dirCoord = getDirectedCoordinate(k.centerX, k.centerY, bgDir === 'follow' ? direction : bgDir, maxX, maxY);
-        colorPhase = (((dirCoord.primary * 0.5 + this.beatPhaseOffset) - now * 0.0005 * speed) % 1.0 + 1.0) % 1.0;
-      } else {
-        colorPhase = (((distFrac * 0.35 + this.beatPhaseOffset) - now * 0.0003 * speed) % 1.0 + 1.0) % 1.0;
+      let keyBeatGlow = 0;
+      if (keyTimeSinceBeat < beatDuration) {
+        const tNorm = keyTimeSinceBeat / beatDuration;
+        // Punchy attack (first 25ms) followed by smooth exponential decay
+        if (tNorm < 0.08) {
+          keyBeatGlow = (tNorm / 0.08) * this.beatIntensity;
+        } else {
+          keyBeatGlow = Math.pow(1.0 - (tNorm - 0.08) / 0.92, 2.0) * this.beatIntensity;
+        }
       }
 
+      // Master key pulse combines transient kick flash with continuous bass rumble
+      const totalKeyPulse = Math.min(1.0, Math.max(keyBeatGlow, continuousBass * 0.75));
+
+      // 2. High-dynamic brightness: smoothly scales from floor (e.g. 15%) up to 100%+
+      let brightFactor = (floor + (1.0 - floor) * totalKeyPulse) * intensity;
+      let rgb: [number, number, number] = [0, 0, 0];
+
+      // Smooth flowing color phase without sudden jumps
+      let colorCoord = distFrac * 0.35;
+      if (bgDir !== 'static') {
+        const dirCoord = getDirectedCoordinate(k.centerX, k.centerY, bgDir === 'follow' ? direction : bgDir, maxX, maxY);
+        colorCoord = dirCoord.primary * 0.45;
+      }
+      const smoothColorPhase = ((timeColorPhase + colorCoord) % 1.0 + 1.0) % 1.0;
+
       if (palette === 'rainbow') {
-        rgb = hsvToRgb(Math.round(colorPhase * 255), 240, 255);
+        rgb = hsvToRgb(Math.round(smoothColorPhase * 255), 235, 255);
       } else if (palette === 'singleColor') {
-        const shade = 0.5 + effectivePulse * 0.5;
+        // Luminance boost on beats
+        const shade = 0.55 + totalKeyPulse * 0.45;
         rgb = [
           Math.min(255, Math.round(customRgb[0] * shade)),
           Math.min(255, Math.round(customRgb[1] * shade)),
           Math.min(255, Math.round(customRgb[2] * shade))
         ];
       } else {
-        rgb = sampleLinearPaletteRgb(palette, ((distFrac * 0.6 + colorPhase * 0.4) % 1.0 + 1.0) % 1.0, customRgb);
+        rgb = sampleLinearPaletteRgb(palette, smoothColorPhase, customRgb);
       }
 
       // 3. Treble Shimmer Overlay (Starlight Glints)
@@ -205,12 +217,12 @@ export class BassPulseEffect implements AudioEffectRenderer {
         const age = now - sparkle.startTime;
         if (age >= 0 && age < sparkle.duration) {
           const spNorm = age / sparkle.duration;
-          // Crisp bell curve attack & smooth sparkle decay
+          // Smooth bell-curve sparkle attack and fade
           const glint = Math.sin(spNorm * Math.PI) * sparkle.intensity;
-          brightFactor = Math.min(1.5, Math.max(brightFactor, (0.45 + glint * 0.85) * intensity));
+          brightFactor = Math.min(1.5, Math.max(brightFactor, (0.50 + glint * 0.90) * intensity));
 
           // Star glint tint: blend towards pure brilliant white
-          const starTint = Math.min(1.0, glint * 1.25);
+          const starTint = Math.min(1.0, glint * 1.3);
           rgb = [
             Math.min(255, Math.round(rgb[0] * (1 - starTint) + 255 * starTint)),
             Math.min(255, Math.round(rgb[1] * (1 - starTint) + 255 * starTint)),
@@ -238,16 +250,26 @@ export class BassPulseEffect implements AudioEffectRenderer {
     const customRgb = hexToRgbList(config.audioSingleColor || '#00ffff');
     const speed = config.audioSpeed || 1.0;
 
-    // Ambient room-filling pulse underglow
-    const continuousBass = (bassEnergy / 255) * 0.75;
-    const masterPulse = Math.min(1.0, Math.max(this.pulseLevel, continuousBass));
+    // Sidelights pulse in sync with the beat surge and continuous bass
+    const timeSinceBeat = now - this.beatTime;
+    const beatDuration = Math.max(220, 340 / speed);
 
-    const bright = (floor + (1.0 - floor) * masterPulse) * intensity;
-    const colorPhase = (((normY * 0.35 + this.beatPhaseOffset) - now * 0.0004 * speed) % 1.0 + 1.0) % 1.0;
+    let beatGlow = 0;
+    if (timeSinceBeat >= 0 && timeSinceBeat < beatDuration) {
+      const tNorm = timeSinceBeat / beatDuration;
+      beatGlow = Math.pow(1.0 - tNorm, 2.0) * this.beatIntensity;
+    }
+
+    const continuousBass = Math.min(1.0, (bassEnergy / 255) * 1.15);
+    const totalPulse = Math.min(1.0, Math.max(beatGlow, continuousBass * 0.75));
+
+    const bright = (floor + (1.0 - floor) * totalPulse) * intensity;
+    const timeColorPhase = (now * 0.00035 * speed) % 1.0;
+    const colorPhase = ((timeColorPhase + normY * 0.3) % 1.0 + 1.0) % 1.0;
 
     let rgb: [number, number, number] = [0, 0, 0];
     if (palette === 'rainbow') {
-      rgb = hsvToRgb(Math.round(colorPhase * 255), 240, 255);
+      rgb = hsvToRgb(Math.round(colorPhase * 255), 235, 255);
     } else if (palette === 'singleColor') {
       rgb = customRgb;
     } else {
@@ -261,4 +283,3 @@ export class BassPulseEffect implements AudioEffectRenderer {
     };
   }
 }
-
