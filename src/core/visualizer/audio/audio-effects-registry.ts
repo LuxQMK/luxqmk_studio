@@ -5,6 +5,7 @@
 import { AudioEffectRenderer } from '../types';
 import { EqualizerEffect } from './effects/equalizer';
 import { BassShockwaveEffect } from './effects/bass-shockwave';
+import { VuMeterEffect } from './effects/vu-meter';
 
 class AudioEffectsRegistry {
   private effects: Map<string, AudioEffectRenderer> = new Map();
@@ -12,6 +13,7 @@ class AudioEffectsRegistry {
   constructor() {
     this.register(new EqualizerEffect());
     this.register(new BassShockwaveEffect());
+    this.register(new VuMeterEffect());
   }
 
   public register(effect: AudioEffectRenderer): void {

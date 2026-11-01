@@ -18,6 +18,26 @@ export class AudioAnalyzer {
   private lastAudioDeviceSignature: string = '';
   private dataArray: Uint8Array = new Uint8Array(128);
 
+  private splitterNode: ChannelSplitterNode | null = null;
+  private analyserLeft: AnalyserNode | null = null;
+  private analyserRight: AnalyserNode | null = null;
+  private dataArrayLeft: Uint8Array = new Uint8Array(128);
+  private dataArrayRight: Uint8Array = new Uint8Array(128);
+
+  public stereoLeftEnergy: number = 0;
+  public stereoRightEnergy: number = 0;
+  public stereoLeftPeak: number = 0;
+  public stereoRightPeak: number = 0;
+  private stereoLeftPeakHoldTime: number = 0;
+  private stereoRightPeakHoldTime: number = 0;
+
+  public stereoLeftBands: Float32Array = new Float32Array(8);
+  public stereoRightBands: Float32Array = new Float32Array(8);
+  public stereoLeftPeakBands: Float32Array = new Float32Array(8);
+  public stereoRightPeakBands: Float32Array = new Float32Array(8);
+  private stereoLeftPeakBandsHoldTime: Float32Array = new Float32Array(8);
+  private stereoRightPeakBandsHoldTime: Float32Array = new Float32Array(8);
+
   public frequencyBands: Float32Array = new Float32Array(16);
   public peakBands: Float32Array = new Float32Array(16);
   public peakHoldTimes: Float32Array = new Float32Array(16);
@@ -139,6 +159,27 @@ export class AudioAnalyzer {
 
     this.sourceNode.connect(this.analyser);
     this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+
+    // Initialize Stereo Channel Splitter (Left: output 0, Right: output 1)
+    try {
+      this.splitterNode = this.audioCtx.createChannelSplitter(2);
+      this.analyserLeft = this.audioCtx.createAnalyser();
+      this.analyserLeft.fftSize = 256;
+      this.analyserLeft.smoothingTimeConstant = config.audioSmoothing || 0.82;
+
+      this.analyserRight = this.audioCtx.createAnalyser();
+      this.analyserRight.fftSize = 256;
+      this.analyserRight.smoothingTimeConstant = config.audioSmoothing || 0.82;
+
+      this.sourceNode.connect(this.splitterNode);
+      this.splitterNode.connect(this.analyserLeft, 0);
+      this.splitterNode.connect(this.analyserRight, 1);
+
+      this.dataArrayLeft = new Uint8Array(this.analyserLeft.frequencyBinCount);
+      this.dataArrayRight = new Uint8Array(this.analyserRight.frequencyBinCount);
+    } catch (stereoErr) {
+      console.warn('[AudioVisualizer] Could not initialize stereo splitter:', stereoErr);
+    }
     this.isRunning = true;
   }
 
@@ -159,6 +200,26 @@ export class AudioAnalyzer {
     this.frequencyBands.fill(0);
     this.peakBands.fill(0);
     this.bassEnergy = 0;
+    if (this.splitterNode) {
+      try { this.splitterNode.disconnect(); } catch (e) {}
+      this.splitterNode = null;
+    }
+    if (this.analyserLeft) {
+      try { this.analyserLeft.disconnect(); } catch (e) {}
+      this.analyserLeft = null;
+    }
+    if (this.analyserRight) {
+      try { this.analyserRight.disconnect(); } catch (e) {}
+      this.analyserRight = null;
+    }
+    this.stereoLeftEnergy = 0;
+    this.stereoRightEnergy = 0;
+    this.stereoLeftPeak = 0;
+    this.stereoRightPeak = 0;
+    this.stereoLeftBands.fill(0);
+    this.stereoRightBands.fill(0);
+    this.stereoLeftPeakBands.fill(0);
+    this.stereoRightPeakBands.fill(0);
   }
 
   public async restartAudioStream(): Promise<void> {
@@ -272,6 +333,110 @@ const LOG_BAND_BOUNDARIES: Array<[number, number]> = [
     this.bassSlowEma = this.bassSlowEma * 0.95 + rawBass * 0.05;
     this.rawBassFlux = Math.max(0, rawBass - this.bassFastEma);
     this.rawBassEnergy = rawBass;
+
+    // Process Independent Stereo Channels (Left & Right)
+    if (this.analyserLeft && this.analyserRight) {
+      if (this.analyserLeft.smoothingTimeConstant !== targetSmoothing) {
+        this.analyserLeft.smoothingTimeConstant = targetSmoothing;
+      }
+      if (this.analyserRight.smoothingTimeConstant !== targetSmoothing) {
+        this.analyserRight.smoothingTimeConstant = targetSmoothing;
+      }
+
+      this.analyserLeft.getByteFrequencyData(this.dataArrayLeft as any);
+      this.analyserRight.getByteFrequencyData(this.dataArrayRight as any);
+
+      let sumL = 0;
+      let sumR = 0;
+      for (let i = 0; i < 128; i++) {
+        sumL += this.dataArrayLeft[i];
+        sumR += this.dataArrayRight[i];
+      }
+
+      // Check if input stream is mono (Channel 1 is completely silent while Left has signal)
+      const isMono = sumR < 5 && sumL > 10;
+      const sensitivity = config.audioSensitivity || 1.2;
+
+      // 8 Logarithmic bands per stereo channel across 128 FFT bins
+      const LOG_STEREO_8_BOUNDARIES: Array<[number, number]> = [
+        [0, 3],    // 0: Sub-bass & Bass (~0 - 560 Hz)
+        [3, 6],    // 1: Low Mids (~560 - 1.1k Hz)
+        [6, 11],   // 2: Mids (~1.1k - 2.0k Hz)
+        [11, 20],  // 3: Presence (~2.0k - 3.75k Hz)
+        [20, 34],  // 4: Treble (~3.75k - 6.3k Hz)
+        [34, 56],  // 5: High Treble (~6.3k - 10.5k Hz)
+        [56, 86],  // 6: Air (~10.5k - 16.1k Hz)
+        [86, 128]  // 7: Brilliance (~16.1k - 24.0k Hz)
+      ];
+
+      for (let i = 0; i < 8; i++) {
+        const [start, end] = LOG_STEREO_8_BOUNDARIES[i];
+        const count = end - start;
+
+        let bSumL = 0;
+        let bSumR = 0;
+        for (let b = start; b < end; b++) {
+          bSumL += this.dataArrayLeft[b];
+          bSumR += isMono ? this.dataArray[b] : this.dataArrayRight[b];
+        }
+
+        const valL = Math.min(255, (bSumL / count) * sensitivity);
+        const valR = Math.min(255, (bSumR / count) * sensitivity);
+
+        this.stereoLeftBands[i] = valL;
+        this.stereoRightBands[i] = valR;
+
+        // Peak hold Left
+        if (valL >= this.stereoLeftPeakBands[i]) {
+          this.stereoLeftPeakBands[i] = valL;
+          this.stereoLeftPeakBandsHoldTime[i] = now + 250;
+        } else if (now > this.stereoLeftPeakBandsHoldTime[i]) {
+          this.stereoLeftPeakBands[i] = Math.max(0, this.stereoLeftPeakBands[i] - 5.0);
+        }
+
+        // Peak hold Right
+        if (valR >= this.stereoRightPeakBands[i]) {
+          this.stereoRightPeakBands[i] = valR;
+          this.stereoRightPeakBandsHoldTime[i] = now + 250;
+        } else if (now > this.stereoRightPeakBandsHoldTime[i]) {
+          this.stereoRightPeakBands[i] = Math.max(0, this.stereoRightPeakBands[i] - 5.0);
+        }
+      }
+
+      // Master channel volume levels
+      const leftLevel = Math.min(255, (sumL / 128) * sensitivity * 1.4);
+      const rightLevel = Math.min(255, (isMono ? sumL / 128 : sumR / 128) * sensitivity * 1.4);
+
+      this.stereoLeftEnergy = leftLevel;
+      this.stereoRightEnergy = rightLevel;
+
+      if (leftLevel >= this.stereoLeftPeak) {
+        this.stereoLeftPeak = leftLevel;
+        this.stereoLeftPeakHoldTime = now + 280;
+      } else if (now > this.stereoLeftPeakHoldTime) {
+        this.stereoLeftPeak = Math.max(0, this.stereoLeftPeak - 4.5);
+      }
+
+      if (rightLevel >= this.stereoRightPeak) {
+        this.stereoRightPeak = rightLevel;
+        this.stereoRightPeakHoldTime = now + 280;
+      } else if (now > this.stereoRightPeakHoldTime) {
+        this.stereoRightPeak = Math.max(0, this.stereoRightPeak - 4.5);
+      }
+    } else {
+      // Fallback if splitter is not available
+      const halfBands = 8;
+      for (let i = 0; i < halfBands; i++) {
+        this.stereoLeftBands[i] = this.frequencyBands[i] || 0;
+        this.stereoRightBands[i] = this.frequencyBands[i + halfBands] || 0;
+        this.stereoLeftPeakBands[i] = this.peakBands[i] || 0;
+        this.stereoRightPeakBands[i] = this.peakBands[i + halfBands] || 0;
+      }
+      this.stereoLeftEnergy = this.bassEnergy;
+      this.stereoRightEnergy = this.bassEnergy;
+      this.stereoLeftPeak = this.bassEnergy;
+      this.stereoRightPeak = this.bassEnergy;
+    }
   }
 
   private _bindDeviceEvents(): void {

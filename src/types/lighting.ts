@@ -102,6 +102,7 @@ export interface StudioLightingConfig {
   audioSource: string;
   audioMode: string;
   audioColorStyle?: 'spectrum' | 'backgroundWave';
+  audioVuStyle?: 'master_bar' | 'stereo_columns' | 'center_split' | 'dual_vertical';
   audioColorMode: string;
   audioDirection: string;
   audioSingleColor: string;

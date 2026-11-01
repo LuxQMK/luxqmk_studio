@@ -579,6 +579,7 @@ export const StudioLightingView: React.FC = () => {
                 >
                   <option value="equalizer">{t('optEqualizer')}</option>
                   <option value="bassShockwave">{t('optBassShockwave')}</option>
+                  <option value="vuMeter">{t('optVuMeter')}</option>
                 </select>
               </div>
 
@@ -612,6 +613,24 @@ export const StudioLightingView: React.FC = () => {
                   )}
                 </select>
               </div>
+
+              {config.audioMode === 'vuMeter' && (
+                <div className="form-group">
+                  <label>{t('lblAudioVuStyle')}</label>
+                  <select
+                    className="form-control"
+                    value={config.audioVuStyle === 'stereo_columns' ? 'stereo_columns' : 'master_bar'}
+                    onChange={(e) => setConfig({ audioVuStyle: e.target.value as any })}
+                  >
+                    <option value="master_bar">{t('optVuMasterBar')}</option>
+                    <option value="stereo_columns">{t('optVuStereoColumns')}</option>
+
+                  </select>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.3rem' }}>
+                    {t('hintAudioVuStyle')}
+                  </span>
+                </div>
+              )}
 
               {config.audioMode === 'equalizer' && (
                 <div className="form-group">

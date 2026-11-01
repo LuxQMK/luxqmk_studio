@@ -47,6 +47,14 @@ export interface AudioRenderContext extends RenderContext {
   bassEnergy: number;           // Bass volume energy (0..255)
   rawBassFlux?: number;         // Unclipped transient onset flux (0..255)
   rawBassEnergy?: number;       // Raw unclipped bass level (0..255)
+  stereoLeftEnergy?: number;    // Master volume level of left channel (0..255)
+  stereoRightEnergy?: number;   // Master volume level of right channel (0..255)
+  stereoLeftPeak?: number;      // Peak hold level of left channel (0..255)
+  stereoRightPeak?: number;     // Peak hold level of right channel (0..255)
+  stereoLeftBands?: Float32Array;      // 8 frequency bands of left channel (0..255)
+  stereoRightBands?: Float32Array;     // 8 frequency bands of right channel (0..255)
+  stereoLeftPeakBands?: Float32Array;  // 8 peak bands of left channel (0..255)
+  stereoRightPeakBands?: Float32Array; // 8 peak bands of right channel (0..255)
 }
 
 export interface AudioEffectRenderer {
@@ -71,7 +79,11 @@ export interface AudioEffectRenderer {
     config: StudioLightingConfig,
     frequencyBands: Float32Array,
     bassEnergy: number,
-    maxX: number
+    maxX: number,
+    stereoLeftEnergy?: number,
+    stereoRightEnergy?: number,
+    stereoLeftPeak?: number,
+    stereoRightPeak?: number
   ) => { r: number; g: number; b: number } | null;
 }
 

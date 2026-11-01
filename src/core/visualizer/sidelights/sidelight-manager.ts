@@ -19,7 +19,11 @@ export class SidelightManager {
     bassEnergy: number,
     beatDecay: number,
     maxX: number,
-    maxY: number
+    maxY: number,
+    stereoLeftEnergy?: number,
+    stereoRightEnergy?: number,
+    stereoLeftPeak?: number,
+    stereoRightPeak?: number
   ): { r: number; g: number; b: number } {
     const isCustom = !!config.sidelightCustomEnable;
     const normY = (index + 0.5) / (totalCount || 1); // 0..1 from top to bottom
@@ -36,7 +40,19 @@ export class SidelightManager {
         const audioMode = config.audioMode || 'equalizer';
         const eff = audioEffectsRegistry.get(audioMode);
         if (eff && eff.computeSidelightRgb) {
-          const res = eff.computeSidelightRgb(side, normY, now, config, frequencyBands, bassEnergy, maxX);
+          const res = eff.computeSidelightRgb(
+            side,
+            normY,
+            now,
+            config,
+            frequencyBands,
+            bassEnergy,
+            maxX,
+            stereoLeftEnergy,
+            stereoRightEnergy,
+            stereoLeftPeak,
+            stereoRightPeak
+          );
           if (res) return res;
         }
 
@@ -196,14 +212,33 @@ export class SidelightManager {
     bassEnergy: number,
     beatDecay: number,
     maxX: number,
-    maxY: number
+    maxY: number,
+    stereoLeftEnergy?: number,
+    stereoRightEnergy?: number,
+    stereoLeftPeak?: number,
+    stereoRightPeak?: number
   ): void {
     if (typeof document === 'undefined') return;
     const leftEls = document.querySelectorAll<HTMLElement>('#studioLightingKeyboardCanvas .side-diffuser-left');
     const rightEls = document.querySelectorAll<HTMLElement>('#studioLightingKeyboardCanvas .side-diffuser-right');
 
     leftEls.forEach((el, i) => {
-      const rgb = this.computeSidelightRgb('left', i, leftEls.length, now, config, frequencyBands, bassEnergy, beatDecay, maxX, maxY);
+      const rgb = this.computeSidelightRgb(
+        'left',
+        i,
+        leftEls.length,
+        now,
+        config,
+        frequencyBands,
+        bassEnergy,
+        beatDecay,
+        maxX,
+        maxY,
+        stereoLeftEnergy,
+        stereoRightEnergy,
+        stereoLeftPeak,
+        stereoRightPeak
+      );
       if (rgb.r === 0 && rgb.g === 0 && rgb.b === 0) {
         el.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
         el.style.borderColor = 'rgba(255, 255, 255, 0.12)';
@@ -216,7 +251,22 @@ export class SidelightManager {
     });
 
     rightEls.forEach((el, i) => {
-      const rgb = this.computeSidelightRgb('right', i, rightEls.length, now, config, frequencyBands, bassEnergy, beatDecay, maxX, maxY);
+      const rgb = this.computeSidelightRgb(
+        'right',
+        i,
+        rightEls.length,
+        now,
+        config,
+        frequencyBands,
+        bassEnergy,
+        beatDecay,
+        maxX,
+        maxY,
+        stereoLeftEnergy,
+        stereoRightEnergy,
+        stereoLeftPeak,
+        stereoRightPeak
+      );
       if (rgb.r === 0 && rgb.g === 0 && rgb.b === 0) {
         el.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
         el.style.borderColor = 'rgba(255, 255, 255, 0.12)';

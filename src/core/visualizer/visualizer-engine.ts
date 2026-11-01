@@ -262,6 +262,14 @@ export class VisualizerEngineService {
           bassEnergy: audioAnalyzer.bassEnergy,
           rawBassFlux: audioAnalyzer.rawBassFlux,
           rawBassEnergy: audioAnalyzer.rawBassEnergy,
+          stereoLeftEnergy: audioAnalyzer.stereoLeftEnergy,
+          stereoRightEnergy: audioAnalyzer.stereoRightEnergy,
+          stereoLeftPeak: audioAnalyzer.stereoLeftPeak,
+          stereoRightPeak: audioAnalyzer.stereoRightPeak,
+          stereoLeftBands: audioAnalyzer.stereoLeftBands,
+          stereoRightBands: audioAnalyzer.stereoRightBands,
+          stereoLeftPeakBands: audioAnalyzer.stereoLeftPeakBands,
+          stereoRightPeakBands: audioAnalyzer.stereoRightPeakBands,
           maxX: geometryManager.maxX,
           maxY: geometryManager.maxY,
           applyKeyStyle: (k, r, g, b, bright) => this._applyKeyStyle(k, r, g, b, bright)
@@ -278,7 +286,11 @@ export class VisualizerEngineService {
           audioAnalyzer.bassEnergy,
           0,
           geometryManager.maxX,
-          geometryManager.maxY
+          geometryManager.maxY,
+          audioAnalyzer.stereoLeftEnergy,
+          audioAnalyzer.stereoRightEnergy,
+          audioAnalyzer.stereoLeftPeak,
+          audioAnalyzer.stereoRightPeak
         );
       } else {
         const renderCtx: RenderContext = {
@@ -416,7 +428,11 @@ export class VisualizerEngineService {
               audioAnalyzer.bassEnergy,
               0,
               geometryManager.maxX,
-              geometryManager.maxY
+              geometryManager.maxY,
+              audioAnalyzer.stereoLeftEnergy,
+              audioAnalyzer.stereoRightEnergy,
+              audioAnalyzer.stereoLeftPeak,
+              audioAnalyzer.stereoRightPeak
             );
             const offset = ledIndex * 3;
             hwBuffer[offset + 0] = sideRgb.r;
@@ -438,7 +454,11 @@ export class VisualizerEngineService {
               audioAnalyzer.bassEnergy,
               0,
               geometryManager.maxX,
-              geometryManager.maxY
+              geometryManager.maxY,
+              audioAnalyzer.stereoLeftEnergy,
+              audioAnalyzer.stereoRightEnergy,
+              audioAnalyzer.stereoLeftPeak,
+              audioAnalyzer.stereoRightPeak
             );
             const offset = ledIndex * 3;
             hwBuffer[offset + 0] = sideRgb.r;

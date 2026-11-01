@@ -103,6 +103,7 @@ const DEFAULT_STUDIO_LIGHTING_CONFIG: StudioLightingConfig = {
   audioSource: 'system_loopback',
   audioMode: 'equalizer',
   audioColorStyle: 'spectrum',
+  audioVuStyle: 'master_bar',
   audioColorMode: 'rainbow',
   audioDirection: 'bottom_to_top',
   audioSingleColor: '#00ffff',
