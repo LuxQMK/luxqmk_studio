@@ -12,6 +12,60 @@ export interface ChangelogRelease {
 
 export const STUDIO_CHANGELOG: ChangelogRelease[] = [
   {
+    "version": "1.4.5",
+    "date": "2026-11-01",
+    "sections": {
+      "Added": [
+        "**Stereo VU Meter Audio Visualizer (`vuMeter`)**:",
+        "Independent Left and Right stereo channel separation via Web Audio API `ChannelSplitterNode(2)` and dedicated AnalyserNodes.",
+        "Two distinct visual layouts: *Stereo Master Level Bar* (wide centered stereo level bar) and *Stereo Spectrum Bands* (8 Left + 8 Right discrete frequency spectrum column bars).",
+        "Multi-directional animation flow supporting all 6 directional vectors (*Bottom to Top*, *Top to Bottom*, *Left to Right*, *Right to Left*, *Center Outward*, *Perimeter Inward*).",
+        "Responsive Peak Hold ballistic decay with high-contrast peak indicators.",
+        "Synchronized underglow sidelight lightbar rendering matching stereo channel levels.",
+        "**Bass Beat Pulse & Treble Shimmer Audio Visualizer (`bassPulse`)**:",
+        "Rhythmic beat drop and kick drum reaction lighting engine surging from ambient floor brightness (15%) to 100% full illumination.",
+        "Multi-tiered low-end transient onset detection combining Dual-EMA Spectral Flux (`bassFast` / `bassSlow`), dynamic rolling baseline AGC, energy delta, and raw WASAPI loopback low-frequency FFT bins.",
+        "**Polyphonic Wave Superposition (`ActiveBassWave`)**: Queue supporting up to 6 overlapping waves simultaneously without interrupting previous traveling waves during rapid double-kicks or drum rolls.",
+        "Continuous sub-bass breathing envelope providing organic pumping during sustained low-frequency passages and 808 sub-bass lines.",
+        "Smooth directional gradient flow along the selected Effect Direction (`audioDirection`) without color stepping or abrupt phase jumping.",
+        "High-frequency percussion, hi-hat, and cymbal transients spawn sparkling star glints in pure white across random keys.",
+        "**Dedicated Treble Starlight Shimmer Toggle**: Custom UI switch in Studio Lighting allowing users to toggle Treble Shimmer on or off specifically for this effect.",
+        "Synchronized underglow sidelight pulse matching the directional wave propagation and bass envelope."
+      ],
+      "Changed": [
+        "**Visualizer Engine Polyphony**: Transitioned transient wave dispatching from single-event timestamps to an active wave queue to prevent visual clipping on fast polyphonic percussion.",
+        "**Directional Gradient Synchronization**: Aligned color phase progression with spatial coordinate mapping (`getDirectedCoordinate`) across all audio visualization modes."
+      ],
+      "Fixed": [
+        "**Bass Beat Detection Sensitivity**: Replaced fixed frame-delta thresholds with adaptive Dual-EMA Spectral Flux and baseline auto-gain calibration, ensuring reliable kick detection across quiet and loud audio sources.",
+        "**Audio Visualizer Background Stagnation**: Restored continuous directional flow offset for ambient background gradients in audio visualization modes.",
+        "**UI Switch Component Styling**: Added missing `.slider` element and full-container click handling for Studio Lighting custom toggle switches."
+      ]
+    },
+    "bullets": [
+      "[Added] **Stereo VU Meter Audio Visualizer (`vuMeter`)**:",
+      "[Added] Independent Left and Right stereo channel separation via Web Audio API `ChannelSplitterNode(2)` and dedicated AnalyserNodes.",
+      "[Added] Two distinct visual layouts: *Stereo Master Level Bar* (wide centered stereo level bar) and *Stereo Spectrum Bands* (8 Left + 8 Right discrete frequency spectrum column bars).",
+      "[Added] Multi-directional animation flow supporting all 6 directional vectors (*Bottom to Top*, *Top to Bottom*, *Left to Right*, *Right to Left*, *Center Outward*, *Perimeter Inward*).",
+      "[Added] Responsive Peak Hold ballistic decay with high-contrast peak indicators.",
+      "[Added] Synchronized underglow sidelight lightbar rendering matching stereo channel levels.",
+      "[Added] **Bass Beat Pulse & Treble Shimmer Audio Visualizer (`bassPulse`)**:",
+      "[Added] Rhythmic beat drop and kick drum reaction lighting engine surging from ambient floor brightness (15%) to 100% full illumination.",
+      "[Added] Multi-tiered low-end transient onset detection combining Dual-EMA Spectral Flux (`bassFast` / `bassSlow`), dynamic rolling baseline AGC, energy delta, and raw WASAPI loopback low-frequency FFT bins.",
+      "[Added] **Polyphonic Wave Superposition (`ActiveBassWave`)**: Queue supporting up to 6 overlapping waves simultaneously without interrupting previous traveling waves during rapid double-kicks or drum rolls.",
+      "[Added] Continuous sub-bass breathing envelope providing organic pumping during sustained low-frequency passages and 808 sub-bass lines.",
+      "[Added] Smooth directional gradient flow along the selected Effect Direction (`audioDirection`) without color stepping or abrupt phase jumping.",
+      "[Added] High-frequency percussion, hi-hat, and cymbal transients spawn sparkling star glints in pure white across random keys.",
+      "[Added] **Dedicated Treble Starlight Shimmer Toggle**: Custom UI switch in Studio Lighting allowing users to toggle Treble Shimmer on or off specifically for this effect.",
+      "[Added] Synchronized underglow sidelight pulse matching the directional wave propagation and bass envelope.",
+      "[Changed] **Visualizer Engine Polyphony**: Transitioned transient wave dispatching from single-event timestamps to an active wave queue to prevent visual clipping on fast polyphonic percussion.",
+      "[Changed] **Directional Gradient Synchronization**: Aligned color phase progression with spatial coordinate mapping (`getDirectedCoordinate`) across all audio visualization modes.",
+      "[Fixed] **Bass Beat Detection Sensitivity**: Replaced fixed frame-delta thresholds with adaptive Dual-EMA Spectral Flux and baseline auto-gain calibration, ensuring reliable kick detection across quiet and loud audio sources.",
+      "[Fixed] **Audio Visualizer Background Stagnation**: Restored continuous directional flow offset for ambient background gradients in audio visualization modes.",
+      "[Fixed] **UI Switch Component Styling**: Added missing `.slider` element and full-container click handling for Studio Lighting custom toggle switches."
+    ]
+  },
+  {
     "version": "1.4.5-beta.2",
     "date": "2026-10-05",
     "sections": {

@@ -48,7 +48,7 @@ function getVersionInfo(pkg) {
   const isMaster = branch === 'master';
   
   let targetVersion = rawVersion;
-  if (isMaster) {
+  if (isMaster || rawVersion === baseVersion) {
     targetVersion = baseVersion;
   } else if (!rawVersion.includes('-beta') && !rawVersion.includes('-rc') && !rawVersion.includes('-alpha')) {
     targetVersion = `${baseVersion}-dev`;
