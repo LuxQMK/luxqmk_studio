@@ -12,6 +12,20 @@ export interface ChangelogRelease {
 
 export const STUDIO_CHANGELOG: ChangelogRelease[] = [
   {
+    "version": "1.4.6",
+    "date": "2026-11-21",
+    "sections": {
+      "Fixed": [
+        "**Live Firmware Release Notes**: Updated the in-app Firmware Changelog viewer (`SettingsView`) to fetch the latest `CHANGELOG.md` directly from GitHub `master` with automatic fallback to the bundled release database.",
+        "**Unified Firmware Changelog Sync**: Updated `scripts/sync-version.js` to read from the unified root `qmk_firmware/CHANGELOG.md`."
+      ]
+    },
+    "bullets": [
+      "[Fixed] **Live Firmware Release Notes**: Updated the in-app Firmware Changelog viewer (`SettingsView`) to fetch the latest `CHANGELOG.md` directly from GitHub `master` with automatic fallback to the bundled release database.",
+      "[Fixed] **Unified Firmware Changelog Sync**: Updated `scripts/sync-version.js` to read from the unified root `qmk_firmware/CHANGELOG.md`."
+    ]
+  },
+  {
     "version": "1.4.5",
     "date": "2026-11-01",
     "sections": {

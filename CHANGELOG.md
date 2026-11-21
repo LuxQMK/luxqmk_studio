@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.6] - 2026-11-21
+
+### Fixed
+- **Live Firmware Release Notes**: Updated the in-app Firmware Changelog viewer (`SettingsView`) to fetch the latest `CHANGELOG.md` directly from GitHub `master` with automatic fallback to the bundled release database.
+- **Unified Firmware Changelog Sync**: Updated `scripts/sync-version.js` to read from the unified root `qmk_firmware/CHANGELOG.md`.
+
+---
+
 ## [1.4.5] - 2026-11-01
 
 ### Added

@@ -201,14 +201,14 @@ export default STUDIO_CHANGELOG;
   }
 
   // 2. Firmware Changelog
-  const fwMdPath = path.resolve(__dirname, '../../qmk_firmware/users/luxqmk/CHANGELOG.md');
+  const fwMdPath = path.resolve(__dirname, '../../qmk_firmware/CHANGELOG.md');
   const fwTsPath = path.resolve(__dirname, '../src/data/firmwareChangelog.ts');
 
   if (fs.existsSync(fwMdPath)) {
     const fwEntries = parseMarkdownChangelog(fwMdPath);
     const fwTsContent = `/**
  * LuxQMK Firmware Changelog Database
- * Automatically generated from qmk_firmware/users/luxqmk/CHANGELOG.md by scripts/sync-version.js. DO NOT EDIT DIRECTLY.
+ * Automatically generated from qmk_firmware/CHANGELOG.md by scripts/sync-version.js. DO NOT EDIT DIRECTLY.
  */
 
 import { ChangelogRelease } from './changelog';

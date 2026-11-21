@@ -3,10 +3,11 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { useDeviceStore } from '../store/useDeviceStore';
 import { useI18n } from '../i18n';
 import { APP_VERSION } from '../version';
-import { FIRMWARE_CHANGELOG } from '../data/firmwareChangelog';
+import { useLiveFirmwareChangelog } from '../services/changelog-service';
 import { ChangelogViewer } from '../components/common/ChangelogViewer';
 
 export const SettingsView: React.FC = () => {
+  const firmwareChangelog = useLiveFirmwareChangelog();
   const {
     performance,
     hardwareInfo,
@@ -745,7 +746,7 @@ export const SettingsView: React.FC = () => {
 
           <div style={{ marginTop: '1.25rem' }}>
             <ChangelogViewer
-              entries={FIRMWARE_CHANGELOG}
+              entries={firmwareChangelog}
               accentColor="#00f0ff"
               emptyMessage={t('lblFirmwareChangelogEmpty')}
             />
